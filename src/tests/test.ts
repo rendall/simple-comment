@@ -2,13 +2,14 @@
  * @jest-environment ./tests/mongo-environment.js
  */
 /* eslint-disable no-console */
-import {MongoClient, Db} from 'mongodb';
+const {MongoClient} = require('mongodb');
 
-let connection:MongoClient;
-let db:Db;
+const COLLECTION_NAME = "comments"
+let connection:any;
+let db:any;
 
 beforeAll(async () => {
-  connection = await MongoClient.connect(global.__MONGO_URI__);
+  connection = await MongoClient.connect(global.__MONGO_URI__, {useNewUrlParser:true});
   db = await connection.db(global.__MONGO_DB_NAME__);
 });
 
@@ -18,9 +19,9 @@ afterAll(async () => {
 });
 
 it('should aggregate docs from collection', async () => {
-  const files = db.collection('files');
+  const comments = db.collection(COLLECTION_NAME);
 
-  await files.insertMany([
+  await comments.insertMany([
     {type: 'Document'},
     {type: 'Video'},
     {type: 'Image'},
@@ -29,7 +30,7 @@ it('should aggregate docs from collection', async () => {
     {type: 'Document'},
   ]);
 
-  const topFiles = await files
+  const topFiles = await comments
     .aggregate([
       {$group: {_id: '$type', count: {$sum: 1}}},
       {$sort: {count: -1}},

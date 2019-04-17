@@ -24,7 +24,8 @@
     "testEnvironment": "node",
     "testPathIgnorePatterns": [
       "/src/",
-      "/node_modules/"
+      "/node_modules/",
+      "/RAW/"
     ]
   }
 }
