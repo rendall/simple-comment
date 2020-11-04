@@ -1,0 +1,6 @@
+{
+"json.schemas": [{
+  "fileMatch": ["simple-comment-api.json"],
+  "url": "./src/schema/openapi.schema.json"
+}]
+}
