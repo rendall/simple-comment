@@ -17,7 +17,7 @@
     "webpack-cli": "^4.2.0"
   },
   "scripts": {
-    "build:ts": "tsc -p tsconfig.netlify.functions.json",
+    "build:ts": "tsc -p tsconfig.netlify.functions.json --listEmittedFiles",
     "build:netlify": "yarn run build:ts && netlify-lambda build ./netlify-functions",
     "prebuild":"rimraf ./functions",
     "build": "yarn run build:netlify",
