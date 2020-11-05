@@ -240,9 +240,20 @@
           {
             "BearerAuth": []
           }
-        ]
+        ],
+        "summary": "Delete a discussion"
       },
-      "summary": "Delete a discussion"
+      "parameters": [
+        {
+          "name": "discussionId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "byte"
+          }
+        }
+      ]
     },
     "/discussion/{discussionId}/{commentId}": {
       "get": {
@@ -396,6 +407,26 @@
         ],
         "summary": "Delete a specific comment"
       },
+      "parameters": [
+        {
+          "name": "discussionId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "byte"
+          }
+        },
+        {
+          "name": "commentId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "byte"
+          }
+        }
+      ]
     },
     "/user": {
       "get": {
@@ -654,7 +685,18 @@
           }
         ],
         "summary": "Delete a user"
-      }
+      },
+      "parameters": [
+        {
+          "name": "userId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "byte"
+          }
+        }
+      ]
     },
     "/auth": {
       "summary": "Handle user authentication",
