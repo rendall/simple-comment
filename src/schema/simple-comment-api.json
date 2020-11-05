@@ -832,6 +832,12 @@
           "text": {
             "type": "string"
           },
+          "edits": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Comment"
+            }
+          },
           "parentComment": {
             "type": "string",
             "format": "byte"
