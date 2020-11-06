@@ -33,6 +33,7 @@ export interface User {
   email:Email,
   name:string,
   avatar:URL,
+  hash: string,
   isAdmin:boolean
 }
 

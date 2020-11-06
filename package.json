@@ -1,40 +1,45 @@
 {
+  "license": "MIT",
   "devDependencies": {
+    "@babel/core": "^7.12.3",
+    "@babel/preset-env": "^7.12.1",
+    "@babel/preset-typescript": "^7.12.1",
+    "@shelf/jest-mongodb": "^1.2.3",
     "@types/aws-lambda": "^8.10.64",
-    "@types/jest": "^24.0.11",
+    "@types/bcrypt": "^3.0.0",
+    "@types/jest": "^26.0.15",
+    "@types/jsonwebtoken": "^8.5.0",
     "@types/mongodb": "^3.1.23",
     "@types/node": "^11.13.4",
+    "babel-jest": "^26.6.3",
     "eslint": "^5.16.0",
-    "jest": "^24.7.1",
+    "jest": "^26.6.3",
     "jest-environment-node": "^24.7.1",
-    "mongodb": "^3.2.3",
-    "mongodb-memory-server": "^5.0.4",
+    "merge": "^1.2.1",
+    "mongodb-memory-server": "^6.9.2",
     "netlify-lambda": "^2.0.1",
     "rimraf": "^3.0.2",
+    "ts-jest": "^26.4.3",
     "ts-loader": "^8.0.9",
+    "ts-node": "^9.0.0",
     "typescript": "^3.4.3",
     "webpack": "^5.4.0",
     "webpack-cli": "^4.2.0"
   },
   "scripts": {
-    "build:ts": "tsc -p tsconfig.netlify.functions.json --listEmittedFiles",
-    "build:netlify": "yarn run build:ts && netlify-lambda build ./netlify-functions",
-    "prebuild":"rimraf ./functions",
     "build": "yarn run build:netlify",
-    "postbuild":"rimraf ./netlify-functions && rimraf ./lib",
+    "build:netlify": "yarn run build:ts && netlify-lambda build ./netlify-functions",
+    "build:ts": "tsc -p tsconfig.netlify.functions.json --listEmittedFiles",
+    "postbuild": "rimraf ./netlify-functions && rimraf ./lib",
+    "prebuild": "rimraf ./functions",
     "start": "build:ts && netlify-lambda serve ./netlify-functions",
-    "test": "jest"
+    "test": "jest",
+    "posttest": "rimraf ./globalConfig.json"
   },
-  "jest": {
-    "globalSetup": "./tests/setup.js",
-    "globalTeardown": "./tests/teardown.js",
-    "clearMocks": true,
-    "coverageDirectory": "coverage",
-    "testEnvironment": "node",
-    "testPathIgnorePatterns": [
-      "/src/",
-      "/node_modules/",
-      "/RAW/"
-    ]
+  "dependencies": {
+    "bcrypt": "^5.0.0",
+    "dotenv": "^8.2.0",
+    "jsonwebtoken": "^8.5.1",
+    "mongodb": "^3.2.3"
   }
 }
