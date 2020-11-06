@@ -22,7 +22,8 @@ export default {
   // An array of regexp pattern strings that are matched against all test paths, matched tests are skipped
   testPathIgnorePatterns: [
     "\\\\node_modules\\\\",
-    "RAW"
+    "RAW",
+    "mongo-db-tests"
   ],
 
   // All imported modules in your tests should be mocked automatically
