@@ -6,7 +6,9 @@
     "@babel/preset-typescript": "^7.12.1",
     "@shelf/jest-mongodb": "^1.2.3",
     "@types/aws-lambda": "^8.10.64",
+    "@types/bcrypt": "^3.0.0",
     "@types/jest": "^26.0.15",
+    "@types/jsonwebtoken": "^8.5.0",
     "@types/mongodb": "^3.1.23",
     "@types/node": "^11.13.4",
     "babel-jest": "^26.6.3",
@@ -14,7 +16,6 @@
     "jest": "^26.6.3",
     "jest-environment-node": "^24.7.1",
     "merge": "^1.2.1",
-    "mongodb": "^3.2.3",
     "mongodb-memory-server": "^6.9.2",
     "netlify-lambda": "^2.0.1",
     "rimraf": "^3.0.2",
@@ -34,5 +35,11 @@
     "start": "build:ts && netlify-lambda serve ./netlify-functions",
     "test": "jest",
     "posttest": "rimraf ./globalConfig.json"
+  },
+  "dependencies": {
+    "bcrypt": "^5.0.0",
+    "dotenv": "^8.2.0",
+    "jsonwebtoken": "^8.5.1",
+    "mongodb": "^3.2.3"
   }
 }

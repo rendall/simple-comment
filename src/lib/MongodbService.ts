@@ -1,6 +1,8 @@
 import type { AuthToken, Comment, CommentId, Discussion, DiscussionId, Error, Success, User, UserId } from "./simple-comment";
 import { Service } from "./Service";
 import { Db, MongoClient } from "mongodb";
+import { comparePassword, getAuthToken } from "./crypt";
+import { user401, user404 } from "./errors";
 
 export class MongodbService extends Service {
 
@@ -46,9 +48,22 @@ export class MongodbService extends Service {
    *
    * returns AuthToken
    **/
-  authPOST = (username: string, password: string) => new Promise<AuthToken | Error>((resolve, reject) => {
-    reject(this.genericError)
-  });
+  authPOST = (username: string, password: string) => new Promise<AuthToken | Error>((resolve, reject) =>
+    this.getDb()
+      .then(db => db.collection("users"))
+      .then(users => users.findOne({ id: username }))
+      .then(async (user: User) => {
+        if (user === null) reject(user404)
+        else {
+          const isSame = await comparePassword(password, user.hash)
+          if (!isSame) reject(user401)
+          else {
+            const authToken = getAuthToken(user.id)
+            resolve(authToken)
+          }
+        }
+      })
+  );
 
 
 
