@@ -1,9 +1,10 @@
 *.js
+.env
 /.git
 /functions
 /lib
 /netlify-functions
 /node_modules
 RAW
-yarn-error.log
 globalConfig.json
+yarn-error.log
