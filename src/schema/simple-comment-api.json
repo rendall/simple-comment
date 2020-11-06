@@ -736,26 +736,6 @@
                 }
               }
             }
-          },
-          "403": {
-            "description": "Requesting user is not authorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "425": {
-            "description": "Possible duplicate user",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
           }
         },
         "summary": "Accept a user name and password, return authentication token"
