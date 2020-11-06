@@ -1,4 +1,8 @@
+import { authPOST } from "./service";
 // post to auth with incorrect credentials should return error 401
+test('posts to auth with incorrect credentials', () => {
+  return authPOST().then(value => expect(value).toBe("3"))
+})
 // post to auth with correct credentials should return authtoken
 
 // post to user with identical credentials should return 425 Possible duplicate user

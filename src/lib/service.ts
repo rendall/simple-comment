@@ -6,7 +6,7 @@ import type { AuthToken, Comment, CommentId, Discussion, DiscussionId, Success, 
  * returns AuthToken
  **/
 export const authPOST = () => new Promise<AuthToken | Error>((resolve, reject) => {
-  resolve()
+  resolve("3")
 });
 
 
