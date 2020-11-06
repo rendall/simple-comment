@@ -1,4 +1,4 @@
-import type { AuthToken, CommentId, Discussion, DiscussionId, Success, User, UserId } from "./simple-comment";
+import type { AuthToken, Comment, CommentId, Discussion, DiscussionId, Success, User, UserId } from "./simple-comment";
 
 /**
  * Accept a user name and password, return authentication token
