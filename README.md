@@ -16,4 +16,10 @@ The API specification is described thoroughly in [simple-comment-api.json](src\s
 
 ## Default build
 
-The default stack uses Netlify + MongoDB for the backend, and a minimal `fetch` based client for the frontend, but it can be readily adapted to use any technology stack, as long as the tests pass.
+The default stack uses Netlify + MongoDB for the backend, and a minimal `fetch` based client for the frontend, but it can be readily adapted to use any technology stack, as long as the tests pass
+
+## Roadmap
+
+1. CRUD for discussion
+1. CRUD for comments
+1. User identification & authentication is lower priority. There will be one hard-coded user to start, the admin and all commenting will be open to the public (with suitable constraints on spam and so forth)
