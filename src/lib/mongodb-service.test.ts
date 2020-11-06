@@ -166,7 +166,4 @@ describe('Full API service test', () => {
   test('POST to /discussion with identical information', () => { })
   // post to /discussion should return Discussion object and 201 Discussion created
   test('POST to /discussion', () => { })
-
-
-
 });

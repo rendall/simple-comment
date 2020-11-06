@@ -907,7 +907,17 @@
             }
           },
           "401": {
-            "description": "Requesting user is not authenticated",
+            "description": "Bad credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown user",
             "content": {
               "application/json": {
                 "schema": {
