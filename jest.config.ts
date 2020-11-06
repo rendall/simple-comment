@@ -4,6 +4,27 @@
  */
 
 export default {
+  // Automatically clear mock calls and instances between every test
+  clearMocks: true,
+
+  // The directory where Jest should output its coverage files
+  coverageDirectory: "coverage",
+
+  // Indicates which provider should be used to instrument code for coverage
+  coverageProvider: "v8",
+
+  // A preset that is used as a base for Jest's configuration
+  preset: 'ts-jest',
+
+  // The test environment that will be used for testing
+  testEnvironment: "node",
+
+  // An array of regexp pattern strings that are matched against all test paths, matched tests are skipped
+  testPathIgnorePatterns: [
+    "\\\\node_modules\\\\",
+    "RAW"
+  ],
+
   // All imported modules in your tests should be mocked automatically
   // automock: false,
 
@@ -13,25 +34,16 @@ export default {
   // The directory where Jest should store its cached dependency information
   // cacheDirectory: 
 
-  // Automatically clear mock calls and instances between every test
-  clearMocks: true,
-
   // Indicates whether the coverage information should be collected while executing the test
   // collectCoverage: false,
 
   // An array of glob patterns indicating a set of files for which coverage information should be collected
   // collectCoverageFrom: undefined,
 
-  // The directory where Jest should output its coverage files
-  coverageDirectory: "coverage",
-
   // An array of regexp pattern strings used to skip coverage collection
   // coveragePathIgnorePatterns: [
   //   "\\\\node_modules\\\\"
   // ],
-
-  // Indicates which provider should be used to instrument code for coverage
-  coverageProvider: "v8",
 
   // A list of reporter names that Jest uses when writing coverage reports
   // coverageReporters: [
@@ -92,9 +104,6 @@ export default {
   // An enum that specifies notification mode. Requires { notify: true }
   // notifyMode: "failure-change",
 
-  // A preset that is used as a base for Jest's configuration
-  // preset: undefined,
-
   // Run tests from one or more projects
   // projects: undefined,
 
@@ -136,9 +145,6 @@ export default {
   // A list of paths to snapshot serializer modules Jest should use for snapshot testing
   // snapshotSerializers: [],
 
-  // The test environment that will be used for testing
-  testEnvironment: "node",
-
   // Options that will be passed to the testEnvironment
   // testEnvironmentOptions: {},
 
@@ -149,11 +155,6 @@ export default {
   // testMatch: [
   //   "**/__tests__/**/*.[jt]s?(x)",
   //   "**/?(*.)+(spec|test).[tj]s?(x)"
-  // ],
-
-  // An array of regexp pattern strings that are matched against all test paths, matched tests are skipped
-  // testPathIgnorePatterns: [
-  //   "\\\\node_modules\\\\"
   // ],
 
   // The regexp pattern or array of patterns that Jest uses to detect test files

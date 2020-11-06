@@ -1,5 +1,5 @@
 /**
- * @jest-environment ./tests/mongo-environment.js
+ * @jest-environment ./tests/mongo-environment.ts
  */
 /* eslint-disable no-console */
 const {MongoClient} = require('mongodb');
