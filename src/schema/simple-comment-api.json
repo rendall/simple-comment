@@ -2,7 +2,11 @@
   "openapi": "3.0.2",
   "info": {
     "title": "Simple Comment API",
-    "description": "REST API for discussions and moderation",
+    "description": "A REST OpenAPI 3.0 Comment API",
+    "contact": {
+      "name": "Rendall Koski",
+      "url": "https://github.com/rendall/simple-comment/issues"
+    },
     "license": {
       "name": "MIT",
       "url": "https://opensource.org/licenses/MIT"
@@ -26,6 +30,8 @@
   "paths": {
     "/discussion": {
       "get": {
+        "summary": "Discussion discovery",
+        "description": "Receive a listing of all discussions",
         "responses": {
           "200": {
             "description": "List available discussions",
@@ -66,11 +72,10 @@
           {
             "BearerAuth": []
           }
-        ],
-        "summary": "Discussion discovery",
-        "description": "Receive a listing of all discussions"
+        ]
       },
       "post": {
+        "summary": "Create a new discussion",
         "responses": {
           "201": {
             "description": "Discussion created",
@@ -142,6 +147,20 @@
     },
     "/discussion/{discussionId}": {
       "get": {
+        "summary": "View specific discussion",
+        "parameters": [
+          {
+            "name": "discussionId",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string",
+              "format": "byte"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "List comments for {discussionId}",
@@ -189,10 +208,23 @@
           {
             "BearerAuth": []
           }
-        ],
-        "summary": "View specific discussion"
+        ]
       },
       "post": {
+        "summary": "Post a comment to specific discussion",
+        "parameters": [
+          {
+            "name": "discussionId",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string",
+              "format": "byte"
+            }
+          }
+        ],
         "responses": {
           "201": {
             "description": "Comment created",
@@ -269,10 +301,23 @@
           {
             "BearerAuth": []
           }
-        ],
-        "summary": "Post a comment to specific discussion"
+        ]
       },
       "delete": {
+        "summary": "Delete a discussion",
+        "parameters": [
+          {
+            "name": "discussionId",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string",
+              "format": "byte"
+            }
+          }
+        ],
         "responses": {
           "202": {
             "description": "Discussion {discussionId} deleted",
@@ -309,23 +354,36 @@
           {
             "BearerAuth": []
           }
-        ],
-        "summary": "Delete a discussion"
-      },
-      "parameters": [
-        {
-          "name": "discussionId",
-          "in": "path",
-          "required": true,
-          "schema": {
-            "type": "string",
-            "format": "byte"
-          }
-        }
-      ]
+        ]
+      }
     },
     "/discussion/{discussionId}/{commentId}": {
       "get": {
+        "summary": "View a specific comment",
+        "parameters": [
+          {
+            "name": "discussionId",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string",
+              "format": "byte"
+            }
+          },
+          {
+            "name": "commentId",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string",
+              "format": "byte"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "View comment {commentId}",
@@ -373,10 +431,34 @@
           {
             "BearerAuth": []
           }
-        ],
-        "summary": "View a specific comment"
+        ]
       },
       "put": {
+        "summary": "Edit a specific comment",
+        "parameters": [
+          {
+            "name": "discussionId",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string",
+              "format": "byte"
+            }
+          },
+          {
+            "name": "commentId",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string",
+              "format": "byte"
+            }
+          }
+        ],
         "responses": {
           "204": {
             "description": "Comment {commentId} updated",
@@ -423,10 +505,34 @@
           {
             "BearerAuth": []
           }
-        ],
-        "summary": "Edit a specific comment"
+        ]
       },
       "delete": {
+        "summary": "Delete a specific comment",
+        "parameters": [
+          {
+            "name": "discussionId",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string",
+              "format": "byte"
+            }
+          },
+          {
+            "name": "commentId",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string",
+              "format": "byte"
+            }
+          }
+        ],
         "responses": {
           "202": {
             "description": "Comment deleted",
@@ -473,32 +579,13 @@
           {
             "BearerAuth": []
           }
-        ],
-        "summary": "Delete a specific comment"
-      },
-      "parameters": [
-        {
-          "name": "discussionId",
-          "in": "path",
-          "required": true,
-          "schema": {
-            "type": "string",
-            "format": "byte"
-          }
-        },
-        {
-          "name": "commentId",
-          "in": "path",
-          "required": true,
-          "schema": {
-            "type": "string",
-            "format": "byte"
-          }
-        }
-      ]
+        ]
+      }
     },
     "/user": {
+      "summary": "Create a user",
       "get": {
+        "summary": "List all users",
         "responses": {
           "200": {
             "description": "List users",
@@ -539,10 +626,10 @@
           {
             "BearerAuth": []
           }
-        ],
-        "summary": "List all users"
+        ]
       },
       "post": {
+        "summary": "Create a user",
         "responses": {
           "201": {
             "description": "User created",
@@ -600,11 +687,24 @@
             "BearerAuth": []
           }
         ]
-      },
-      "summary": "Create a user"
+      }
     },
     "/user/{userId}": {
       "get": {
+        "summary": "View a user",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string",
+              "format": "byte"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "View user {userId}",
@@ -652,10 +752,23 @@
           {
             "BearerAuth": []
           }
-        ],
-        "summary": "View user"
+        ]
       },
       "put": {
+        "summary": "Edit a user",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string",
+              "format": "byte"
+            }
+          }
+        ],
         "responses": {
           "204": {
             "description": "User {userId} updated",
@@ -702,10 +815,23 @@
           {
             "BearerAuth": []
           }
-        ],
-        "summary": "Edit a user"
+        ]
       },
       "delete": {
+        "summary": "Delete a user",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string",
+              "format": "byte"
+            }
+          }
+        ],
         "responses": {
           "202": {
             "description": "User deleted",
@@ -752,29 +878,13 @@
           {
             "BearerAuth": []
           }
-        ],
-        "summary": "Delete a user"
-      },
-      "parameters": [
-        {
-          "name": "userId",
-          "in": "path",
-          "required": true,
-          "schema": {
-            "type": "string",
-            "format": "byte"
-          }
-        }
-      ]
+        ]
+      }
     },
     "/auth": {
       "summary": "Handle user authentication",
       "post": {
-        "security": [
-          {
-            "BasicAuth": []
-          }
-        ],
+        "summary": "Accept a user name and password, return authentication token",
         "responses": {
           "200": {
             "description": "User authenticated",
@@ -807,7 +917,11 @@
             }
           }
         },
-        "summary": "Accept a user name and password, return authentication token"
+        "security": [
+          {
+            "BasicAuth": []
+          }
+        ]
       }
     },
     "/admin": {
@@ -815,55 +929,51 @@
     }
   },
   "components": {
-    "securitySchemes": {
-      "BasicAuth": {
-        "type": "http",
-        "scheme": "basic",
-        "description": "'BasicAuth' returns an 'BearerAuth' bearer token"
-      },
-      "BearerAuth": {
-        "type": "http",
-        "scheme": "bearer",
-        "description": "All API requests that require authentication shall be 'BearerAuth'",
-        "bearerFormat": "JWT with 'user' field"
-      }
-    },
     "schemas": {
       "Success": {
-        "type": "object",
         "required": [
-          "message",
-          "code"
+          "code",
+          "message"
         ],
+        "type": "object",
         "properties": {
           "message": {
             "type": "string"
           },
           "code": {
-            "type": "integer",
+            "maximum": 299,
             "minimum": 200,
-            "maximum": 299
+            "type": "integer"
           }
-        }
+        },
+        "description": "Success message when no other information is expected"
       },
       "Error": {
-        "type": "object",
         "required": [
-          "message",
-          "code"
+          "code",
+          "message"
         ],
+        "type": "object",
         "properties": {
           "message": {
             "type": "string"
           },
           "code": {
-            "type": "integer",
+            "maximum": 499,
             "minimum": 400,
-            "maximum": 499
+            "type": "integer"
           }
-        }
+        },
+        "description": "Error message "
       },
       "Comment": {
+        "required": [
+          "dateCreated",
+          "discussion",
+          "id",
+          "text",
+          "user"
+        ],
         "type": "object",
         "properties": {
           "id": {
@@ -898,17 +1008,12 @@
           "dateModified": {
             "type": "string",
             "format": "date-time"
+          },
+          "authToken": {
+            "type": "string",
+            "format": "byte"
           }
-        },
-        "required": [
-          "id",
-          "discussion",
-          "user",
-          "text",
-          "parentComment",
-          "dateCreated",
-          "authToken"
-        ]
+        }
       },
       "User": {
         "type": "object",
@@ -963,6 +1068,8 @@
         "name": "userId",
         "in": "path",
         "required": true,
+        "style": "simple",
+        "explode": false,
         "schema": {
           "type": "string",
           "format": "byte"
@@ -972,6 +1079,8 @@
         "name": "commentId",
         "in": "path",
         "required": true,
+        "style": "simple",
+        "explode": false,
         "schema": {
           "type": "string",
           "format": "byte"
@@ -981,6 +1090,8 @@
         "name": "discussionId",
         "in": "path",
         "required": true,
+        "style": "simple",
+        "explode": false,
         "schema": {
           "type": "string",
           "format": "byte"
@@ -990,10 +1101,25 @@
         "name": "authToken",
         "in": "header",
         "required": true,
+        "style": "simple",
+        "explode": false,
         "schema": {
           "type": "string",
           "format": "byte"
         }
+      }
+    },
+    "securitySchemes": {
+      "BasicAuth": {
+        "type": "http",
+        "description": "'BasicAuth' returns an 'BearerAuth' bearer token",
+        "scheme": "basic"
+      },
+      "BearerAuth": {
+        "type": "http",
+        "description": "All API requests that require authentication shall be 'BearerAuth'",
+        "scheme": "bearer",
+        "bearerFormat": "JWT with 'user' field"
       }
     }
   }
