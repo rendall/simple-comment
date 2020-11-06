@@ -1,4 +1,5 @@
 {
+  "license": "MIT",
   "devDependencies": {
     "@types/aws-lambda": "^8.10.64",
     "@types/jest": "^24.0.11",
@@ -17,11 +18,11 @@
     "webpack-cli": "^4.2.0"
   },
   "scripts": {
-    "build:ts": "tsc -p tsconfig.netlify.functions.json --listEmittedFiles",
-    "build:netlify": "yarn run build:ts && netlify-lambda build ./netlify-functions",
-    "prebuild": "rimraf ./functions",
     "build": "yarn run build:netlify",
+    "build:netlify": "yarn run build:ts && netlify-lambda build ./netlify-functions",
+    "build:ts": "tsc -p tsconfig.netlify.functions.json --listEmittedFiles",
     "postbuild": "rimraf ./netlify-functions && rimraf ./lib",
+    "prebuild": "rimraf ./functions",
     "start": "build:ts && netlify-lambda serve ./netlify-functions",
     "test": "jest"
   },
