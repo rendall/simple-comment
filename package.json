@@ -1,20 +1,29 @@
 {
   "devDependencies": {
+    "@types/aws-lambda": "^8.10.64",
     "@types/jest": "^24.0.11",
     "@types/mongodb": "^3.1.23",
     "@types/node": "^11.13.4",
     "eslint": "^5.16.0",
     "jest": "^24.7.1",
+    "jest-environment-node": "^24.7.1",
     "mongodb": "^3.2.3",
-    "typescript": "^3.4.3"
+    "mongodb-memory-server": "^5.0.4",
+    "netlify-lambda": "^2.0.1",
+    "rimraf": "^3.0.2",
+    "ts-loader": "^8.0.9",
+    "typescript": "^3.4.3",
+    "webpack": "^5.4.0",
+    "webpack-cli": "^4.2.0"
   },
   "scripts": {
-    "build": "tsc",
+    "build:ts": "tsc -p tsconfig.netlify.functions.json --listEmittedFiles",
+    "build:netlify": "yarn run build:ts && netlify-lambda build ./netlify-functions",
+    "prebuild":"rimraf ./functions",
+    "build": "yarn run build:netlify",
+    "postbuild":"rimraf ./netlify-functions && rimraf ./lib",
+    "start": "build:ts && netlify-lambda serve ./netlify-functions",
     "test": "jest"
-  },
-  "dependencies": {
-    "jest-environment-node": "^24.7.1",
-    "mongodb-memory-server": "^5.0.4"
   },
   "jest": {
     "globalSetup": "./tests/setup.js",

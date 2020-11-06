@@ -128,7 +128,11 @@
           "201": {
             "description": "Comment created",
             "content": {
-              "$ref": "#/components/schemas/Comment"
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Comment"
+                }
+              }
             }
           },
           "400": {
@@ -202,7 +206,14 @@
       "delete": {
         "responses": {
           "202": {
-            "description": "Discussion {discussionId} deleted"
+            "description": "Discussion {discussionId} deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Success"
+                }
+              }
+            }
           },
           "401": {
             "description": "User is not authenticated",
@@ -229,9 +240,20 @@
           {
             "BearerAuth": []
           }
-        ]
+        ],
+        "summary": "Delete a discussion"
       },
-      "summary": "Delete a discussion"
+      "parameters": [
+        {
+          "name": "discussionId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "byte"
+          }
+        }
+      ]
     },
     "/discussion/{discussionId}/{commentId}": {
       "get": {
@@ -288,7 +310,14 @@
       "put": {
         "responses": {
           "204": {
-            "description": "Comment {commentId} updated"
+            "description": "Comment {commentId} updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Comment"
+                }
+              }
+            }
           },
           "401": {
             "description": "User is not authenticated",
@@ -319,7 +348,7 @@
                 }
               }
             }
-          },
+          }
         },
         "security": [
           {
@@ -331,7 +360,14 @@
       "delete": {
         "responses": {
           "202": {
-            "description": "Comment deleted"
+            "description": "Comment deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Success"
+                }
+              }
+            }
           },
           "401": {
             "description": "User is not authenticated",
@@ -362,7 +398,7 @@
                 }
               }
             }
-          },
+          }
         },
         "security": [
           {
@@ -371,6 +407,26 @@
         ],
         "summary": "Delete a specific comment"
       },
+      "parameters": [
+        {
+          "name": "discussionId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "byte"
+          }
+        },
+        {
+          "name": "commentId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "byte"
+          }
+        }
+      ]
     },
     "/user": {
       "get": {
@@ -407,7 +463,7 @@
                 }
               }
             }
-          },
+          }
         },
         "security": [
           {},
@@ -420,7 +476,14 @@
       "post": {
         "responses": {
           "201": {
-            "description": "User created"
+            "description": "User created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
           },
           "400": {
             "description": "Request format not understood",
@@ -461,7 +524,7 @@
                 }
               }
             }
-          },
+          }
         },
         "security": [
           {
@@ -477,7 +540,11 @@
           "200": {
             "description": "View user {userId}",
             "content": {
-              "$ref": "#/components/schemas/User"
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
             }
           },
           "401": {
@@ -522,7 +589,14 @@
       "put": {
         "responses": {
           "204": {
-            "description": "User {userId} updated"
+            "description": "User {userId} updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Success"
+                }
+              }
+            }
           },
           "401": {
             "description": "User is not authenticated",
@@ -553,7 +627,7 @@
                 }
               }
             }
-          },
+          }
         },
         "security": [
           {
@@ -565,7 +639,14 @@
       "delete": {
         "responses": {
           "202": {
-            "description": "User deleted"
+            "description": "User deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Success"
+                }
+              }
+            }
           },
           "401": {
             "description": "User is not authenticated",
@@ -596,7 +677,7 @@
                 }
               }
             }
-          },
+          }
         },
         "security": [
           {
@@ -604,7 +685,18 @@
           }
         ],
         "summary": "Delete a user"
-      }
+      },
+      "parameters": [
+        {
+          "name": "userId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "byte"
+          }
+        }
+      ]
     },
     "/auth": {
       "summary": "Handle user authentication",
@@ -688,6 +780,23 @@
       }
     },
     "schemas": {
+      "Success": {
+        "type": "object",
+        "required": [
+          "message",
+          "code"
+        ],
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "code": {
+            "type": "integer",
+            "minimum": 200,
+            "maximum": 299
+          }
+        }
+      },
       "Error": {
         "type": "object",
         "required": [
@@ -722,6 +831,12 @@
           },
           "text": {
             "type": "string"
+          },
+          "edits": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Comment"
+            }
           },
           "parentComment": {
             "type": "string",
