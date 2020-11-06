@@ -14,16 +14,15 @@ export default {
   coverageProvider: "v8",
 
   // A preset that is used as a base for Jest's configuration
-  preset: 'ts-jest',
+  preset: './jest.preset.ts',
 
   // The test environment that will be used for testing
-  testEnvironment: "node",
+  // testEnvironment: "node",
 
   // An array of regexp pattern strings that are matched against all test paths, matched tests are skipped
   testPathIgnorePatterns: [
     "\\\\node_modules\\\\",
-    "RAW",
-    "mongo-db-tests"
+    "RAW"
   ],
 
   // All imported modules in your tests should be mocked automatically

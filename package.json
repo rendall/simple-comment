@@ -4,6 +4,7 @@
     "@babel/core": "^7.12.3",
     "@babel/preset-env": "^7.12.1",
     "@babel/preset-typescript": "^7.12.1",
+    "@shelf/jest-mongodb": "^1.2.3",
     "@types/aws-lambda": "^8.10.64",
     "@types/jest": "^26.0.15",
     "@types/mongodb": "^3.1.23",
@@ -12,8 +13,9 @@
     "eslint": "^5.16.0",
     "jest": "^26.6.3",
     "jest-environment-node": "^24.7.1",
+    "merge": "^1.2.1",
     "mongodb": "^3.2.3",
-    "mongodb-memory-server": "^5.0.4",
+    "mongodb-memory-server": "^6.9.2",
     "netlify-lambda": "^2.0.1",
     "rimraf": "^3.0.2",
     "ts-jest": "^26.4.3",
@@ -30,6 +32,7 @@
     "postbuild": "rimraf ./netlify-functions && rimraf ./lib",
     "prebuild": "rimraf ./functions",
     "start": "build:ts && netlify-lambda serve ./netlify-functions",
-    "test": "jest"
+    "test": "jest",
+    "posttest": "rimraf ./globalConfig.json"
   }
 }
