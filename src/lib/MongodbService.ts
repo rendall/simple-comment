@@ -196,8 +196,5 @@ export class MongodbService extends Service {
 
   destroy = async () => {
     await this.getClient().then(client => client.close())
-    await this.getClient().then(db => db.close())
-    await db.close();
   }
-  test('
 }
