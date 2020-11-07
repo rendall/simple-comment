@@ -1,18 +1,27 @@
 import type { AuthToken, Comment, CommentId, Discussion, DiscussionId, Error, Success, User, UserId } from "./simple-comment";
 import { MongodbService } from "./MongodbService";
 import { Db, MongoClient } from "mongodb";
-import { user401, user404 } from "./errors";
+import { user401, user404, userExists400 } from "./messages";
 import { getAuthToken, hashPassword } from "./crypt";
 
 declare const global: any
 
 const adminUser: Partial<User> = {
-  id: "admin",
-  verified: true,
-  avatar: "some-url",
+  id: "admin", verified: true, avatar: "some-url",
   email: "admin@simple-comment",
   isAdmin: true,
   name: "Simple Comment Admin",
+}
+
+const userInputAlpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÅ abcdefghijklmnopqrstuvwxyzäöå 1234567890 !@#$%^&*()_+-= "
+const asciiAlpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890_-"
+
+const randomString = (alpha: string = asciiAlpha, len: number = 10, str: string = "") => len === 0 ? str : randomString(alpha, len - 1, `${str}${alpha.charAt(Math.floor(Math.random() * alpha.length))}`)
+
+const newUser: Partial<User> = {
+  id: randomString(),
+  email: randomString(userInputAlpha),
+  name: randomString(userInputAlpha)
 }
 
 const adminUserPassword = "LZI6uw1ZZRXrCqjAKc9s"
@@ -47,7 +56,7 @@ describe('Full API service test', () => {
   });
   // post to auth with incorrect credentials should return error 401
   test('POST to auth with incorrect password', () => {
-    return service.authPOST(adminUser.id, "password").catch(e => expect(e).toEqual(user401))
+    return service.authPOST(adminUser.id, randomString(userInputAlpha, 40)).catch(e => expect(e).toEqual(user401))
   });
   // post to auth with correct credentials should return authtoken
   test('POST to auth with correct credentials', () => {
@@ -55,14 +64,20 @@ describe('Full API service test', () => {
     // this will occassionally fail when the getAuthToken expiration is +- 1 second difference
     return service.authPOST(adminUser.id, adminUserPassword).then((value: AuthToken) => expect(value).toEqual(authToken))
   });
-  // post to /user with identical credentials should return 425 Possible duplicate user
-  test('POST to /user with identical credentials', () => { })
   // post to /user too quickly should return 425 too early
-  test('POST to /user too quickly', () => { })
+  // test('POST to /user too quickly', () => { })
   // post to /user with improper credentials and admin-only-create-user policy should return 401
-  test('POST to /user with improper credentials and admin-only-create-user policy', () => { })
+  // test('POST to /user with improper credentials and admin-only-create-user policy', () => { })
   // post to /user should return user and 201 User created
-  test('POST to /user', () => { })
+  test('POST to /user', () => {
+    const newUserPassword = randomString(userInputAlpha, Math.floor(Math.random() * 30) + 10)
+    return service.userPOST(newUser as User, newUserPassword).then(value => expect(value).toHaveProperty("code", 201))
+  })
+  // post to /user with identical credentials should return 425 Possible duplicate user
+  test('POST to /user with identical credentials', () => {
+    const newUserPassword = randomString(userInputAlpha, Math.floor(Math.random() * 30) + 10)
+    return service.userPOST(newUser as User, newUserPassword).then(x => expect(true).toBe(false)).catch(value => expect(value).toBe(userExists400))
+  })
 
   // get to /user with no credentials and public-can-view-users set to false should return 401
   test('GET to /user with no credentials and public-can-view-users set to false', () => { })
@@ -80,7 +95,7 @@ describe('Full API service test', () => {
   // delete to /user/{userId} with hardcoded admin userId should return 403
   test('DELETE to /user/{userId} with hardcoded admin userId', () => { })
   // delete to /user/{userId} should delete user and return 202 User deleted
-  test('DELETE to /user/{userId} should', () => { })
+  test('DELETE to /user/{userId} with userId', () => { })
 
   // put to /user/{userId} with no credentials should return 401
   test('PUT to /user/{userId} with no credentials', () => { })
@@ -156,13 +171,17 @@ describe('Full API service test', () => {
   // get to /discussion should return a list of discussions and 200 OK
   test('GET to /discussion', () => { })
 
+  // post to /discussion with no credentials should return 401
+  test('POST to /discussion with no credentials', () => { })
   // post to /discussion with no credentials and public-can-create-discussion false policy should return 401
-  test('POST to /discussion with no credentials and public-can-create-discussion false policy', () => { })
+  // test('POST to /discussion with no credentials and public-can-create-discussion false policy', () => { })
+  // post to /discussion with improper credentials should return 403
+  test('POST to /discussion with improper credentials', () => { })
   // post to /discussion with improper credentials and user-can-create-discussion false policy should return 403
-  test('POST to /discussion with improper credentials and user-can-create-discussion false policy', () => { })
+  // test('POST to /discussion with improper credentials and user-can-create-discussion false policy', () => { })
   // post to /discussion too often should return 429 Too much discussion
   test('POST to /discussion too often', () => { })
-  // post to /discussion with identical information should return 425 Discussion already exists
+  // post to /discussion with identical information should return 400 Discussion already exists
   test('POST to /discussion with identical information', () => { })
   // post to /discussion should return Discussion object and 201 Discussion created
   test('POST to /discussion', () => { })

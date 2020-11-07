@@ -120,7 +120,7 @@ export abstract class Service {
    * User created
    * returns User
    **/
-  abstract userPOST = () => new Promise<User | Error>((resolve, reject) => {
+  abstract userPOST = (newUser: User, newPassword: string) => new Promise<User | Error>((resolve, reject) => {
     reject(this.abstractError)
   });
 

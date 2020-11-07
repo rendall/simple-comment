@@ -1,8 +1,8 @@
 import type { AuthToken, Comment, CommentId, Discussion, DiscussionId, Error, Success, User, UserId } from "./simple-comment";
 import { Service } from "./Service";
-import { Db, MongoClient } from "mongodb";
-import { comparePassword, getAuthToken } from "./crypt";
-import { user401, user404 } from "./errors";
+import { Collection, Db, InsertOneWriteOpResult, MongoClient, WithId } from "mongodb";
+import { comparePassword, getAuthToken, hashPassword } from "./crypt";
+import { user201, user401, user404, userExists400 } from "./messages";
 
 export class MongodbService extends Service {
 
@@ -169,8 +169,21 @@ export class MongodbService extends Service {
    * User created
    * returns User
    **/
-  userPOST = () => new Promise<User | Error>((resolve, reject) => {
-    reject(this.genericError)
+  userPOST = (newUser: User, newUserPassword: string) => new Promise<User | Error>(async (resolve, reject) => {
+    const users: Collection<User> = (await this.getDb()).collection("users")
+
+    const oldUser = await users.findOne({ id: newUser.id })
+    if (oldUser) {
+      reject(userExists400)
+      return
+    }
+
+
+    const hash = await hashPassword(newUserPassword)
+    const user: User = { ...newUser, hash } as User
+    users.insertOne(user).then((result: InsertOneWriteOpResult<WithId<User>>) => {
+      resolve({ ...user201, message: `User '${user.id}' created` })
+    })
   });
 
 
