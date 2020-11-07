@@ -1,9 +1,36 @@
-import * as dotenv from "dotenv";
+import * as dotenv from "dotenv"
+import * as fs from "fs"
 dotenv.config()
 
-// making sure that .env is not the same strings as in example.env
-test('JWT_SECRET should be changed', () => { expect(process.env.JWT_SECRET).not.toBe('aXvEQ572fvOMvQQ36K2i2PE0bwEMg9qpqBWlnPhsa5OMF1vl9NyI3TxRH0DK') })
-test('ADMIN_PASSWORD should be changed', () => { expect(process.env.ADMIN_PASSWORD).not.toBe('fzBj6Xl5VWrVQbEWsDXQe6dw2K2216xwxkYUjdib') })
+let lines: string[]
 
-test('JWT_SECRET should exist', () => { expect(process.env.JWT_SECRET).toBeDefined()})
-test('ADMIN_PASSWORD should exist', () => { expect(process.env.ADMIN_PASSWORD).toBeDefined()})
+/**
+ * These tests ensure that secrets are handled properly
+ * There should be a file .env that contains simple-comment secrets
+ * such as ADMIN_PASSWORD and MONGO_DB_KEY
+ * 
+ * See example.env for an example 
+ * BUT! and this is important: do not use the same values
+ * as in example.env
+ **/
+
+describe("check each line", () => {
+  const exampleEnv = fs.readFileSync(`${process.cwd()}/example.env`, "utf8")
+  lines = exampleEnv.replace(/\r/g, "\n").replace(/\n{2}/g, "/n").split("\n")
+
+  test(".env exists", () => {
+    const envExists = fs.existsSync(`${process.cwd()}/.env`)
+    expect(envExists).toBe(true)
+  })
+
+  test("example.env has information", () => {
+    expect(lines.length).toBeGreaterThan(0)
+  })
+
+  lines.forEach(line => {
+    const [varName, varValue] = line.split("=")
+    test(`${varName} is defined as an environmental variable`, () => { expect(process.env[varName]).toBeDefined() })
+    test(`${varName} is not ${varValue}`, () => { expect(process.env[varName]).not.toBe(varValue) })
+  })
+})
+
