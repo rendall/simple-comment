@@ -145,12 +145,12 @@
         ]
       }
     },
-    "/discussion/{discussionId}": {
+    "/discussion/{commentId}": {
       "get": {
-        "summary": "View specific discussion",
+        "summary": "View specific comment and its descendants",
         "parameters": [
           {
-            "name": "discussionId",
+            "name": "commentId",
             "in": "path",
             "required": true,
             "style": "simple",
@@ -163,7 +163,7 @@
         ],
         "responses": {
           "200": {
-            "description": "List comments for {discussionId}",
+            "description": "List comments for {commentId}",
             "content": {
               "application/json": {
                 "schema": {
@@ -183,7 +183,7 @@
             }
           },
           "403": {
-            "description": "User is not authorized to view discussion {discussionId}",
+            "description": "User is not authorized to view discussion {commentId}",
             "content": {
               "application/json": {
                 "schema": {
@@ -193,7 +193,7 @@
             }
           },
           "404": {
-            "description": "{discussionId} is not found",
+            "description": "{commentId} is not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -211,10 +211,10 @@
         ]
       },
       "post": {
-        "summary": "Post a comment to specific discussion",
+        "summary": "Reply to comment {commentId}",
         "parameters": [
           {
-            "name": "discussionId",
+            "name": "commentId",
             "in": "path",
             "required": true,
             "style": "simple",
@@ -304,10 +304,10 @@
         ]
       },
       "delete": {
-        "summary": "Delete a discussion",
+        "summary": "Delete a comment",
         "parameters": [
           {
-            "name": "discussionId",
+            "name": "commentId",
             "in": "path",
             "required": true,
             "style": "simple",
@@ -320,7 +320,7 @@
         ],
         "responses": {
           "202": {
-            "description": "Discussion {discussionId} deleted",
+            "description": "Discussion {commentId} deleted",
             "content": {
               "application/json": {
                 "schema": {
@@ -341,231 +341,6 @@
           },
           "403": {
             "description": "User is not authorized to delete this comment",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ]
-      }
-    },
-    "/discussion/{discussionId}/{commentId}": {
-      "get": {
-        "summary": "View a specific comment",
-        "parameters": [
-          {
-            "name": "discussionId",
-            "in": "path",
-            "required": true,
-            "style": "simple",
-            "explode": false,
-            "schema": {
-              "type": "string",
-              "format": "byte"
-            }
-          },
-          {
-            "name": "commentId",
-            "in": "path",
-            "required": true,
-            "style": "simple",
-            "explode": false,
-            "schema": {
-              "type": "string",
-              "format": "byte"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "View comment {commentId}",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Comment"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "User is not authenticated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "User is not authorized to view this comment",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Comment {commentId} not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {},
-          {
-            "BearerAuth": []
-          }
-        ]
-      },
-      "put": {
-        "summary": "Edit a specific comment",
-        "parameters": [
-          {
-            "name": "discussionId",
-            "in": "path",
-            "required": true,
-            "style": "simple",
-            "explode": false,
-            "schema": {
-              "type": "string",
-              "format": "byte"
-            }
-          },
-          {
-            "name": "commentId",
-            "in": "path",
-            "required": true,
-            "style": "simple",
-            "explode": false,
-            "schema": {
-              "type": "string",
-              "format": "byte"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Comment {commentId} updated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Comment"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "User is not authenticated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "User is not authorized to update this comment",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Comment {commentId} not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ]
-      },
-      "delete": {
-        "summary": "Delete a specific comment",
-        "parameters": [
-          {
-            "name": "discussionId",
-            "in": "path",
-            "required": true,
-            "style": "simple",
-            "explode": false,
-            "schema": {
-              "type": "string",
-              "format": "byte"
-            }
-          },
-          {
-            "name": "commentId",
-            "in": "path",
-            "required": true,
-            "style": "simple",
-            "explode": false,
-            "schema": {
-              "type": "string",
-              "format": "byte"
-            }
-          }
-        ],
-        "responses": {
-          "202": {
-            "description": "Comment deleted",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Success"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "User is not authenticated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "User is not authorized to delete this comment",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Comment {commentId} not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -1077,17 +852,6 @@
       },
       "commentId": {
         "name": "commentId",
-        "in": "path",
-        "required": true,
-        "style": "simple",
-        "explode": false,
-        "schema": {
-          "type": "string",
-          "format": "byte"
-        }
-      },
-      "discussionId": {
-        "name": "discussionId",
         "in": "path",
         "required": true,
         "style": "simple",
