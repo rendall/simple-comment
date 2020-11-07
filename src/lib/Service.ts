@@ -55,7 +55,16 @@ export abstract class Service {
     reject(this.abstractError)
   });
 
-
+  /**
+   * Create a discussion
+   * 
+   * discussionId
+   * authUserId
+   * returns Success 201
+   **/
+  abstract discussionPOST = (discussionId: DiscussionId, authUserId: UserId) => new Promise<Discussion | Error>((resolve, reject) => {
+    reject(this.abstractError)
+  });
 
   /**
    * Delete a discussion

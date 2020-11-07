@@ -979,7 +979,7 @@
       "Comment": {
         "required": [
           "dateCreated",
-          "discussion",
+          "parentComment",
           "id",
           "text",
           "user"
@@ -987,10 +987,6 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "string",
-            "format": "byte"
-          },
-          "discussion": {
             "type": "string",
             "format": "byte"
           },
@@ -1063,12 +1059,6 @@
           },
           "isLocked": {
             "type": "boolean"
-          },
-          "comments": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Comment"
-            }
           }
         }
       }

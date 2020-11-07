@@ -19,3 +19,18 @@ export const userExists400: Error = {
   code: 400,
   message: "UserId exists"
 }
+
+export const userNotAuthenticated401: Error = {
+  code: 401,
+  message: "User not authenticated"
+}
+
+export const userNotAuthorized403: Error = {
+  code: 403,
+  message: "User not authorized"
+}
+
+export const discussionExists400: Error = {
+  code: 400,
+  message: "Discussion already exists"
+}

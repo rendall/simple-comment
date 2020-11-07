@@ -38,7 +38,6 @@ export interface User {
 }
 
 export interface Discussion {
-  id:DiscussionId,
+  id:CommentId,
   isLocked: boolean,
-  comments: Comment[]
 }

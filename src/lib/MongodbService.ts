@@ -2,7 +2,7 @@ import type { AuthToken, Comment, CommentId, Discussion, DiscussionId, Error, Su
 import { Service } from "./Service";
 import { Collection, Db, InsertOneWriteOpResult, MongoClient, WithId } from "mongodb";
 import { comparePassword, getAuthToken, hashPassword } from "./crypt";
-import { user201, user401, user404, userExists400 } from "./messages";
+import { discussionExists400, user201, user401, user404, userExists400, userNotAuthenticated401, userNotAuthorized403 } from "./messages";
 
 export class MongodbService extends Service {
 
@@ -104,7 +104,45 @@ export class MongodbService extends Service {
     reject(this.genericError)
   });
 
+  /**
+   * Create a discussion
+   * 
+   * Discussion
+   * 
+   * discussionId
+   * authUserId
+   * returns Success 201
+   **/
+  discussionPOST = (discussionId: DiscussionId, authUserId: UserId) => new Promise<Discussion | Error>(async (resolve, reject) => {
+    const users: Collection<User> = (await this.getDb()).collection("users")
+    const authUser = await users.findOne({ id: authUserId })
+    if (!authUser) {
+      reject(userNotAuthenticated401)
+      return
+    }
 
+    if (!authUser.isAdmin) {
+      reject(userNotAuthorized403)
+      return
+    }
+
+    const discussions: Collection<Discussion> = (await this.getDb()).collection("discussions")
+
+    const oldDiscussion = await discussions.findOne({id:discussionId})
+    if (oldDiscussion) {
+      reject(discussionExists400)
+      return
+    }
+
+    discussions.insertOne({ id: discussionId, isLocked: false }).then((response: InsertOneWriteOpResult<WithId<Discussion>>) => {
+      const insertedDiscussion:Discussion = response.ops.find( d => d._id === response.insertedId)
+      if (insertedDiscussion.id !== discussionId) reject({code:500, message:"Database insertion error"})
+      else resolve({ code: 201, message: `Discssion '${discussionId}' created` })
+    }).catch(e => {
+      console.error(e)
+      reject({ code: 500, message: "Server error" })
+    })
+  });
 
   /**
    * Delete a discussion
@@ -171,7 +209,6 @@ export class MongodbService extends Service {
    **/
   userPOST = (newUser: User, newUserPassword: string) => new Promise<User | Error>(async (resolve, reject) => {
     const users: Collection<User> = (await this.getDb()).collection("users")
-
     const oldUser = await users.findOne({ id: newUser.id })
     if (oldUser) {
       reject(userExists400)
