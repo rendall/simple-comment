@@ -16,23 +16,64 @@ export abstract class Service {
     reject(this.abstractError)
   });
 
-
-
   /**
-   * Delete a specific comment
-   *
-   * discussionId byte[] 
-   * commentId byte[] 
-   * returns Success
+   * Create user
+   * returns Success | Error
    **/
-  abstract commentDELETE = (discussionId: DiscussionId, commentId: CommentId, authUser: UserId) => new Promise<Success | Error>((resolve, reject) => {
+  abstract userPOST = (newUser: User, newPassword: string) => new Promise<User | Error>((resolve, reject) => {
     reject(this.abstractError)
   });
 
-
+  /**
+   * Read user
+   *
+   * userId byte[] 
+   * returns User
+   **/
+  abstract userGET = (userId: UserId, authUser?: UserId) => new Promise<User | Error>((resolve, reject) => {
+    reject(this.abstractError)
+  });
+  /**
+   * Read all users
+   *
+   * returns List
+   **/
+  abstract userListGET = (authUser?: UserId) => new Promise<User[] | Error>((resolve, reject) => {
+    reject(this.abstractError)
+  });
 
   /**
-   * View a specific comment
+   * Update user
+   *
+   * userId byte[] 
+   * returns Success
+   **/
+  abstract userPUT = (user: Partial<User>, authUser: UserId) => new Promise<Success | Error>((resolve, reject) => {
+    reject(this.abstractError)
+  });
+
+  /**
+   * Delete user
+   *
+   * userId byte[] 
+   * returns Success
+   **/
+  abstract userDELETE = (userId: UserId, authUser: UserId) => new Promise<Success | Error>((resolve, reject) => {
+    reject(this.abstractError)
+  });
+
+  /**
+   * Create a comment
+   *
+   * discussionId byte[] 
+   * returns Comment
+   **/
+  abstract commentPOST = (parentId: (DiscussionId | CommentId), comment: Partial<Comment>, authUser?: UserId) => new Promise<Comment | Error>((resolve, reject) => {
+    reject(this.abstractError)
+  });
+
+  /**
+   * Read a comment
    *
    * discussionId byte[] 
    * commentId byte[] 
@@ -42,16 +83,25 @@ export abstract class Service {
     reject(this.abstractError)
   });
 
-
-
   /**
-   * Edit a specific comment
+   * Update a specific comment
    *
    * discussionId byte[] 
    * commentId byte[] 
    * returns Comment
    **/
   abstract commentPUT = (discussionId: DiscussionId, commentId: CommentId, authUser: UserId) => new Promise<Comment | Error>((resolve, reject) => {
+    reject(this.abstractError)
+  });
+
+  /**
+   * Delete a specific comment
+   *
+   * discussionId byte[] 
+   * commentId byte[] 
+   * returns Success
+   **/
+  abstract commentDELETE = (discussionId: DiscussionId, commentId: CommentId, authUser: UserId) => new Promise<Success | Error>((resolve, reject) => {
     reject(this.abstractError)
   });
 
@@ -67,19 +117,7 @@ export abstract class Service {
   });
 
   /**
-   * Delete a discussion
-   *
-   * discussionId byte[] 
-   * returns Success
-   **/
-  abstract discussionDELETE = (discussionId: DiscussionId, authUser: UserId) => new Promise<Success | Error>((resolve, reject) => {
-    reject(this.abstractError)
-  });
-
-
-
-  /**
-   * View specific discussion
+   * Read specific discussion
    *
    * discussionId byte[] 
    * returns Discussion
@@ -88,23 +126,9 @@ export abstract class Service {
     reject(this.abstractError)
   });
 
-
-
   /**
-   * Post a comment to specific discussion
-   *
-   * discussionId byte[] 
-   * returns Comment
-   **/
-  abstract commentPOST = (discussionId: DiscussionId, parentComment: (CommentId | null), authUser: UserId) => new Promise<Comment | Error>((resolve, reject) => {
-    reject(this.abstractError)
-  });
-
-
-
-  /**
+   * Read a list of all discussions
    * Discussion discovery
-   * Receive a listing of all discussions
    *
    * returns List
    **/
@@ -112,58 +136,17 @@ export abstract class Service {
     reject(this.abstractError)
   });
 
-
-
-  /**
-   * List all users
-   *
-   * returns List
-   **/
-  abstract userListGET = (authUser?: UserId) => new Promise<User[] | Error>((resolve, reject) => {
+  discussionPUT = (discussion: Discussion, authUser: UserId) => new Promise<Success | Error>((resolve, reject) => {
     reject(this.abstractError)
   });
 
-
-
   /**
-   * User created
-   * returns User
-   **/
-  abstract userPOST = (newUser: User, newPassword: string) => new Promise<User | Error>((resolve, reject) => {
-    reject(this.abstractError)
-  });
-
-
-
-  /**
-   * Delete a user
+   * Delete a discussion
    *
-   * userId byte[] 
+   * discussionId byte[] 
    * returns Success
    **/
-  abstract userDELETE = (userId: UserId, authUser: UserId) => new Promise<Success | Error>((resolve, reject) => {
-    reject(this.abstractError)
-  });
-
-
-
-  /**
-   * View user
-   *
-   * userId byte[] 
-   * returns User
-   **/
-  abstract userGET = (userId: UserId, authUser?: UserId) => new Promise<User | Error>((resolve, reject) => {
-    reject(this.abstractError)
-  });
-
-  /**
-   * Edit a user
-   *
-   * userId byte[] 
-   * returns Success
-   **/
-  abstract userPUT = (userId: UserId, authUser: UserId) => new Promise<Success | Error>((resolve, reject) => {
+  abstract discussionDELETE = (discussionId: DiscussionId, authUser: UserId) => new Promise<Success | Error>((resolve, reject) => {
     reject(this.abstractError)
   });
 

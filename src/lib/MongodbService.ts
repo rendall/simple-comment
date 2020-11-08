@@ -1,8 +1,8 @@
-import type { AuthToken, Comment, CommentId, Discussion, DiscussionId, Error, Success, User, UserId } from "./simple-comment";
+import type { AuthToken, Comment, CommentId, Discussion, DiscussionId, Error, NewComment, Success, User, UserId } from "./simple-comment";
 import { Service } from "./Service";
 import { Collection, Db, InsertOneWriteOpResult, MongoClient, WithId } from "mongodb";
 import { comparePassword, getAuthToken, hashPassword } from "./crypt";
-import { discussionExists400, user201, user401, user404, userExists400, userNotAuthenticated401, userNotAuthorized403 } from "./messages";
+import { comment404, discussionExists400, user201, user401, user404, userExists400, userNotAuthenticated401, userNotAuthorized403 } from "./messages";
 
 export class MongodbService extends Service {
 
@@ -13,7 +13,6 @@ export class MongodbService extends Service {
 
   readonly connectionString: string
   readonly dbName: string
-
   private _client: MongoClient
   private _db: Db
 
@@ -65,23 +64,99 @@ export class MongodbService extends Service {
       })
   );
 
-
+  /**
+   * User created
+   * returns User
+   **/
+  userPOST = (newUser: User, newUserPassword: string) => new Promise<User | Error>(async (resolve, reject) => {
+    const users: Collection<User> = (await this.getDb()).collection("users")
+    const oldUser = await users.findOne({ id: newUser.id })
+    if (oldUser) {
+      reject(userExists400)
+      return
+    }
+    const hash = await hashPassword(newUserPassword)
+    const user: User = { ...newUser, hash } as User
+    users.insertOne(user).then((result: InsertOneWriteOpResult<WithId<User>>) => {
+      resolve({ ...user201, message: `User '${user.id}' created` })
+    })
+  });
 
   /**
-   * Delete a specific comment
+   * Read user
    *
-   * discussionId byte[] 
-   * commentId byte[] 
-   * returns Success
+   * userId byte[] 
+   * returns User
    **/
-  commentDELETE = (discussionId: DiscussionId, commentId: CommentId, authUser: UserId) => new Promise<Success | Error>((resolve, reject) => {
+  userGET = (userId?: UserId, authUser?: UserId) => new Promise<User | Error>((resolve, reject) => {
     reject(this.genericError)
   });
 
-
+  /**
+   * List users
+   *
+   * returns List
+   **/
+  userListGET = (authUser?: UserId) => new Promise<User[] | Error>((resolve, reject) => {
+    reject(this.genericError)
+  });
 
   /**
-   * View a specific comment
+   * Update a user
+   *
+   * userId byte[] 
+   * returns Success
+   **/
+  userPUT = (user: Partial<User>, authUser?: UserId) => new Promise<Success | Error>((resolve, reject) => {
+    reject(this.genericError)
+  });
+
+  /**
+   * Delete a user
+   *
+   * userId byte[] 
+   * returns Success
+   **/
+  userDELETE = (userId: UserId, authUser?: UserId) => new Promise<Success | Error>((resolve, reject) => {
+    reject(this.genericError)
+  });
+
+  /**
+   * Create a comment
+   *
+   * parentId byte[] 
+   * returns Comment
+   **/
+  commentPOST = (parentId: (DiscussionId | CommentId), comment: Pick<Comment, "text" | "user">, authUserId?: UserId) => new Promise<Success | Error>(async (resolve, reject) => {
+    if (!authUserId) {
+      reject(userNotAuthenticated401)
+      return
+    }
+    const users: Collection<User> = (await this.getDb()).collection("users")
+    const authUser = await users.findOne({ id: authUserId })
+    if (!authUser) {
+      reject(userNotAuthenticated401)
+      return
+    }
+    const comments: Collection<Comment | NewComment | Discussion> = (await this.getDb()).collection("comments")
+    const parent = await comments.findOne({ id: parentId })
+    if (!parent) {
+      reject({ ...comment404, message: `parentId '${parentId}' not found` })
+      return
+    }
+    const insertComment: NewComment = { ...comment, dateCreated: new Date(), parentId } as NewComment
+    comments.insertOne(insertComment).then((response: InsertOneWriteOpResult<WithId<Comment>>) => {
+      const insertedComment: Comment = response.ops.find(x => true)
+      if (insertComment.parentId !== parentId) reject({ code: 500, message: "Database insertion error" })
+      else resolve({ code: 201, message: `Comment '${insertComment.id}' created`, body: insertedComment })
+    }).catch(e => {
+      console.error(e)
+      reject({ code: 500, message: "Server error" })
+    })
+  })
+
+  /**
+   * Read a comment
    *
    * discussionId byte[] 
    * commentId byte[] 
@@ -91,16 +166,25 @@ export class MongodbService extends Service {
     reject(this.genericError)
   });
 
-
-
   /**
-   * Edit a specific comment
+   * Update a comment
    *
    * discussionId byte[] 
    * commentId byte[] 
    * returns Comment
    **/
   commentPUT = (discussionId: DiscussionId, commentId: CommentId, authUser: UserId) => new Promise<Comment | Error>((resolve, reject) => {
+    reject(this.genericError)
+  });
+
+  /**
+   * Delete a comment
+   *
+   * discussionId byte[] 
+   * commentId byte[] 
+   * returns Success
+   **/
+  commentDELETE = (commentId: CommentId, authUser?: UserId) => new Promise<Success | Error>((resolve, reject) => {
     reject(this.genericError)
   });
 
@@ -113,35 +197,65 @@ export class MongodbService extends Service {
    * authUserId
    * returns Success 201
    **/
-  discussionPOST = (discussionId: DiscussionId, authUserId: UserId) => new Promise<Discussion | Error>(async (resolve, reject) => {
+  discussionPOST = (discussionId: DiscussionId, authUserId?: UserId) => new Promise<Discussion | Error>(async (resolve, reject) => {
+    if (!authUserId) {
+      reject(userNotAuthenticated401)
+      return
+    }
     const users: Collection<User> = (await this.getDb()).collection("users")
     const authUser = await users.findOne({ id: authUserId })
     if (!authUser) {
       reject(userNotAuthenticated401)
       return
     }
-
     if (!authUser.isAdmin) {
       reject(userNotAuthorized403)
       return
     }
-
     const discussions: Collection<Discussion> = (await this.getDb()).collection("discussions")
-
-    const oldDiscussion = await discussions.findOne({id:discussionId})
+    const oldDiscussion = await discussions.findOne({ id: discussionId })
     if (oldDiscussion) {
       reject(discussionExists400)
       return
     }
-
     discussions.insertOne({ id: discussionId, isLocked: false }).then((response: InsertOneWriteOpResult<WithId<Discussion>>) => {
-      const insertedDiscussion:Discussion = response.ops.find( d => d._id === response.insertedId)
-      if (insertedDiscussion.id !== discussionId) reject({code:500, message:"Database insertion error"})
+      const insertedDiscussion: Discussion = response.ops.find(x => true)
+      if (insertedDiscussion.id !== discussionId) reject({ code: 500, message: "Database insertion error" })
       else resolve({ code: 201, message: `Discssion '${discussionId}' created` })
     }).catch(e => {
       console.error(e)
       reject({ code: 500, message: "Server error" })
     })
+  });
+
+  /**
+   * Read a discussion
+   *
+   * discussionId byte[] 
+   * returns Discussion
+   **/
+  discussionGET = (discussionId: DiscussionId, authUser?: UserId) => new Promise<Discussion | Error>((resolve, reject) => {
+    reject(this.genericError)
+  });
+
+  /**
+   * Read the list of discussions
+   * Discussion discovery
+   *
+   * returns List
+   **/
+  discussionListGET = (authUser?: UserId) => new Promise<Discussion[] | Error>((resolve, reject) => {
+    reject(this.genericError)
+  });
+
+  /**
+   * Update a discussion (lock it)
+   *
+   * discussionId byte[] 
+   * returns Success
+   **/
+  discussionPUT = (discussion: Discussion, authUser: UserId) => new Promise<Success | Error>((resolve, reject) => {
+    reject(this.genericError)
   });
 
   /**
@@ -151,111 +265,6 @@ export class MongodbService extends Service {
    * returns Success
    **/
   discussionDELETE = (discussionId: DiscussionId, authUser: UserId) => new Promise<Success | Error>((resolve, reject) => {
-    reject(this.genericError)
-  });
-
-
-
-  /**
-   * View specific discussion
-   *
-   * discussionId byte[] 
-   * returns Discussion
-   **/
-  discussionGET = (discussionId: DiscussionId, authUser?: UserId) => new Promise<Discussion | Error>((resolve, reject) => {
-    reject(this.genericError)
-  });
-
-
-
-  /**
-   * Post a comment to specific discussion
-   *
-   * discussionId byte[] 
-   * returns Comment
-   **/
-  commentPOST = (discussionId: DiscussionId, parentComment: (CommentId | null), authUser: UserId) => new Promise<Comment | Error>((resolve, reject) => {
-    reject(this.genericError)
-  });
-
-
-
-  /**
-   * Discussion discovery
-   * Receive a listing of all discussions
-   *
-   * returns List
-   **/
-  discussionListGET = (authUser?: UserId) => new Promise<Discussion[] | Error>((resolve, reject) => {
-    reject(this.genericError)
-  });
-
-
-
-  /**
-   * List all users
-   *
-   * returns List
-   **/
-  userListGET = (authUser?: UserId) => new Promise<User[] | Error>((resolve, reject) => {
-    reject(this.genericError)
-  });
-
-
-
-  /**
-   * User created
-   * returns User
-   **/
-  userPOST = (newUser: User, newUserPassword: string) => new Promise<User | Error>(async (resolve, reject) => {
-    const users: Collection<User> = (await this.getDb()).collection("users")
-    const oldUser = await users.findOne({ id: newUser.id })
-    if (oldUser) {
-      reject(userExists400)
-      return
-    }
-
-
-    const hash = await hashPassword(newUserPassword)
-    const user: User = { ...newUser, hash } as User
-    users.insertOne(user).then((result: InsertOneWriteOpResult<WithId<User>>) => {
-      resolve({ ...user201, message: `User '${user.id}' created` })
-    })
-  });
-
-
-
-  /**
-   * Delete a user
-   *
-   * userId byte[] 
-   * returns Success
-   **/
-  userDELETE = (userId: UserId, authUser: UserId) => new Promise<Success | Error>((resolve, reject) => {
-    reject(this.genericError)
-  });
-
-
-
-  /**
-   * View user
-   *
-   * userId byte[] 
-   * returns User
-   **/
-  userGET = (userId: UserId, authUser?: UserId) => new Promise<User | Error>((resolve, reject) => {
-    reject(this.genericError)
-  });
-
-
-
-  /**
-   * Edit a user
-   *
-   * userId byte[] 
-   * returns Success
-   **/
-  userPUT = (userId: UserId, authUser: UserId) => new Promise<Success | Error>((resolve, reject) => {
     reject(this.genericError)
   });
 
