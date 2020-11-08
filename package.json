@@ -34,6 +34,7 @@
     "prebuild": "rimraf ./functions",
     "start": "build:ts && netlify-lambda serve ./netlify-functions",
     "test": "jest",
+    "test:watch": "jest --watch --noStackTrace",
     "posttest": "rimraf ./globalConfig.json"
   },
   "dependencies": {
