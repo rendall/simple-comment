@@ -8,7 +8,8 @@ export type UserId = string
 
 export interface Success {
   code: number,
-  message: string
+  message: string,
+  body?:(Comment | User | Discussion)
 }
 
 export interface Error {
@@ -16,28 +17,31 @@ export interface Error {
   message: string
 }
 
+export interface Discussion {
+  id: DiscussionId,
+  isLocked: boolean,
+  comments?: Comment[]
+}
+
 export interface Comment {
   id: CommentId,
-  discussion: DiscussionId,
-  user: UserId,
+  user: Pick<User, "email" | "name" | "id">,
   text: string,
-  parentComment?: CommentId,
-  edits?:Comment[],
-  dateCreated: Date,
-  dateModified: Date
+  parentId: (DiscussionId | CommentId ),
+  dateCreated: Date
 }
+
+type NewComment = Exclude<Comment, "id">
+type DeletedComment = Pick<Comment, "id" | "parentId">
 
 export interface User {
-  id:UserId,
-  verified:boolean,
-  email:Email,
-  name:string,
-  avatar:URL,
+  id: UserId,
+  verified: boolean,
+  email: Email,
+  name: string,
+  avatar?: URL,
   hash: string,
-  isAdmin:boolean
+  isAdmin: boolean
 }
 
-export interface Discussion {
-  id:CommentId,
-  isLocked: boolean,
-}
+
