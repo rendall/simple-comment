@@ -211,7 +211,7 @@
         ]
       },
       "post": {
-        "summary": "Reply to comment {commentId}",
+        "summary": "Reply to comment {commentId} or post root comment on discussion {discussionId}",
         "parameters": [
           {
             "name": "commentId",
@@ -708,9 +708,6 @@
           }
         ]
       }
-    },
-    "/admin": {
-      "summary": "Manage policy"
     }
   },
   "components": {
