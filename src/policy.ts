@@ -1,0 +1,1 @@
+export const maxCommentLengthChars = 5000
