@@ -6,10 +6,10 @@ export type Email = string
 export type URL = string
 export type UserId = string
 
-export interface Success {
+export interface Success<T = {}> {
   code: number,
   message: string,
-  body?:(Comment | User | Discussion)
+  body?:T
 }
 
 export interface Error {

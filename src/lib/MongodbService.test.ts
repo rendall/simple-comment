@@ -55,9 +55,9 @@ const adminUserPassword = randomString(asciiAlpha, randomNumber(10, 40))
 const mockGroupUsers = getRandomGroupUsers(100)
 
 const randomDate = () => new Date(randomNumber(0, 1604920277420))
-const getRandomTopic = ():Topic => ({ id: randomString(asciiAlpha, randomNumber(10, 40)), isLocked: false, title: randomString(userInputAlpha, randomNumber(25, 100)), dateCreated:randomDate() })
+const getRandomTopic = (): Topic => ({ id: randomString(asciiAlpha, randomNumber(10, 40)), isLocked: false, title: randomString(userInputAlpha, randomNumber(25, 100)), dateCreated: randomDate() })
 const getRandomListOfTopics = (num: number = randomNumber(2, 20), topics: Topic[] = []): Topic[] => num <= 0 ? topics : getRandomListOfTopics(num - 1, [...topics, getRandomTopic()])
-const mockTopics = getRandomListOfTopics()
+const mockTopics:Topic[] = getRandomListOfTopics()
 const mockCommentTree = getRandomCommentTree(5000, mockGroupUsers, mockTopics)
 const mockNewTopic = getRandomTopic()
 const mockNewComment: Comment = getRandomComment(mockNewTopic.id, mockNewUser)
@@ -209,7 +209,11 @@ describe('Full API service test', () => {
     const adminGroup = mockGroupUsers.filter(u => u.isAdmin)
     const userToDelete = mockGroupUsers.find(u => u.id !== adminUser.id)
     const adminAuthUser = adminGroup.find(u => u.id !== userToDelete.id)
-    return service.userDELETE(adminUser.id, adminAuthUser.id).then(res => expect(res).toBe(success202UserDeleted)).catch(e => expect(true).toBe(false))
+    return service.userDELETE(adminUser.id, adminAuthUser.id).then(res => {
+      expect(res).toBe(success202UserDeleted)
+      const users = db.collection("users")
+      expect(users).not.toContain(userToDelete)
+    })
   })
 
   // Comment Create 
@@ -355,15 +359,15 @@ describe('Full API service test', () => {
   // Topic Read
   // GET to /topic should return a list of topics and 200 OK
   test('GET to /topic', () => {
-    return service.topicListGET().then((res: Topic[]) => expect(res).toContainEqual(mockTopics))
+    return service.topicListGET().then((res: Success<Topic[]>) => expect(res.body).toContainEqual(mockTopics))
   })
   // GET to /topic/{topicId} should return a topic and descendent comments
   test('GET to /topic', () => {
     const targetTopicId = singleMockDiscussion[0].id
     return service.topicGET(targetTopicId).then(
-      (res: Discussion) => {
-        expect(res.id).toBe(targetTopicId)
-        expect(res.comments).toContainEqual(singleMockCommentTree)
+      (res: Success<Discussion>) => {
+        expect(res.body.id).toBe(targetTopicId)
+        expect(res.body.comments).toContainEqual(singleMockCommentTree)
       }
     )
   })
@@ -441,7 +445,7 @@ describe('Full API service test', () => {
       // none of these comments should be in the database
       const deletedComments = singleMockCommentTree
       const comments = db.collection<Comment | Discussion>('comments')
-      deletedComments.forEach( c => {
+      deletedComments.forEach(c => {
         expect(comments).not.toContain(c)
       })
     })

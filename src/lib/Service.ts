@@ -20,7 +20,7 @@ export abstract class Service {
    * Create user
    * returns Success | Error
    **/
-  abstract userPOST = (newUser: User, newPassword: string) => new Promise<User | Error>((resolve, reject) => {
+  abstract userPOST = (newUser: User, newPassword: string) => new Promise<Success<User> | Error>((resolve, reject) => {
     reject(this.abstractError)
   });
 
@@ -30,7 +30,7 @@ export abstract class Service {
    * userId byte[] 
    * returns User
    **/
-  abstract userGET = (userId: UserId, authUser?: UserId) => new Promise<User | Error>((resolve, reject) => {
+  abstract userGET = (userId: UserId, authUser?: UserId) => new Promise<Success<User> | Error>((resolve, reject) => {
     reject(this.abstractError)
   });
   /**
@@ -38,7 +38,7 @@ export abstract class Service {
    *
    * returns List
    **/
-  abstract userListGET = (authUser?: UserId) => new Promise<User[] | Error>((resolve, reject) => {
+  abstract userListGET = (authUser?: UserId) => new Promise<Success<User[]> | Error>((resolve, reject) => {
     reject(this.abstractError)
   });
 
@@ -48,7 +48,7 @@ export abstract class Service {
    * userId byte[] 
    * returns Success
    **/
-  abstract userPUT = (user: Partial<User>, authUser: UserId) => new Promise<Success | Error>((resolve, reject) => {
+  abstract userPUT = (user: Partial<User>, authUser: UserId) => new Promise<Success<User> | Error>((resolve, reject) => {
     reject(this.abstractError)
   });
 
@@ -68,7 +68,7 @@ export abstract class Service {
    * topicId byte[] or commentId byte[] 
    * returns Comment
    **/
-  abstract commentPOST = (parentId: (TopicId | CommentId), comment: Partial<Comment>, authUser?: UserId) => new Promise<Comment | Error>((resolve, reject) => {
+  abstract commentPOST = (parentId: (TopicId | CommentId), comment: Partial<Comment>, authUser?: UserId) => new Promise<Success<Comment> | Error>((resolve, reject) => {
     reject(this.abstractError)
   });
 
@@ -79,7 +79,7 @@ export abstract class Service {
    * commentId byte[] 
    * returns Comment
    **/
-  abstract commentGET = (topicId: TopicId, commentId: CommentId, authUser?: UserId) => new Promise<Comment | Error>((resolve, reject) => {
+  abstract commentGET = (topicId: TopicId, commentId: CommentId, authUser?: UserId) => new Promise<Success<Comment> | Error>((resolve, reject) => {
     reject(this.abstractError)
   });
 
@@ -90,7 +90,7 @@ export abstract class Service {
    * commentId byte[] 
    * returns Comment
    **/
-  abstract commentPUT = (comment:Comment, authUser?: UserId) => new Promise<Comment | Error>((resolve, reject) => {
+  abstract commentPUT = (comment:Comment, authUser?: UserId) => new Promise<Success<Comment> | Error>((resolve, reject) => {
     reject(this.abstractError)
   });
 
@@ -112,7 +112,7 @@ export abstract class Service {
    * authUserId
    * returns Success 201
    **/
-  abstract topicPOST = (topic:Topic, authUserId: UserId) => new Promise<Discussion | Error>((resolve, reject) => {
+  abstract topicPOST = (topic:Topic, authUserId: UserId) => new Promise<Success<Discussion> | Error>((resolve, reject) => {
     reject(this.abstractError)
   });
 
@@ -122,7 +122,7 @@ export abstract class Service {
    * topicId byte[] 
    * returns Discussion
    **/
-  abstract topicGET = (topicId: TopicId, authUser?: UserId) => new Promise<Discussion | Error>((resolve, reject) => {
+  abstract topicGET = (topicId: TopicId, authUser?: UserId) => new Promise<Success<Discussion> | Error>((resolve, reject) => {
     reject(this.abstractError)
   });
 
@@ -132,11 +132,11 @@ export abstract class Service {
    *
    * returns List
    **/
-  abstract topicListGET = (authUser?: UserId) => new Promise<Discussion[] | Error>((resolve, reject) => {
+  abstract topicListGET = (authUser?: UserId) => new Promise<Success<Discussion[]> | Error>((resolve, reject) => {
     reject(this.abstractError)
   });
 
-  abstract topicPUT = (topic: Topic, authUser: UserId) => new Promise<Success | Error>((resolve, reject) => {
+  abstract topicPUT = (topic: Topic, authUser: UserId) => new Promise<Success<Topic> | Error>((resolve, reject) => {
     reject(this.abstractError)
   });
 
