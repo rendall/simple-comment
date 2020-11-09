@@ -38,6 +38,7 @@
     "posttest": "rimraf ./globalConfig.json"
   },
   "dependencies": {
+    "@types/uuid": "^8.3.0",
     "bcrypt": "^5.0.0",
     "dotenv": "^8.2.0",
     "jsonwebtoken": "^8.5.1",

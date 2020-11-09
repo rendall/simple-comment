@@ -22,9 +22,10 @@ export interface Discussion {
   title: string,
   isLocked: boolean,
   comments?: Comment[]
+  dateCreated: Date
 }
 
-export type Topic = Pick<Discussion, "id" | "title" | "isLocked">
+export type Topic = Pick<Discussion, "id" | "title" | "isLocked" | "dateCreated">
 
 export interface Comment {
   id: CommentId,

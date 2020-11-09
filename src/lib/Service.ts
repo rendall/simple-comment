@@ -90,7 +90,7 @@ export abstract class Service {
    * commentId byte[] 
    * returns Comment
    **/
-  abstract commentPUT = (topicId: TopicId, commentId: CommentId, authUser: UserId) => new Promise<Comment | Error>((resolve, reject) => {
+  abstract commentPUT = (comment:Comment, authUser?: UserId) => new Promise<Comment | Error>((resolve, reject) => {
     reject(this.abstractError)
   });
 
@@ -136,7 +136,7 @@ export abstract class Service {
     reject(this.abstractError)
   });
 
-  abstract topicPUT = (topic: Pick<Discussion, "id" | "isLocked" | "title">, authUser: UserId) => new Promise<Success | Error>((resolve, reject) => {
+  abstract topicPUT = (topic: Topic, authUser: UserId) => new Promise<Success | Error>((resolve, reject) => {
     reject(this.abstractError)
   });
 
@@ -146,7 +146,7 @@ export abstract class Service {
    * topicId byte[] 
    * returns Success
    **/
-  abstract topicDELETE = (topicId: TopicId, authUser: UserId) => new Promise<Success | Error>((resolve, reject) => {
+  abstract topicDELETE = (topicId: TopicId, authUser?: UserId) => new Promise<Success | Error>((resolve, reject) => {
     reject(this.abstractError)
   });
 
