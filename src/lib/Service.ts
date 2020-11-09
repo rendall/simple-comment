@@ -1,4 +1,4 @@
-import type { AuthToken, Comment, CommentId, Discussion, DiscussionId, Error, Success, User, UserId } from "./simple-comment";
+import type { AuthToken, Comment, CommentId, Discussion, TopicId, Error, Success, User, UserId, Topic } from "./simple-comment";
 
 export abstract class Service {
 
@@ -65,64 +65,64 @@ export abstract class Service {
   /**
    * Create a comment
    *
-   * discussionId byte[] 
+   * topicId byte[] or commentId byte[] 
    * returns Comment
    **/
-  abstract commentPOST = (parentId: (DiscussionId | CommentId), comment: Partial<Comment>, authUser?: UserId) => new Promise<Comment | Error>((resolve, reject) => {
+  abstract commentPOST = (parentId: (TopicId | CommentId), comment: Partial<Comment>, authUser?: UserId) => new Promise<Comment | Error>((resolve, reject) => {
     reject(this.abstractError)
   });
 
   /**
    * Read a comment
    *
-   * discussionId byte[] 
+   * topicId byte[] 
    * commentId byte[] 
    * returns Comment
    **/
-  abstract commentGET = (discussionId: DiscussionId, commentId: CommentId, authUser?: UserId) => new Promise<Comment | Error>((resolve, reject) => {
+  abstract commentGET = (topicId: TopicId, commentId: CommentId, authUser?: UserId) => new Promise<Comment | Error>((resolve, reject) => {
     reject(this.abstractError)
   });
 
   /**
    * Update a specific comment
    *
-   * discussionId byte[] 
+   * topicId byte[] 
    * commentId byte[] 
    * returns Comment
    **/
-  abstract commentPUT = (discussionId: DiscussionId, commentId: CommentId, authUser: UserId) => new Promise<Comment | Error>((resolve, reject) => {
+  abstract commentPUT = (topicId: TopicId, commentId: CommentId, authUser: UserId) => new Promise<Comment | Error>((resolve, reject) => {
     reject(this.abstractError)
   });
 
   /**
    * Delete a specific comment
    *
-   * discussionId byte[] 
+   * topicId byte[] 
    * commentId byte[] 
    * returns Success
    **/
-  abstract commentDELETE = (discussionId: DiscussionId, commentId: CommentId, authUser: UserId) => new Promise<Success | Error>((resolve, reject) => {
+  abstract commentDELETE = (topicId: TopicId, commentId: CommentId, authUser: UserId) => new Promise<Success | Error>((resolve, reject) => {
     reject(this.abstractError)
   });
 
   /**
    * Create a discussion
    * 
-   * discussionId
+   * topicId
    * authUserId
    * returns Success 201
    **/
-  abstract discussionPOST = (discussionId: DiscussionId, authUserId: UserId) => new Promise<Discussion | Error>((resolve, reject) => {
+  abstract topicPOST = (topic:Topic, authUserId: UserId) => new Promise<Discussion | Error>((resolve, reject) => {
     reject(this.abstractError)
   });
 
   /**
    * Read specific discussion
    *
-   * discussionId byte[] 
+   * topicId byte[] 
    * returns Discussion
    **/
-  abstract discussionGET = (discussionId: DiscussionId, authUser?: UserId) => new Promise<Discussion | Error>((resolve, reject) => {
+  abstract topicGET = (topicId: TopicId, authUser?: UserId) => new Promise<Discussion | Error>((resolve, reject) => {
     reject(this.abstractError)
   });
 
@@ -132,21 +132,21 @@ export abstract class Service {
    *
    * returns List
    **/
-  abstract discussionListGET = (authUser?: UserId) => new Promise<Discussion[] | Error>((resolve, reject) => {
+  abstract topicListGET = (authUser?: UserId) => new Promise<Discussion[] | Error>((resolve, reject) => {
     reject(this.abstractError)
   });
 
-  discussionPUT = (discussion: Discussion, authUser: UserId) => new Promise<Success | Error>((resolve, reject) => {
+  abstract topicPUT = (topic: Pick<Discussion, "id" | "isLocked" | "title">, authUser: UserId) => new Promise<Success | Error>((resolve, reject) => {
     reject(this.abstractError)
   });
 
   /**
    * Delete a discussion
    *
-   * discussionId byte[] 
+   * topicId byte[] 
    * returns Success
    **/
-  abstract discussionDELETE = (discussionId: DiscussionId, authUser: UserId) => new Promise<Success | Error>((resolve, reject) => {
+  abstract topicDELETE = (topicId: TopicId, authUser: UserId) => new Promise<Success | Error>((resolve, reject) => {
     reject(this.abstractError)
   });
 

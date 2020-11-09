@@ -28,7 +28,7 @@
     }
   ],
   "paths": {
-    "/discussion": {
+    "/topic": {
       "get": {
         "summary": "Discussion discovery",
         "description": "Receive a listing of all discussions",
@@ -57,7 +57,7 @@
             }
           },
           "403": {
-            "description": "User is not authorized to view discussion urls",
+            "description": "User is not authorized to view topics",
             "content": {
               "application/json": {
                 "schema": {
@@ -75,14 +75,14 @@
         ]
       },
       "post": {
-        "summary": "Create a new discussion",
+        "summary": "Create a new topic",
         "responses": {
           "201": {
-            "description": "Discussion created",
+            "description": "Topic created",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Discussion"
+                  "$ref": "#/components/schemas/Topic"
                 }
               }
             }
@@ -108,7 +108,7 @@
             }
           },
           "403": {
-            "description": "User is not authorized to create discussions",
+            "description": "User is not authorized to create topics",
             "content": {
               "application/json": {
                 "schema": {
@@ -118,7 +118,7 @@
             }
           },
           "425": {
-            "description": "Possible duplicate discussion",
+            "description": "Duplicate topic",
             "content": {
               "application/json": {
                 "schema": {
@@ -145,12 +145,12 @@
         ]
       }
     },
-    "/discussion/{commentId}": {
+    "/topic/{topicId}": {
       "get": {
-        "summary": "View specific comment and its descendants",
+        "summary": "View topic and its comments",
         "parameters": [
           {
-            "name": "commentId",
+            "name": "topicId",
             "in": "path",
             "required": true,
             "style": "simple",
@@ -163,7 +163,7 @@
         ],
         "responses": {
           "200": {
-            "description": "List comments for {commentId}",
+            "description": "List comments for {topicId}",
             "content": {
               "application/json": {
                 "schema": {
@@ -183,7 +183,7 @@
             }
           },
           "403": {
-            "description": "User is not authorized to view discussion {commentId}",
+            "description": "User is not authorized to view discussion {topicId}",
             "content": {
               "application/json": {
                 "schema": {
@@ -210,8 +210,126 @@
           }
         ]
       },
+      "put": {
+        "summary": "Edit a topic",
+        "parameters": [
+          {
+            "name": "topicId",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string",
+              "format": "byte"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Topic {topicId} updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Success"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User is not authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "User is not authorized to update this comment",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Topic {topicId} not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "summary": "Delete a discussion",
+        "parameters": [
+          {
+            "name": "topicId",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string",
+              "format": "byte"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Discussion of topic {topicId} deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Success"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User is not authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "User is not authorized to delete this comment",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/comment/{commentId}": {
       "post": {
-        "summary": "Reply to comment {commentId} or post root comment on discussion {discussionId}",
+        "summary": "Reply to comment or topic {commentId}",
         "parameters": [
           {
             "name": "commentId",
@@ -303,6 +421,133 @@
           }
         ]
       },
+      "get": {
+        "summary": "View specific comment and its descendants",
+        "parameters": [
+          {
+            "name": "commentId",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string",
+              "format": "byte"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List comments for {commentId}",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Discussion"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User is not authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "User is not authorized to view discussion {commentId}",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "{commentId} is not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {},
+          {
+            "BearerAuth": []
+          }
+        ]
+      },
+      "put": {
+        "summary": "Edit a comment",
+        "parameters": [
+          {
+            "name": "commentId",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string",
+              "format": "byte"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Comment {commentId} updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Success"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User is not authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "User is not authorized to update this comment",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Comment {commentId} not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      },
       "delete": {
         "summary": "Delete a comment",
         "parameters": [
@@ -320,7 +565,7 @@
         ],
         "responses": {
           "202": {
-            "description": "Discussion {commentId} deleted",
+            "description": "Comment {commentId} deleted",
             "content": {
               "application/json": {
                 "schema": {
@@ -822,7 +1067,7 @@
       "AuthToken": {
         "type": "string"
       },
-      "Discussion": {
+      "Topic": {
         "type": "object",
         "properties": {
           "id": {
@@ -833,11 +1078,40 @@
             "type": "boolean"
           }
         }
+      },
+      "Discussion": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "byte"
+          },
+          "isLocked": {
+            "type": "boolean"
+          },
+          "comments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Comment"
+            }
+          }
+        }
       }
     },
     "parameters": {
       "userId": {
         "name": "userId",
+        "in": "path",
+        "required": true,
+        "style": "simple",
+        "explode": false,
+        "schema": {
+          "type": "string",
+          "format": "byte"
+        }
+      },
+      "topicId": {
+        "name": "topicId",
         "in": "path",
         "required": true,
         "style": "simple",

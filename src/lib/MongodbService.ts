@@ -1,4 +1,4 @@
-import type { AuthToken, Comment, CommentId, Discussion, DiscussionId, Error, NewComment, Success, User, UserId } from "./simple-comment";
+import type { AuthToken, Comment, CommentId, Discussion, TopicId, Error, NewComment, Success, User, UserId, Topic } from "./simple-comment";
 import { Service } from "./Service";
 import { Collection, Db, InsertOneWriteOpResult, MongoClient, WithId } from "mongodb";
 import { comparePassword, getAuthToken, hashPassword } from "./crypt";
@@ -127,7 +127,7 @@ export class MongodbService extends Service {
    * parentId byte[] 
    * returns Comment
    **/
-  commentPOST = (parentId: (DiscussionId | CommentId), comment: Pick<Comment, "text" | "user">, authUserId?: UserId) => new Promise<Success | Error>(async (resolve, reject) => {
+  commentPOST = (parentId: (TopicId | CommentId), comment: Pick<Comment, "text" | "user">, authUserId?: UserId) => new Promise<Success | Error>(async (resolve, reject) => {
     if (!authUserId) {
       reject(userNotAuthenticated401)
       return
@@ -162,7 +162,7 @@ export class MongodbService extends Service {
    * commentId byte[] 
    * returns Comment
    **/
-  commentGET = (discussionId: DiscussionId, commentId: CommentId, authUser?: UserId) => new Promise<Comment | Error>((resolve, reject) => {
+  commentGET = (discussionId: TopicId, commentId: CommentId, authUser?: UserId) => new Promise<Comment | Error>((resolve, reject) => {
     reject(this.genericError)
   });
 
@@ -173,7 +173,7 @@ export class MongodbService extends Service {
    * commentId byte[] 
    * returns Comment
    **/
-  commentPUT = (discussionId: DiscussionId, commentId: CommentId, authUser: UserId) => new Promise<Comment | Error>((resolve, reject) => {
+  commentPUT = (discussionId: TopicId, commentId: CommentId, authUser: UserId) => new Promise<Comment | Error>((resolve, reject) => {
     reject(this.genericError)
   });
 
@@ -197,7 +197,7 @@ export class MongodbService extends Service {
    * authUserId
    * returns Success 201
    **/
-  discussionPOST = (discussionId: DiscussionId, authUserId?: UserId) => new Promise<Discussion | Error>(async (resolve, reject) => {
+  topicPOST = (topic: Topic, authUserId?: UserId) => new Promise<Discussion | Error>(async (resolve, reject) => {
     if (!authUserId) {
       reject(userNotAuthenticated401)
       return
@@ -213,15 +213,15 @@ export class MongodbService extends Service {
       return
     }
     const discussions: Collection<Discussion> = (await this.getDb()).collection("discussions")
-    const oldDiscussion = await discussions.findOne({ id: discussionId })
+    const oldDiscussion = await discussions.findOne({ id: topic.id })
     if (oldDiscussion) {
       reject(discussionExists400)
       return
     }
-    discussions.insertOne({ id: discussionId, isLocked: false }).then((response: InsertOneWriteOpResult<WithId<Discussion>>) => {
+    discussions.insertOne(topic).then((response: InsertOneWriteOpResult<WithId<Discussion>>) => {
       const insertedDiscussion: Discussion = response.ops.find(x => true)
-      if (insertedDiscussion.id !== discussionId) reject({ code: 500, message: "Database insertion error" })
-      else resolve({ code: 201, message: `Discssion '${discussionId}' created` })
+      if (insertedDiscussion.id !== topic.id) reject({ code: 500, message: "Database insertion error" })
+      else resolve({ code: 201, message: `Discssion '${topic.title}' created` })
     }).catch(e => {
       console.error(e)
       reject({ code: 500, message: "Server error" })
@@ -234,7 +234,7 @@ export class MongodbService extends Service {
    * discussionId byte[] 
    * returns Discussion
    **/
-  discussionGET = (discussionId: DiscussionId, authUser?: UserId) => new Promise<Discussion | Error>((resolve, reject) => {
+  topicGET = (discussionId: TopicId, authUser?: UserId) => new Promise<Discussion | Error>((resolve, reject) => {
     reject(this.genericError)
   });
 
@@ -244,7 +244,7 @@ export class MongodbService extends Service {
    *
    * returns List
    **/
-  discussionListGET = (authUser?: UserId) => new Promise<Discussion[] | Error>((resolve, reject) => {
+  topicListGET = (authUser?: UserId) => new Promise<Discussion[] | Error>((resolve, reject) => {
     reject(this.genericError)
   });
 
@@ -254,7 +254,7 @@ export class MongodbService extends Service {
    * discussionId byte[] 
    * returns Success
    **/
-  discussionPUT = (discussion: Discussion, authUser: UserId) => new Promise<Success | Error>((resolve, reject) => {
+  topicPUT = (discussion: Discussion, authUser: UserId) => new Promise<Success | Error>((resolve, reject) => {
     reject(this.genericError)
   });
 
@@ -264,7 +264,7 @@ export class MongodbService extends Service {
    * discussionId byte[] 
    * returns Success
    **/
-  discussionDELETE = (discussionId: DiscussionId, authUser: UserId) => new Promise<Success | Error>((resolve, reject) => {
+  topicDELETE = (discussionId: TopicId, authUser: UserId) => new Promise<Success | Error>((resolve, reject) => {
     reject(this.genericError)
   });
 
