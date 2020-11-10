@@ -43,7 +43,6 @@ export interface User {
   verified: boolean,
   email: Email,
   name: string,
-  avatar?: URL,
   hash: string,
   isAdmin: boolean
 }
