@@ -24,8 +24,8 @@ export const adminOnlyModifiableUserProperties: (keyof User)[] = ["isVerified", 
  */
 export const toSafeUser = (user: User, isAdmin: boolean = false): (PublicSafeUser | AdminSafeUser) => isAdmin ? toAdminSafeUser(user)
     : toPublicSafeUser(user)
-export const toPublicSafeUser = (user:User) => omitProperties(user, publicUnsafeUserProperties) as PublicSafeUser
-export const toAdminSafeUser = (user:User) => omitProperties(user, adminUnsafeUserProperties) as AdminSafeUser
+export const toPublicSafeUser = (user:User) => user? omitProperties(user, publicUnsafeUserProperties) as PublicSafeUser : user
+export const toAdminSafeUser = (user:User) => user? omitProperties(user, adminUnsafeUserProperties) as AdminSafeUser : user
 
 export const isComment = (target: Comment | Discussion): target is Comment => target.hasOwnProperty("parentId")
 export const isDeletedComment = (target: Comment | Discussion): target is DeletedComment => isComment(target) && target.user === null || target.hasOwnProperty("dateDeleted")
