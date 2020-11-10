@@ -4,7 +4,7 @@ A free, self-hosted comment system for any blog or website
 
 ## API
 
-The API specification is described thoroughly in [simple-comment-api.json](src\schema\simple-comment-api.json) in Open API 3 format and is designed to be interchangeable with any backend, frontend and authentication system
+The API specification is described thoroughly in [simple-comment-api.json](./src/schema/simple-comment-api.json) in Open API 3 format and is designed to be interchangeable with any backend, frontend and authentication system
 
 ### discussion
 
