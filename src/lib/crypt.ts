@@ -9,7 +9,7 @@ const saltRounds = 10
 const DAY = 60 * 24
 
 // Rounds down to the nearest second before adding `minutes`
-const getExpirationTime = (minutes:number):number => new Date(Math.floor(new Date().valueOf() / 1000) * 1000 + minutes * 60 * 1000).valueOf()
+const getExpirationTime = (minutes:number):number => new Date(Math.floor(new Date().valueOf() / 10000) * 10000 + minutes * 60 * 1000).valueOf()
 
 export const hashPassword = (plainTextPassword: string) => bcrypt
   .genSalt(saltRounds)
