@@ -1,10 +1,10 @@
-import { AuthToken, Comment, CommentId, Discussion, TopicId, Error, Success, Topic, User, UserId, AdminSafeUser, PublicSafeUser, Email, DeletedComment } from "./simple-comment";
+import { AuthToken, Comment, CommentId, Discussion, TopicId, Success, Topic, User, AdminSafeUser, PublicSafeUser, Email, DeletedComment } from "./simple-comment";
 import { MongodbService } from "./MongodbService";
 import { Db, MongoClient } from "mongodb";
-import { error404CommentNotFound, success201CommentCreated, success202CommentDeleted, error425DuplicateComment, error413CommentTooLong, error403Forbidden, error401BadCredentials, error404UserUnknown, success202UserDeleted, error400UserExists, error401UserNotAuthenticated, error403UserNotAuthorized, success204UserUpdated, error404TopicNotFound, success202TopicDeleted, error403ForbiddenToModify } from "./messages";
+import { success202CommentDeleted, error425DuplicateComment, error413CommentTooLong, error403Forbidden, error401BadCredentials, error404UserUnknown, success202UserDeleted, error400UserExists, error401UserNotAuthenticated, error403UserNotAuthorized, success202TopicDeleted, error403ForbiddenToModify } from "./messages";
 import { getAuthToken, hashPassword, uuidv4 } from "./crypt";
 import { policy } from "../policy";
-import { adminUnsafeUserProperties, isComment, isDeletedComment, omitProperties, publicUnsafeUserProperties, toAdminSafeUser, toPublicSafeUser } from "./utilities";
+import { adminUnsafeUserProperties, isComment, isDeletedComment, publicUnsafeUserProperties, toAdminSafeUser, toPublicSafeUser } from "./utilities";
 
 declare const global: any
 
@@ -15,7 +15,6 @@ const randomString = (alpha: string = asciiAlpha, len: number = randomNumber(10,
 const randomDate = () => new Date(randomNumber(0, new Date().valueOf()))
 // Returns a random email that will validate but does not create examples of all possible valid emails 
 const randomEmail = (): Email => `${randomString(asciiAlpha)}@${randomString(asciiAlpha)}.${randomString(asciiAlpha)}`
-
 // Functions that generate fake data - these could be moved to a common file to help other Service tests
 const getRandomComment = (parentId: (TopicId | CommentId), user: User): Comment => ({ id: uuidv4(), parentId, user, text: randomString(userInputAlpha, randomNumber(50, 500)), dateCreated: new Date() })
 const getRandomCommentTree = (replies: number, users: User[], chain: (Comment | Discussion)[]): (Comment | Discussion)[] => replies <= 0 ? chain : getRandomCommentTree(replies - 1, users, [...chain, getRandomComment(getRandomElement(chain).id, getRandomElement(users))])
@@ -36,10 +35,9 @@ const mockGroupUsers = getRandomGroupUsers(100)
 const mockNewTopic = getRandomTopic()
 const mockNewUser = { ...getRandomUser(), isAdmin: false }
 let mockNewComment: Pick<Comment, "text" | "user" | "parentId">
+let mockDeleteTopic: Topic
 const mockTopics: Topic[] = getRandomListOfTopics()
 const mockCommentTree = getRandomCommentTree(5000, mockGroupUsers, mockTopics)
-const singleMockDiscussion = getRandomListOfTopics(1)
-const singleMockCommentTree = getRandomCommentTree(300, mockGroupUsers, singleMockDiscussion)
 
 let mockAllUsers = []
 let service: MongodbService;
@@ -332,14 +330,14 @@ describe('Full API service test', () => {
   // put comment to /comment/{commentId} with no credentials should return 401
   test('PUT comment to /comment/{commentId} with no credentials', () => {
     const randomComment = getRandomElement(mockCommentTree.filter(isComment))
-    const comment = {id:randomComment.id, text:randomString()}
+    const comment = { id: randomComment.id, text: randomString() }
     expect.assertions(1)
     return service.commentPUT(comment).catch(e => expect(e).toBe(error401UserNotAuthenticated))
   })
   // put comment to /comment/{commentId} with improper credentials should return 403
   test('PUT comment to /comment/{commentId} with improper credentials', () => {
     const randomComment = getRandomElement(mockCommentTree.filter(c => !c.hasOwnProperty("isLocked"))) as Comment
-    const comment = { id:randomComment.id, text: randomString() }
+    const comment = { id: randomComment.id, text: randomString() }
     const improperAuthUser = getRandomElement(mockGroupUsers.filter(u => !u.isAdmin && u.id !== randomComment.user.id))
     expect.assertions(1)
     return service.commentPUT(comment, improperAuthUser.id).catch(e => expect(e).toBe(error403UserNotAuthorized))
@@ -357,13 +355,13 @@ describe('Full API service test', () => {
   })
   // put comment to /comment/{commentId} where either Id does not exist should return 404
   test('PUT comment to /comment/{commentId} where Id does not exist', () => {
-    const unknownComment = { text:randomString(), id: uuidv4() }
+    const unknownComment = { text: randomString(), id: uuidv4() }
     expect.assertions(1)
     return service.commentPUT(unknownComment, mockAdminUser.id).catch(e => expect(e).toHaveProperty("code", 404))
   })
   // put comment to /comment/{commentId} should return the edited comment with 202 Comment updated
   test('PUT comment to /comment/{commentId}', () => {
-    const targetComment = getRandomElement(mockCommentTree.filter(c => c.hasOwnProperty("user"))) as Comment
+    const targetComment = getRandomElement(mockCommentTree.filter(isComment)) as Comment
     const updatedComment = { id: targetComment.id, text: randomString(userInputAlpha, 500) }
     const user = targetComment.user
     return service.commentPUT(updatedComment, user.id).then((res: Success<Comment>) => {
@@ -385,7 +383,7 @@ describe('Full API service test', () => {
   test('DELETE comment to /comment/{commentId} with improper credentials', () => {
     const targetComment = getRandomElement(mockCommentTree.filter(isComment))
     // improper user is neither an admin nor the comment poster
-    const improperUser = getRandomElement( mockGroupUsers.filter(u => !u.isAdmin && u.id !== targetComment.user.id) )
+    const improperUser = getRandomElement(mockGroupUsers.filter(u => !u.isAdmin && u.id !== targetComment.user.id))
     expect.assertions(1)
     return service.commentDELETE(targetComment.id, improperUser.id).catch(e => expect(e).toBe(error403UserNotAuthorized))
   })
@@ -397,27 +395,22 @@ describe('Full API service test', () => {
     return service.commentDELETE(commentId, adminUser.id).catch(e => expect(e).toHaveProperty("code", 404))
   })
   // delete comment to /comment/{commentId} by an admin should delete the comment and return 202 Comment deleted
-  test('DELETE comment to /comment/{commentId} should', () => {
+  test('DELETE comment to /comment/{commentId} by admin', () => {
     const targetComment = getRandomElement(mockCommentTree.filter(isComment))
     const adminUser = mockGroupUsers.find(u => u.isAdmin)
     return service.commentDELETE(targetComment.id, adminUser.id).then(value => expect(value).toEqual(expect.objectContaining(success202CommentDeleted)))
   })
   // delete comment to /comment/{commentId} by the user should delete the comment and return 202 Comment deleted
-  test('DELETE comment to /comment/{commentId} should', () => {
+  test('DELETE comment to /comment/{commentId} by self user', () => {
     const targetComment = getRandomElement(mockCommentTree.filter(isComment).filter(c => !isDeletedComment(c)))
-    return service.commentDELETE(targetComment.id, targetComment.user.id).then(value => expect(value).toBe(success202CommentDeleted))
+    return service.commentDELETE(targetComment.id, targetComment.user.id).then(value => expect(value).toHaveProperty("code", 202))
   })
 
   // Topic Create
-  // post to /topic with identical information should return 400 Discussion already exists
-  test('POST to /topic with identical information', () => {
-    expect.assertions(1)
-    return service.topicPOST(mockNewTopic, mockAdminUser.id).catch(value => expect(value).toHaveProperty("code", 400))
-  })
   // post to /topic with no credentials should return 401
   test('POST to /topic with no credentials and public-can-create-topic=false policy', () => {
     expect.assertions(1)
-    return service.topicPOST(mockNewTopic).catch(value => expect(value).toHaveProperty("code", 403))
+    return service.topicPOST(mockNewTopic).catch(value => expect(value).toHaveProperty("code", 401))
   })
   // post to /topic with improper credentials should return 403
   test('POST to /topic with improper credentials', () => {
@@ -432,37 +425,37 @@ describe('Full API service test', () => {
   // Topic Read
   // GET to /topic should return a list of topics and 200 OK
   test('GET to /topic', () => {
-    return service.topicListGET().then((res: Success<Topic[]>) => expect(res.body).toContainEqual(mockTopics))
+    return service.topicListGET().then((res: Success<Topic[]>) => {
+      expect(res.body.map(i => i.id)).toEqual([...mockTopics, mockNewTopic].map(i => i.id))
+    })
   })
   // GET to /topic/{topicId} should return a topic and descendent comments
-  test('GET to /topic', () => {
-    const targetTopicId = singleMockDiscussion[0].id
+  test('GET to /topic/{topicId}', () => {
+    const targetTopicId = getRandomElement(mockTopics).id
     return service.topicGET(targetTopicId).then(
       (res: Success<Discussion>) => {
         expect(res.body.id).toBe(targetTopicId)
         expect(res.body).toHaveProperty("replies")
-        expect(res.body.replies.length).toBe(singleMockCommentTree.length)
-        expect(res.body.replies).toContainEqual(singleMockCommentTree)
       }
     )
   })
 
   // Discussion Update
-  // put topic  to /topic/{topicId} editing anything except title or isLocked should return 403 Forbidden
+  // put topic  to /topic/{topicId} editing anything except title or isLocked should be ignored 
   test('PUT to /topic/{topicId}', () => {
     const topic = getRandomElement(mockTopics)
-    const hackedTopics: Topic[] = [{ ...topic, id: randomString() }, { ...topic, dateCreated: new Date() }]
-    const putTopic = getRandomElement(hackedTopics)
-    expect.assertions(1)
-    return service.topicPUT(putTopic, mockAdminUser.id).catch(e => expect(e).toBe(error403Forbidden)
-    )
+    const putTopic = { ...topic, dateCreated: new Date(), title: randomString() }
+    return service.topicPUT(putTopic, mockAdminUser.id).then((res: Success<Topic>) => {
+      expect(res).toHaveProperty("code", 204)
+      expect(res.body.dateCreated.toDateString()).toBe(topic.dateCreated.toDateString())
+    })
   })
   // put topic to /topic/{topicId} with no credentials should return 401
   test('PUT topic to /topic/{topicId} with no credentials', () => {
     const topic = getRandomElement(mockTopics)
     const putTopic = { ...topic, isLocked: !topic.isLocked, title: randomString(userInputAlpha, 500) }
     expect.assertions(1)
-    return service.topicPUT(putTopic, mockAdminUser.id).catch(e => expect(e).toBe(error401UserNotAuthenticated)
+    return service.topicPUT(putTopic).catch(e => expect(e).toBe(error401UserNotAuthenticated)
     )
   })
   // put topic to /topic/{topicId} with improper credentials should return 403
@@ -478,7 +471,7 @@ describe('Full API service test', () => {
     const topic = getRandomElement(mockTopics)
     const putTopic = { ...topic, id: randomString() }
     expect.assertions(1)
-    return service.topicPUT(putTopic, mockAdminUser.id).catch(e => expect(e).toBe(error404TopicNotFound)
+    return service.topicPUT(putTopic, mockAdminUser.id).catch(e => expect(e).toHaveProperty("code", 404)
     )
   })
   // put topic with {topicId} to /topic/{topicId} should return topic and 204 Discussion updated
@@ -494,34 +487,36 @@ describe('Full API service test', () => {
   // Discussion Delete
   // delete topic to /topic/{topicId} with no credentials should return 401
   test('DELETE topic to /topic/{topicId} with no credentials', () => {
-    const topic = getRandomElement(mockTopics)
-    return service.topicDELETE(topic.id).catch(e => expect(e).toBe(error401UserNotAuthenticated))
+    mockDeleteTopic = getRandomElement(mockTopics)
+    return service.topicDELETE(mockDeleteTopic.id).catch(e => expect(e).toBe(error401UserNotAuthenticated))
   })
   // delete topic to /topic/{topicId} with improper credentials should return 403
   test('DELETE to /topic/{topicId} with improper credentials', () => {
-    const topic = getRandomElement(mockTopics)
+    const topic = getRandomElement(mockTopics.filter(t => t.id !== mockDeleteTopic.id))
     return service.topicDELETE(topic.id, mockNewUser.id).catch(e => expect(e).toBe(error403UserNotAuthorized))
   })
   // delete to /topic/{topicId} where Id does not exist should return 404 
   test('DELETE topic to /topic/{topicId} where Id does not exist', () => {
     const deleteTopicId = uuidv4()
-    return service.topicDELETE(deleteTopicId, mockAdminUser.id).catch(e => expect(e).toBe(error404TopicNotFound))
+    return service.topicDELETE(deleteTopicId, mockAdminUser.id).catch(e => expect(e).toHaveProperty("code", 404))
   })
   // delete to /topic/{topicId} should delete the topic and return 202 Discussion deleted
-  test('DELETE topic to /topic/{topicId} should', () => {
+  test('DELETE topic to /topic/{topicId} should delete the topic', () => {
     const topic = getRandomElement(mockTopics)
     return service.topicDELETE(topic.id, mockAdminUser.id).then((res: Success) => expect(res).toBe(success202TopicDeleted))
   })
   // delete to /topic/{topicId} should delete all descended comments
-  test('DELETE topic to /topic/{topicId} should', () => {
-    const topic = singleMockDiscussion[0]
-    expect.assertions(1)
-    return service.topicDELETE(topic.id, mockAdminUser.id).then(async () => {
-      // none of these comments should be in the database
-      const deletedComments = singleMockCommentTree
-      const comments = db.collection<Comment | Discussion>('comments')
-      deletedComments.forEach(c => {
-        expect(comments).not.toContain(c)
+  test('DELETE topic to /topic/{topicId} should delete descended comments', () => {
+    const topic = getRandomElement(mockTopics)
+    const getChildren = (commentId: CommentId, allComments: (Discussion | Comment)[]) => allComments.filter(c => isComment(c)).filter((c: Comment) => c.parentId === commentId)
+    return service.topicDELETE(topic.id, mockAdminUser.id).then(async (res: Success) => {
+      // none of these replies should be in the database
+      const replyIds = getChildren(topic.id, mockTopics).map(c => c.id)
+      const comments = await db.collection<Comment | Discussion>('comments').find({}).toArray()
+      const commentIds = comments.map(c => c.id)
+
+      replyIds.forEach(c => {
+        expect(commentIds).not.toContain(c)
       })
     })
   })
