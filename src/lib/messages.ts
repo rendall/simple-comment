@@ -1,11 +1,14 @@
 import { Success, Error } from "./simple-comment";
 export const error400TopicExists: Error = { code: 400, message: "Discussion already exists" }
 export const error400UserExists: Error = { code: 400, message: "UserId exists" }
+export const error400CommentIdMissing: Error = { code: 400, message: "Comment id missing" }
+export const error400NoUpdate: Error = { code: 400, message: "Comment text is same" }
 export const error400UserIdMissing: Error = { code: 400, message: "UserId missing" }
 export const error401BadCredentials: Error = { code: 401, message: "Bad credentials" }
 export const error401UserNotAuthenticated: Error = { code: 401, message: "User not authenticated" }
 export const error403Forbidden: Error = { code: 403, message: "Forbidden" }
 export const error403UserNotAuthorized: Error = { code: 403, message: "User not authorized" }
+export const error403ForbiddenToModify: Error = { code: 403, message: "Forbidden to modify" }
 export const error404CommentNotFound: Error = { code: 404, message: "Comment not found" }
 export const error404TopicNotFound: Error = { code: 404, message: "Topic not found" }
 export const error404UserUnknown: Error = { code: 404, message: "Unknown user" }
@@ -19,3 +22,4 @@ export const success202CommentDeleted: Success = { code: 202, message: "Comment 
 export const success202TopicDeleted: Success = { code: 202, message: "Topic deleted" }
 export const success202UserDeleted: Success = { code: 202, message: "User deleted" }
 export const success204UserUpdated: Success = { code: 204, message: "User updated" }
+export const success204CommentUpdated: Success = { code: 204, message: "Comment updated" }
