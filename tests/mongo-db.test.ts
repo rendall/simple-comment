@@ -1,21 +1,23 @@
-import { MongoClient } from "mongodb";
+import { Db, MongoClient } from "mongodb";
 
 declare const global: any
+const MONGO_URI = global.__MONGO_URI__
+const MONGO_DB = global.__MONGO_DB_NAME__
 
 describe('insert', () => {
   let connection;
-  let db;
+  let db:Db;
 
   beforeAll(async () => {
-    connection = await MongoClient.connect(global.__MONGO_URI__, {
+    connection = await MongoClient.connect(MONGO_URI, {
       useNewUrlParser: true, useUnifiedTopology: true
     });
-    db = await connection.db(global.__MONGO_DB_NAME__);
+    db = await connection.db(MONGO_DB);
   });
 
   afterAll(async () => {
+    await db.dropDatabase()
     await connection.close();
-    await db.close();
   });
 
   it('should insert a doc into collection', async () => {
