@@ -23,7 +23,7 @@ describe("Ensures secrets are secret", () => {
     const exampleEnvExists = fs.existsSync(`${process.cwd()}/example.env`)
     expect(exampleEnvExists).toBe(true)
   })
-  
+
   const exampleEnv = fs.readFileSync(`${process.cwd()}/example.env`, "utf8")
 
   exampleLines = exampleEnv
@@ -31,7 +31,8 @@ describe("Ensures secrets are secret", () => {
     .replace(/\n{2}/g, "/n")
     .split("\n")
     .map(l => l.trim())
-    .filter(l => !l.startsWith("#"))
+    .filter(l => !l.startsWith("#")) // eliminate comments
+    .filter(l => l.length > 0) // eliminate blank lines
 
   test(".env exists", () => {
     const envExists = fs.existsSync(`${process.cwd()}/.env`)
@@ -45,7 +46,9 @@ describe("Ensures secrets are secret", () => {
   exampleLines.forEach(line => {
     const [varName, varValue] = line.split("=")
     test(`${varName} is defined as an environmental variable`, () => { expect(process.env[varName]).toBeDefined() })
-    test(`${varName} is not ${varValue}`, () => { expect(process.env[varName]).not.toBe(varValue) })
+    // make sure the secrets and passwords are not the same as in example.env
+    if (varName.indexOf("SECRET") >= 0 || varName.indexOf("PASSWORD") >= 0)
+      test(`${varName} is not ${varValue}`, () => { expect(process.env[varName]).not.toBe(varValue) })
   })
 })
 
