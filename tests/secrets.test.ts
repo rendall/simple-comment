@@ -8,7 +8,7 @@ let exampleLines: string[]
  * Simple Comment uses a .env file to keep secrets
  * It is not tracked in git
  * example.env is tracked in git and shows the
- * environmental variables expected in git
+ * environmental variables expected in .env
  * 
  * This test file ensures that:
  * - `example.env` exists
