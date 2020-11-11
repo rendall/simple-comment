@@ -8,14 +8,14 @@ import { success200OK, error404CommentNotFound, success201UserCreated, error401B
 
 export class MongodbService extends Service {
 
-  readonly connectionString: string
-  readonly dbName: string
+  readonly _connectionString: string
+  readonly _dbName: string
   private _client: MongoClient
   private _db: Db
 
   getClient = async () => {
     if (this._client && this._client.isConnected()) return this._client
-    this._client = await MongoClient.connect(this.connectionString, {
+    this._client = await MongoClient.connect(this._connectionString, {
       useNewUrlParser: true, useUnifiedTopology: true
     });
     return this._client
@@ -24,14 +24,14 @@ export class MongodbService extends Service {
   getDb = async () => {
     if (this._db && this._client.isConnected()) return this._db
     const client = await this.getClient()
-    this._db = await client.db(this.dbName);
+    this._db = await client.db(this._dbName);
     return this._db
   }
 
   constructor(connectionString: string, dbName: string) {
     super()
-    this.connectionString = connectionString
-    this.dbName = dbName
+    this._connectionString = connectionString
+    this._dbName = dbName
   }
 
   /**
