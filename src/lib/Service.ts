@@ -153,5 +153,5 @@ export abstract class Service {
   /**
    * Close connections, cleanup
    **/
-  abstract destroy = () => new Promise<void>((resolve, reject) => reject(this.abstractError))
+  abstract close = () => new Promise<void>((resolve, reject) => reject(this.abstractError))
 }

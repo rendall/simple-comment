@@ -8,11 +8,6 @@ import { success200OK, error404CommentNotFound, success201UserCreated, error401B
 
 export class MongodbService extends Service {
 
-  private genericError: Error = {
-    code: 500,
-    message: "Implementation error: Method not implemented"
-  }
-
   readonly connectionString: string
   readonly dbName: string
   private _client: MongoClient
@@ -647,7 +642,7 @@ export class MongodbService extends Service {
 
   });
 
-  destroy = async () => {
+  close = async () => {
     await this.getClient().then(client => client.close())
   }
 }
