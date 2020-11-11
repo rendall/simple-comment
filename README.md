@@ -1,4 +1,4 @@
-# Open Source Comments
+# Simple Comment
 
 A free, self-hosted comment system for any blog or website
 
