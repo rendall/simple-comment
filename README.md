@@ -12,23 +12,23 @@ The API specification is described by the file [simple-comment-api.json](./src/s
 
 This is an overview of the *Simple Comment API* endpoints
 
-### comment
+### `/comment`
 
 A `comment` is text that a user posts in reply to either another `comment` or a `topic`, and presenting these replies is the sole reason this project exists!
 
 The comment endpoint is for the creation, reading, updating and deleting (CRUD) of individual comments. All comments must have a parent, that is, something it replies to, whether a `topic` or `comment`
 
-### topic
+### `/topic`
 
 A topic is a special kind of comment that by default can only be created by admin users, and forms an organizational bucket for comments that reply. It is a kind of root comment, and therefore has no parent
 
 The /topic endpoint handles CRUD for these root comments. A GET operation of `/topic` will get a list of topics and GET on `/topic/{topicId}` will get all comments in reply to that topic and their descendents
 
-### user
+### `/user`
 
 By default, comments can be posted by anonymous users, but *Simple Comment* does have a minimal identification scheme so that commenters who choose to do so can have control over their comments after the are posted, according to policy
 
-### auth
+### `/auth`
 
 Auth is the endpoint for the authentication and identification scheme. A user submits their username and password to the auth endpoint, and receives a JSON Web Token (JWT) that authenticates them as that user for other CRUD operations
 
