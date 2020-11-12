@@ -7,15 +7,14 @@ export type Email = string
 export type URL = string
 export type UserId = string
 
-export interface Success<T = {}> {
-  code: number,
-  message: string,
-  body?: T
+export interface Success<T = string> {
+  statusCode: number,
+  body: (T)
 }
 
 export interface Error {
-  code: number,
-  message: string
+  statusCode: number,
+  body: string
 }
 
 export interface Discussion {
@@ -32,7 +31,8 @@ export type Topic = Pick<Discussion, "id" | "title" | "isLocked" | "dateCreated"
 export interface Comment {
   _id?: ObjectId,
   id: CommentId,
-  user: (User | PublicSafeUser | AdminSafeUser | null),
+  userId: UserId,
+  user?: (PublicSafeUser | AdminSafeUser),
   text: string | null,
   parentId: (TopicId | CommentId),
   replies?: Comment[],
@@ -43,7 +43,7 @@ export interface Comment {
 export interface DeletedComment {
   _id?: ObjectId,
   id: CommentId,
-  user: null, 
+  userId: null,
   text: null,
   parentId: (TopicId | CommentId),
   replies?: Comment[],
@@ -58,7 +58,7 @@ export interface User {
   id: UserId,
   email: Email,
   name: string,
-  hash: string,
+  hash?: string,
   isAdmin: boolean,
   isVerified: boolean
 }
