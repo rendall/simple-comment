@@ -27,8 +27,8 @@ export const toSafeUser = (user: User, isAdmin: boolean = false): (PublicSafeUse
 export const toPublicSafeUser = (user:User) => user? omitProperties(user, publicUnsafeUserProperties) as PublicSafeUser : user
 export const toAdminSafeUser = (user:User) => user? omitProperties(user, adminUnsafeUserProperties) as AdminSafeUser : user
 
-export const isComment = (target: Comment | Discussion): target is Comment => target.hasOwnProperty("parentId")
-export const isDeletedComment = (target: Comment | Discussion): target is DeletedComment => isComment(target) && target.user === null || target.hasOwnProperty("dateDeleted")
+export const isComment = (target: Comment | Discussion): target is Comment => target && target.hasOwnProperty("parentId")
+export const isDeletedComment = (target: Comment | Discussion): target is DeletedComment => isComment(target) && target.hasOwnProperty("dateDeleted")
 
 export const isAdminSafeUser = (user:Partial<User>): user is AdminSafeUser => (Object.keys(user) as (keyof User)[]).every(key => !adminOnlyModifiableUserProperties.includes(key))
 export const isPublicSafeUser = (user:Partial<User>): user is PublicSafeUser => (Object.keys(user) as (keyof User)[]).every(key => !publicUnsafeUserProperties.includes(key))
