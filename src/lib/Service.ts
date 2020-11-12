@@ -1,10 +1,10 @@
-import type { AuthToken, Comment, CommentId, Discussion, TopicId, Error, Success, User, UserId, Topic } from "./simple-comment";
+import type { AuthToken, Comment, CommentId, Discussion, TopicId, Error, Success, User, UserId, Topic, AdminSafeUser, PublicSafeUser } from "./simple-comment";
 
 export abstract class Service {
 
   private abstractError: Error = {
-    code: 500,
-    message: "Implementation error: extend Service class"
+    statusCode: 500,
+    body: "Implementation error: extend Service class"
   }
 
   /**
@@ -30,7 +30,7 @@ export abstract class Service {
    * userId byte[] 
    * returns User
    **/
-  abstract userGET = (userId: UserId, authUser?: UserId) => new Promise<Success<User> | Error>((resolve, reject) => {
+  abstract userGET = (userId?: UserId, authUserId?: UserId) => new Promise<Success<Partial<User>> | Error>(async (resolve, reject) => {
     reject(this.abstractError)
   });
   /**
@@ -38,7 +38,7 @@ export abstract class Service {
    *
    * returns List
    **/
-  abstract userListGET = (authUser?: UserId) => new Promise<Success<User[]> | Error>((resolve, reject) => {
+  abstract userListGET = (authUserId?: UserId) => new Promise<Success<(AdminSafeUser[] | PublicSafeUser[])> | Error>(async (resolve, reject) => {
     reject(this.abstractError)
   });
 
@@ -79,7 +79,7 @@ export abstract class Service {
    * commentId byte[] 
    * returns Comment
    **/
-  abstract commentGET = (topicId: TopicId, commentId: CommentId, authUser?: UserId) => new Promise<Success<Comment> | Error>((resolve, reject) => {
+  abstract commentGET = (targetId: (TopicId | CommentId), authUserId?: UserId) => new Promise<Success<Comment | Discussion> | Error>(async (resolve, reject) => {
     reject(this.abstractError)
   });
 
