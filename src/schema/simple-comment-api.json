@@ -603,7 +603,6 @@
       }
     },
     "/user": {
-      "summary": "Create a user",
       "get": {
         "summary": "List all users",
         "responses": {
@@ -902,7 +901,6 @@
       }
     },
     "/auth": {
-      "summary": "Handle user authentication",
       "post": {
         "summary": "Accept a user name and password, return authentication token",
         "responses": {
