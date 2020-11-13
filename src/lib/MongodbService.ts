@@ -1,10 +1,10 @@
-import type { AuthToken, Comment, CommentId, Discussion, TopicId, Error, NewComment, Success, User, UserId, Topic, AdminSafeUser, DeletedComment, PublicSafeUser } from "./simple-comment";
+import type { AuthToken, Comment, CommentId, Discussion, TopicId, Error, Success, User, UserId, Topic, AdminSafeUser, DeletedComment, PublicSafeUser } from "./simple-comment";
 import { Collection, Db, FindAndModifyWriteOpResultObject, FindOneOptions, InsertOneWriteOpResult, MongoClient, UpdateWriteOpResult, WithId } from "mongodb";
 import { Service } from "./Service";
 import { adminOnlyModifiableUserProperties, isComment, isDeletedComment, omitProperties, toAdminSafeUser, toPublicSafeUser, toSafeUser } from "./utilities";
 import { policy } from "../policy";
 import { success200OK, error404CommentNotFound, success201UserCreated, error401BadCredentials, error404UserUnknown, error400UserExists, error401UserNotAuthenticated, error403UserNotAuthorized, error400TopicExists, error400UserIdMissing, error500ServerError, success202UserDeleted, success204UserUpdated, error403Forbidden, error413CommentTooLong, error425DuplicateComment, error403ForbiddenToModify, error400CommentIdMissing, success204CommentUpdated, success202CommentDeleted, error400NoUpdate, error404TopicNotFound, success202TopicDeleted } from "./messages";
-import { comparePassword, getAuthToken } from "./crypt";
+import { comparePassword, getAuthToken, uuidv4 } from "./crypt";
 
 export class MongodbService extends Service {
 
@@ -196,7 +196,7 @@ export class MongodbService extends Service {
     }
 
     //TODO: username admin as .env variable
-    if (userId === "admin") {
+    if (userId === process.env.SIMPLE_COMMENT_MODERATOR_ID) {
       reject(error403Forbidden)
       return
     }
@@ -234,14 +234,14 @@ export class MongodbService extends Service {
    * parentId byte[] 
    * returns Comment
    **/
-  commentPOST = (parentId: (TopicId | CommentId), comment: Pick<Comment, "text" | "userId">, authUserId?: UserId) => new Promise<Success<Comment> | Error>(async (resolve, reject) => {
+  commentPOST = (parentId: (TopicId | CommentId), text:string, authUserId?: UserId) => new Promise<Success<Comment> | Error>(async (resolve, reject) => {
 
     if (!authUserId) {
       reject(error401UserNotAuthenticated)
       return
     }
 
-    if (comment.text.length > policy.maxCommentLengthChars) {
+    if (text.length > policy.maxCommentLengthChars) {
       reject(error413CommentTooLong)
       return
     }
@@ -254,7 +254,7 @@ export class MongodbService extends Service {
       return
     }
 
-    const comments: Collection<Comment | DeletedComment | NewComment | Discussion> = (await this.getDb()).collection("comments")
+    const comments: Collection<Comment | DeletedComment | Discussion> = (await this.getDb()).collection("comments")
     const parent = await comments.findOne({ id: parentId })
 
     if (!parent || isDeletedComment(parent)) {
@@ -266,13 +266,14 @@ export class MongodbService extends Service {
     const findOptions: FindOneOptions<Comment> = { sort: { dateCreated: -1 } }
     const lastComment = await comments.findOne({ "user.id": authUserId }, findOptions) as Comment
 
-    if (lastComment && lastComment.text === comment.text && lastComment.parentId === parentId) {
+    if (lastComment && lastComment.text === text && lastComment.parentId === parentId) {
       reject(error425DuplicateComment)
       return
     }
 
     const adminSafeUser = toAdminSafeUser(authUser)
-    const insertComment: NewComment = { ...comment, dateCreated: new Date(), parentId, user: adminSafeUser } as NewComment
+    const id = uuidv4()
+    const insertComment: Comment = { id, text, dateCreated: new Date(), parentId, user: adminSafeUser } as Comment
 
     comments.insertOne(insertComment).then((response: InsertOneWriteOpResult<WithId<Comment>>) => {
 
@@ -462,31 +463,25 @@ export class MongodbService extends Service {
    * commentId byte[] 
    * returns Comment
    **/
-  commentPUT = (updatedComment: { id: CommentId, text: string }, authUserId?: UserId) => new Promise<Success<Comment> | Error>(async (resolve, reject) => {
-
-    if (!updatedComment.hasOwnProperty("id")) {
-      reject(error400CommentIdMissing)
-      return
-    }
+  commentPUT = (targetId:CommentId, text:string, authUserId?: UserId) => new Promise<Success<Comment> | Error>(async (resolve, reject) => {
 
     const users: Collection<User> = (await this.getDb()).collection("users")
-    const authUser = await users.findOne({ id: authUserId })
+    const authUser = await users.find({ id: authUserId }).limit(1).next()
 
     if (!authUser) {
       reject(error401UserNotAuthenticated)
       return
     }
 
-    const targetId = updatedComment.id
     const comments: Collection<Comment | Discussion> = (await this.getDb()).collection("comments")
-    const foundComment = await comments.findOne({ id: targetId }) as Comment
+    const foundComment = await comments.find({ id: targetId }).limit(1).next() as Comment
 
     if (!foundComment || !isComment(foundComment) || isDeletedComment(foundComment)) {
       reject({ ...error404CommentNotFound, body: `Comment '${targetId}' not found` })
       return
     }
 
-    if (foundComment.text === updatedComment.text) {
+    if (foundComment.text === text) {
       reject(error400NoUpdate)
       return
     }
@@ -498,15 +493,7 @@ export class MongodbService extends Service {
       return
     }
 
-    const diffKeys: string[] = Object.keys(updatedComment).filter(key => !["text", "id"].includes(key)).reduce((diff: string[], key: string) => updatedComment[key] == foundComment[key] ? diff : [...diff, key], [])
-
-    if (diffKeys.length > 0) {
-      reject({ ...error403UserNotAuthorized, body: `Cannot alter ${diffKeys.join(", ")} ` })
-      return
-    }
-
     // can only edit text
-    const { text } = updatedComment
     const user = toSafeUser(foundComment.user as User, authUser.isAdmin)
     const returnComment = { ...foundComment, text, user }
 
@@ -530,7 +517,7 @@ export class MongodbService extends Service {
     }
 
     const users: Collection<User> = (await this.getDb()).collection("users")
-    const authUser = await users.findOne({ id: authUserId })
+    const authUser = await users.find({ id: authUserId }).limit(1).next()
 
     if (!authUser) {
       reject(error404UserUnknown)
@@ -538,7 +525,7 @@ export class MongodbService extends Service {
     }
 
     const comments: Collection<Comment | Discussion> = (await this.getDb()).collection("comments")
-    const foundComment = await comments.findOne({ id: targetId })
+    const foundComment = await comments.find({ id: targetId }).limit(1).next()
 
     if (!foundComment || !isComment(foundComment) || isDeletedComment(foundComment)) {
       reject({ ...error404CommentNotFound, body: `Comment '${targetId}' not found` })
@@ -558,7 +545,7 @@ export class MongodbService extends Service {
 
     if (reply) {
       // it cannot be deleted, but set user and text to null
-      const deletedComment = { ...foundComment, user: null, text: null, dateDeleted: new Date() }
+      const deletedComment = { ...foundComment, userId: null, text: null, dateDeleted: new Date() }
 
       comments
         .updateOne({ id: foundComment.id },

@@ -68,7 +68,7 @@ export abstract class Service {
    * topicId byte[] or commentId byte[] 
    * returns Comment
    **/
-  abstract commentPOST = (parentId: (TopicId | CommentId), comment: Partial<Comment>, authUser?: UserId) => new Promise<Success<Comment> | Error>((resolve, reject) => {
+  abstract commentPOST = (parentId: (TopicId | CommentId), text:string, authUser?: UserId) => new Promise<Success<Comment> | Error>((resolve, reject) => {
     reject(this.abstractError)
   });
 
@@ -90,7 +90,7 @@ export abstract class Service {
    * commentId byte[] 
    * returns Comment
    **/
-  abstract commentPUT = (comment:Comment, authUser?: UserId) => new Promise<Success<Comment> | Error>((resolve, reject) => {
+  abstract commentPUT = (targetId:CommentId, text:string, authUser?: UserId) => new Promise<Success<Comment> | Error>((resolve, reject) => {
     reject(this.abstractError)
   });
 
