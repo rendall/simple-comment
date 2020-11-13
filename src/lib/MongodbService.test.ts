@@ -7,36 +7,36 @@ import { policy } from "../policy";
 import { adminUnsafeUserProperties, isComment, isDeletedComment, publicUnsafeUserProperties, toAdminSafeUser, toPublicSafeUser } from "./utilities";
 import * as dotenv from "dotenv"
 dotenv.config()
-// const MONGO_URI = process.env.DB_CONNECTION_STRING
-// const MONGO_DB = process.env.DATABASE_NAME
+
+// const MONGO_URI = "mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&ssl=false"
 const MONGO_URI = global.__MONGO_URI__
 const MONGO_DB = global.__MONGO_DB_NAME__
 
 declare const global: any
 
-const userInputAlpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÅ abcdefghijklmnopqrstuvwxyzäöå 1234567890 !@#$%^&*()_+-= "
-const asciiAlpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890_-"
+const alphaUserInput = "ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÅ abcdefghijklmnopqrstuvwxyzäöå 1234567890 !@#$%^&*()_+-= "
+const alphaAscii = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890_-"
 const randomNumber = (min: number, max: number): number => Math.floor(Math.random() * (max - min)) + min
-const randomString = (alpha: string = asciiAlpha, len: number = randomNumber(10, 50), str: string = ""): string => len === 0 ? str : randomString(alpha, len - 1, `${str}${alpha.charAt(Math.floor(Math.random() * alpha.length))}`)
+const randomString = (alpha: string = alphaAscii, len: number = randomNumber(10, 50), str: string = ""): string => len === 0 ? str : randomString(alpha, len - 1, `${str}${alpha.charAt(Math.floor(Math.random() * alpha.length))}`)
 const randomDate = () => new Date(randomNumber(0, new Date().valueOf()))
 // Returns a random email that will validate but does not create examples of all possible valid emails 
-const randomEmail = (): Email => `${randomString(asciiAlpha)}@${randomString(asciiAlpha)}.${randomString(asciiAlpha)}`
+const randomEmail = (): Email => `${randomString(alphaAscii)}@${randomString(alphaAscii)}.${randomString(alphaAscii)}`
 // Functions that generate fake data - these could be moved to a common file to help other Service tests
-const getRandomComment = (parentId: (TopicId | CommentId), user: User): Comment => ({ id: uuidv4(), parentId, userId: user.id, text: randomString(userInputAlpha, randomNumber(50, 500)), dateCreated: new Date() })
+const getRandomComment = (parentId: (TopicId | CommentId), user: User): Comment => ({ id: uuidv4(), parentId, userId: user.id, text: randomString(alphaUserInput, randomNumber(50, 500)), dateCreated: new Date() })
 const getRandomCommentTree = (replies: number, users: User[], chain: (Comment | Discussion)[]): (Comment | Discussion)[] => replies <= 0 ? chain : getRandomCommentTree(replies - 1, users, [...chain, getRandomComment(getRandomElement(chain).id, getRandomElement(users))])
 const getRandomElement = <T>(arr: T[]) => arr[Math.floor(Math.random() * arr.length)]
 const getRandomGroupUsers = (population: number, users: User[] = []): User[] => population <= 0 ? users : getRandomGroupUsers(population - 1, [...users, getRandomUser()])
 const getRandomListOfTopics = (num: number = randomNumber(2, 20), topics: Topic[] = []): Topic[] => num <= 0 ? topics : getRandomListOfTopics(num - 1, [...topics, getRandomTopic()])
-const getRandomTopic = (): Topic => ({ id: randomString(asciiAlpha, randomNumber(10, 40)), isLocked: false, title: randomString(userInputAlpha, randomNumber(25, 100)), dateCreated: randomDate() })
-const getRandomUser = (): User => ({ id: randomString(), email: randomEmail(), name: randomString(userInputAlpha), isVerified: Math.random() > 0.5, isAdmin: Math.random() > 0.5, hash: randomString(asciiAlpha, 32) })
+const getRandomTopic = (): Topic => ({ id: randomString(alphaAscii, randomNumber(10, 40)), isLocked: false, title: randomString(alphaUserInput, randomNumber(25, 100)), dateCreated: randomDate() })
+const getRandomUser = (): User => ({ id: randomString(), email: randomEmail(), name: randomString(alphaUserInput), isVerified: Math.random() > 0.5, isAdmin: Math.random() > 0.5, hash: randomString(alphaAscii, 32) })
 
 // Verification functions
 const isPublicSafeUser = (u: Partial<User>) => (Object.keys(u) as (keyof User)[]).every(key => !publicUnsafeUserProperties.includes(key))
 const isAdminSafeUser = (u: Partial<User>) => (Object.keys(u) as (keyof User)[]).every(key => !adminUnsafeUserProperties.includes(key))
 
 // Fake data objects
-const testAdminUser: Omit<User, "hash"> = { id: "admin", isVerified: true, email: randomEmail(), isAdmin: true, name: "Simple Comment Admin", }
-const testAdminUserPassword = randomString(asciiAlpha, randomNumber(10, 40))
+const testAdminUser: User = { id: process.env.SIMPLE_COMMENT_MODERATOR_ID, isVerified: true, email: randomEmail(), isAdmin: true, name: "Simple Comment Admin", }
+const testAdminUserPassword = process.env.SIMPLE_COMMENT_MODERATOR_PASSWORD
 const testGroupUsers = getRandomGroupUsers(100)
 let testUsedUsers: User[] = []
 let testNewComment: Pick<Comment, "text" | "userId" | "parentId">
@@ -74,9 +74,9 @@ describe('Full API service test', () => {
     client = await service.getClient()
     db = await service.getDb()
     const hash = await hashPassword(testAdminUserPassword)
-    testAllUsers = [...testGroupUsers, { ...testAdminUser, hash }]
+    testAllUsers = [{ ...testAdminUser, hash }, ...testGroupUsers ]
     const users = db.collection("users");
-    users.insertMany(testAllUsers)
+    await users.insertMany(testAllUsers)
     const comments = db.collection<Comment | DeletedComment | Discussion>("comments")
     await comments.insertMany(testCommentTree)
   }, 120000);
@@ -89,12 +89,12 @@ describe('Full API service test', () => {
   // post to auth with unknown credentials should return error 404
   test("POST to auth with unknown user", () => {
     expect.assertions(1)
-    return service.authPOST(randomString(), randomString(userInputAlpha)).catch(e => expect(e).toEqual(error404UserUnknown))
+    return service.authPOST(randomString(), randomString(alphaUserInput)).catch(e => expect(e).toEqual(error404UserUnknown))
   });
   // post to auth with incorrect credentials should return error 401
   test("POST to auth with incorrect password", () => {
     expect.assertions(1)
-    return service.authPOST(testAdminUser.id, randomString(userInputAlpha, 40)).catch(e => expect(e).toEqual(error401BadCredentials))
+    return service.authPOST(testAdminUser.id, randomString(alphaUserInput, 40)).catch(e => expect(e).toEqual(error401BadCredentials))
   });
   // post to auth with correct credentials should return authtoken
   test("POST to auth with correct credentials", () => {
@@ -109,12 +109,12 @@ describe('Full API service test', () => {
   // User Create
   // post to /user should return user and 201 User created
   test("POST to /user", () => {
-    const newUserPassword = randomString(userInputAlpha, Math.floor(Math.random() * 30) + 10)
+    const newUserPassword = randomString(alphaUserInput, Math.floor(Math.random() * 30) + 10)
     return service.userPOST(testNewUser as User, newUserPassword).then(value => expect(value).toHaveProperty("statusCode", 201))
   })
   // post to /user with existing username should return 400 user exists
   test("POST to /user with identical credentials", () => {
-    const newUserPassword = randomString(userInputAlpha, Math.floor(Math.random() * 30) + 10)
+    const newUserPassword = randomString(alphaUserInput, Math.floor(Math.random() * 30) + 10)
     expect.assertions(1)
     return service.userPOST(testNewUser as User, newUserPassword).catch(value => expect(value).toBe(error400UserExists))
   })
@@ -208,7 +208,7 @@ describe('Full API service test', () => {
   // put to /user/{userId} with own credentials should alter user return 204 User updated
   test("PUT to /user/{userId} with own credentials", () => {
     const targetUser = getTargetUser()
-    const updatedUser = { id: targetUser.id, name: randomString(userInputAlpha, 25) }
+    const updatedUser = { id: targetUser.id, name: randomString(alphaUserInput, 25) }
     return service.userPUT(updatedUser, targetUser.id).then((res: Success<AdminSafeUser>) => {
       expect(res).toHaveProperty("statusCode", 204)
       expect(res).toHaveProperty("body")
@@ -220,7 +220,7 @@ describe('Full API service test', () => {
   test("PUT to /user/{userId} with admin credentials", () => {
     const targetUser = getTargetUser(u => !u.isAdmin && !u.isVerified)
     const adminAuthUser = getAuthUser(u => u.isAdmin)
-    const updatedUser: User = { ...targetUser, name: randomString(userInputAlpha, 25), isAdmin: true, isVerified: true }
+    const updatedUser: User = { ...targetUser, name: randomString(alphaUserInput, 25), isAdmin: true, isVerified: true }
     return service.userPUT(updatedUser, adminAuthUser.id).then((res: Success<AdminSafeUser>) => {
       expect(res).toHaveProperty("statusCode", 204)
       expect(res).toHaveProperty("body", toAdminSafeUser(updatedUser))
@@ -288,23 +288,21 @@ describe('Full API service test', () => {
   test('POST comment to /comment/{commentId} with too long comment', () => {
     const parentComment = getRandomElement(testCommentTree)
     const user = getAuthUser()
-    const comment: Pick<Comment, "text" | "userId"> = {
-      text: randomString(userInputAlpha, policy.maxCommentLengthChars + 1),
-      userId: user.id
-    }
+    const text = randomString(alphaUserInput, policy.maxCommentLengthChars + 1)
+
     expect.assertions(1)
-    return service.commentPOST(parentComment.id, comment, user.id).catch(e => expect(e).toBe(error413CommentTooLong))
+    return service.commentPOST(parentComment.id, text, user.id).catch(e => expect(e).toBe(error413CommentTooLong))
   })
   // post comment to /comment/{commentId} should return comment and 201 Comment created
   test('POST to /comment/{commentId}', () => {
     const parentComment = getRandomElement(testCommentTree)
     const user = getAuthUser()
     testNewComment = {
-      text: randomString(userInputAlpha, policy.maxCommentLengthChars - 1),
+      text: randomString(alphaUserInput, policy.maxCommentLengthChars - 1),
       parentId: parentComment.id,
       userId: user.id
     }
-    return service.commentPOST(parentComment.id, testNewComment, user.id).then((res: Success<Comment>) => {
+    return service.commentPOST(parentComment.id, testNewComment.text, user.id).then((res: Success<Comment>) => {
       expect(res).toHaveProperty("statusCode", 201)
       expect(res).toHaveProperty("body")
       expect(res.body).toHaveProperty("text", testNewComment.text)
@@ -316,7 +314,7 @@ describe('Full API service test', () => {
     const parentCommentId = testNewComment.parentId
     const userId = testNewComment.userId
     expect.assertions(1)
-    return service.commentPOST(parentCommentId, testNewComment, userId).catch(e => expect(e).toBe(error425DuplicateComment))
+    return service.commentPOST(parentCommentId, testNewComment.text, userId).catch(e => expect(e).toBe(error425DuplicateComment))
   })
 
   // Comment Read
@@ -354,41 +352,30 @@ describe('Full API service test', () => {
   // put comment to /comment/{commentId} with no credentials should return 401
   test('PUT comment to /comment/{commentId} with no credentials', () => {
     const randomComment = getRandomElement(testCommentTree.filter(isComment))
-    const comment = { id: randomComment.id, text: randomString() }
+    const updateText = randomString(alphaUserInput)
     expect.assertions(1)
-    return service.commentPUT(comment).catch(e => expect(e).toBe(error401UserNotAuthenticated))
+    return service.commentPUT(randomComment.id, updateText).catch(e => expect(e).toBe(error401UserNotAuthenticated))
   })
   // put comment to /comment/{commentId} with improper credentials should return 403
   test('PUT comment to /comment/{commentId} with improper credentials', () => {
     const randomComment = getRandomElement(testCommentTree.filter(c => !c.hasOwnProperty("isLocked"))) as Comment
-    const comment = { id: randomComment.id, text: randomString() }
+    const updateText = randomString(alphaUserInput)
     const improperAuthUser = getAuthUser(u => !u.isAdmin && u.id !== randomComment.userId)
     expect.assertions(1)
-    return service.commentPUT(comment, improperAuthUser.id).catch(e => expect(e).toBe(error403UserNotAuthorized))
+    return service.commentPUT(randomComment.id, updateText, improperAuthUser.id).catch(e => expect(e).toBe(error403UserNotAuthorized))
   })
-  // put comment to /comment/{commentId} altering anything other than 'text' should ignore updates 
-  test('PUT hacked comment to /comment/{commentId}', () => {
-    const randomComment = getRandomElement(testCommentTree.filter(c => !c.hasOwnProperty("isLocked"))) as Comment
-    const comment = { id: randomComment.id, text: randomString() }
-    const authUserId = randomComment.userId
-    const targetUser = getTargetUser(u => u.id !== authUserId)
-    const hackedComments: Partial<Comment>[] = [{ ...comment, user: targetUser }, { ...comment, dateCreated: new Date() }, { ...comment, parentId: uuidv4() }]
-    const hack = getRandomElement(hackedComments)
-    expect.assertions(1)
-    return service.commentPUT(hack as { id: CommentId, text: string }, authUserId).catch(e => expect(e).toHaveProperty("statusCode", 403))
-  })
-  // put comment to /comment/{commentId} where either Id does not exist should return 404
+  // put comment to /comment/{commentId} where Id does not exist should return 404
   test('PUT comment to /comment/{commentId} where Id does not exist', () => {
     const unknownComment = { text: randomString(), id: uuidv4() }
     expect.assertions(1)
-    return service.commentPUT(unknownComment, testAdminUser.id).catch(e => expect(e).toHaveProperty("statusCode", 404))
+    return service.commentPUT(unknownComment.id, unknownComment.text, testAdminUser.id).catch(e => expect(e).toHaveProperty("statusCode", 404))
   })
   // put comment to /comment/{commentId} should return the edited comment with 202 Comment updated
   test('PUT comment to /comment/{commentId}', () => {
     const targetComment = getRandomElement(testCommentTree.filter(isComment)) as Comment
-    const updatedComment = { id: targetComment.id, text: randomString(userInputAlpha, 500) }
+    const updatedComment = { id: targetComment.id, text: randomString(alphaUserInput, 500) }
     const userId = targetComment.userId
-    return service.commentPUT(updatedComment, userId).then((res: Success<Comment>) => {
+    return service.commentPUT(updatedComment.id, updatedComment.text, userId).then((res: Success<Comment>) => {
       expect(res).toHaveProperty("statusCode", 204)
       expect(res).toHaveProperty("body")
       expect(res.body).toHaveProperty("text")
@@ -477,7 +464,7 @@ describe('Full API service test', () => {
   // put topic to /topic/{topicId} with no credentials should return 401
   test('PUT topic to /topic/{topicId} with no credentials', () => {
     const topic = getRandomElement(testTopics)
-    const putTopic = { ...topic, isLocked: !topic.isLocked, title: randomString(userInputAlpha, 500) }
+    const putTopic = { ...topic, isLocked: !topic.isLocked, title: randomString(alphaUserInput, 500) }
     expect.assertions(1)
     return service.topicPUT(putTopic).catch(e => expect(e).toBe(error401UserNotAuthenticated)
     )
@@ -485,7 +472,7 @@ describe('Full API service test', () => {
   // put topic to /topic/{topicId} with improper credentials should return 403
   test('PUT to /topic/{topicId} with improper credentials', () => {
     const topic = getRandomElement(testTopics)
-    const putTopic = { ...topic, isLocked: !topic.isLocked, title: randomString(userInputAlpha, 500) }
+    const putTopic = { ...topic, isLocked: !topic.isLocked, title: randomString(alphaUserInput, 500) }
     expect.assertions(1)
     return service.topicPUT(putTopic, testNewUser.id).catch(e => expect(e).toBe(error403UserNotAuthorized)
     )
