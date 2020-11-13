@@ -51,16 +51,14 @@ export interface DeletedComment {
   dateDeleted: Date
 }
 
-type NewComment = Exclude<Comment, "id">
-
 export interface User {
   _id?: ObjectId,
   id: UserId,
-  email: Email,
   name: string,
+  email?: Email,
   hash?: string,
-  isAdmin: boolean,
-  isVerified: boolean
+  isAdmin?: boolean,
+  isVerified?: boolean
 }
 
 // This is a user that is safe to return from the server to the public

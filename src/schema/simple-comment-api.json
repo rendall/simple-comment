@@ -343,6 +343,9 @@
             }
           }
         ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/text"
+        },
         "responses": {
           "201": {
             "description": "Comment created",
@@ -500,6 +503,9 @@
             }
           }
         ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/text"
+        },
         "responses": {
           "204": {
             "description": "Comment {commentId} updated",
@@ -1090,7 +1096,7 @@
           "dateCreated": {
             "type": "string",
             "format": "date-time"
-          },
+          }
         }
       },
       "Discussion": {
@@ -1121,7 +1127,7 @@
           "dateCreated": {
             "type": "string",
             "format": "date-time"
-          },
+          }
         }
       }
     },
@@ -1168,6 +1174,18 @@
         "schema": {
           "type": "string",
           "format": "byte"
+        }
+      }
+    },
+    "requestBodies": {
+      "text": {
+        "description": "This is the body copy of the reply to a topic or comment",
+        "content": {
+          "text/plain": {
+            "schema": {
+              "type": "string"
+            }
+          }
         }
       }
     },
