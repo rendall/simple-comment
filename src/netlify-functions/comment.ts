@@ -12,15 +12,19 @@ export const handler = async (event: APIGatewayEvent, context: Context) => {
 
   const dirs = event.path.split("/")
   const isValidPath = dirs.length <= 5
+
   if (!isValidPath) return ({ ...error404CommentNotFound, body: `${event.path} is not valid` })
 
-  const userId = getUserId(event.headers)
-  const commentId = getTargetId(event.path, "comment") as CommentId
+  const authUserId = getUserId(event.headers)
+  const targetId = getTargetId(event.path, "comment") as CommentId
 
   const handleMethod = (method): Promise<Success<Comment> | Error> => {
 
     switch (method) {
-      case "GET": return service.commentGET(commentId, userId)
+      case "GET": return service.commentGET(targetId, authUserId)
+      case "POST": return service.commentPOST(targetId, event.body, authUserId)
+      case "PUT": return service.commentPUT(targetId, event.body, authUserId)
+      case "DELETE": return service.commentDELETE(targetId, authUserId)
       default: return new Promise<Error>((resolve) => resolve(error405MethodNotAllowed))
     }
   }
