@@ -957,15 +957,15 @@
     "schemas": {
       "Success": {
         "required": [
-          "code",
-          "message"
+          "statusCode",
+          "body"
         ],
         "type": "object",
         "properties": {
-          "message": {
+          "body": {
             "type": "string"
           },
-          "code": {
+          "statusCode": {
             "maximum": 299,
             "minimum": 200,
             "type": "integer"
@@ -975,15 +975,15 @@
       },
       "Error": {
         "required": [
-          "code",
-          "message"
+          "statusCode",
+          "body"
         ],
         "type": "object",
         "properties": {
-          "message": {
+          "body": {
             "type": "string"
           },
-          "code": {
+          "statusCode": {
             "maximum": 499,
             "minimum": 400,
             "type": "integer"
@@ -993,11 +993,11 @@
       },
       "Comment": {
         "required": [
-          "dateCreated",
-          "parentComment",
           "id",
+          "userId",
           "text",
-          "user"
+          "parentId",
+          "dateCreated"
         ],
         "type": "object",
         "properties": {
@@ -1005,60 +1005,63 @@
             "type": "string",
             "format": "byte"
           },
-          "user": {
+          "userId": {
             "type": "string",
             "format": "byte"
+          },
+          "user": {
+            "$ref": "#/components/schemas/User"
           },
           "text": {
             "type": "string"
           },
-          "edits": {
+          "parentId": {
+            "type": "string",
+            "format": "byte"
+          },
+          "replies": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Comment"
             }
           },
-          "parentComment": {
-            "type": "string",
-            "format": "byte"
-          },
           "dateCreated": {
             "type": "string",
             "format": "date-time"
           },
-          "dateModified": {
+          "dateDeleted": {
             "type": "string",
             "format": "date-time"
-          },
-          "authToken": {
-            "type": "string",
-            "format": "byte"
           }
         }
       },
       "User": {
         "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
         "properties": {
           "id": {
             "type": "string",
             "format": "byte"
           },
-          "verified": {
-            "type": "boolean"
+          "name": {
+            "type": "string"
           },
           "email": {
             "type": "string",
             "format": "email"
           },
-          "name": {
-            "type": "string"
-          },
-          "avatar": {
+          "hash": {
             "type": "string"
           },
           "isAdmin": {
             "type": "boolean",
             "description": "true if the user is admin, false otherwise"
+          },
+          "isVerified": {
+            "type": "boolean"
           }
         }
       },
@@ -1067,32 +1070,58 @@
       },
       "Topic": {
         "type": "object",
+        "required": [
+          "id",
+          "title",
+          "isLocked",
+          "dateCreated"
+        ],
         "properties": {
           "id": {
             "type": "string",
             "format": "byte"
           },
+          "title": {
+            "type": "string"
+          },
           "isLocked": {
             "type": "boolean"
-          }
+          },
+          "dateCreated": {
+            "type": "string",
+            "format": "date-time"
+          },
         }
       },
       "Discussion": {
         "type": "object",
+        "required": [
+          "id",
+          "title",
+          "isLocked",
+          "dateCreated"
+        ],
         "properties": {
           "id": {
             "type": "string",
             "format": "byte"
           },
+          "title": {
+            "type": "string"
+          },
           "isLocked": {
             "type": "boolean"
           },
-          "comments": {
+          "replies": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Comment"
             }
-          }
+          },
+          "dateCreated": {
+            "type": "string",
+            "format": "date-time"
+          },
         }
       }
     },
