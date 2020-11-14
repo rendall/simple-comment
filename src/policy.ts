@@ -1,7 +1,8 @@
 class Policy {
   maxCommentLengthChars = 5000
-  userCanDeleteSelf = true
-  publicCanRead = true
+  canUserDeleteSelf = true
+  canPublicRead = true
+  canPublicCreateUser = true
 }
 
 export const policy = new Policy()

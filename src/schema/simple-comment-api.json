@@ -343,6 +343,9 @@
             }
           }
         ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/text"
+        },
         "responses": {
           "201": {
             "description": "Comment created",
@@ -500,6 +503,9 @@
             }
           }
         ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/text"
+        },
         "responses": {
           "204": {
             "description": "Comment {commentId} updated",
@@ -603,7 +609,6 @@
       }
     },
     "/user": {
-      "summary": "Create a user",
       "get": {
         "summary": "List all users",
         "responses": {
@@ -902,7 +907,56 @@
       }
     },
     "/auth": {
-      "summary": "Handle user authentication",
+      "get": {
+        "summary": "Accept a user name and password, return authentication token",
+        "responses": {
+          "200": {
+            "description": "User authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthToken"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request format not understood",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bad credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BasicAuth": []
+          }
+        ]
+      },
       "post": {
         "summary": "Accept a user name and password, return authentication token",
         "responses": {
@@ -959,15 +1013,15 @@
     "schemas": {
       "Success": {
         "required": [
-          "code",
-          "message"
+          "statusCode",
+          "body"
         ],
         "type": "object",
         "properties": {
-          "message": {
+          "body": {
             "type": "string"
           },
-          "code": {
+          "statusCode": {
             "maximum": 299,
             "minimum": 200,
             "type": "integer"
@@ -977,15 +1031,15 @@
       },
       "Error": {
         "required": [
-          "code",
-          "message"
+          "statusCode",
+          "body"
         ],
         "type": "object",
         "properties": {
-          "message": {
+          "body": {
             "type": "string"
           },
-          "code": {
+          "statusCode": {
             "maximum": 499,
             "minimum": 400,
             "type": "integer"
@@ -995,11 +1049,11 @@
       },
       "Comment": {
         "required": [
-          "dateCreated",
-          "parentComment",
           "id",
+          "userId",
           "text",
-          "user"
+          "parentId",
+          "dateCreated"
         ],
         "type": "object",
         "properties": {
@@ -1007,60 +1061,63 @@
             "type": "string",
             "format": "byte"
           },
-          "user": {
+          "userId": {
             "type": "string",
             "format": "byte"
+          },
+          "user": {
+            "$ref": "#/components/schemas/User"
           },
           "text": {
             "type": "string"
           },
-          "edits": {
+          "parentId": {
+            "type": "string",
+            "format": "byte"
+          },
+          "replies": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Comment"
             }
           },
-          "parentComment": {
-            "type": "string",
-            "format": "byte"
-          },
           "dateCreated": {
             "type": "string",
             "format": "date-time"
           },
-          "dateModified": {
+          "dateDeleted": {
             "type": "string",
             "format": "date-time"
-          },
-          "authToken": {
-            "type": "string",
-            "format": "byte"
           }
         }
       },
       "User": {
         "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
         "properties": {
           "id": {
             "type": "string",
             "format": "byte"
           },
-          "verified": {
-            "type": "boolean"
+          "name": {
+            "type": "string"
           },
           "email": {
             "type": "string",
             "format": "email"
           },
-          "name": {
-            "type": "string"
-          },
-          "avatar": {
+          "hash": {
             "type": "string"
           },
           "isAdmin": {
             "type": "boolean",
             "description": "true if the user is admin, false otherwise"
+          },
+          "isVerified": {
+            "type": "boolean"
           }
         }
       },
@@ -1069,31 +1126,57 @@
       },
       "Topic": {
         "type": "object",
+        "required": [
+          "id",
+          "title",
+          "isLocked",
+          "dateCreated"
+        ],
         "properties": {
           "id": {
             "type": "string",
             "format": "byte"
           },
+          "title": {
+            "type": "string"
+          },
           "isLocked": {
             "type": "boolean"
+          },
+          "dateCreated": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
       "Discussion": {
         "type": "object",
+        "required": [
+          "id",
+          "title",
+          "isLocked",
+          "dateCreated"
+        ],
         "properties": {
           "id": {
             "type": "string",
             "format": "byte"
           },
+          "title": {
+            "type": "string"
+          },
           "isLocked": {
             "type": "boolean"
           },
-          "comments": {
+          "replies": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Comment"
             }
+          },
+          "dateCreated": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       }
@@ -1141,6 +1224,18 @@
         "schema": {
           "type": "string",
           "format": "byte"
+        }
+      }
+    },
+    "requestBodies": {
+      "text": {
+        "description": "This is the body copy of the reply to a topic or comment",
+        "content": {
+          "text/plain": {
+            "schema": {
+              "type": "string"
+            }
+          }
         }
       }
     },

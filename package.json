@@ -11,8 +11,11 @@
     "@types/jsonwebtoken": "^8.5.0",
     "@types/mongodb": "^3.1.23",
     "@types/node": "^11.13.4",
+    "@types/uuid": "^8.3.0",
+    "aws-sdk": "^2.790.0",
     "babel-jest": "^26.6.3",
     "eslint": "^5.16.0",
+    "http-server": "^0.12.3",
     "jest": "^26.6.3",
     "jest-environment-node": "^24.7.1",
     "merge": "^1.2.1",
@@ -32,14 +35,13 @@
     "build:ts": "tsc -p tsconfig.netlify.functions.json --listEmittedFiles",
     "postbuild": "rimraf ./netlify-functions && rimraf ./lib",
     "prebuild": "rimraf ./functions",
-    "start": "build:ts && netlify-lambda serve ./netlify-functions",
+    "start:frontend": "http-server ./dist --proxy http://localhost:9000",
+    "start": "yarn run build:ts && netlify-lambda serve ./netlify-functions",
     "test": "jest",
     "test:watch": "jest --watch --noStackTrace",
     "posttest": "rimraf ./globalConfig.json"
   },
   "dependencies": {
-    "@types/uuid": "^8.3.0",
-    "bcrypt": "^5.0.0",
     "dotenv": "^8.2.0",
     "jsonwebtoken": "^8.5.1",
     "mongodb": "^3.2.3"

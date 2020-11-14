@@ -1,10 +1,10 @@
-import type { AuthToken, Comment, CommentId, Discussion, TopicId, Error, Success, User, UserId, Topic } from "./simple-comment";
+import type { AuthToken, Comment, CommentId, Discussion, TopicId, Error, Success, User, UserId, Topic, AdminSafeUser, PublicSafeUser, UpdateUser, NewUser } from "./simple-comment";
 
 export abstract class Service {
 
   private abstractError: Error = {
-    code: 500,
-    message: "Implementation error: extend Service class"
+    statusCode: 500,
+    body: "Implementation error: extend Service class"
   }
 
   /**
@@ -17,10 +17,19 @@ export abstract class Service {
   });
 
   /**
+   * Accept a user name and password, return authentication token
+   *
+   * returns AuthToken
+   **/
+  abstract authGET = (username: string, password: string) => new Promise<AuthToken | Error>((resolve, reject) => {
+    reject(this.abstractError)
+  });
+
+  /**
    * Create user
    * returns Success | Error
    **/
-  abstract userPOST = (newUser: User, newPassword: string) => new Promise<Success<User> | Error>((resolve, reject) => {
+  abstract userPOST = (newUser: NewUser, authUserId?: UserId) => new Promise<Success<User> | Error>((resolve, reject) => {
     reject(this.abstractError)
   });
 
@@ -30,7 +39,7 @@ export abstract class Service {
    * userId byte[] 
    * returns User
    **/
-  abstract userGET = (userId: UserId, authUser?: UserId) => new Promise<Success<User> | Error>((resolve, reject) => {
+  abstract userGET = (userId?: UserId, authUserId?: UserId) => new Promise<Success<Partial<User>> | Error>(async (resolve, reject) => {
     reject(this.abstractError)
   });
   /**
@@ -38,7 +47,7 @@ export abstract class Service {
    *
    * returns List
    **/
-  abstract userListGET = (authUser?: UserId) => new Promise<Success<User[]> | Error>((resolve, reject) => {
+  abstract userListGET = (authUserId?: UserId) => new Promise<Success<(AdminSafeUser[] | PublicSafeUser[])> | Error>(async (resolve, reject) => {
     reject(this.abstractError)
   });
 
@@ -48,7 +57,7 @@ export abstract class Service {
    * userId byte[] 
    * returns Success
    **/
-  abstract userPUT = (user: Partial<User>, authUser: UserId) => new Promise<Success<User> | Error>((resolve, reject) => {
+  abstract userPUT = (targetId: UserId, user: UpdateUser, authUserId?: UserId) => new Promise<Success<User> | Error>((resolve, reject) => {
     reject(this.abstractError)
   });
 
@@ -68,7 +77,7 @@ export abstract class Service {
    * topicId byte[] or commentId byte[] 
    * returns Comment
    **/
-  abstract commentPOST = (parentId: (TopicId | CommentId), comment: Partial<Comment>, authUser?: UserId) => new Promise<Success<Comment> | Error>((resolve, reject) => {
+  abstract commentPOST = (parentId: (TopicId | CommentId), text: string, authUser?: UserId) => new Promise<Success<Comment> | Error>((resolve, reject) => {
     reject(this.abstractError)
   });
 
@@ -79,7 +88,7 @@ export abstract class Service {
    * commentId byte[] 
    * returns Comment
    **/
-  abstract commentGET = (topicId: TopicId, commentId: CommentId, authUser?: UserId) => new Promise<Success<Comment> | Error>((resolve, reject) => {
+  abstract commentGET = (targetId: (TopicId | CommentId), authUserId?: UserId) => new Promise<Success<Comment | Discussion> | Error>(async (resolve, reject) => {
     reject(this.abstractError)
   });
 
@@ -90,7 +99,7 @@ export abstract class Service {
    * commentId byte[] 
    * returns Comment
    **/
-  abstract commentPUT = (comment:Comment, authUser?: UserId) => new Promise<Success<Comment> | Error>((resolve, reject) => {
+  abstract commentPUT = (targetId: CommentId, text: string, authUser?: UserId) => new Promise<Success<Comment> | Error>((resolve, reject) => {
     reject(this.abstractError)
   });
 
@@ -112,7 +121,7 @@ export abstract class Service {
    * authUserId
    * returns Success 201
    **/
-  abstract topicPOST = (topic:Topic, authUserId: UserId) => new Promise<Success<Discussion> | Error>((resolve, reject) => {
+  abstract topicPOST = ( topic: Topic, authUserId?: UserId) => new Promise<Success<Discussion> | Error>((resolve, reject) => {
     reject(this.abstractError)
   });
 
@@ -136,7 +145,7 @@ export abstract class Service {
     reject(this.abstractError)
   });
 
-  abstract topicPUT = (topic: Topic, authUser: UserId) => new Promise<Success<Topic> | Error>((resolve, reject) => {
+  abstract topicPUT = (topicId:TopicId, topic: Pick<Topic, "title" | "isLocked">, authUserId?: UserId) => new Promise<Success<Topic> | Error>((resolve, reject) => {
     reject(this.abstractError)
   });
 

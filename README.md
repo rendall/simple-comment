@@ -4,7 +4,9 @@ A free, self-hosted comment system for any blog or website
 
 ## Default build
 
-The default stack uses Netlify + MongoDB for the backend, and a minimal `fetch` based client for the frontend, but it can be readily adapted to use any technology stack, as long as the tests pass and the API conforms to the Open API 3 schema file
+The default stack uses Netlify + *MongoDB* for the backend, and a minimal `fetch` based client for the frontend, but it can be readily adapted to use any technology stack, as long as the tests pass and the API conforms to the Open API 3 schema file
+
+You can get your own free-tier MongoDB-in-the-cloud by [following these instructions](./docs/MONGODB_ATLAS.md)
 
 ## API
 
