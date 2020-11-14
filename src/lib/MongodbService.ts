@@ -1,17 +1,17 @@
 import type { AuthToken, Comment, CommentId, Discussion, TopicId, Error, Success, User, UserId, Topic, AdminSafeUser, DeletedComment, PublicSafeUser, NewUser, UpdateUser } from "./simple-comment";
 import { Collection, Db, FindAndModifyWriteOpResultObject, FindOneOptions, InsertOneWriteOpResult, MongoClient, UpdateWriteOpResult, WithId } from "mongodb";
 import { Service } from "./Service";
-import { adminOnlyModifiableUserProperties, isComment, isDeletedComment, omitProperties, toAdminSafeUser, toPublicSafeUser, toSafeUser } from "./utilities";
+import { adminOnlyModifiableUserProperties, isComment, isDeletedComment, toAdminSafeUser, toPublicSafeUser, toSafeUser } from "./utilities";
 import { policy } from "../policy";
-import { success200OK, error404CommentNotFound, success201UserCreated, error401BadCredentials, error404UserUnknown, error409UserExists, error401UserNotAuthenticated, error403UserNotAuthorized, error400TopicExists, error400UserIdMissing, error500ServerError, success202UserDeleted, success204UserUpdated, error403Forbidden, error413CommentTooLong, error425DuplicateComment, error403ForbiddenToModify, error400CommentIdMissing, success204CommentUpdated, success202CommentDeleted, error400NoUpdate, error404TopicNotFound, success202TopicDeleted, error400PasswordMissing } from "./messages";
+import { error400CommentIdMissing, error400NoUpdate, error400PasswordMissing, error400TopicExists, error400UserIdMissing, error401BadCredentials, error401UserNotAuthenticated, error403Forbidden, error403ForbiddenToModify, error403UserNotAuthorized, error404CommentNotFound, error404TopicNotFound, error404UserUnknown, error409UserExists, error413CommentTooLong, error425DuplicateComment, error500ServerError, success200OK, success201UserCreated, success202CommentDeleted, success202TopicDeleted, success202UserDeleted, success204CommentUpdated, success204UserUpdated } from "./messages";
 import { comparePassword, getAuthToken, hashPassword, uuidv4 } from "./crypt";
 
 export class MongodbService extends Service {
 
-  readonly _connectionString: string
-  readonly _dbName: string
   private _client: MongoClient
   private _db: Db
+  readonly _connectionString: string
+  readonly _dbName: string
 
   getClient = async () => {
     if (this._client && this._client.isConnected()) return this._client
@@ -50,7 +50,7 @@ export class MongodbService extends Service {
           if (!isSame) reject(error401BadCredentials)
           else {
             const authToken = getAuthToken(user.id)
-            resolve({...success200OK, body:authToken})
+            resolve({ ...success200OK, body: authToken })
           }
         }
       })
@@ -64,13 +64,18 @@ export class MongodbService extends Service {
    **/
   userPOST = (newUser: NewUser, authUserId?: UserId) => new Promise<Success<AdminSafeUser> | Error>(async (resolve, reject) => {
 
-    if (!authUserId && !policy.publicCanCreateUser) {
+    if (!authUserId && !policy.canPublicCreateUser) {
       reject({ error401UserNotAuthenticated })
       return
     }
 
     if (!newUser.id) {
       reject(error400UserIdMissing)
+      return
+    }
+
+    if (newUser.id === process.env.SIMPLE_COMMENT_MODERATOR_ID) {
+      reject(error403ForbiddenToModify)
       return
     }
 
@@ -84,6 +89,13 @@ export class MongodbService extends Service {
 
     if (authUserId && !authUser) {
       reject({ ...error404UserUnknown, body: "Authenticating user is unknown" })
+      return
+    }
+
+    const hasAdminOnlyProps = adminOnlyModifiableUserProperties.some(prop => newUser.hasOwnProperty(prop))
+
+    if (hasAdminOnlyProps && (!authUser || !authUser.isAdmin)) {
+      reject({ ...error403ForbiddenToModify })
       return
     }
 
@@ -230,7 +242,7 @@ export class MongodbService extends Service {
       return
     }
 
-    const canDelete = authUser.isAdmin || (authUserId === userId && policy.userCanDeleteSelf)
+    const canDelete = authUser.isAdmin || (authUserId === userId && policy.canUserDeleteSelf)
 
     if (!canDelete) {
       reject(error403UserNotAuthorized)
@@ -321,7 +333,7 @@ export class MongodbService extends Service {
       return
     }
 
-    if (!authUserId && !policy.publicCanRead) {
+    if (!authUserId && !policy.canPublicRead) {
       reject(error401UserNotAuthenticated)
       return
     }
@@ -329,7 +341,7 @@ export class MongodbService extends Service {
     const users: Collection<User> = (await this.getDb()).collection("users")
     const authUser = authUserId ? await users.findOne({ id: authUserId }) : null
 
-    if (!authUser && !policy.publicCanRead) {
+    if (!authUser && !policy.canPublicRead) {
       reject(error401UserNotAuthenticated)
       return
     }
@@ -640,7 +652,7 @@ export class MongodbService extends Service {
    **/
   topicGET = (targetId: TopicId, authUserId?: UserId) => new Promise<Success<Discussion> | Error>(async (resolve, reject) => {
 
-    if (!authUserId && !policy.publicCanRead) {
+    if (!authUserId && !policy.canPublicRead) {
       reject(error401UserNotAuthenticated)
       return
     }
@@ -648,7 +660,7 @@ export class MongodbService extends Service {
     const users: Collection<User> = (await this.getDb()).collection("users")
     const authUser = await users.findOne({ id: authUserId })
 
-    if (!authUser && !policy.publicCanRead) {
+    if (!authUser && !policy.canPublicRead) {
       reject(error404UserUnknown)
       return
     }
@@ -791,7 +803,7 @@ export class MongodbService extends Service {
    **/
   topicListGET = (authUserId?: UserId) => new Promise<Success<Topic[]> | Error>(async (resolve, reject) => {
 
-    if (!authUserId && !policy.publicCanRead) {
+    if (!authUserId && !policy.canPublicRead) {
       reject(error401UserNotAuthenticated)
       return
     }
@@ -799,7 +811,7 @@ export class MongodbService extends Service {
     const users: Collection<User> = (await this.getDb()).collection("users")
     const authUser = await users.findOne({ id: authUserId })
 
-    if (!authUser && !policy.publicCanRead) {
+    if (!authUser && !policy.canPublicRead) {
       reject(error404UserUnknown)
       return
     }

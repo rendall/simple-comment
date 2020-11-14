@@ -3,7 +3,7 @@ import type { APIGatewayEvent, APIGatewayEventRequestContext } from "aws-lambda"
 import { MongodbService } from "../lib/MongodbService"
 import { Success, Error, AuthToken } from "../lib/simple-comment"
 import { error401UserNotAuthenticated, error404CommentNotFound, error405MethodNotAllowed, success200OK } from "../lib/messages"
-import { getUserIdPassword, hasBasicScheme, REALM, isError } from "./modules/helpers"
+import { getUserIdPassword, hasBasicScheme, REALM, isError } from "../lib/utilities"
 dotenv.config()
 
 const isProduction = process.env.SIMPLE_COMMENT_MODE === "production"
@@ -53,7 +53,7 @@ const handleAuth = async (event: APIGatewayEvent) => {
   }
   else {
     const { user, password } = getUserIdPassword(event.headers)
-    const authUser = await service.auth(user, password)
+    const authUser = await service.authGET(user, password)
 
     if (isError(authUser)) {
       return authUser

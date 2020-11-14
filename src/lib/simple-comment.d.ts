@@ -59,7 +59,7 @@ export interface User {
   _id?: ObjectId,
   id: UserId,
   name: string,
-  email?: Email,
+  email: Email,
   hash?: string,
   isAdmin?: boolean,
   isVerified?: boolean
@@ -75,6 +75,7 @@ export type NewUser = { id: UserId,
   email: Email,
   password: string,
   isAdmin?: boolean,
+  isVerified?: boolean
 }
 // The information that can be updated for a user 
 export type UpdateUser = Partial<Omit<NewUser, "id">>

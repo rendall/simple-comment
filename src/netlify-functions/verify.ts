@@ -1,18 +1,18 @@
-import { Handler, Context, Callback } from "aws-lambda"
+import { Handler, Context, Callback, APIGatewayEvent } from "aws-lambda"
 import * as jwt from 'jsonwebtoken'
 import * as dotenv from 'dotenv'
-import { getAuthCredentials, getAuthHeaderValue, hasBearerScheme, Event, REALM } from "./modules/helpers";
+import { getAuthCredentials, getAuthHeaderValue, hasBearerScheme, REALM } from "../lib/utilities";
 
 dotenv.config() 
 
-export const handler: Handler = ( event: Event, context: Context, callback: Callback) => {
+export const handler: Handler = ( event: APIGatewayEvent, context: Context, callback: Callback) => {
   switch (event.httpMethod.toUpperCase()) {
     case "GET": handleGet(event, callback); break; 
     default: callback(null, buildResponse( `Method ${event.httpMethod} not supported`, 405)); break
   }
 }
 
-const handleGet = (event:Event, callback:Callback) => {
+const handleGet = (event:APIGatewayEvent, callback:Callback) => {
   const isBearer = hasBearerScheme(event.headers)
 
   if (!isBearer) callback(null, buildResponse( `Unauthenticated`, 401, {...HEADERS, ...{ "WWW-Authenticate":`Basic realm="${REALM}", charset="UTF-8"` }} ))

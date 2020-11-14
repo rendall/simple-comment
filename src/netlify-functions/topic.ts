@@ -3,7 +3,7 @@ import type { APIGatewayEvent, Callback, Context } from "aws-lambda"
 import { TopicId, Success, Error, Topic } from "../lib/simple-comment";
 import { MongodbService } from "../lib/MongodbService";
 import { error404TopicNotFound, error405MethodNotAllowed } from "./../lib/messages";
-import { getNewTopicInfo, getTargetId, getUpdateTopicInfo, getUserId } from "./modules/helpers"
+import { getNewTopicInfo, getTargetId, getUpdateTopicInfo, getUserId } from "../lib/utilities"
 dotenv.config()
 
 const service: MongodbService = new MongodbService(process.env.DB_CONNECTION_STRING, process.env.DATABASE_NAME)
