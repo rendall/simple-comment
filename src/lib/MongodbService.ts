@@ -1,9 +1,9 @@
-import type { AuthToken, Comment, CommentId, Discussion, TopicId, Error, Success, User, UserId, Topic, AdminSafeUser, DeletedComment, PublicSafeUser } from "./simple-comment";
+import type { AuthToken, Comment, CommentId, Discussion, TopicId, Error, Success, User, UserId, Topic, AdminSafeUser, DeletedComment, PublicSafeUser, NewUser, UpdateUser } from "./simple-comment";
 import { Collection, Db, FindAndModifyWriteOpResultObject, FindOneOptions, InsertOneWriteOpResult, MongoClient, UpdateWriteOpResult, WithId } from "mongodb";
 import { Service } from "./Service";
 import { adminOnlyModifiableUserProperties, isComment, isDeletedComment, omitProperties, toAdminSafeUser, toPublicSafeUser, toSafeUser } from "./utilities";
 import { policy } from "../policy";
-import { success200OK, error404CommentNotFound, success201UserCreated, error401BadCredentials, error404UserUnknown, error400UserExists, error401UserNotAuthenticated, error403UserNotAuthorized, error400TopicExists, error400UserIdMissing, error500ServerError, success202UserDeleted, success204UserUpdated, error403Forbidden, error413CommentTooLong, error425DuplicateComment, error403ForbiddenToModify, error400CommentIdMissing, success204CommentUpdated, success202CommentDeleted, error400NoUpdate, error404TopicNotFound, success202TopicDeleted } from "./messages";
+import { success200OK, error404CommentNotFound, success201UserCreated, error401BadCredentials, error404UserUnknown, error409UserExists, error401UserNotAuthenticated, error403UserNotAuthorized, error400TopicExists, error400UserIdMissing, error500ServerError, success202UserDeleted, success204UserUpdated, error403Forbidden, error413CommentTooLong, error425DuplicateComment, error403ForbiddenToModify, error400CommentIdMissing, success204CommentUpdated, success202CommentDeleted, error400NoUpdate, error404TopicNotFound, success202TopicDeleted } from "./messages";
 import { comparePassword, getAuthToken, uuidv4 } from "./crypt";
 
 export class MongodbService extends Service {
@@ -61,13 +61,30 @@ export class MongodbService extends Service {
    * User created
    * returns User
    **/
-  userPOST = (newUser: User, newUserPassword: string) => new Promise<Success<User> | Error>(async (resolve, reject) => {
+  userPOST = (newUser: NewUser, authUserId?: UserId) => new Promise<Success<AdminSafeUser> | Error>(async (resolve, reject) => {
+
+    if (!authUserId) {
+      reject({ error401UserNotAuthenticated })
+      return
+    }
+
+    if (!newUser.id) {
+      reject(error400UserIdMissing)
+      return
+    }
 
     const users: Collection<User> = (await this.getDb()).collection("users")
-    const oldUser = await users.findOne({ id: newUser.id })
+    const authUser = await users.find({id:authUserId}).limit(1).next()
+
+    if (!authUser) {
+      reject({...error404UserUnknown, body:"Authenticating user is unknown"})
+      return
+    }
+
+    const oldUser = await users.find({ id: newUser.id }).limit(1).next()
 
     if (oldUser) {
-      reject(error400UserExists)
+      reject(error409UserExists)
       return
     }
 
@@ -75,7 +92,8 @@ export class MongodbService extends Service {
     const user: User = { ...newUser, hash } as User
 
     users.insertOne(user).then((result: InsertOneWriteOpResult<WithId<User>>) => {
-      resolve({ ...success201UserCreated, body: `User '${user.id}' created` })
+      const body = toAdminSafeUser(user)
+      resolve({ ...success201UserCreated, body })
     })
   });
 
@@ -85,16 +103,16 @@ export class MongodbService extends Service {
    * userId byte[] 
    * returns User
    **/
-  userGET = (userId?: UserId, authUserId?: UserId) => new Promise<Success<Partial<User>> | Error>(async (resolve, reject) => {
+  userGET = (userId?: UserId, authUserId?: UserId) => new Promise<Success<(PublicSafeUser | AdminSafeUser)> | Error> (async (resolve, reject) => {
     const users: Collection<User> = (await this.getDb()).collection("users")
-    const foundUser = await users.findOne({ id: userId })
+    const foundUser = await users.find({ id: userId }).limit(1).next()
     if (!foundUser) {
       reject(error404UserUnknown)
       return
     }
     const authUser = await users.findOne({ id: authUserId })
     const isAdmin = authUser ? authUser.isAdmin : false
-    const outUser = isAdmin ? omitProperties(foundUser, ["hash"]) : omitProperties(foundUser, ["hash", "email"])
+    const outUser = toSafeUser(foundUser, isAdmin)
     resolve({ ...success200OK, body: outUser })
   });
 
@@ -123,7 +141,7 @@ export class MongodbService extends Service {
    * userId byte[] 
    * returns Success<AdminSafeUser>
    **/
-  userPUT = (user: Partial<User>, authUserId?: UserId) => new Promise<Success<AdminSafeUser> | Error>(async (resolve, reject) => {
+  userPUT = (targetId:UserId, user: UpdateUser, authUserId?:UserId ) => new Promise<Success<AdminSafeUser> | Error>(async (resolve, reject) => {
 
     if (!authUserId) {
       reject(error401UserNotAuthenticated)
@@ -138,7 +156,7 @@ export class MongodbService extends Service {
     const users: Collection<User> = (await this.getDb()).collection("users")
     const authUser = await users.findOne({ id: authUserId })
 
-    if (user.id !== authUser.id && !authUser.isAdmin) {
+    if (targetId !== authUser.id && !authUser.isAdmin) {
       reject(error403UserNotAuthorized)
       return
     }
@@ -150,31 +168,22 @@ export class MongodbService extends Service {
 
     // At this point, user.id exists and authUser can alter it
 
-    const foundUser = await users.findOne({ id: user.id })
+    const foundUser = await users.find({ id: targetId }).limit(1).next()
 
     if (!foundUser) {
       reject(error404UserUnknown)
       return
     }
 
-    const canPut = authUser ? authUser.isAdmin || authUserId === foundUser.id : false
-
-    if (!canPut) {
-      if (authUser) reject(error403UserNotAuthorized)
-      else reject(error401UserNotAuthenticated)
-      return
-    }
-
     const updatedUser = { ...foundUser, ...user }
 
-    users.updateOne({ id: updatedUser.id },
+    users.findOneAndUpdate({ id: updatedUser.id },
       { $set: updatedUser })
-      .then((x: UpdateWriteOpResult) => {
+      .then((x: FindAndModifyWriteOpResultObject<User>) => {
 
         // return isAdmin version of this user, because the user is either an admin or self
         const safeUser = toAdminSafeUser(updatedUser)
 
-        //TODO: update all of the user's comments, too!
         resolve({ ...success204UserUpdated, body: safeUser })
       })
       .catch(e => reject(error500ServerError))
@@ -234,7 +243,7 @@ export class MongodbService extends Service {
    * parentId byte[] 
    * returns Comment
    **/
-  commentPOST = (parentId: (TopicId | CommentId), text:string, authUserId?: UserId) => new Promise<Success<Comment> | Error>(async (resolve, reject) => {
+  commentPOST = (parentId: (TopicId | CommentId), text: string, authUserId?: UserId) => new Promise<Success<Comment> | Error>(async (resolve, reject) => {
 
     if (!authUserId) {
       reject(error401UserNotAuthenticated)
@@ -247,9 +256,9 @@ export class MongodbService extends Service {
     }
 
     const users: Collection<User> = (await this.getDb()).collection("users")
-    const authUser = await users.findOne({ id: authUserId })
+    const authUser = authUserId ? await users.findOne({ id: authUserId }) : null
 
-    if (!authUser) {
+    if (authUserId && !authUser) {
       reject(error404UserUnknown)
       return
     }
@@ -463,7 +472,7 @@ export class MongodbService extends Service {
    * commentId byte[] 
    * returns Comment
    **/
-  commentPUT = (targetId:CommentId, text:string, authUserId?: UserId) => new Promise<Success<Comment> | Error>(async (resolve, reject) => {
+  commentPUT = (targetId: CommentId, text: string, authUserId?: UserId) => new Promise<Success<Comment> | Error>(async (resolve, reject) => {
 
     const users: Collection<User> = (await this.getDb()).collection("users")
     const authUser = await users.find({ id: authUserId }).limit(1).next()

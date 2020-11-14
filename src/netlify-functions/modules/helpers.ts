@@ -1,5 +1,6 @@
 import * as jwt from 'jsonwebtoken'
-import { UserId } from "./../../lib/simple-comment";
+import { stringify } from 'querystring';
+import { NewUser, UpdateUser, UserId } from "./../../lib/simple-comment";
 
 const AUTHORIZATION_HEADER = "Authorization";
 const BEARER_SCHEME = "Bearer";
@@ -78,15 +79,29 @@ export const getUserId = (headers: { [key: string]: string }): UserId | null => 
 export const getTargetId = (path: string, endpoint: string, dirs?: string[]): (string | null) => {
 
     if (dirs === undefined) return getTargetId(path, endpoint, path.split("/"))
-    
+
     if (dirs.length <= 1) return null // this means dirs[0] is endpoint or endpoint does not exist
-    
+
     if (dirs[0] === endpoint) return dirs[1]
 
     return getTargetId(path, endpoint, dirs.splice(1))
 }
 
+type GenericObj = { [key: string]: (string | number | boolean) }
 
+const parseBody = (body: string): GenericObj => body.split("&")
+    .map(i => i.split("="))
+    .map(([key, value]: [string, string]) => [key, decodeURI(value)])
+    .reduce((obj, [key, value]) => ({ ...obj, [key]: value }), {})
+
+const narrowType = <T>(obj:GenericObj, keys:(keyof T)[]) => Object.entries(obj)
+    .reduce((narrowType, [key, value]) => keys.includes(key as keyof T) ? ({ [key]: value }) : narrowType, {}) as T
+
+
+const newUserKeys: (keyof NewUser)[] = ["id", "isAdmin", "email", "isVerified", "name"]
+export const getNewUserInfo = (body: string): NewUser => narrowType<NewUser>(parseBody(body), newUserKeys) 
+const updatedUserKeys: (keyof UpdateUser)[] = ["isAdmin", "email", "isVerified", "name"]
+export const getUpdatedUserInfo = (body: string): UpdateUser => narrowType<UpdateUser>( parseBody(body), updatedUserKeys ) as UpdateUser
 
 export interface Event {
     path: string;

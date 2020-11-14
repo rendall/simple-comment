@@ -64,6 +64,10 @@ export interface User {
 // This is a user that is safe to return from the server to the public
 export type PublicSafeUser = Pick<User, "id" | "name" | "isAdmin">
 // This is a user that is safe to return from the server to admin
-export type AdminSafeUser = Pick<User, "id" | "name" | "isAdmin" | "email" | "isVerified">
+export type AdminSafeUser = Pick<User, "id" | "name" | "email" | "isAdmin" | "isVerified">
+// The information that may be expected for a new user
+export type NewUser = Pick<User, "id" | "name" | "email" | "isAdmin" | "isVerified">
+// The information that can be updated for a user 
+export type UpdateUser = Omit<NewUser, "id">
 
 
