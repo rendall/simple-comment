@@ -1,7 +1,7 @@
 import { AuthToken, Comment, CommentId, Discussion, TopicId, Success, Topic, User, AdminSafeUser, PublicSafeUser, Email, DeletedComment } from "./simple-comment";
 import { MongodbService } from "./MongodbService";
 import { Db, MongoClient } from "mongodb";
-import { success202CommentDeleted, error425DuplicateComment, error413CommentTooLong, error403Forbidden, error401BadCredentials, error404UserUnknown, success202UserDeleted, error400UserExists, error401UserNotAuthenticated, error403UserNotAuthorized, success202TopicDeleted, error403ForbiddenToModify } from "./messages";
+import { success202CommentDeleted, error425DuplicateComment, error413CommentTooLong, error403Forbidden, error401BadCredentials, error404UserUnknown, success202UserDeleted, error401UserNotAuthenticated, error403UserNotAuthorized, success202TopicDeleted, error403ForbiddenToModify, error409UserExists } from "./messages";
 import { getAuthToken, hashPassword, uuidv4 } from "./crypt";
 import { policy } from "../policy";
 import { adminUnsafeUserProperties, isComment, isDeletedComment, publicUnsafeUserProperties, toAdminSafeUser, toPublicSafeUser } from "./utilities";
@@ -74,7 +74,7 @@ describe('Full API service test', () => {
     client = await service.getClient()
     db = await service.getDb()
     const hash = await hashPassword(testAdminUserPassword)
-    testAllUsers = [{ ...testAdminUser, hash }, ...testGroupUsers ]
+    testAllUsers = [{ ...testAdminUser, hash }, ...testGroupUsers]
     const users = db.collection("users");
     await users.insertMany(testAllUsers)
     const comments = db.collection<Comment | DeletedComment | Discussion>("comments")
@@ -109,14 +109,14 @@ describe('Full API service test', () => {
   // User Create
   // post to /user should return user and 201 User created
   test("POST to /user", () => {
-    const newUserPassword = randomString(alphaUserInput, Math.floor(Math.random() * 30) + 10)
-    return service.userPOST(testNewUser as User, newUserPassword).then(value => expect(value).toHaveProperty("statusCode", 201))
+    const authUser = getAuthUser(u => u.isAdmin)
+    return service.userPOST(testNewUser as User, authUser.id).then(value => expect(value).toHaveProperty("statusCode", 201))
   })
   // post to /user with existing username should return 400 user exists
   test("POST to /user with identical credentials", () => {
-    const newUserPassword = randomString(alphaUserInput, Math.floor(Math.random() * 30) + 10)
+    const authUser = getAuthUser(u => u.isAdmin)
     expect.assertions(1)
-    return service.userPOST(testNewUser as User, newUserPassword).catch(value => expect(value).toBe(error400UserExists))
+    return service.userPOST(testNewUser as User, authUser.id).catch(value => expect(value).toBe(error409UserExists))
   })
 
   // User Read
@@ -183,33 +183,33 @@ describe('Full API service test', () => {
   // put to /user/{userId} with no credentials should return 401
   test("PUT to /user/{userId} with no credentials", () => {
     const targetUser = getTargetUser()
-    return service.userPUT(targetUser).then(res => expect(true).toBe(false)).catch(e => expect(e).toBe(error401UserNotAuthenticated))
+    return service.userPUT(targetUser.id, targetUser).then(res => expect(true).toBe(false)).catch(e => expect(e).toBe(error401UserNotAuthenticated))
   })
   // put to /user/{userId} with improper credentials should return 403
   test("PUT to /user/{userId} with improper credentials", () => {
     const targetUser = getTargetUser()
     const ordinaryUser = getAuthUser(u => !u.isAdmin)
-    return service.userPUT(targetUser, ordinaryUser.id).then(res => expect(true).toBe(false)).catch(e => expect(e).toBe(error403UserNotAuthorized))
+    return service.userPUT(targetUser.id, targetUser, ordinaryUser.id).then(res => expect(true).toBe(false)).catch(e => expect(e).toBe(error403UserNotAuthorized))
   })
   // put to /user/{userId} with public, own credentials cannot modify isAdmin
   test("PUT to /user/{userId} with public, own credentials cannot modify isAdmin", () => {
     const ordinaryUser = getTargetUser(u => !u.isAdmin)
     const updatedUser = { ...ordinaryUser, isAdmin: true }
     expect.assertions(1)
-    return service.userPUT(updatedUser, ordinaryUser.id).catch(error => expect(error).toBe(error403ForbiddenToModify))
+    return service.userPUT(updatedUser.id, updatedUser, ordinaryUser.id).catch(error => expect(error).toBe(error403ForbiddenToModify))
   })
   // put to /user/{userId} with public, own credentials cannot modify isVerified
   test("PUT to /user/{userId} with public, own credentials cannot modify isVerified", () => {
     const ordinaryUser = getTargetUser(u => !u.isAdmin)
     const updatedUser = { ...ordinaryUser, isVerified: true }
     expect.assertions(1)
-    return service.userPUT(updatedUser, ordinaryUser.id).catch(error => expect(error).toBe(error403ForbiddenToModify))
+    return service.userPUT(updatedUser.id, updatedUser, ordinaryUser.id).catch(error => expect(error).toBe(error403ForbiddenToModify))
   })
   // put to /user/{userId} with own credentials should alter user return 204 User updated
   test("PUT to /user/{userId} with own credentials", () => {
     const targetUser = getTargetUser()
     const updatedUser = { id: targetUser.id, name: randomString(alphaUserInput, 25) }
-    return service.userPUT(updatedUser, targetUser.id).then((res: Success<AdminSafeUser>) => {
+    return service.userPUT(updatedUser.id, updatedUser, targetUser.id).then((res: Success<AdminSafeUser>) => {
       expect(res).toHaveProperty("statusCode", 204)
       expect(res).toHaveProperty("body")
       expect(res.body.name).toBe(updatedUser.name)
@@ -221,7 +221,7 @@ describe('Full API service test', () => {
     const targetUser = getTargetUser(u => !u.isAdmin && !u.isVerified)
     const adminAuthUser = getAuthUser(u => u.isAdmin)
     const updatedUser: User = { ...targetUser, name: randomString(alphaUserInput, 25), isAdmin: true, isVerified: true }
-    return service.userPUT(updatedUser, adminAuthUser.id).then((res: Success<AdminSafeUser>) => {
+    return service.userPUT(updatedUser.id, updatedUser, adminAuthUser.id).then((res: Success<AdminSafeUser>) => {
       expect(res).toHaveProperty("statusCode", 204)
       expect(res).toHaveProperty("body", toAdminSafeUser(updatedUser))
       expect(res.body).toHaveProperty("isAdmin", true)
@@ -233,7 +233,7 @@ describe('Full API service test', () => {
     const targetUser = getRandomUser()
     const adminAuthUser = getAuthUser(u => u.isAdmin)
     expect.assertions(1)
-    return service.userPUT(targetUser, adminAuthUser.id).catch(error => expect(error).toBe(error404UserUnknown))
+    return service.userPUT(targetUser.id, targetUser, adminAuthUser.id).catch(error => expect(error).toBe(error404UserUnknown))
   })
 
   // User Delete
@@ -309,6 +309,14 @@ describe('Full API service test', () => {
       expect(res.body).toHaveProperty("user")
     })
   })
+  // post comment to /comment/{commentId} without credentials should fail
+  test('POST to /comment/{commentId} without credentials', () => {
+    const parentComment = getRandomElement(testCommentTree)
+    const text = randomString(alphaUserInput, 400)
+    expect.assertions(1)
+    return service.commentPOST(parentComment.id, text).catch(e => expect(e).toBe(error401UserNotAuthenticated))
+  })
+
   // post comment to /comment/{commentId} with identical information within a short length of time should return 425 Possible duplicate comment
   test('POST comment to /comment/{commentId} with identical information', () => {
     const parentCommentId = testNewComment.parentId
@@ -413,7 +421,8 @@ describe('Full API service test', () => {
   })
   // delete comment to /comment/{commentId} by the user should delete the comment and return 202 Comment deleted
   test('DELETE comment to /comment/{commentId} by self user', () => {
-    const targetComment = getRandomElement(testCommentTree.filter(isComment).filter(c => !isDeletedComment(c)))
+    const selfUser = getAuthUser(u => !u.isAdmin)
+    const targetComment = getRandomElement(testCommentTree.filter(isComment).filter(c => !isDeletedComment(c)).filter(c => c.userId === selfUser.id))
     return service.commentDELETE(targetComment.id, targetComment.userId).then(value => expect(value).toHaveProperty("statusCode", 202))
   })
 
