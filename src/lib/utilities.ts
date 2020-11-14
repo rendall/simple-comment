@@ -2,35 +2,27 @@ import * as jwt from 'jsonwebtoken'
 import { NewUser, Success, Error, Topic, UpdateUser, UserId, AdminSafeUser, Comment, DeletedComment, Discussion, PublicSafeUser, User } from "./simple-comment"
 
 /**
- * Return object with properties in props removed
- */
-
-/**
- * These are user properties that are unsafe to return to admins
- */
-export const adminUnsafeUserProperties: (keyof User)[] = ["hash", "_id"]
-/**
- * These are user properties that are unsafe to return to ordinary users and the public
- */
-export const publicUnsafeUserProperties: (keyof User)[] = [...adminUnsafeUserProperties, "email", "isVerified"]
-/**
  * These are user properties that only admins can modify on users 
  */
 export const adminOnlyModifiableUserProperties: (keyof User)[] = ["isVerified", "isAdmin"]
+
 /**
  * Return a user object that is clean and secure
  */
 export const toSafeUser = (user: User, isAdmin: boolean = false): (PublicSafeUser | AdminSafeUser) => isAdmin ? toAdminSafeUser(user) : toPublicSafeUser(user)
+
 export const toPublicSafeUser = (user: User) => user ? narrowType<PublicSafeUser>(user, ["id", "name", "isAdmin"]) : user
+
 export const toAdminSafeUser = (user: User) => user ? narrowType<AdminSafeUser>(user, ["id", "name", "email", "isAdmin", "isVerified"]) : user
 
+// Type guards
 export const isComment = (target: Comment | Discussion): target is Comment => target && target.hasOwnProperty("parentId")
+
 export const isDeletedComment = (target: Comment | Discussion): target is DeletedComment => isComment(target) && target.hasOwnProperty("dateDeleted")
 
-export const isAdminSafeUser = (user: Partial<User>): user is AdminSafeUser => (Object.keys(user) as (keyof User)[]).every(key => !adminOnlyModifiableUserProperties.includes(key))
-export const isPublicSafeUser = (user: Partial<User>): user is PublicSafeUser => (Object.keys(user) as (keyof User)[]).every(key => !publicUnsafeUserProperties.includes(key))
+export const isError = (res: (Success | Error)): boolean => res.statusCode >= 400
 
-
+// Header utilities
 
 const AUTHORIZATION_HEADER = "Authorization";
 const BEARER_SCHEME = "Bearer";
@@ -107,6 +99,7 @@ export const getUserId = (headers: { [key: string]: string }): UserId | null => 
 
 }
 
+// Request parsing utilities
 /** 
  * return the path directory after endpoint or null if none
  * /dir1/endpoint/somestring/anotherstring returns somestring
@@ -135,13 +128,14 @@ const parseBody = (body: string): GenericObj => body.split("&")
 const narrowType = <T>(obj: ( GenericObj | User ), keys: (keyof T)[]) => Object.entries(obj)
   .reduce((narrowType, [key, value]) => keys.includes(key as keyof T) ? ({ ...narrowType, [key]: value }) : narrowType, {}) as T
 
-const newUserKeys: (keyof NewUser)[] = ["id", "isAdmin", "email", "isVerified", "name", "password"]
+const newUserKeys: (keyof NewUser)[] = [ "email", "id", "isAdmin", "isVerified", "name", "password" ]
+
 export const getNewUserInfo = (body: string): NewUser => narrowType<NewUser>(parseBody(body), newUserKeys)
-const updatedUserKeys: (keyof UpdateUser)[] = ["isAdmin", "email", "isVerified", "name"]
+
+const updatedUserKeys: (keyof UpdateUser)[] = ["email", "isAdmin", "isVerified", "name"]
+
 export const getUpdatedUserInfo = (body: string): UpdateUser => narrowType<UpdateUser>(parseBody(body), updatedUserKeys) as UpdateUser
 
 export const getNewTopicInfo = (body: string): Topic => narrowType<Topic>(parseBody(body), ["id", "title", "isLocked"]) as Topic
+
 export const getUpdateTopicInfo = (body: string): Topic => narrowType<Topic>(parseBody(body), ["title", "isLocked"]) as Topic
-
-export const isError = (res: (Success | Error)): boolean => res.statusCode >= 400
-
