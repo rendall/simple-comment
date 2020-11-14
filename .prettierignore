@@ -1,0 +1,10 @@
+*.js
+.env
+/.git
+/functions
+/lib
+/netlify-functions
+/node_modules
+RAW
+globalConfig.json
+yarn-error.log
