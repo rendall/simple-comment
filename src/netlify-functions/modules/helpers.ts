@@ -1,5 +1,5 @@
 import * as jwt from 'jsonwebtoken'
-import { NewUser, UpdateUser, UserId } from "./../../lib/simple-comment";
+import { NewUser, Topic, UpdateUser, UserId } from "./../../lib/simple-comment";
 
 const AUTHORIZATION_HEADER = "Authorization";
 const BEARER_SCHEME = "Bearer";
@@ -93,14 +93,17 @@ const parseBody = (body: string): GenericObj => body.split("&")
     .map(([key, value]: [string, string]) => [key, decodeURI(value)])
     .reduce((obj, [key, value]) => ({ ...obj, [key]: value }), {})
 
-const narrowType = <T>(obj:GenericObj, keys:(keyof T)[]) => Object.entries(obj)
+const narrowType = <T>(obj: GenericObj, keys: (keyof T)[]) => Object.entries(obj)
     .reduce((narrowType, [key, value]) => keys.includes(key as keyof T) ? ({ [key]: value }) : narrowType, {}) as T
 
 
 const newUserKeys: (keyof NewUser)[] = ["id", "isAdmin", "email", "isVerified", "name"]
-export const getNewUserInfo = (body: string): NewUser => narrowType<NewUser>(parseBody(body), newUserKeys) 
+export const getNewUserInfo = (body: string): NewUser => narrowType<NewUser>(parseBody(body), newUserKeys)
 const updatedUserKeys: (keyof UpdateUser)[] = ["isAdmin", "email", "isVerified", "name"]
-export const getUpdatedUserInfo = (body: string): UpdateUser => narrowType<UpdateUser>( parseBody(body), updatedUserKeys ) as UpdateUser
+export const getUpdatedUserInfo = (body: string): UpdateUser => narrowType<UpdateUser>(parseBody(body), updatedUserKeys) as UpdateUser
+
+export const getNewTopicInfo = (body: string): Topic => narrowType<Topic>(parseBody(body), ["id", "title", "isLocked"]) as Topic
+export const getUpdateTopicInfo = (body: string): Topic => narrowType<Topic>(parseBody(body), ["title", "isLocked"]) as Topic
 
 export interface Event {
     path: string;

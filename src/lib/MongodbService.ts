@@ -583,7 +583,7 @@ export class MongodbService extends Service {
    * authUserId
    * returns Success 201
    **/
-  topicPOST = (topic: Topic, authUserId?: UserId) => new Promise<Success<Topic> | Error>(async (resolve, reject) => {
+  topicPOST = ( topic: Topic, authUserId?: UserId) => new Promise<Success<Topic> | Error>(async (resolve, reject) => {
 
     if (!authUserId) {
       reject(error401UserNotAuthenticated)
@@ -811,7 +811,7 @@ export class MongodbService extends Service {
    * discussionId byte[] 
    * returns Success
    **/
-  topicPUT = (topic: Pick<Topic, "id" | "title" | "isLocked">, authUserId?: UserId) => new Promise<Success<Topic> | Error>(async (resolve, reject) => {
+  topicPUT = (topicId:TopicId, topic: Pick<Topic, "id" | "title" | "isLocked">, authUserId?: UserId) => new Promise<Success<Topic> | Error>(async (resolve, reject) => {
 
     if (!authUserId) {
       reject(error401UserNotAuthenticated)

@@ -465,7 +465,7 @@ describe('Full API service test', () => {
   test('PUT to /topic/{topicId}', () => {
     const topic = getRandomElement(testTopics)
     const putTopic = { ...topic, dateCreated: new Date(), title: randomString() }
-    return service.topicPUT(putTopic, testAdminUser.id).then((res: Success<Topic>) => {
+    return service.topicPUT(putTopic.id, putTopic, testAdminUser.id).then((res: Success<Topic>) => {
       expect(res).toHaveProperty("statusCode", 204)
       expect(res.body.dateCreated.toDateString()).toBe(topic.dateCreated.toDateString())
     })
@@ -475,7 +475,7 @@ describe('Full API service test', () => {
     const topic = getRandomElement(testTopics)
     const putTopic = { ...topic, isLocked: !topic.isLocked, title: randomString(alphaUserInput, 500) }
     expect.assertions(1)
-    return service.topicPUT(putTopic).catch(e => expect(e).toBe(error401UserNotAuthenticated)
+    return service.topicPUT(putTopic.id, putTopic).catch(e => expect(e).toBe(error401UserNotAuthenticated)
     )
   })
   // put topic to /topic/{topicId} with improper credentials should return 403
@@ -483,7 +483,7 @@ describe('Full API service test', () => {
     const topic = getRandomElement(testTopics)
     const putTopic = { ...topic, isLocked: !topic.isLocked, title: randomString(alphaUserInput, 500) }
     expect.assertions(1)
-    return service.topicPUT(putTopic, testNewUser.id).catch(e => expect(e).toBe(error403UserNotAuthorized)
+    return service.topicPUT(putTopic.id, putTopic, testNewUser.id).catch(e => expect(e).toBe(error403UserNotAuthorized)
     )
   })
   // put to /topic/{topicId} where Id does not exist should return 404 
@@ -491,14 +491,14 @@ describe('Full API service test', () => {
     const topic = getRandomElement(testTopics)
     const putTopic = { ...topic, id: randomString() }
     expect.assertions(1)
-    return service.topicPUT(putTopic, testAdminUser.id).catch(e => expect(e).toHaveProperty("statusCode", 404)
+    return service.topicPUT(putTopic.id, putTopic, testAdminUser.id).catch(e => expect(e).toHaveProperty("statusCode", 404)
     )
   })
   // put topic with {topicId} to /topic/{topicId} should return topic and 204 Discussion updated
   test('PUT topic to /topic/{topicId}', () => {
     const topic = getRandomElement(testTopics)
     const putTopic = { ...topic, title: randomString() }
-    return service.topicPUT(putTopic, testAdminUser.id).then((res: Success) => {
+    return service.topicPUT(putTopic.id, putTopic, testAdminUser.id).then((res: Success) => {
       expect(res).toHaveProperty("statusCode", 204)
       expect(res).toHaveProperty("body", putTopic)
     })

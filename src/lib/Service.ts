@@ -112,7 +112,7 @@ export abstract class Service {
    * authUserId
    * returns Success 201
    **/
-  abstract topicPOST = (topic: Topic, authUserId: UserId) => new Promise<Success<Discussion> | Error>((resolve, reject) => {
+  abstract topicPOST = ( topic: Topic, authUserId?: UserId) => new Promise<Success<Discussion> | Error>((resolve, reject) => {
     reject(this.abstractError)
   });
 
@@ -136,7 +136,7 @@ export abstract class Service {
     reject(this.abstractError)
   });
 
-  abstract topicPUT = (topic: Topic, authUser: UserId) => new Promise<Success<Topic> | Error>((resolve, reject) => {
+  abstract topicPUT = (topicId:TopicId, topic: Pick<Topic, "title" | "isLocked">, authUserId?: UserId) => new Promise<Success<Topic> | Error>((resolve, reject) => {
     reject(this.abstractError)
   });
 
