@@ -4,7 +4,7 @@ import { Db, MongoClient } from "mongodb";
 import { success202CommentDeleted, error425DuplicateComment, error413CommentTooLong, error403Forbidden, error401BadCredentials, error404UserUnknown, success202UserDeleted, error401UserNotAuthenticated, error403UserNotAuthorized, success202TopicDeleted, error403ForbiddenToModify, error409UserExists } from "../src/lib/messages";
 import { getAuthToken, hashPassword, uuidv4 } from "../src/lib/crypt";
 import { policy } from "../src/policy";
-import { adminUnsafeUserProperties, isComment, isDeletedComment, publicUnsafeUserProperties, toAdminSafeUser } from "../src/lib/utilities";
+import { isComment, isDeletedComment, toAdminSafeUser } from "../src/lib/utilities";
 import * as dotenv from "dotenv"
 dotenv.config()
 
@@ -29,6 +29,10 @@ const createRandomGroupUsers = (population: number, users: User[] = []): User[] 
 const createRandomListOfTopics = (num: number = randomNumber(2, 20), topics: Topic[] = []): Topic[] => num <= 0 ? topics : createRandomListOfTopics(num - 1, [...topics, createRandomTopic()])
 const createRandomTopic = (): Topic => ({ id: randomString(alphaAscii, randomNumber(10, 40)), isLocked: false, title: randomString(alphaUserInput, randomNumber(25, 100)), dateCreated: randomDate() })
 const createRandomUser = (): User => ({ id: randomString(), email: createRandomEmail(), name: randomString(alphaUserInput), isVerified: Math.random() > 0.5, isAdmin: Math.random() > 0.5, hash: randomString(alphaAscii, 32) })
+
+//@ts-expect-error
+const adminUnsafeUserProperties: (keyof User)[] = ["hash", "_id", "password"]
+const publicUnsafeUserProperties: (keyof User)[] = [...adminUnsafeUserProperties, "email", "isVerified"]
 
 // Verification functions
 const isPublicSafeUser = (u: Partial<User>) => (Object.keys(u) as (keyof User)[]).every(key => !publicUnsafeUserProperties.includes(key))

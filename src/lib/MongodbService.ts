@@ -107,7 +107,7 @@ export class MongodbService extends Service {
     }
 
     const hash = await hashPassword(newUser.password)
-    const user: User = { ...newUser, hash } as User
+    const user: User = { ...toAdminSafeUser(newUser), hash } as User
 
     users.insertOne(user).then((result: InsertOneWriteOpResult<WithId<User>>) => {
       const body = toAdminSafeUser(user)
