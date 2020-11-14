@@ -4,7 +4,7 @@ A free, self-hosted comment system for any blog or website
 
 ## Default build
 
-The default stack uses Netlify + *MongoDB* for the backend, and a minimal `fetch` based client for the frontend, but it can be readily adapted to use any technology stack, as long as the tests pass and the API conforms to the Open API 3 schema file
+The default stack uses Netlify + _MongoDB_ for the backend, and a minimal `fetch` based client for the frontend, but it can be readily adapted to use any technology stack, as long as the tests pass and the API conforms to the Open API 3 schema file
 
 You can get your own free-tier MongoDB-in-the-cloud by [following these instructions](./docs/MONGODB_ATLAS.md)
 
@@ -12,7 +12,7 @@ You can get your own free-tier MongoDB-in-the-cloud by [following these instruct
 
 The API specification is described by the file [simple-comment-api.json](./src/schema/simple-comment-api.json) in Open API 3 format and is designed to be interchangeable with any backend, frontend and identification system
 
-This is an overview of the *Simple Comment API* endpoints
+This is an overview of the _Simple Comment API_ endpoints
 
 ### `/comment`
 
@@ -28,7 +28,7 @@ The /topic endpoint handles CRUD for these root comments. A GET operation of `/t
 
 ### `/user`
 
-By default, comments can be posted by anonymous users, but *Simple Comment* does have a minimal identification scheme so that commenters who choose to do so can have control over their comments after the are posted, according to policy
+By default, comments can be posted by anonymous users, but _Simple Comment_ does have a minimal identification scheme so that commenters who choose to do so can have control over their comments after the are posted, according to policy
 
 ### `/auth`
 
@@ -36,7 +36,7 @@ Auth is the endpoint for the authentication and identification scheme. A user su
 
 ## policy
 
-`policy` is an [object holding key-value pairs](./src/policy.ts) that governs how *Simple Comment* behaves, determining for instance maximum comment length or whether ordinary users can delete themselves
+`policy` is an [object holding key-value pairs](./src/policy.ts) that governs how _Simple Comment_ behaves, determining for instance maximum comment length or whether ordinary users can delete themselves
 
 ## Roadmap
 

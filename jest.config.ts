@@ -14,16 +14,13 @@ export default {
   coverageProvider: "v8",
 
   // A preset that is used as a base for Jest's configuration
-  preset: './jest.preset.ts',
+  preset: "./jest.preset.ts",
 
   // The test environment that will be used for testing
   // testEnvironment: "node",
 
   // An array of regexp pattern strings that are matched against all test paths, matched tests are skipped
-  testPathIgnorePatterns: [
-    "\\\\node_modules\\\\",
-    "RAW"
-  ],
+  testPathIgnorePatterns: ["\\\\node_modules\\\\", "RAW"]
 
   // All imported modules in your tests should be mocked automatically
   // automock: false,
@@ -32,7 +29,7 @@ export default {
   // bail: 0,
 
   // The directory where Jest should store its cached dependency information
-  // cacheDirectory: 
+  // cacheDirectory:
 
   // Indicates whether the coverage information should be collected while executing the test
   // collectCoverage: false,
@@ -192,4 +189,4 @@ export default {
 
   // Whether to use watchman for file crawling
   // watchman: true,
-};
+}

@@ -1,6 +1,7 @@
 *.js
 .env
 /.git
+/docs
 /functions
 /lib
 /netlify-functions

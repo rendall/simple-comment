@@ -9,7 +9,7 @@ let exampleLines: string[]
  * It is not tracked in git
  * example.env is tracked in git and shows the
  * environmental variables expected in .env
- * 
+ *
  * This test file ensures that:
  * - `example.env` exists
  * - `.env` exists
@@ -18,7 +18,6 @@ let exampleLines: string[]
  **/
 
 describe("Ensures secrets are secret", () => {
-
   test("example.env exists", () => {
     const exampleEnvExists = fs.existsSync(`${process.cwd()}/example.env`)
     expect(exampleEnvExists).toBe(true)
@@ -45,10 +44,13 @@ describe("Ensures secrets are secret", () => {
 
   exampleLines.forEach(line => {
     const [varName, varValue] = line.split("=")
-    test(`${varName} is defined as an environmental variable`, () => { expect(process.env[varName]).toBeDefined() })
+    test(`${varName} is defined as an environmental variable`, () => {
+      expect(process.env[varName]).toBeDefined()
+    })
     // make sure the secrets and passwords are not the same as in example.env
     if (varName.indexOf("SECRET") >= 0 || varName.indexOf("PASSWORD") >= 0)
-      test(`${varName} is not ${varValue}`, () => { expect(process.env[varName]).not.toBe(varValue) })
+      test(`${varName} is not ${varValue}`, () => {
+        expect(process.env[varName]).not.toBe(varValue)
+      })
   })
 })
-
