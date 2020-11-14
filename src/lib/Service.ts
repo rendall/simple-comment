@@ -17,6 +17,15 @@ export abstract class Service {
   });
 
   /**
+   * Accept a user name and password, return authentication token
+   *
+   * returns AuthToken
+   **/
+  abstract authGET = (username: string, password: string) => new Promise<AuthToken | Error>((resolve, reject) => {
+    reject(this.abstractError)
+  });
+
+  /**
    * Create user
    * returns Success | Error
    **/

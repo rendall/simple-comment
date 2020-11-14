@@ -7,14 +7,18 @@ export type Email = string
 export type URL = string
 export type UserId = string
 
+export type Headers = {[key:string]:string}
+
 export interface Success<T = string> {
   statusCode: number,
-  body: (T)
+  body: (T),
+  headers?:Headers
 }
 
 export interface Error {
   statusCode: number,
   body: string
+  headers?:Headers
 }
 
 export interface Discussion {
@@ -66,8 +70,13 @@ export type PublicSafeUser = Pick<User, "id" | "name" | "isAdmin">
 // This is a user that is safe to return from the server to admin
 export type AdminSafeUser = Pick<User, "id" | "name" | "email" | "isAdmin" | "isVerified">
 // The information that may be expected for a new user
-export type NewUser = Pick<User, "id" | "name" | "email" | "isAdmin" | "isVerified">
+export type NewUser = { id: UserId,
+  name: string,
+  email: Email,
+  password: string,
+  isAdmin?: boolean,
+}
 // The information that can be updated for a user 
-export type UpdateUser = Omit<NewUser, "id">
+export type UpdateUser = Partial<Omit<NewUser, "id">>
 
 

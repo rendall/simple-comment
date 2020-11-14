@@ -3,6 +3,7 @@ export const error400CommentIdMissing: Error = { statusCode: 400, body: "Comment
 export const error400NoUpdate: Error = { statusCode: 400, body: "Comment text is same" }
 export const error400TopicExists: Error = { statusCode: 400, body: "Discussion already exists" }
 export const error400UserIdMissing: Error = { statusCode: 400, body: "UserId missing" }
+export const error400PasswordMissing: Error = { statusCode: 400, body: "Password missing" }
 export const error401BadCredentials: Error = { statusCode: 401, body: "Bad credentials" }
 export const error401UserNotAuthenticated: Error = { statusCode: 401, body: "User not authenticated" }
 export const error403Forbidden: Error = { statusCode: 403, body: "Forbidden" }

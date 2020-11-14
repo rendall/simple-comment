@@ -3,8 +3,8 @@ import { Collection, Db, FindAndModifyWriteOpResultObject, FindOneOptions, Inser
 import { Service } from "./Service";
 import { adminOnlyModifiableUserProperties, isComment, isDeletedComment, omitProperties, toAdminSafeUser, toPublicSafeUser, toSafeUser } from "./utilities";
 import { policy } from "../policy";
-import { success200OK, error404CommentNotFound, success201UserCreated, error401BadCredentials, error404UserUnknown, error409UserExists, error401UserNotAuthenticated, error403UserNotAuthorized, error400TopicExists, error400UserIdMissing, error500ServerError, success202UserDeleted, success204UserUpdated, error403Forbidden, error413CommentTooLong, error425DuplicateComment, error403ForbiddenToModify, error400CommentIdMissing, success204CommentUpdated, success202CommentDeleted, error400NoUpdate, error404TopicNotFound, success202TopicDeleted } from "./messages";
-import { comparePassword, getAuthToken, uuidv4 } from "./crypt";
+import { success200OK, error404CommentNotFound, success201UserCreated, error401BadCredentials, error404UserUnknown, error409UserExists, error401UserNotAuthenticated, error403UserNotAuthorized, error400TopicExists, error400UserIdMissing, error500ServerError, success202UserDeleted, success204UserUpdated, error403Forbidden, error413CommentTooLong, error425DuplicateComment, error403ForbiddenToModify, error400CommentIdMissing, success204CommentUpdated, success202CommentDeleted, error400NoUpdate, error404TopicNotFound, success202TopicDeleted, error400PasswordMissing } from "./messages";
+import { comparePassword, getAuthToken, hashPassword, uuidv4 } from "./crypt";
 
 export class MongodbService extends Service {
 
@@ -39,7 +39,7 @@ export class MongodbService extends Service {
    *
    * returns AuthToken
    **/
-  authPOST = (username: string, password: string) => new Promise<AuthToken | Error>((resolve, reject) =>
+  authPOST = (username: string, password: string) => new Promise<Success<AuthToken> | Error>((resolve, reject) =>
     this.getDb()
       .then(db => db.collection("users"))
       .then(users => users.findOne({ id: username }))
@@ -50,12 +50,13 @@ export class MongodbService extends Service {
           if (!isSame) reject(error401BadCredentials)
           else {
             const authToken = getAuthToken(user.id)
-            resolve(authToken)
-            // resolve(error500ServerError)
+            resolve({...success200OK, body:authToken})
           }
         }
       })
   );
+
+  authGET = this.authPOST
 
   /**
    * User created
@@ -63,7 +64,7 @@ export class MongodbService extends Service {
    **/
   userPOST = (newUser: NewUser, authUserId?: UserId) => new Promise<Success<AdminSafeUser> | Error>(async (resolve, reject) => {
 
-    if (!authUserId) {
+    if (!authUserId && !policy.publicCanCreateUser) {
       reject({ error401UserNotAuthenticated })
       return
     }
@@ -73,11 +74,16 @@ export class MongodbService extends Service {
       return
     }
 
-    const users: Collection<User> = (await this.getDb()).collection("users")
-    const authUser = await users.find({id:authUserId}).limit(1).next()
+    if (!newUser.password) {
+      reject(error400PasswordMissing)
+      return
+    }
 
-    if (!authUser) {
-      reject({...error404UserUnknown, body:"Authenticating user is unknown"})
+    const users: Collection<User> = (await this.getDb()).collection("users")
+    const authUser = await users.find({ id: authUserId }).limit(1).next()
+
+    if (authUserId && !authUser) {
+      reject({ ...error404UserUnknown, body: "Authenticating user is unknown" })
       return
     }
 
@@ -88,7 +94,7 @@ export class MongodbService extends Service {
       return
     }
 
-    const hash = "";//await hashPassword(newUserPassword)
+    const hash = await hashPassword(newUser.password)
     const user: User = { ...newUser, hash } as User
 
     users.insertOne(user).then((result: InsertOneWriteOpResult<WithId<User>>) => {
@@ -103,7 +109,7 @@ export class MongodbService extends Service {
    * userId byte[] 
    * returns User
    **/
-  userGET = (userId?: UserId, authUserId?: UserId) => new Promise<Success<(PublicSafeUser | AdminSafeUser)> | Error> (async (resolve, reject) => {
+  userGET = (userId?: UserId, authUserId?: UserId) => new Promise<Success<(PublicSafeUser | AdminSafeUser)> | Error>(async (resolve, reject) => {
     const users: Collection<User> = (await this.getDb()).collection("users")
     const foundUser = await users.find({ id: userId }).limit(1).next()
     if (!foundUser) {
@@ -141,7 +147,7 @@ export class MongodbService extends Service {
    * userId byte[] 
    * returns Success<AdminSafeUser>
    **/
-  userPUT = (targetId:UserId, user: UpdateUser, authUserId?:UserId ) => new Promise<Success<AdminSafeUser> | Error>(async (resolve, reject) => {
+  userPUT = (targetId: UserId, user: UpdateUser, authUserId?: UserId) => new Promise<Success<AdminSafeUser> | Error>(async (resolve, reject) => {
 
     if (!authUserId) {
       reject(error401UserNotAuthenticated)
@@ -583,7 +589,7 @@ export class MongodbService extends Service {
    * authUserId
    * returns Success 201
    **/
-  topicPOST = ( topic: Topic, authUserId?: UserId) => new Promise<Success<Topic> | Error>(async (resolve, reject) => {
+  topicPOST = (topic: Topic, authUserId?: UserId) => new Promise<Success<Topic> | Error>(async (resolve, reject) => {
 
     if (!authUserId) {
       reject(error401UserNotAuthenticated)
@@ -811,7 +817,7 @@ export class MongodbService extends Service {
    * discussionId byte[] 
    * returns Success
    **/
-  topicPUT = (topicId:TopicId, topic: Pick<Topic, "id" | "title" | "isLocked">, authUserId?: UserId) => new Promise<Success<Topic> | Error>(async (resolve, reject) => {
+  topicPUT = (topicId: TopicId, topic: Pick<Topic, "id" | "title" | "isLocked">, authUserId?: UserId) => new Promise<Success<Topic> | Error>(async (resolve, reject) => {
 
     if (!authUserId) {
       reject(error401UserNotAuthenticated)

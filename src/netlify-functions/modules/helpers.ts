@@ -1,5 +1,5 @@
 import * as jwt from 'jsonwebtoken'
-import { NewUser, Topic, UpdateUser, UserId } from "./../../lib/simple-comment";
+import { NewUser, Success, Error, Topic, UpdateUser, UserId } from "./../../lib/simple-comment";
 
 const AUTHORIZATION_HEADER = "Authorization";
 const BEARER_SCHEME = "Bearer";
@@ -24,7 +24,7 @@ export const REALM = "Access to restricted resources";
 export const nowPlusMinutes = (minutes: number): number =>
     new Date(new Date().valueOf() + minutes * 60 * 1000).valueOf();
 
-export const getAuthHeaderValue = (headers: {
+const getAuthHeaderValue = (headers: {
     [header: string]: string;
 }): string | undefined => getHeaderValue(headers, AUTHORIZATION_HEADER);
 
@@ -50,6 +50,14 @@ export const hasBearerScheme = (headers: { [header: string]: string }, parse?: {
             )
             : false
         : parse.scheme.toLowerCase() === BEARER_SCHEME.toLowerCase();
+
+/** decodeAuthHeader expects a string of the form `Basic someBase64String==` and returns its plaintext decode */
+const decodeAuthHeader = (authHeaderValue) => Buffer.from(authHeaderValue.slice(6), 'base64').toString()
+
+/** parseAuthHeader expects a string of the form `user:password` and returns an object of the form {user, password} Will fail if the : character is in the user name */
+const parseAuthHeader = (plainText:string, colonIndex?:number):{user:string, password:string} => colonIndex === undefined? parseAuthHeader(plainText, plainText.indexOf(':')) : ({user:plainText.slice(0,colonIndex),password:plainText.slice(colonIndex+1)}) 
+
+export const getUserIdPassword = (eventHeaders) => [getAuthHeaderValue, decodeAuthHeader, parseAuthHeader].reduce((acc,func) => func(acc), eventHeaders)
 
 export const getUserId = (headers: { [key: string]: string }): UserId | null => {
 
@@ -104,6 +112,8 @@ export const getUpdatedUserInfo = (body: string): UpdateUser => narrowType<Updat
 
 export const getNewTopicInfo = (body: string): Topic => narrowType<Topic>(parseBody(body), ["id", "title", "isLocked"]) as Topic
 export const getUpdateTopicInfo = (body: string): Topic => narrowType<Topic>(parseBody(body), ["title", "isLocked"]) as Topic
+
+export const isError = (res: (Success | Error)): boolean => res.statusCode >= 400
 
 export interface Event {
     path: string;
