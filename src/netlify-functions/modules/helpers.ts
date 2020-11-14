@@ -1,5 +1,4 @@
 import * as jwt from 'jsonwebtoken'
-import { stringify } from 'querystring';
 import { NewUser, UpdateUser, UserId } from "./../../lib/simple-comment";
 
 const AUTHORIZATION_HEADER = "Authorization";
