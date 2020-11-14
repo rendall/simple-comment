@@ -11,6 +11,7 @@
     "@types/jsonwebtoken": "^8.5.0",
     "@types/mongodb": "^3.1.23",
     "@types/node": "^11.13.4",
+    "@types/uuid": "^8.3.0",
     "aws-sdk": "^2.790.0",
     "babel-jest": "^26.6.3",
     "eslint": "^5.16.0",
@@ -41,8 +42,6 @@
     "posttest": "rimraf ./globalConfig.json"
   },
   "dependencies": {
-    "@types/uuid": "^8.3.0",
-    "bcrypt": "^5.0.0",
     "dotenv": "^8.2.0",
     "jsonwebtoken": "^8.5.1",
     "mongodb": "^3.2.3"
