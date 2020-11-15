@@ -238,10 +238,10 @@ export const getTokenClaim = (headers: {
     ? getCookieToken(headers)
     : getAuthCredentials(getAuthHeaderValue(headers))
 
-  const claim: TokenClaim = jwt.verify(token, process.env.JWT_SECRET) as {
-    user: UserId
-    exp: number
-  }
+  const claim: { user: UserId; exp: number } = jwt.verify(
+    token,
+    process.env.JWT_SECRET
+  ) as { user: UserId; exp: number }
   const isExpired = claim.exp <= new Date().valueOf()
 
   if (isExpired) return null
