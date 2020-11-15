@@ -249,13 +249,13 @@ export const getTokenClaim = (headers: {
   return claim
 }
 
-export const getUserId = (
-  headers: {
-    [key: string]: string
-  },
-  claim?: TokenClaim
-): UserId | null =>
-  claim ? claim.user : getUserId(headers, getTokenClaim(headers))
+export const getUserId = (headers: {
+  [key: string]: string
+}): UserId | null => {
+  const claim = getTokenClaim(headers)
+  if (claim) return claim.user
+  else return null
+}
 
 /**
  * return the path directory after endpoint or null if none
