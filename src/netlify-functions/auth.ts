@@ -41,6 +41,8 @@ export const handler = async (
       case "POST":
       case "GET":
         return handleAuth(event)
+      case "DELETE":
+        return service.authDELETE()
       default:
         return new Promise<Error>(resolve =>
           resolve({ ...error405MethodNotAllowed, headers: HEADERS })

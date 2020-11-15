@@ -12,7 +12,8 @@ import type {
   AdminSafeUser,
   PublicSafeUser,
   UpdateUser,
-  NewUser
+  NewUser,
+  TokenClaim
 } from "./simple-comment"
 
 export abstract class Service {
@@ -210,6 +211,16 @@ export abstract class Service {
    **/
   abstract topicDELETE = (topicId: TopicId, authUser?: UserId) =>
     new Promise<Success | Error>((resolve, reject) => {
+      reject(this.abstractError)
+    })
+
+  abstract authDELETE = () =>
+    new Promise<Success | Error>((resolve, reject) => {
+      reject(this.abstractError)
+    })
+
+  abstract verifyGET = (claim: TokenClaim | null) =>
+    new Promise<Success<TokenClaim> | Error>((resolve, reject) => {
       reject(this.abstractError)
     })
 

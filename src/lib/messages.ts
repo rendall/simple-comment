@@ -81,6 +81,10 @@ export const success202CommentDeleted: Success = {
   statusCode: 202,
   body: "Comment deleted"
 }
+export const success202LoggedOut: Success = {
+  statusCode: 202,
+  body: "Logged out"
+}
 export const success202TopicDeleted: Success = {
   statusCode: 202,
   body: "Topic deleted"

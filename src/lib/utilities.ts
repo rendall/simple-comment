@@ -11,7 +11,8 @@ import {
   DeletedComment,
   Discussion,
   PublicSafeUser,
-  User
+  User,
+  TokenClaim
 } from "./simple-comment"
 
 /**
@@ -191,9 +192,9 @@ export const getUserIdPassword = eventHeaders =>
     eventHeaders
   )
 
-export const getUserId = (headers: {
+export const getTokenClaim = (headers: {
   [key: string]: string
-}): UserId | null => {
+}): TokenClaim | null => {
   const isBearer = hasBearerScheme(headers)
   const hasCookie = hasTokenCookie(headers)
 
@@ -203,16 +204,24 @@ export const getUserId = (headers: {
     ? getCookieToken(headers)
     : getAuthCredentials(getAuthHeaderValue(headers))
 
-  const claim: { user: UserId; exp: number } = jwt.verify(
-    token,
-    process.env.JWT_SECRET
-  ) as { user: UserId; exp: number }
+  const claim: TokenClaim = jwt.verify(token, process.env.JWT_SECRET) as {
+    user: UserId
+    exp: number
+  }
   const isExpired = claim.exp <= new Date().valueOf()
 
   if (isExpired) return null
 
-  return claim.user
+  return claim
 }
+
+export const getUserId = (
+  headers: {
+    [key: string]: string
+  },
+  claim?: TokenClaim
+): UserId | null =>
+  claim ? claim.user : getUserId(headers, getTokenClaim(headers))
 
 /**
  * return the path directory after endpoint or null if none
