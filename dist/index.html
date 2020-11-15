@@ -2,7 +2,9 @@
 <html>
   <head>
     <title>Simple Comment API</title>
+    <script type="module" src="./js/apiClient.js"></script>
   </head>
+
   <body>
     <ul>
       <li><a href="/.netlify/functions/comment">comment</a></li>
@@ -11,5 +13,9 @@
       <li><a href="/.netlify/functions/user">user</a></li>
       <li><a href="/login.html">login</a></li>
     </ul>
+    <script type="module">
+      import { getTopics } from "./js/apiClient.js"
+      getTopics()
+    </script>
   </body>
 </html>
