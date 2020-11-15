@@ -63,6 +63,10 @@ export const toAdminSafeUser = (user: User) =>
 
 export const isComment = (target: Comment | Discussion): target is Comment =>
   target && target.hasOwnProperty("parentId")
+
+export const isDeleted = (target: Comment | Discussion) =>
+  target.hasOwnProperty("dateDeleted")
+
 export const isDeletedComment = (
   target: Comment | Discussion
 ): target is DeletedComment =>
