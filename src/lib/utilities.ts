@@ -249,7 +249,9 @@ export const getTokenClaim = (headers: {
   return claim
 }
 
-export const getUserId = (headers: { [key: string]: string }): UserId | null => {
+export const getUserId = (headers: {
+  [key: string]: string
+}): UserId | null => {
   const claim = getTokenClaim(headers)
   if (claim) return claim.user
   else return null
