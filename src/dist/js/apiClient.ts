@@ -1,54 +1,28 @@
+import { METHODS } from "http"
 import { Discussion, Topic, User, UserId } from "./../../lib/simple-comment"
-
-const onReceiveTopics = (value: Topic[]) => {
-  console.log({ value })
-}
-
-const onReceiveUsers = (value: User[]) => {
-  console.log({ value })
-}
-
-const onReceiveSingleUser = (value: User) => {
-  console.log({ value })
-}
-
-const onReceiveDiscussion = (value: Discussion) => {
-  console.log({ value })
-}
-
-const onError = (reason: any) => {
-  console.error(reason)
-}
 
 const processResponse = (res: Response) => res.json()
 
 export const getAllTopics = () =>
-  fetch("/.netlify/functions/topic")
-    .then(processResponse, onError)
-    .then(onReceiveTopics)
+  fetch("/.netlify/functions/topic").then(processResponse)
 
 export const getAllUsers = () =>
-  fetch("/.netlify/functions/user")
-    .then(processResponse, onError)
-    .then(onReceiveUsers, onError)
+  fetch("/.netlify/functions/user").then(processResponse)
 
 export const getOneUser = (userId: UserId) =>
-  fetch("/.netlify/functions/user/{userId}")
-    .then(processResponse, onError)
-    .then(onReceiveSingleUser, onError)
+  fetch("/.netlify/functions/user/{userId}").then(processResponse)
 
 /**
  * A discussion is a topic with all comments attached
  **/
-export const getOneDiscussion = topicId =>
-  fetch(`/.netlify/functions/topic/${topicId}`)
-    .then(processResponse, onError)
-    .then(onReceiveDiscussion, onError)
+export const getDiscussion = topicId =>
+  fetch(`/.netlify/functions/topic/${topicId}`).then(processResponse)
 
-export const postComment = (targetId, comment) =>
-  fetch(`/.netlify/functions/comment/${targetId}`)
-    .then(processResponse, onError)
-    .then(onReceiveDiscussion, onError)
+export const postComment = (targetId, text) =>
+  fetch(`/.netlify/functions/comment/${targetId}`, {
+    body: text,
+    method: "POST"
+  }).then(processResponse)
 
 // 'topicGET', 'topicPOST',
 //   'topicGET', 'topicPUT',

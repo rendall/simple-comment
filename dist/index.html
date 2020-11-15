@@ -6,16 +6,111 @@
   </head>
 
   <body>
-    <ul>
-      <li><a href="/.netlify/functions/comment">comment</a></li>
-      <li><a href="/.netlify/functions/topic">topic</a></li>
-      <li><a href="/.netlify/functions/auth">auth</a></li>
-      <li><a href="/.netlify/functions/user">user</a></li>
-      <li><a href="/login.html">login</a></li>
-    </ul>
+    <p id="errorDisplay"></p>
+    <p id="statusDisplay"></p>
+    <ul id="topic-list"></ul>
+    <div id="discussion"></div>
     <script type="module">
-      import { getAllTopics } from "./js/apiClient.js"
-      getAllTopics()
+      import { getAllTopics, getDiscussion } from "./js/apiClient.js"
+
+      const clearStatus = () =>
+        (document.querySelector("#statusDisplay").innerHTML = "")
+      const setStatus = message =>
+        (document.querySelector("#statusDisplay").innerHTML = message)
+
+      const onReplyToComment = comment => e => {
+        console.log(`reply to ${comment.id}`)
+      }
+
+      const onReplyToTopic = topic => e => {
+        console.log(`reply to ${topic.id}`)
+      }
+      const onReceiveDiscussion = discussion => {
+        const discussionDiv = document.querySelector("#discussion")
+
+        while (discussionDiv.hasChildNodes()) {
+          discussionDiv.removeChild(discussionDiv.lastChild)
+        }
+
+        clearStatus()
+        if (!discussion) {
+          setStatus("No discussion on that topic")
+          return
+        }
+
+        const comments = discussion.replies
+
+        // replies can be threaded, although they arrive in a flat array
+        const threadReplies = (list, parentId) => {
+          const comment = comments.find(c => c.id === parentId)
+
+          if (comment) {
+            const userDisplay = document.createElement("P")
+            userDisplay.setAttribute("id", comment.user.id)
+            userDisplay.innerText = comment.user.name
+            list.appendChild(userDisplay)
+
+            const commentText = document.createElement("p")
+            commentText.innerText = comment.text
+            list.appendChild(commentText)
+
+            const replyCommentButton = document.createElement("button")
+            replyCommentButton.innerText = "reply"
+            list.appendChild(replyCommentButton)
+
+            replyCommentButton.addEventListener(
+              "click",
+              onReplyToComment(comment)
+            )
+          }
+
+          const replies = comments.filter(c => c.parentId === parentId)
+
+          if (replies.length) {
+            const replyList = document.createElement("ul")
+            list.appendChild(replyList)
+            replies.forEach(reply => {
+              const li = document.createElement("li")
+              replyList.appendChild(li)
+              threadReplies(li, reply.id)
+            })
+          }
+        }
+
+        const title = document.createElement("h2")
+        title.innerText = discussion.title
+        discussionDiv.appendChild(title)
+        const replyTopicButton = document.createElement("button")
+        replyTopicButton.innerText = "reply"
+        discussionDiv.appendChild(replyTopicButton)
+
+        replyTopicButton.addEventListener("click", onReplyToTopic(discussion))
+
+        threadReplies(discussionDiv, discussion.id)
+      }
+
+      const onReceiveTopics = (topics = []) => {
+        const topicList = document.querySelector("#topic-list")
+        while (topicList.hasChildNodes()) {
+          topicList.removeChild(topicList.lastChild)
+        }
+
+        if (topics.length)
+          topics.forEach(topic => {
+            const listItem = document.createElement("li")
+            topicList.appendChild(listItem)
+            listItem.innerText = topic.title
+            listItem.setAttribute("id", topic.id)
+            listItem.addEventListener("click", onTopicClick)
+          })
+      }
+
+      const onTopicClick = e => {
+        const topicId = e.target.id
+        getDiscussion(topicId).then(onReceiveDiscussion, setStatus)
+      }
+
+      getAllTopics().then(onReceiveTopics, setStatus)
     </script>
   </body>
 </html>
