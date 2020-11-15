@@ -1,6 +1,12 @@
 import * as dotenv from "dotenv"
 import type { APIGatewayEvent, Callback, Context } from "aws-lambda"
-import { TopicId, Success, Error, Topic } from "../lib/simple-comment"
+import {
+  TopicId,
+  Success,
+  Error,
+  Topic,
+  Discussion
+} from "../lib/simple-comment"
 import { MongodbService } from "../lib/MongodbService"
 import {
   error404TopicNotFound,
@@ -29,10 +35,13 @@ export const handler = async (event: APIGatewayEvent, context: Context) => {
   const authUserId = getUserId(event.headers)
   const targetId = getTargetId(event.path, "topic") as TopicId
 
-  const handleMethod = (method): Promise<Success<Topic> | Error> => {
+  const handleMethod = (
+    method
+  ): Promise<Success<Discussion> | Success<Topic[]> | Error> => {
     switch (method) {
       case "GET":
-        return service.topicGET(targetId, authUserId)
+        if (targetId) return service.topicGET(targetId, authUserId)
+        else return service.topicListGET(authUserId)
       case "POST":
         return service.topicPOST(getNewTopicInfo(event.body), authUserId)
       case "PUT":
