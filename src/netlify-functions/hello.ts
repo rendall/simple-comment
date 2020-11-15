@@ -1,4 +1,5 @@
 import { Context, APIGatewayEvent } from "aws-lambda"
+import { success200OK } from "../lib/messages"
 import { getAllowedOrigins, getAllowOriginHeaders } from "../lib/utilities"
 
 const getAllowHeaders = (event: APIGatewayEvent) => {
@@ -13,12 +14,11 @@ const getAllowHeaders = (event: APIGatewayEvent) => {
 
 export const handler = async (event: APIGatewayEvent, context: Context) => {
   const headers = getAllowHeaders(event)
-
   const message = `Hello world ${Math.floor(Math.random() * 10)}`
-  return {
-    headers,
-    statusCode: 200,
-    body: JSON.stringify({ message, event, context })
+  try {
+    return ({ ...success200OK, body: JSON.stringify({ message, event, context }), headers })
+  } catch (error) {
+    return error
   }
 } // simple hello world to ensure that the endpoint is building and
 // deploying properly
