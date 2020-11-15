@@ -39,6 +39,7 @@ import * as dotenv from "dotenv"
 dotenv.config()
 
 // const MONGO_URI = "mongodb://localhost:27017/?readPreference=primary&ssl=false"
+// const MONGO_DB = process.env.DATABASE_NAME
 const MONGO_URI = global.__MONGO_URI__
 const MONGO_DB = global.__MONGO_DB_NAME__
 
@@ -102,6 +103,7 @@ const createRandomGroupUsers = (
   population <= 0
     ? users
     : createRandomGroupUsers(population - 1, [...users, createRandomUser()])
+
 const createRandomListOfTopics = (
   num: number = randomNumber(2, 20),
   topics: Topic[] = []
@@ -109,14 +111,22 @@ const createRandomListOfTopics = (
   num <= 0
     ? topics
     : createRandomListOfTopics(num - 1, [...topics, createRandomTopic()])
-const createRandomTopic = (): Topic => ({
-  id: randomString(alphaAscii, randomNumber(10, 40)),
+
+let topicCount = 0
+const getTopicId = prepend => `${prepend}topicId-${topicCount++}`
+
+const createRandomTopic = (prepend = ""): Topic => ({
+  // id: randomString(alphaAscii, randomNumber(10, 40)),
+  id: getTopicId(prepend),
   isLocked: false,
   title: randomString(alphaUserInput, randomNumber(25, 100)),
   dateCreated: randomDate()
 })
-const createRandomUser = (): User => ({
-  id: randomString(),
+
+let userCount = 0
+const createUserId = (prepend = "") => `${prepend}userId-${userCount++}`
+const createRandomUser = (prepend = ""): User => ({
+  id: createUserId(prepend),
   email: createRandomEmail(),
   name: randomString(alphaUserInput),
   isVerified: Math.random() > 0.5,
@@ -137,6 +147,7 @@ const isPublicSafeUser = (u: Partial<User>) =>
   (Object.keys(u) as (keyof User)[]).every(
     key => !publicUnsafeUserProperties.includes(key)
   )
+
 const isAdminSafeUser = (u: Partial<User>) =>
   (Object.keys(u) as (keyof User)[]).every(
     key => !adminUnsafeUserProperties.includes(key)
@@ -150,19 +161,26 @@ const adminUserTest: User = {
   isAdmin: true,
   name: "Simple Comment Admin"
 }
+
 const adminUserPasswordTest = randomString(alphaAscii, 20)
 const groupUsersTest = createRandomGroupUsers(100)
 let usedUsersTest: User[] = []
-let newCommentTest: Pick<Comment, "text" | "userId" | "parentId">
-const newTopicTest = createRandomTopic()
+
+const newTopicTest = createRandomTopic("new-")
 const newUserTest: NewUser = {
-  ...createRandomUser(),
+  ...createRandomUser("new-"),
   isAdmin: false,
   password: randomString(),
   email: createRandomEmail()
 }
+
+// This is a topic + comments that will be deleted
+const deleteTopicTest: Topic = createRandomTopic("delete-")
+const deleteTopicCommentsTest = createRandomCommentTree(20, groupUsersTest, [
+  deleteTopicTest
+])
+
 const topicsTest: Topic[] = createRandomListOfTopics()
-let deleteTopicTest: Topic
 const commentTreeTest = createRandomCommentTree(500, groupUsersTest, topicsTest)
 
 // Testing randomly from testGroupUsers causes test fails if the user has been
@@ -187,6 +205,13 @@ const getAuthUser = (p: (u: User) => boolean = (u: User) => true) => {
   return user
 }
 
+// This comment will be inserted
+const newCommentTest: Pick<Comment, "text" | "userId" | "parentId"> = {
+  text: randomString(alphaUserInput, policy.maxCommentLengthChars - 1),
+  parentId: chooseRandomElement(commentTreeTest).id,
+  userId: getAuthUser().id
+}
+
 let testAllUsers = []
 let service: MongodbService
 let client: MongoClient
@@ -206,7 +231,10 @@ describe("Full API service test", () => {
     const comments = db.collection<Comment | DeletedComment | Discussion>(
       "comments"
     )
-    await comments.insertMany(commentTreeTest)
+    // This insert includes both topics and comments
+    await comments.insertMany([...commentTreeTest, ...deleteTopicCommentsTest])
+
+    console.log(topicsTest.map(i => i.id))
   }, 120000)
 
   afterAll(async () => {
@@ -563,26 +591,24 @@ describe("Full API service test", () => {
     const text = randomString(alphaUserInput, policy.maxCommentLengthChars + 1)
 
     expect.assertions(1)
-    return service
-      .commentPOST(parentComment.id, text, user.id)
-      .catch(e => expect(e).toBe(error413CommentTooLong))
+    return service.commentPOST(parentComment.id, text, user.id).catch(e => {
+      expect(e).toBe(error413CommentTooLong)
+    })
   })
   // post comment to /comment/{commentId} should return comment and 201 Comment created
   test("POST to /comment/{commentId}", () => {
-    const parentComment = chooseRandomElement(commentTreeTest)
-    const user = getAuthUser()
-    newCommentTest = {
-      text: randomString(alphaUserInput, policy.maxCommentLengthChars - 1),
-      parentId: parentComment.id,
-      userId: user.id
-    }
     return service
-      .commentPOST(parentComment.id, newCommentTest.text, user.id)
+      .commentPOST(
+        newCommentTest.parentId,
+        newCommentTest.text,
+        newCommentTest.userId
+      )
       .then((res: Success<Comment>) => {
         expect(res).toHaveProperty("statusCode", 201)
         expect(res).toHaveProperty("body")
         expect(res.body).toHaveProperty("text", newCommentTest.text)
         expect(res.body).toHaveProperty("user")
+        expect(res.body.user.id).toBe(newCommentTest.userId)
       })
   })
   // post comment to /comment/{commentId} without credentials should fail
@@ -590,18 +616,20 @@ describe("Full API service test", () => {
     const parentComment = chooseRandomElement(commentTreeTest)
     const text = randomString(alphaUserInput, 400)
     expect.assertions(1)
-    return service
-      .commentPOST(parentComment.id, text)
-      .catch(e => expect(e).toBe(error401UserNotAuthenticated))
+    return service.commentPOST(parentComment.id, text).catch(e => {
+      expect(e).toBe(error401UserNotAuthenticated)
+    })
   })
 
   // post comment to /comment/{commentId} with identical information within a short length of time should return 425 Possible duplicate comment
   test("POST comment to /comment/{commentId} with identical information", () => {
-    const parentCommentId = newCommentTest.parentId
-    const userId = newCommentTest.userId
     expect.assertions(1)
     return service
-      .commentPOST(parentCommentId, newCommentTest.text, userId)
+      .commentPOST(
+        newCommentTest.parentId,
+        newCommentTest.text,
+        newCommentTest.userId
+      )
       .catch(e => expect(e).toBe(error425DuplicateComment))
   })
 
@@ -774,23 +802,40 @@ describe("Full API service test", () => {
   // Topic Create
   // post to /topic with no credentials should return 401
   test("POST to /topic with no credentials and public-can-create-topic=false policy", () => {
-    expect.assertions(1)
-    return service
-      .topicPOST(newTopicTest)
-      .catch(value => expect(value).toHaveProperty("statusCode", 401))
+    expect.assertions(2)
+    const newTopic = createRandomTopic()
+    return service.topicPOST(newTopic).catch(async value => {
+      const deletedTopic = await db
+        .collection<Comment | Discussion>("comments")
+        .findOne({ id: newTopic.id })
+      expect(deletedTopic).toBeNull()
+      expect(value).toHaveProperty("statusCode", 401)
+    })
   })
   // post to /topic with improper credentials should return 403
   test("POST to /topic with improper credentials", () => {
-    expect.assertions(1)
-    return service
-      .topicPOST(newTopicTest, newUserTest.id)
-      .catch(value => expect(value).toHaveProperty("statusCode", 403))
+    const newTopic = createRandomTopic()
+    const ordinaryUser = getAuthUser(u => !u.isAdmin)
+    expect.assertions(2)
+    return service.topicPOST(newTopic, ordinaryUser.id).catch(async value => {
+      const deletedTopic = await db
+        .collection<Comment | Discussion>("comments")
+        .findOne({ id: newTopic.id })
+      expect(deletedTopic).toBeNull()
+      expect(value).toHaveProperty("statusCode", 403)
+    })
   })
   // post to /topic should return Discussion object and 201 Discussion created
   test("POST to /topic", () => {
     return service
       .topicPOST(newTopicTest, adminUserTest.id)
-      .then(value => expect(value).toHaveProperty("statusCode", 201))
+      .then(async value => {
+        const insertedTopic = await db
+          .collection<Comment | Discussion>("comments")
+          .findOne({ id: newTopicTest.id })
+        expect(insertedTopic).toEqual(newTopicTest)
+        expect(value).toHaveProperty("statusCode", 201)
+      })
   })
 
   // Topic Read
@@ -798,7 +843,7 @@ describe("Full API service test", () => {
   test("GET to /topic", () => {
     return service.topicListGET().then((res: Success<Topic[]>) => {
       expect(res.body.map(i => i.id)).toEqual(
-        [...topicsTest, newTopicTest].map(i => i.id)
+        [...topicsTest, deleteTopicTest, newTopicTest].map(i => i.id)
       )
     })
   })
@@ -900,38 +945,22 @@ describe("Full API service test", () => {
   })
   // delete to /topic/{topicId} should delete the topic and return 202 Discussion deleted
   test("DELETE topic to /topic/{topicId} should delete the topic", () => {
-    deleteTopicTest = chooseRandomElement(topicsTest)
     return service
       .topicDELETE(deleteTopicTest.id, adminUserTest.id)
       .then((res: Success) => expect(res).toBe(success202TopicDeleted))
   })
   // delete to /topic/{topicId} should delete all descended comments
-  test("DELETE topic to /topic/{topicId} should delete descended comments", () => {
-    const topic = chooseRandomElement(
-      topicsTest.filter(t => t.id !== deleteTopicTest.id)
-    )
-    const getChildren = (
-      commentId: CommentId,
-      allComments: (Discussion | Comment)[]
-    ) =>
-      allComments
-        .filter(c => isComment(c))
-        .filter((c: Comment) => c.parentId === commentId)
-    return service
-      .topicDELETE(topic.id, adminUserTest.id)
-      .then(async (res: Success) => {
-        // none of these replies should be in the database
-        const replyIds = getChildren(topic.id, topicsTest).map(c => c.id)
-        const comments = await db
-          .collection<Comment | Discussion>("comments")
-          .find({})
-          .toArray()
-        const commentIds = comments.map(c => c.id)
+  test("DELETE topic to /topic/{topicId} should delete descended comments", async () => {
+    // none of these replies should be in the database
+    const replies = deleteTopicCommentsTest
+    const comments = await db
+      .collection<Comment | Discussion>("comments")
+      .find({})
+      .toArray()
 
-        replyIds.forEach(c => {
-          expect(commentIds).not.toContain(c)
-        })
-      })
+    replies.forEach(c => {
+      expect(comments).not.toContain(c)
+    })
   })
 })
 
