@@ -905,7 +905,7 @@ export class MongodbService extends Service {
         {
           $unwind: {
             path: "$replies",
-            preserveNullAndEmptyArrays: false
+            preserveNullAndEmptyArrays: true
           }
         },
         {
@@ -927,6 +927,7 @@ export class MongodbService extends Service {
           $project: {
             "parentId": 1,
             "id": 1,
+            "title": 1,
             "text": 1,
             "dateCreated": 1,
             "user.id": 1,
@@ -988,6 +989,9 @@ export class MongodbService extends Service {
             },
             text: {
               $first: "$text"
+            },
+            title: {
+              $first: "$title"
             },
             user: {
               $first: "$user"
