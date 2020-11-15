@@ -909,6 +909,7 @@
     "/auth": {
       "get": {
         "summary": "Accept a user name and password, return authentication token",
+        "description": "The authentication token is set via the Set-Cookie header with a 'simple_comment_token' key or as an Authentication header with Bearer scheme, depending on Simple Comment configuration",
         "responses": {
           "200": {
             "description": "User authenticated",
@@ -959,6 +960,7 @@
       },
       "post": {
         "summary": "Accept a user name and password, return authentication token",
+        "description": "The authentication token is set via the Set-Cookie header with a 'simple_comment_token' key or as an Authentication header with Bearer scheme, depending on Simple Comment configuration",
         "responses": {
           "200": {
             "description": "User authenticated",
@@ -986,6 +988,54 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BasicAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "summary": "Revoke authentication / log out",
+        "description": "Sets the Cookie token to expire in the past or the revokes the Authentication header",
+        "responses": {
+          "202": {
+            "description": "Authentication revoked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Success"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/verify": {
+      "get": {
+        "summary": "Return the claim in the security token or 404",
+        "responses": {
+          "200": {
+            "description": "User authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
                 }
               }
             }

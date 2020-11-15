@@ -233,8 +233,6 @@ describe("Full API service test", () => {
     )
     // This insert includes both topics and comments
     await comments.insertMany([...commentTreeTest, ...deleteTopicCommentsTest])
-
-    console.log(topicsTest.map(i => i.id))
   }, 120000)
 
   afterAll(async () => {

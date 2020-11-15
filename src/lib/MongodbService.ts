@@ -13,7 +13,8 @@ import type {
   DeletedComment,
   PublicSafeUser,
   NewUser,
-  UpdateUser
+  UpdateUser,
+  TokenClaim
 } from "./simple-comment"
 import {
   Collection,
@@ -58,6 +59,7 @@ import {
   success200OK,
   success201UserCreated,
   success202CommentDeleted,
+  success202LoggedOut,
   success202TopicDeleted,
   success202UserDeleted,
   success204CommentUpdated,
@@ -66,6 +68,7 @@ import {
 import { comparePassword, getAuthToken, hashPassword, uuidv4 } from "./crypt"
 
 export class MongodbService extends Service {
+  private isProduction = process.env.SIMPLE_COMMENT_MODE === "production"
   private _client: MongoClient
   private _db: Db
   readonly _connectionString: string
@@ -1186,6 +1189,23 @@ export class MongodbService extends Service {
             ? reject({ ...error500ServerError, body: e })
             : reject(error500ServerError)
         )
+    })
+
+  authDELETE = () =>
+    new Promise<Success>((resolve, reject) => {
+      const pastDate = new Date(0).toUTCString()
+      const COOKIE_HEADER = {
+        "Set-Cookie": `simple_comment_token=logged-out; path=/; HttpOnly; Expires=${pastDate}; SameSite${
+          this.isProduction ? "; Secure" : ""
+        }`
+      }
+      resolve({ ...success202LoggedOut, headers: COOKIE_HEADER })
+    })
+
+  verifyGET = (claim: TokenClaim | null) =>
+    new Promise<Success<TokenClaim> | Error>((resolve, reject) => {
+      if (claim) return resolve({ ...success200OK, body: claim })
+      else reject(error404UserUnknown)
     })
 
   close = async () => {
