@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { UserId } from "./../../lib/simple-comment"
 
 const processResponse = (res: Response) => {
@@ -8,6 +9,12 @@ const processResponse = (res: Response) => {
 
 export const getCurrentUser = () =>
   fetch("/.netlify/functions/verify").then(processResponse)
+=======
+import { METHODS } from "http"
+import { Discussion, Topic, User, UserId } from "./../../lib/simple-comment"
+
+const processResponse = (res: Response) => res.json()
+>>>>>>> Add minimal frontent
 
 export const getAllTopics = () =>
   fetch("/.netlify/functions/topic").then(processResponse)
@@ -16,7 +23,11 @@ export const getAllUsers = () =>
   fetch("/.netlify/functions/user").then(processResponse)
 
 export const getOneUser = (userId: UserId) =>
+<<<<<<< HEAD
   fetch(`/.netlify/functions/user/${userId}`).then(processResponse)
+=======
+  fetch("/.netlify/functions/user/{userId}").then(processResponse)
+>>>>>>> Add minimal frontent
 
 /**
  * A discussion is a topic with all comments attached
