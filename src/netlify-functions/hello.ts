@@ -31,7 +31,7 @@ export const handler = async (
   })
 
   try {
-    return convert({ ...success200OK, body: userInfo })
+    return convert({ ...success200OK, body: { event, context } })
   } catch (error) {
     return error
   }
