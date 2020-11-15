@@ -131,6 +131,31 @@ export const hasBasicScheme = (
       : false
     : parse.scheme.toLowerCase() === BASIC_SCHEME.toLowerCase()
 
+/** Checks the Set-Cookie header for "simple_comment_token" and returns true if found, false otherwise */
+export const hasTokenCookie = (headers: { [header: string]: string }) =>
+  hasHeader(headers, "Cookie") &&
+  getHeaderValue(headers, "Cookie").indexOf("simple_comment_token=") >= 0
+
+// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cookie "Pairs in the list are separated by a semicolon and a space ('; ')"
+export const getCookieToken = (
+  headers: { [header: string]: string },
+  cookieHeader?: string
+) =>
+  cookieHeader
+    ? cookieHeader
+        .split("; ")
+        .reduce(
+          (auth, pair) =>
+            auth
+              ? auth
+              : pair.startsWith("simple_comment_token")
+              ? pair.split("=")[1]
+              : auth,
+          null
+        )
+    : getCookieToken(headers, getHeaderValue(headers, "Cookie"))
+
+/** Checks the Authorization header for "Bearer" + token and returns true if found, false otherwise */
 export const hasBearerScheme = (
   headers: { [header: string]: string },
   parse?: { scheme: string; credentials: string }
@@ -170,11 +195,14 @@ export const getUserId = (headers: {
   [key: string]: string
 }): UserId | null => {
   const isBearer = hasBearerScheme(headers)
+  const hasCookie = hasTokenCookie(headers)
 
-  if (!isBearer) return null
+  if (!isBearer && !hasCookie) return null
 
-  const authHeaderValue = getAuthHeaderValue(headers)
-  const token = getAuthCredentials(authHeaderValue)
+  const token = hasCookie
+    ? getCookieToken(headers)
+    : getAuthCredentials(getAuthHeaderValue(headers))
+
   const claim: { user: UserId; exp: number } = jwt.verify(
     token,
     process.env.JWT_SECRET
