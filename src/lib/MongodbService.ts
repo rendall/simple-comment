@@ -17,6 +17,7 @@ import type {
 } from "./simple-comment"
 import {
   Collection,
+  Cursor,
   Db,
   FindAndModifyWriteOpResultObject,
   FindOneOptions,
@@ -29,6 +30,7 @@ import { Service } from "./Service"
 import {
   adminOnlyModifiableUserProperties,
   isComment,
+  isDeleted,
   isDeletedComment,
   toAdminSafeUser,
   toPublicSafeUser,
@@ -376,10 +378,10 @@ export class MongodbService extends Service {
       ).collection("comments")
       const parent = await comments.findOne({ id: parentId })
 
-      if (!parent || isDeletedComment(parent)) {
+      if (!parent || isDeleted(parent)) {
         reject({
           ...error404CommentNotFound,
-          body: `parentId '${parentId}' not found`
+          body: `Discussion '${parentId}' not found`
         })
         return
       }
@@ -1023,18 +1025,22 @@ export class MongodbService extends Service {
       }
 
       const users: Collection<User> = (await this.getDb()).collection("users")
-      const authUser = await users.findOne({ id: authUserId })
+      const authUser = await users.find({ id: authUserId }).limit(1)
 
       if (!authUser && !policy.canPublicRead) {
         reject(error404UserUnknown)
         return
       }
 
-      const comments: Collection<Comment | Topic> = (
-        await this.getDb()
-      ).collection("comments")
-      const allDiscussion = await comments.find({}).toArray()
-      const topics = allDiscussion.filter(c => !isComment(c)) as Topic[]
+      const db = await this.getDb()
+
+      const comments = db.collection("comments")
+
+      const topicsCursor: Cursor<Topic> = await comments.find({
+        parentId: null
+      })
+
+      const topics = await topicsCursor.toArray()
 
       resolve({ ...success200OK, body: topics })
     })
