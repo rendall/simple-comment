@@ -1,5 +1,5 @@
-<<<<<<< HEAD
-import { UserId } from "./../../lib/simple-comment"
+
+import { TopicId, UserId } from "./../../lib/simple-comment"
 
 const processResponse = (res: Response) => {
   if (res.ok === false) {
@@ -9,25 +9,12 @@ const processResponse = (res: Response) => {
 
 export const getCurrentUser = () =>
   fetch("/.netlify/functions/verify").then(processResponse)
-=======
-import { METHODS } from "http"
-import { Discussion, Topic, User, UserId } from "./../../lib/simple-comment"
-
-const processResponse = (res: Response) => res.json()
->>>>>>> Add minimal frontent
-
-export const getAllTopics = () =>
-  fetch("/.netlify/functions/topic").then(processResponse)
 
 export const getAllUsers = () =>
   fetch("/.netlify/functions/user").then(processResponse)
 
 export const getOneUser = (userId: UserId) =>
-<<<<<<< HEAD
   fetch(`/.netlify/functions/user/${userId}`).then(processResponse)
-=======
-  fetch("/.netlify/functions/user/{userId}").then(processResponse)
->>>>>>> Add minimal frontent
 
 /**
  * A discussion is a topic with all comments attached
@@ -60,4 +47,25 @@ export const postAuth = (user: string, password: string) => {
   }
 
   return fetch(`/.netlify/functions/auth`, authReqInfo).then(processResponse)
+}
+
+// TOPICS
+
+export const getAllTopics = () =>
+  fetch("/.netlify/functions/topic").then(processResponse)
+
+export const getOneTopic = (topicId: TopicId) =>
+  fetch(`/.netlify/functions/topic/${topicId}`).then(processResponse)
+
+export const getDefaultDiscussionId = () =>
+  window.location.href.toLowerCase().replace(/[^a-z0-9]/g, "-")
+
+export const createNewTopic = (id, title, isLocked = false) => {
+  const body = `id=${id}&title=${title}&isLocked=${isLocked}`
+  const authReqInfo = {
+    method: "POST",
+    body
+  }
+
+  return fetch(`/.netlify/functions/topic`, authReqInfo).then(processResponse)
 }
