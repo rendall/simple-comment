@@ -1,116 +1,55 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Simple Comment API</title>
-    <script type="module" src="./js/apiClient.js"></script>
-  </head>
 
-  <body>
-    <p id="errorDisplay"></p>
-    <p id="statusDisplay"></p>
+<head>
+    <title>Simple Comment API</title>
+    <style>
+        textarea#reply-textarea {
+            display: block;
+            width: 25rem;
+            height: 7rem;
+        }
+
+        #log-out-button {
+            display: none;
+        }
+
+        .is-logged-in #log-out-button {
+            display: unset;
+        }
+
+        .is-logged-in #log-in-form {
+            display: none;
+        }
+
+        .error {
+            font-weight: bold;
+            color: red;
+        }
+
+        div.is-reply button.comment-button {
+            display: none;
+        }
+    </style>
+    <script type="module" src="./js/apiClient.js"></script>
+</head>
+
+<body>
+    <div id="user-display">
+        <p id="user-name"></p>
+        <button id="log-out-button">Log out</button>
+        <div id="log-in-form">
+            <label for="userid">Username:</label>
+            <input id="userid" t></input>
+            <label for="password">Password:</label>
+            <input id="password" type="password"></input>
+            <button id="log-in-button">Log in</button>
+        </div>
+    </div>
+    <p id="status-display"></p>
     <ul id="topic-list"></ul>
     <div id="discussion"></div>
-    <script type="module">
-      import { getAllTopics, getDiscussion } from "./js/apiClient.js"
+    <script type="module" src="./js/index.js"></script>
+</body>
 
-      const clearStatus = () =>
-        (document.querySelector("#statusDisplay").innerHTML = "")
-      const setStatus = message =>
-        (document.querySelector("#statusDisplay").innerHTML = message)
-
-      const onReplyToComment = comment => e => {
-        console.log(`reply to ${comment.id}`)
-      }
-
-      const onReplyToTopic = topic => e => {
-        console.log(`reply to ${topic.id}`)
-      }
-      const onReceiveDiscussion = discussion => {
-        const discussionDiv = document.querySelector("#discussion")
-
-        while (discussionDiv.hasChildNodes()) {
-          discussionDiv.removeChild(discussionDiv.lastChild)
-        }
-
-        clearStatus()
-        if (!discussion) {
-          setStatus("No discussion on that topic")
-          return
-        }
-
-        const comments = discussion.replies
-
-        // replies can be threaded, although they arrive in a flat array
-        const threadReplies = (list, parentId) => {
-          const comment = comments.find(c => c.id === parentId)
-
-          if (comment) {
-            const userDisplay = document.createElement("P")
-            userDisplay.setAttribute("id", comment.user.id)
-            userDisplay.innerText = comment.user.name
-            list.appendChild(userDisplay)
-
-            const commentText = document.createElement("p")
-            commentText.innerText = comment.text
-            list.appendChild(commentText)
-
-            const replyCommentButton = document.createElement("button")
-            replyCommentButton.innerText = "reply"
-            list.appendChild(replyCommentButton)
-
-            replyCommentButton.addEventListener(
-              "click",
-              onReplyToComment(comment)
-            )
-          }
-
-          const replies = comments.filter(c => c.parentId === parentId)
-
-          if (replies.length) {
-            const replyList = document.createElement("ul")
-            list.appendChild(replyList)
-            replies.forEach(reply => {
-              const li = document.createElement("li")
-              replyList.appendChild(li)
-              threadReplies(li, reply.id)
-            })
-          }
-        }
-
-        const title = document.createElement("h2")
-        title.innerText = discussion.title
-        discussionDiv.appendChild(title)
-        const replyTopicButton = document.createElement("button")
-        replyTopicButton.innerText = "reply"
-        discussionDiv.appendChild(replyTopicButton)
-
-        replyTopicButton.addEventListener("click", onReplyToTopic(discussion))
-
-        threadReplies(discussionDiv, discussion.id)
-      }
-
-      const onReceiveTopics = (topics = []) => {
-        const topicList = document.querySelector("#topic-list")
-        while (topicList.hasChildNodes()) {
-          topicList.removeChild(topicList.lastChild)
-        }
-
-        if (topics.length)
-          topics.forEach(topic => {
-            const listItem = document.createElement("li")
-            topicList.appendChild(listItem)
-            listItem.innerText = topic.title
-            listItem.setAttribute("id", topic.id)
-            listItem.addEventListener("click", onTopicClick)
-          })
-      }
-
-      const onTopicClick = e => {
-        const topicId = e.target.id
-        getDiscussion(topicId).then(onReceiveDiscussion, setStatus)
-      }
-
-      getAllTopics().then(onReceiveTopics, setStatus)
-    </script>
-  </body>
 </html>
