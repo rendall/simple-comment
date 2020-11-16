@@ -412,7 +412,7 @@ export class MongodbService extends Service {
         text,
         dateCreated: new Date(),
         parentId,
-        user: adminSafeUser
+        userId: authUserId
       } as Comment
 
       comments
@@ -425,7 +425,7 @@ export class MongodbService extends Service {
             return
           }
 
-          resolve({ statusCode: 201, body: insertedComment })
+          resolve({ statusCode: 201, body: { ...insertedComment, user:adminSafeUser } })
         })
         .catch(e => {
           console.error(e)
