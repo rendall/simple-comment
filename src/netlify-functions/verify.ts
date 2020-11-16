@@ -37,9 +37,8 @@ const handleGet = (event: APIGatewayEvent, callback: Callback) => {
   if (!isBearer && !hasCookie)
     callback(
       null,
-      buildResponse(`Unauthenticated`, 401, {
-        ...HEADERS,
-        ...{ "WWW-Authenticate": `Basic realm="${REALM}", charset="UTF-8"` }
+      buildResponse(`Unauthenticated`, 401, { ...HEADERS,
+        // ...{ "WWW-Authenticate": `Basic realm="${REALM}", charset="UTF-8"` }
       })
     )
   else {
