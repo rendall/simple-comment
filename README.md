@@ -1,6 +1,38 @@
 # Simple Comment
 
-A free, self-hosted comment system for any blog or website
+_Simple Comment_ allows visitors to your web pages to leave and read comments. It is _truly free_ (as in no cost) and entirely controlled by you from end to end
+
+## Features
+
+- Visitors can read and reply to comments
+- Optional user authentication and identification
+- Easy to set up and use anywhere
+- Industry-standard security
+- Scalable, from free-tier to enterprise!
+- Designed to be fully customizable
+- Free and Open Source:
+  - The source code is available to be modified and used without restriction
+  - Commercial use allowed! Start a business with it! Knock yourself out!
+- Fully documented API
+  - Open API 3
+- Friendly and welcoming developer community
+
+### Upcoming features
+
+- GraphQL endpoint
+- GDPR compliance
+- Moderators can restrict visitor read and write access
+- Optional connection to the Fediverse
+- Support for other databases and hosting services
+
+## Setup
+
+1. sign up for a free Netlify account
+1. sign up for a free MongoDB Atlas account
+1. install the software locally
+1. add code to your webpage
+1. configure software
+1. Boom! Now you have comments
 
 ## Default build
 
@@ -34,13 +66,10 @@ By default, comments can be posted by anonymous users, but _Simple Comment_ does
 
 Auth is the endpoint for the authentication and identification scheme. A user submits their username and password to the auth endpoint, and receives a JSON Web Token (JWT) that authenticates them as that user for other CRUD operations
 
+### `/verify`
+
+Returns the logged-in user id or `401`
+
 ## policy
 
 `policy` is an [object holding key-value pairs](./src/policy.ts) that governs how _Simple Comment_ behaves, determining for instance maximum comment length or whether ordinary users can delete themselves
-
-## Roadmap
-
-1. Integrating MongoDB Atlas
-1. Integrating Netlify functions
-1. Add CORS to API
-1. Minimal frontend
