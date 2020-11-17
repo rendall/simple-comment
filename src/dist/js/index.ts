@@ -14,6 +14,7 @@ const clearStatus = () => {
     .querySelector("#status-display")
     .classList.remove("error")
 }
+
 const setStatus = (message, isError = false) => {
   if (typeof message !== "string") {
     if (typeof message.text === "function") {
@@ -58,7 +59,6 @@ const clearReply = () => {
     oldTextArea.remove()
   }
 
-
   const oldSubmitReplyButton = document.querySelector(
     "#reply-submit-button"
   )
@@ -79,7 +79,9 @@ const onSubmitReply = (textarea, targetId) => e => {
     console.log({ comment })
   }
 
-  postComment(targetId, text).then(onPostCommentResponse).catch(setErrorStatus)
+  postComment(targetId, text)
+    .then(onPostCommentResponse)
+    .catch(setErrorStatus)
 }
 
 const onReplyToComment = comment => e => {
