@@ -1,4 +1,5 @@
 import * as jwt from "jsonwebtoken"
+import * as dotenv from "dotenv"
 import {
   NewUser,
   Success,
@@ -13,6 +14,8 @@ import {
   PublicSafeUser,
   User
 } from "./simple-comment"
+
+dotenv.config()
 
 /**
  * Return object with properties in props removed
@@ -50,12 +53,12 @@ export const toPublicSafeUser = (user: User) =>
 export const toAdminSafeUser = (user: User) =>
   user
     ? narrowType<AdminSafeUser>(user, [
-        "id",
-        "name",
-        "email",
-        "isAdmin",
-        "isVerified"
-      ])
+      "id",
+      "name",
+      "email",
+      "isAdmin",
+      "isVerified"
+    ])
     : user
 
 export const isComment = (target: Comment | Discussion): target is Comment =>
@@ -77,6 +80,7 @@ export const isPublicSafeUser = (user: Partial<User>): user is PublicSafeUser =>
 const AUTHORIZATION_HEADER = "Authorization"
 const BEARER_SCHEME = "Bearer"
 const BASIC_SCHEME = "Basic"
+const ACCESS_CONTROL_ALLOW_ORIGIN = "Access-Control-Allow-Origin"
 
 const hasHeader = (headers: { [header: string]: string }, header: string) =>
   Object.keys(headers).some(
@@ -91,7 +95,31 @@ const getHeaderValue = (
   header: string
 ) => headers[getHeader(headers, header)]
 
-export const getOrigin = (headers: { [header: string]: string }) => getHeaderValue(headers, "origin")
+const getOrigin = (headers: { [header: string]: string }) =>
+  getHeaderValue(headers, "origin")
+export const getAllowedOrigins = () => process.env.ALLOW_ORIGIN.split(",")
+// const isAllAllowed = (allowedOrigins) => allowedOrigins.includes("*")
+const isOriginAllowed = (origin: string, allowedOrigins: string[]) =>
+  allowedOrigins.includes("*") || getAllowedOrigins().includes(origin)
+
+/** Returns the proper headers for Access-Control-Allow-Origin
+ * as set in .env and as determined by the Request Origin header
+ *
+ * If allowed origin is '*" will return that header
+ *
+ * If allowed origin list matches origin, will return that header + vary:origin
+ *
+ * If no match will return {}
+ *
+ **/
+export const getAllowOriginHeaders = (headers: { [header: string]: string }, allowedOrigins: string[] = []): {} | { "Access-Control-Allow-Origin": string; Vary?: "Origin" } =>
+  // This function is so clunky from the need to return two headers if there 
+  // is an exact match and *no* headers if there is not!
+  allowedOrigins.includes("*")
+    ? { "Access-Control-Allow-Origin": "*" }
+    : allowedOrigins.includes(getOrigin(headers))
+      ? { "Access-Control-Allow-Origin": getOrigin(headers), Vary: "Origin" }
+      : {}
 
 const parseAuthHeaderValue = (
   authHeaderValue: string,
@@ -100,9 +128,9 @@ const parseAuthHeaderValue = (
   spaceIndex === undefined
     ? parseAuthHeaderValue(authHeaderValue, authHeaderValue.indexOf(" "))
     : {
-        scheme: authHeaderValue.slice(0, spaceIndex),
-        credentials: authHeaderValue.slice(spaceIndex + 1)
-      }
+      scheme: authHeaderValue.slice(0, spaceIndex),
+      credentials: authHeaderValue.slice(spaceIndex + 1)
+    }
 
 export const REALM = "Access to restricted resources"
 /** nowPlusMinutes returns the numericDate `minutes` from now */
@@ -123,9 +151,9 @@ export const hasBasicScheme = (
   parse === undefined
     ? hasHeader(headers, AUTHORIZATION_HEADER)
       ? hasBasicScheme(
-          headers,
-          parseAuthHeaderValue(getHeaderValue(headers, AUTHORIZATION_HEADER))
-        )
+        headers,
+        parseAuthHeaderValue(getHeaderValue(headers, AUTHORIZATION_HEADER))
+      )
       : false
     : parse.scheme.toLowerCase() === BASIC_SCHEME.toLowerCase()
 
@@ -136,9 +164,9 @@ export const hasBearerScheme = (
   parse === undefined
     ? hasHeader(headers, AUTHORIZATION_HEADER)
       ? hasBearerScheme(
-          headers,
-          parseAuthHeaderValue(getHeaderValue(headers, AUTHORIZATION_HEADER))
-        )
+        headers,
+        parseAuthHeaderValue(getHeaderValue(headers, AUTHORIZATION_HEADER))
+      )
       : false
     : parse.scheme.toLowerCase() === BEARER_SCHEME.toLowerCase()
 
@@ -154,9 +182,9 @@ const parseAuthHeader = (
   colonIndex === undefined
     ? parseAuthHeader(plainText, plainText.indexOf(":"))
     : {
-        user: plainText.slice(0, colonIndex),
-        password: plainText.slice(colonIndex + 1)
-      }
+      user: plainText.slice(0, colonIndex),
+      password: plainText.slice(colonIndex + 1)
+    }
 
 export const getUserIdPassword = eventHeaders =>
   [getAuthHeaderValue, decodeAuthHeader, parseAuthHeader].reduce(
@@ -248,3 +276,16 @@ export const getUpdateTopicInfo = (body: string): Topic =>
   narrowType<Topic>(parseBody(body), ["title", "isLocked"]) as Topic
 
 export const isError = (res: Success | Error): boolean => res.statusCode >= 400
+
+export class HeaderList {
+  private _headers: { [header: string]: string }
+  constructor(headers?: { [header: string]: string }) {
+    this._headers = headers
+  }
+  add = (header, value) => {
+    this._headers = { ...this._headers, ...{ [header]: value } }
+  }
+  get headers() {
+    return this._headers
+  }
+}

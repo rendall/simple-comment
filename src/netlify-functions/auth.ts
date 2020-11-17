@@ -6,30 +6,34 @@ import {
   error401UserNotAuthenticated,
   error404CommentNotFound,
   error405MethodNotAllowed,
-  success200OK
+  success200OK,
+  success204NoContent
 } from "../lib/messages"
 import {
   getUserIdPassword,
   hasBasicScheme,
   REALM,
-  isError
+  isError,
+  getAllowOriginHeaders,
+  getAllowedOrigins
 } from "../lib/utilities"
 dotenv.config()
 
 const isProduction = process.env.SIMPLE_COMMENT_MODE === "production"
-const HEADERS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST,GET"
-}
 
 const service: MongodbService = new MongodbService(
   process.env.DB_CONNECTION_STRING,
   process.env.DATABASE_NAME
 )
-export const handler = async (
-  event: APIGatewayEvent,
-  context: APIGatewayEventRequestContext
-) => {
+
+const getAllowHeaders = (event:APIGatewayEvent) => {
+  const allowedMethods = { "Access-Control-Allow-Methods": "POST,GET,OPTION" }
+  const allowedOriginHeaders = getAllowOriginHeaders(event.headers, getAllowedOrigins())
+  const headers = {...allowedMethods, ...allowedOriginHeaders}
+  return headers
+}
+
+export const handler = async (event: APIGatewayEvent, context: APIGatewayEventRequestContext) => {
   const dirs = event.path.split("/")
   const isValidPath = dirs.length <= 5
 
@@ -41,9 +45,12 @@ export const handler = async (
       case "POST":
       case "GET":
         return handleAuth(event)
+      case "OPTION":
+        return handleOption(event)
       default:
+        const headers = getAllowHeaders(event)
         return new Promise<Error>(resolve =>
-          resolve({ ...error405MethodNotAllowed, headers: HEADERS })
+          resolve({ ...error405MethodNotAllowed, headers })
         )
     }
   }
@@ -64,13 +71,15 @@ export const handler = async (
 const handleAuth = async (event: APIGatewayEvent) => {
   const isBasicAuth = hasBasicScheme(event.headers)
 
+  const allowHeaders = getAllowHeaders(event)
+
   if (!isBasicAuth)
     return {
       // Receiving no basic authorization header, send instructions via WWW-Authenticate header
       // q.v. RFC7235 https://tools.ietf.org/html/rfc7235#section-4.1
       ...error401UserNotAuthenticated,
       headers: {
-        ...HEADERS,
+        ...allowHeaders,
         "WWW-Authenticate": `Basic realm="${REALM}", charset="UTF-8"`
       }
     }
@@ -87,8 +96,13 @@ const handleAuth = async (event: APIGatewayEvent) => {
     const COOKIE_HEADER = isProduction
       ? { "Set-Cookie": `token=${token}; path=/; Secure; HttpOnly; SameSite` }
       : { "Set-Cookie": `token=${token}; path=/; HttpOnly; SameSite` }
-    const headers = { ...HEADERS, ...COOKIE_HEADER }
+    const headers = { ...allowHeaders, ...COOKIE_HEADER }
 
     return { ...success200OK, headers }
   }
+}
+
+const handleOption = async (event: APIGatewayEvent) => {
+  const headers = getAllowHeaders(event)
+  return { ...success204NoContent, headers }
 }

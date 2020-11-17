@@ -69,6 +69,7 @@ export const error500ServerError: Error = {
   body: "Update error"
 }
 export const success200OK: Success = { statusCode: 200, body: "OK" }
+export const success204NoContent: Success = { statusCode: 204, body: undefined }
 export const success201CommentCreated: Success = {
   statusCode: 201,
   body: "Comment created"

@@ -1,25 +1,16 @@
-import * as dotenv from "dotenv";
 import { Context, APIGatewayEvent } from "aws-lambda"
-import { getOrigin } from "../lib/utilities";
-dotenv.config()
+import { getAllowedOrigins, getAllowOriginHeaders } from "../lib/utilities";
+
+const getAllowHeaders = (event:APIGatewayEvent) => {
+  const allowedMethods = { "Access-Control-Allow-Methods": "POST,GET,OPTION" }
+  const allowedOriginHeaders = getAllowOriginHeaders(event.headers, getAllowedOrigins())
+  const headers = {...allowedMethods, ...allowedOriginHeaders}
+  return headers
+}
 
 export const handler = async (event: APIGatewayEvent, context: Context) => {
 
-  const rawAllowOrigin = process.env.ALLOW_ORIGIN
-  const allowedOrigins = rawAllowOrigin.split(",")
-  const allowAll = allowedOrigins.includes("*")
-  const requestingOrigin = getOrigin(event.headers)
-
-  const isAllowed = allowAll || allowedOrigins.includes(requestingOrigin)
-
-  const headers = isAllowed ? {
-    "Access-Control-Allow-Origin": requestingOrigin,
-    Vary: "Origin"
-  } : {}
-
-
-
-
+  const headers = getAllowHeaders(event)
 
   const message = `Hello world ${Math.floor(Math.random() * 10)}`
   return {
