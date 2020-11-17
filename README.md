@@ -1,12 +1,14 @@
 # Simple Comment
 
-_Simple Comment_ allows visitors to your web pages to leave and read comments. It is _truly free_ (as in no cost) and entirely controlled by you from end to end
+_Simple Comment_ allows visitors to your web pages to leave and read comments.
+It is _truly free_ (as in no cost) and entirely controlled by you from end to
+end
 
 ## Features
 
 - Visitors can read and reply to comments
 - Optional user authentication and identification
-- Easy to set up and use anywhere
+- Easy to use anywhere
 - Industry-standard security
 - Designed to be fully customizable
 - Scalable, from free-tier to enterprise!
@@ -23,20 +25,55 @@ _Simple Comment_ allows visitors to your web pages to leave and read comments. I
 
 ### Upcoming features
 
+- CLI (command-line interface) for
+  - installation and setup
+  - content moderation
+  - user admininstration
 - GraphQL endpoint
 - GDPR compliance
 - Moderators can restrict visitor read and write access
+  - IP whitelists, graylists and blacklists
+  - User whitelists, graylists and blacklists
+- User self-verification
 - Optional connection to the Fediverse
 - Support for other databases and hosting services
 
 ## Setup
 
-1. sign up for a free Netlify account
+The assumption is that the API will run in a separate Netlify website and be accessed cross-origin
+
+1. Fork this repository to your own account
+1. `git clone https://github.com/<your-github-profile>/simple-comment` replacing
+   `<your-github-profile>`
+1. `cd simple-comment`
+1. `yarn install` (or `npm install`)
+1. Copy and rename `example.env` as `.env`
+1. In `.env`, enter your own, secret values, replacing everything to the right
+   of the `=` in every case:
+   1. SIMPLE_COMMENT_MODERATOR_ID
+   1. SIMPLE_COMMENT_MODERATOR_PASSWORD
+   1. JWT_SECRET
+   1. HASH_SECRET
 1. sign up for a free MongoDB Atlas account
-1. install the software locally
-1. add code to your webpage
-1. configure software
-1. Boom! Now you have comments
+   1. [Follow these instructions](docs/MONGODB_ATLAS.md)
+   1. In `.env` add the proper `DB_CONNECION_STRING`
+1. Sign up for a Netlify account, begin a new website, and link your repository
+   to the new website
+   1. Navigate to 'Build & Deploy => Environment`
+   1. Under `Environmental Variables` click the button `Edit Variables`
+   1. For each entry in `.env` add the key and corresponding value for _all_
+      variables
+   1. For `SIMPLE_COMMENT_MODE` add the value `production`
+
+### Troubleshooting
+
+- Error: `Refused to connect to 'api/auth' because it violates the following Content Security Policy directive: connect-src 'self'`
+  - Add `https://<your-comment-app>.netlify.app` to your Content Security Policy
+    header next to `connect-src` (q.v.
+    <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/connect-src>)
+- Error:
+  `Access to fetch at 'https://<your-comment-app>.netlify.app/.netlify/functions/' from origin '<your-website>' has been blocked by CORS policy...`
+- Add `<your-website>` to
 
 ## Default build
 
