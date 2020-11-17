@@ -1,8 +1,7 @@
-import { METHODS } from "http"
-import { Discussion, Topic, User, UserId } from "./../../lib/simple-comment"
+import { UserId } from "./../../lib/simple-comment"
 
 const processResponse = (res: Response) => {
-  if (!res.ok) {
+  if (res.ok === false) {
     throw res
   }
   else return res.json()
@@ -52,14 +51,4 @@ export const postAuth = (user: string, password: string) => {
   };
 
   return fetch(`/.netlify/functions/auth`, authReqInfo).then(processResponse)
-
 }
-
-// 'topicGET', 'topicPOST',
-//   'topicGET', 'topicPUT',
-//   'topicDELETE', 'commentPOST',
-//   'commentGET', 'commentPUT',
-//   'commentDELETE', 'userGET',
-//   'userPOST', 'userGET',
-//   'userPUT', 'userDELETE',
-//   'authGET', 'authPOST'
