@@ -77,3 +77,20 @@ Returns the logged-in user id or `401`
 ## policy
 
 `policy` is an [object holding key-value pairs](./src/policy.ts) that governs how _Simple Comment_ behaves, determining for instance maximum comment length or whether ordinary users can delete themselves
+
+## License
+
+The _Simple Comment License version 1_ is not yet written, but these are the proposed allowances and restrictions:
+
+- Source Code is free, open-source, and available to be modified without restriction
+  - Commercial use allowed without restriction
+- The _Simple Comment_ brand is intended to offer confidence to users of the software, and so comes with restrictions
+  - You are free to use the software without restriction of any kind _without_ attribution or reference to _Simple Comment_
+    - This is in effect the MIT License
+  - You may attribute _Simple Comment_ without using the official _Powered by Simple Comment_ badge, in which case the software comes under a more restricted license:
+    - You _must_ make any modification to the source code freely available and inspectable
+    - This is effectively the AGPL License
+  - You may use the official _Powered by Simple Comment_ badge, but in that case, the software comes under a much more restricted license
+    - NO modifications to the source code allowed
+    - Pull requests always welcome!
+    - This is effectively a license to use, but not modify, the software
