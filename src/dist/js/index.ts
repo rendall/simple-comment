@@ -10,20 +10,16 @@ import {
 
 const clearStatus = () => {
   document.querySelector("#status-display").innerHTML = ""
-  document
-    .querySelector("#status-display")
-    .classList.remove("error")
+  document.querySelector("#status-display").classList.remove("error")
 }
 
 const setStatus = (message, isError = false) => {
   if (typeof message !== "string") {
     if (typeof message.text === "function") {
       message.text().then(msg => setStatus(msg, isError))
-    }
-    else return setStatus(JSON.stringify(message), isError)
-  }
-  else {
-  document.querySelector("#status-display").classList.toggle("error", isError)
+    } else return setStatus(JSON.stringify(message), isError)
+  } else {
+    document.querySelector("#status-display").classList.toggle("error", isError)
     document.querySelector("#status-display").innerHTML = message
   }
 }
@@ -59,14 +55,10 @@ const clearReply = () => {
     oldTextArea.remove()
   }
 
-  const oldSubmitReplyButton = document.querySelector(
-    "#reply-submit-button"
-  )
+  const oldSubmitReplyButton = document.querySelector("#reply-submit-button")
   if (oldSubmitReplyButton) oldSubmitReplyButton.remove()
 
-  const oldCancelReply = document.querySelector(
-    "#reply-cancel-button"
-  )
+  const oldCancelReply = document.querySelector("#reply-cancel-button")
   if (oldCancelReply) oldCancelReply.remove()
 }
 
@@ -79,9 +71,7 @@ const onSubmitReply = (textarea, targetId) => e => {
     console.log({ comment })
   }
 
-  postComment(targetId, text)
-    .then(onPostCommentResponse)
-    .catch(setErrorStatus)
+  postComment(targetId, text).then(onPostCommentResponse).catch(setErrorStatus)
 }
 
 const onReplyToComment = comment => e => {
