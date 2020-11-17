@@ -97,6 +97,7 @@ const getHeaderValue = (
 
 const getOrigin = (headers: { [header: string]: string }) =>
   getHeaderValue(headers, "origin")
+
 export const getAllowedOrigins = () => process.env.ALLOW_ORIGIN.split(",")
 // const isAllAllowed = (allowedOrigins) => allowedOrigins.includes("*")
 const isOriginAllowed = (origin: string, allowedOrigins: string[]) =>
