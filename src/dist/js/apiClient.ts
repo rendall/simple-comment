@@ -3,8 +3,7 @@ import { UserId } from "./../../lib/simple-comment"
 const processResponse = (res: Response) => {
   if (res.ok === false) {
     throw res
-  }
-  else return res.json()
+  } else return res.json()
 }
 
 export const getCurrentUser = () =>
@@ -37,10 +36,9 @@ export const deleteAuth = () =>
   }).then(processResponse)
 
 export const postAuth = (user: string, password: string) => {
-
-  const credentials: RequestCredentials = "include";
-  const encode = `${user}:${password}`;
-  const basicCred = window.btoa(encode);
+  const credentials: RequestCredentials = "include"
+  const encode = `${user}:${password}`
+  const basicCred = window.btoa(encode)
 
   const authReqInfo = {
     credentials: credentials,
@@ -48,7 +46,7 @@ export const postAuth = (user: string, password: string) => {
     headers: {
       Authorization: `Basic ${basicCred}`
     }
-  };
+  }
 
   return fetch(`/.netlify/functions/auth`, authReqInfo).then(processResponse)
 }

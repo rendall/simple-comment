@@ -10,36 +10,42 @@ import {
 
 const clearStatus = () => {
   document.querySelector("#status-display").innerHTML = ""
-  document
-    .querySelector("#status-display")
-    .classList.remove("error")
+  document.querySelector("#status-display").classList.remove("error")
 }
 
 const setStatus = (message, isError = false) => {
   if (typeof message !== "string") {
     if (typeof message.text === "function") {
       message.text().then(msg => setStatus(msg, isError))
-    }
-    else return setStatus(JSON.stringify(message), isError)
-  }
-  else {
-  document.querySelector("#status-display").classList.toggle("error", isError)
+    } else return setStatus(JSON.stringify(message), isError)
+  } else {
+    document.querySelector("#status-display").classList.toggle("error", isError)
     document.querySelector("#status-display").innerHTML = message
   }
 }
 
-const setErrorStatus = (message) => {
+const setErrorStatus = message => {
   setStatus(message, true)
 }
 
-const setUserStatus = (user?: {id:string,  name:string, email:string, isAdmin:string, isVerified:string}) => {
-
-  const userName = user ? `Logged in as: ${user.name} ${user.isAdmin? "(admin)" : ""}` : "Not logged in"
-  if (user && user.isAdmin) document.querySelector("body").classList.add("is-admin")
+const setUserStatus = (user?: {
+  id: string
+  name: string
+  email: string
+  isAdmin: string
+  isVerified: string
+}) => {
+  const userName = user
+    ? `Logged in as: ${user.name} ${user.isAdmin ? "(admin)" : ""}`
+    : "Not logged in"
+  if (user && user.isAdmin)
+    document.querySelector("body").classList.add("is-admin")
   else document.querySelector("body").classList.remove("is-admin")
 
   document.querySelector("#user-name").innerHTML = userName
-  document.querySelector("#user-display").classList.toggle("is-logged-in", !!user)
+  document
+    .querySelector("#user-display")
+    .classList.toggle("is-logged-in", !!user)
 }
 
 const clearReply = () => {
@@ -49,14 +55,10 @@ const clearReply = () => {
     oldTextArea.remove()
   }
 
-  const oldSubmitReplyButton = document.querySelector(
-    "#reply-submit-button"
-  )
+  const oldSubmitReplyButton = document.querySelector("#reply-submit-button")
   if (oldSubmitReplyButton) oldSubmitReplyButton.remove()
 
-  const oldCancelReply = document.querySelector(
-    "#reply-cancel-button"
-  )
+  const oldCancelReply = document.querySelector("#reply-cancel-button")
   if (oldCancelReply) oldCancelReply.remove()
 }
 
@@ -69,9 +71,7 @@ const onSubmitReply = (textarea, targetId) => e => {
     console.log({ comment })
   }
 
-  postComment(targetId, text)
-    .then(onPostCommentResponse)
-    .catch(setErrorStatus)
+  postComment(targetId, text).then(onPostCommentResponse).catch(setErrorStatus)
 }
 
 const onReplyToComment = comment => e => {
@@ -122,10 +122,7 @@ const attachComment = (comment, elem) => {
   replyCommentButton.classList.add("comment-button")
   commentDisplay.appendChild(replyCommentButton)
 
-  replyCommentButton.addEventListener(
-    "click",
-    onReplyToComment(comment)
-  )
+  replyCommentButton.addEventListener("click", onReplyToComment(comment))
 }
 
 const onReplyToTopic = onReplyToComment
@@ -151,9 +148,7 @@ const onReceiveDiscussion = discussion => {
 
     if (comment) attachComment(comment, listItem)
 
-    const replies = comments.filter(
-      c => c.parentId === parentId
-    )
+    const replies = comments.filter(c => c.parentId === parentId)
     const replyList = document.createElement("ul")
     listItem.appendChild(replyList)
 
@@ -173,10 +168,7 @@ const onReceiveDiscussion = discussion => {
   replyTopicButton.innerText = "reply"
   replyTopicButton.classList.add("comment-button")
 
-  replyTopicButton.addEventListener(
-    "click",
-    onReplyToTopic(discussion)
-  )
+  replyTopicButton.addEventListener("click", onReplyToTopic(discussion))
 
   threadReplies(discussionDiv, discussion.id)
 
@@ -209,7 +201,7 @@ const onReceiveTopics = (topics = []) => {
     })
 }
 
-const onTopicClick = ( e ) => {
+const onTopicClick = e => {
   e.preventDefault()
   const topicId = e.target.id
   getDiscussion(topicId).then(onReceiveDiscussion, setStatus)
@@ -219,11 +211,15 @@ const onLogoutClick = e => {
   deleteAuth().then(updateLoginStatus).catch(setErrorStatus)
 }
 
-const getSelf = (userObj?: { user: string}) => getOneUser(userObj.user).then(setUserStatus).catch(setErrorStatus)
+const getSelf = (userObj?: { user: string }) =>
+  getOneUser(userObj.user).then(setUserStatus).catch(setErrorStatus)
 
 const onLoginClick = e => {
-  const usernamevalue = (document.querySelector("#userid") as HTMLInputElement).value
-  const passwordvalue = (document.querySelector("#password") as HTMLInputElement).value
+  const usernamevalue = (document.querySelector("#userid") as HTMLInputElement)
+    .value
+  const passwordvalue = (document.querySelector(
+    "#password"
+  ) as HTMLInputElement).value
 
   const username = usernamevalue ? usernamevalue.trim() : usernamevalue
   const password = passwordvalue ? passwordvalue.trim() : passwordvalue
@@ -237,12 +233,14 @@ const onLoginClick = e => {
   postAuth(username, password).then(updateLoginStatus).catch(setErrorStatus)
 }
 
-const updateLoginStatus = () => getCurrentUser().then(getSelf).catch(currUserError => {
-    if (currUserError.status && currUserError.status === 401) {
-      setUserStatus()
-    }
-    else setErrorStatus(currUserError);
-  })
+const updateLoginStatus = () =>
+  getCurrentUser()
+    .then(getSelf)
+    .catch(currUserError => {
+      if (currUserError.status && currUserError.status === 401) {
+        setUserStatus()
+      } else setErrorStatus(currUserError)
+    })
 
 const setup = () => {
   const logoutButton = document.querySelector("#log-out-button")
@@ -254,7 +252,6 @@ const setup = () => {
   updateLoginStatus()
 
   getAllTopics().then(onReceiveTopics, setStatus)
-
 }
 
 setup()

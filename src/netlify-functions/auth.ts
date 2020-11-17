@@ -44,7 +44,10 @@ export const handler = async (
   const isValidPath = dirs.length <= 5
 
   if (!isValidPath)
-    return { ...error404CommentNotFound, body: `${event.path} is not valid` }
+    return {
+      ...error404CommentNotFound,
+      body: `${event.path} is not valid`
+    }
 
   const handleMethod = (method): Promise<Success | Error> => {
     switch (method) {

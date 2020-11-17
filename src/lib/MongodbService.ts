@@ -390,7 +390,9 @@ export class MongodbService extends Service {
       }
 
       // Prevent duplicate comments
-      const findOptions: FindOneOptions<Comment> = { sort: { dateCreated: -1 } }
+      const findOptions: FindOneOptions<Comment> = {
+        sort: { dateCreated: -1 }
+      }
       const lastComment = (await comments.findOne(
         { "user.id": authUserId },
         findOptions
@@ -421,11 +423,17 @@ export class MongodbService extends Service {
           const insertedComment: Comment = response.ops.find(x => true)
 
           if (insertComment.parentId !== parentId) {
-            reject({ statusCode: 500, body: "Database insertion error" })
+            reject({
+              statusCode: 500,
+              body: "Database insertion error"
+            })
             return
           }
 
-          resolve({ statusCode: 201, body: { ...insertedComment, user:adminSafeUser } })
+          resolve({
+            statusCode: 201,
+            body: { ...insertedComment, user: adminSafeUser }
+          })
         })
         .catch(e => {
           console.error(e)
@@ -687,7 +695,10 @@ export class MongodbService extends Service {
       comments
         .findOneAndUpdate({ id: foundComment.id }, { $set: returnComment })
         .then((x: FindAndModifyWriteOpResultObject<Comment>) =>
-          resolve({ ...success204CommentUpdated, body: returnComment })
+          resolve({
+            ...success204CommentUpdated,
+            body: returnComment
+          })
         )
         .catch(e =>
           authUser.isAdmin
@@ -823,7 +834,10 @@ export class MongodbService extends Service {
           const insertedDiscussion: Discussion = response.ops.find(x => true)
 
           if (insertedDiscussion.id !== topic.id)
-            reject({ statusCode: 500, body: "Database insertion error" })
+            reject({
+              statusCode: 500,
+              body: "Database insertion error"
+            })
           else
             resolve({
               statusCode: 201,
