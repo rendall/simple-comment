@@ -38,7 +38,7 @@ _Simple Comment_ allows visitors to your web pages to leave and read comments. I
 
 ## Setup
 
-The assumption is that the API will run in a separate Netlify website and be accessed cross-origin. It is a *necessary* requirement that the pages where you want Simple Comments to run *must* be served via *https:*  If you already have a Netlify account and want to integrate Simple Comment with your site, open an issue and we'll create instructions.
+The assumption is that the API will run in a separate Netlify website and be accessed cross-origin. It is a _necessary_ requirement that the pages where you want Simple Comments to run _must_ be served via _https:_ If you already have a Netlify account and want to integrate Simple Comment with your site, open an issue and we'll create instructions.
 
 1. Fork this repository to your own account
 1. `git clone https://github.com/<your-github-profile>/simple-comment` replacing
@@ -62,11 +62,12 @@ The assumption is that the API will run in a separate Netlify website and be acc
    1. For each entry in `.env` add the key and corresponding value for _all_
       variables
    1. For `SIMPLE_COMMENT_MODE` add the value `production`
-1. Modify your website
-    1. In the HTML for each page on your website where you want Simple Comment to run, add these two tags:
-        1. `<script src="simple-comment.js" defer></script>` (`src` can of course be anywhere)
-        1. `<div id="simple-comment-area"></div>`
-    1. Place the `login.html` page somewhere on your website
+1. Modify your website. These are simple instructions, but feel free to hack away
+   1. In the HTML for each page on your website where you want Simple Comment to run, add these two tags:
+      1. `<script src="[path-to]/simple-comment.js" defer></script>` (`src` must point to the `simple-comment.js` file)
+      1. `<div id="simple-comment-area"></div>`
+   1. Upload the `simple-comment.js` file to your website's script folder
+   1. Upload the `login.html` page on the root of your website (or somewhere accessible)
 1. It should now be possible to leave and read comments on your website
 
 ### Troubleshooting
@@ -80,7 +81,7 @@ The assumption is that the API will run in a separate Netlify website and be acc
 
 ## Moderating
 
-1. Visit the `login.html` page you uploaded in *Setup* and 
+1. Visit the `login.html` page you uploaded in _Setup_ and
 1. Log in using the `SIMPLE_COMMENT_MODERATOR_ID` and `SIMPLE_COMMENT_MODERATOR_PASSWORD` values in your `.env` file
 
 ## Default build
