@@ -4,7 +4,8 @@ import {
   getDiscussion,
   getCurrentUser,
   deleteAuth,
-  postAuth
+  postAuth,
+  getOneUser
 } from "./apiClient.js"
 
 const clearStatus = () => {
@@ -13,6 +14,7 @@ const clearStatus = () => {
     .querySelector("#status-display")
     .classList.remove("error")
 }
+
 const setStatus = (message, isError = false) => {
   if (typeof message !== "string") {
     if (typeof message.text === "function") {
@@ -30,10 +32,14 @@ const setErrorStatus = (message) => {
   setStatus(message, true)
 }
 
-const setUserStatus = (userObj?: { user: string, exp: number, iat: number }) => {
-  const userName = userObj ? userObj.user : "Anonymous"
+const setUserStatus = (user?: {id:string,  name:string, email:string, isAdmin:string, isVerified:string}) => {
+
+  const userName = user ? `Logged in as: ${user.name} ${user.isAdmin? "(admin)" : ""}` : "Not logged in"
+  if (user && user.isAdmin) document.querySelector("body").classList.add("is-admin")
+  else document.querySelector("body").classList.remove("is-admin")
+
   document.querySelector("#user-name").innerHTML = userName
-  document.querySelector("#user-display").classList.toggle("is-logged-in", !!userObj)
+  document.querySelector("#user-display").classList.toggle("is-logged-in", !!user)
 }
 
 const clearReply = () => {
@@ -42,7 +48,6 @@ const clearReply = () => {
     oldTextArea.parentElement.classList.remove("is-reply")
     oldTextArea.remove()
   }
-
 
   const oldSubmitReplyButton = document.querySelector(
     "#reply-submit-button"
@@ -66,16 +71,7 @@ const onSubmitReply = (textarea, targetId) => e => {
 
   postComment(targetId, text)
     .then(onPostCommentResponse)
-    .catch(errRes => {
-      console.error({ errRes })
-      errRes
-        .text()
-        .then(errMessage =>
-          setErrorStatus(
-            `${errRes.status}: ${errMessage}`
-          )
-        )
-    })
+    .catch(setErrorStatus)
 }
 
 const onReplyToComment = comment => e => {
@@ -132,9 +128,8 @@ const attachComment = (comment, elem) => {
   )
 }
 
-const onReplyToTopic = onReplyToComment // topic => e => {
-// console.log(`reply to ${topic.id}`)
-// }
+const onReplyToTopic = onReplyToComment
+
 const onReceiveDiscussion = discussion => {
   const discussionDiv = document.querySelector("#discussion")
 
@@ -224,6 +219,8 @@ const onLogoutClick = e => {
   deleteAuth().then(updateLoginStatus).catch(setErrorStatus)
 }
 
+const getSelf = (userObj?: { user: string}) => getOneUser(userObj.user).then(setUserStatus).catch(setErrorStatus)
+
 const onLoginClick = e => {
   const usernamevalue = (document.querySelector("#userid") as HTMLInputElement).value
   const passwordvalue = (document.querySelector("#password") as HTMLInputElement).value
@@ -240,12 +237,13 @@ const onLoginClick = e => {
   postAuth(username, password).then(updateLoginStatus).catch(setErrorStatus)
 }
 
-const updateLoginStatus = () => getCurrentUser().then(setUserStatus).catch(currUserError => {
+const updateLoginStatus = () => getCurrentUser().then(getSelf).catch(currUserError => {
     if (currUserError.status && currUserError.status === 401) {
       setUserStatus()
     }
     else setErrorStatus(currUserError);
   })
+
 const setup = () => {
   const logoutButton = document.querySelector("#log-out-button")
   logoutButton.addEventListener("click", onLogoutClick)
