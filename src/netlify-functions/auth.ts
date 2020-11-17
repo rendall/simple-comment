@@ -26,14 +26,20 @@ const service: MongodbService = new MongodbService(
   process.env.DATABASE_NAME
 )
 
-const getAllowHeaders = (event:APIGatewayEvent) => {
+const getAllowHeaders = (event: APIGatewayEvent) => {
   const allowedMethods = { "Access-Control-Allow-Methods": "POST,GET,OPTION" }
-  const allowedOriginHeaders = getAllowOriginHeaders(event.headers, getAllowedOrigins())
-  const headers = {...allowedMethods, ...allowedOriginHeaders}
+  const allowedOriginHeaders = getAllowOriginHeaders(
+    event.headers,
+    getAllowedOrigins()
+  )
+  const headers = { ...allowedMethods, ...allowedOriginHeaders }
   return headers
 }
 
-export const handler = async (event: APIGatewayEvent, context: APIGatewayEventRequestContext) => {
+export const handler = async (
+  event: APIGatewayEvent,
+  context: APIGatewayEventRequestContext
+) => {
   const dirs = event.path.split("/")
   const isValidPath = dirs.length <= 5
 
