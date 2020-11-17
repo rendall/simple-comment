@@ -33,27 +33,6 @@
   </head>
 
   <body>
-    <p>
-      This is an example implementation of authentication by
-      <a href="https://tools.ietf.org/html/rfc7519">JSON Web Tokens (JWT)</a>
-      using the <a href="https://jwt.io">https://jwt.io</a> library.
-    </p>
-    <p>
-      The user submits a <code>username</code> and <code>password</code>, and
-      receives a token which is used as authentication elsewhere in the API to
-      verify the claim that the user "is" <code>username</code>
-    </p>
-    <p>
-      The project is comprised of a backend API server written in Node, and a
-      simple HTML/javascript frontend client (this page). The source code is at
-      <a href="https://github.com/rendall/jwt-implementation"
-        >https://github.com/rendall/jwt-implementation</a
-      >
-    </p>
-    <p>
-      Enter a username and password, and submit it to the <code>auth</code> API
-      endpoint. Try username 'abc' and password '123'
-    </p>
     <form id="userForm">
       <div>
         <label for="user">User name:</label>
@@ -65,18 +44,10 @@
       </div>
       <button type="submit" id="userSubmitButton">submit</button>
     </form>
-
-    <br />
-    <p>
-      When <code>auth</code> returns a token, submit it to the
-      <code>verify</code> API
-    </p>
     <form id="tokenForm">
       <div>
-        <label for="token">Token:</label>
         <textarea name="token"></textarea>
       </div>
-      <button type="submit" id="tokenSubmitButton">submit</button>
     </form>
     <p id="errorDisplay"></p>
     <p id="statusDisplay"></p>
