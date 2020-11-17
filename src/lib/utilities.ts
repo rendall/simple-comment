@@ -91,6 +91,8 @@ const getHeaderValue = (
   header: string
 ) => headers[getHeader(headers, header)]
 
+export const getOrigin = (headers: { [header: string]: string }) => getHeaderValue(headers, "origin")
+
 const parseAuthHeaderValue = (
   authHeaderValue: string,
   spaceIndex?: number
