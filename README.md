@@ -8,13 +8,17 @@ _Simple Comment_ allows visitors to your web pages to leave and read comments. I
 - Optional user authentication and identification
 - Easy to set up and use anywhere
 - Industry-standard security
-- Scalable, from free-tier to enterprise!
 - Designed to be fully customizable
-- Free and Open Source:
+- Scalable, from free-tier to enterprise!
+- Free (as in "free beer": no cost)
+  - Takes advantage of free-tier offerings from DBaaS and website hosts
+- Free (as in "free speech": open source)
   - The source code is available to be modified and used without restriction
   - Commercial use allowed! Start a business with it! Knock yourself out!
+  - MIT licensing available
 - Fully documented API
   - Open API 3
+- Ethical, no-track, visitor control over data
 - Friendly and welcoming developer community
 
 ### Upcoming features
