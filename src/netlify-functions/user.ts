@@ -2,7 +2,8 @@ import * as dotenv from "dotenv"
 import type { APIGatewayEvent, APIGatewayEventRequestContext } from "aws-lambda"
 import {
   error404CommentNotFound,
-  error405MethodNotAllowed
+  error405MethodNotAllowed,
+  success204NoContent
 } from "../lib/messages"
 import { MongodbService } from "../lib/MongodbService"
 import {
@@ -13,6 +14,8 @@ import {
   Error
 } from "../lib/simple-comment"
 import {
+  getAllowedOrigins,
+  getAllowOriginHeaders,
   getNewUserInfo,
   getTargetId,
   getUpdatedUserInfo,
@@ -24,12 +27,26 @@ const service: MongodbService = new MongodbService(
   process.env.DB_CONNECTION_STRING,
   process.env.DATABASE_NAME
 )
+
+const getAllowHeaders = (event: APIGatewayEvent) => {
+  const allowedMethods = {
+    "Access-Control-Allow-Methods": "POST,GET,OPTION,PUT,DELETE,OPTION"
+  }
+  const allowedOriginHeaders = getAllowOriginHeaders(
+    event.headers,
+    getAllowedOrigins()
+  )
+  const headers = { ...allowedMethods, ...allowedOriginHeaders }
+  return headers
+}
+
 export const handler = async (
   event: APIGatewayEvent,
   context: APIGatewayEventRequestContext
 ) => {
   const dirs = event.path.split("/")
   const isValidPath = dirs.length <= 5
+  const headers = getAllowHeaders(event)
 
   if (!isValidPath)
     return { ...error404CommentNotFound, body: `${event.path} is not valid` }
@@ -60,15 +77,23 @@ export const handler = async (
         )
       case "DELETE":
         return service.userDELETE(targetId, authUserId)
+      case "OPTION":
+        return new Promise<Success>(resolve =>
+          resolve({ ...success204NoContent, headers })
+        )
       default:
         return new Promise<Error>(resolve => resolve(error405MethodNotAllowed))
     }
   }
 
-  const convert = (res: { statusCode: number; body: any }) => ({
-    ...res,
-    body: JSON.stringify(res.body)
-  })
+  const convert = (res: { statusCode: number; body: any }) =>
+    res.statusCode === 204
+      ? { ...res, headers }
+      : {
+          ...res,
+          body: JSON.stringify(res.body),
+          headers
+        }
 
   try {
     const response = await handleMethod(event.httpMethod)
