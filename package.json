@@ -10,7 +10,7 @@
     "@types/jest": "^26.0.15",
     "@types/jsonwebtoken": "^8.5.0",
     "@types/mongodb": "^3.1.23",
-    "@types/node": "^11.13.4",
+    "@types/node": "^11.15.35",
     "@types/uuid": "^8.3.0",
     "aws-sdk": "^2.790.0",
     "babel-jest": "^26.6.3",
