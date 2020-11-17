@@ -53,12 +53,12 @@ export const toPublicSafeUser = (user: User) =>
 export const toAdminSafeUser = (user: User) =>
   user
     ? narrowType<AdminSafeUser>(user, [
-      "id",
-      "name",
-      "email",
-      "isAdmin",
-      "isVerified"
-    ])
+        "id",
+        "name",
+        "email",
+        "isAdmin",
+        "isVerified"
+      ])
     : user
 
 export const isComment = (target: Comment | Discussion): target is Comment =>
@@ -113,14 +113,17 @@ const isOriginAllowed = (origin: string, allowedOrigins: string[]) =>
  * If no match will return {}
  *
  **/
-export const getAllowOriginHeaders = (headers: { [header: string]: string }, allowedOrigins: string[] = []): {} | { "Access-Control-Allow-Origin": string; Vary?: "Origin" } =>
-  // This function is so clunky from the need to return two headers if there 
+export const getAllowOriginHeaders = (
+  headers: { [header: string]: string },
+  allowedOrigins: string[] = []
+): {} | { "Access-Control-Allow-Origin": string; Vary?: "Origin" } =>
+  // This function is so clunky from the need to return two headers if there
   // is an exact match and *no* headers if there is not!
   allowedOrigins.includes("*")
     ? { "Access-Control-Allow-Origin": "*" }
     : allowedOrigins.includes(getOrigin(headers))
-      ? { "Access-Control-Allow-Origin": getOrigin(headers), Vary: "Origin" }
-      : {}
+    ? { "Access-Control-Allow-Origin": getOrigin(headers), Vary: "Origin" }
+    : {}
 
 const parseAuthHeaderValue = (
   authHeaderValue: string,
@@ -129,9 +132,9 @@ const parseAuthHeaderValue = (
   spaceIndex === undefined
     ? parseAuthHeaderValue(authHeaderValue, authHeaderValue.indexOf(" "))
     : {
-      scheme: authHeaderValue.slice(0, spaceIndex),
-      credentials: authHeaderValue.slice(spaceIndex + 1)
-    }
+        scheme: authHeaderValue.slice(0, spaceIndex),
+        credentials: authHeaderValue.slice(spaceIndex + 1)
+      }
 
 export const REALM = "Access to restricted resources"
 /** nowPlusMinutes returns the numericDate `minutes` from now */
@@ -152,9 +155,9 @@ export const hasBasicScheme = (
   parse === undefined
     ? hasHeader(headers, AUTHORIZATION_HEADER)
       ? hasBasicScheme(
-        headers,
-        parseAuthHeaderValue(getHeaderValue(headers, AUTHORIZATION_HEADER))
-      )
+          headers,
+          parseAuthHeaderValue(getHeaderValue(headers, AUTHORIZATION_HEADER))
+        )
       : false
     : parse.scheme.toLowerCase() === BASIC_SCHEME.toLowerCase()
 
@@ -165,9 +168,9 @@ export const hasBearerScheme = (
   parse === undefined
     ? hasHeader(headers, AUTHORIZATION_HEADER)
       ? hasBearerScheme(
-        headers,
-        parseAuthHeaderValue(getHeaderValue(headers, AUTHORIZATION_HEADER))
-      )
+          headers,
+          parseAuthHeaderValue(getHeaderValue(headers, AUTHORIZATION_HEADER))
+        )
       : false
     : parse.scheme.toLowerCase() === BEARER_SCHEME.toLowerCase()
 
@@ -183,9 +186,9 @@ const parseAuthHeader = (
   colonIndex === undefined
     ? parseAuthHeader(plainText, plainText.indexOf(":"))
     : {
-      user: plainText.slice(0, colonIndex),
-      password: plainText.slice(colonIndex + 1)
-    }
+        user: plainText.slice(0, colonIndex),
+        password: plainText.slice(colonIndex + 1)
+      }
 
 export const getUserIdPassword = eventHeaders =>
   [getAuthHeaderValue, decodeAuthHeader, parseAuthHeader].reduce(
