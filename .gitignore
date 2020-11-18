@@ -1,10 +1,14 @@
 *.js
 .env
 /.git
+/RAW
+/cypress/integration/examples
+/cypress/screenshots
 /functions
 /lib
 /netlify-functions
 /node_modules
-RAW
+debug.log
 globalConfig.json
 yarn-error.log
+!/cypress/**/*.js
