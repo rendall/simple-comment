@@ -16,6 +16,7 @@ Nearly there! Steps to minimum viable product (MVP):
 - Visitor can claim ownership over anonymous posts
   - Temporary uuid
 - Minimal script to add Simple Comment functionality to any webpage
+- Working example on Github pages
 
 ### Done!
 
@@ -23,6 +24,7 @@ Nearly there! Steps to minimum viable product (MVP):
   - Each endpoint and each verb behaves properly
   - `Access-Control-Allow-Origin` responds to `.env` variables
 - Authentication and Identification works as expected
+- Authenticated users and admins can interact with Simple Comment entirely as expected
 - Anonymous user can create topics
   - This is useful for pages that do not have topics yet
   - Restrictions apply:
@@ -30,7 +32,15 @@ Nearly there! Steps to minimum viable product (MVP):
     - The `Origin` must be on the `Access-Control-Allow-Origin` list
 - Setup instructions
   - Are complicated but work when followed
-  
+
+### Nice to haves
+
+- Comprehensive front-end tests
+  - Give users confidence it works as expected
+  - ... or useful error messages if not
+- _"Powered by Simple Comment"_ badge
+- Extensive helpful comments!
+
 ## Features
 
 - Visitors can read and reply to comments
