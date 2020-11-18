@@ -14,7 +14,8 @@ import type {
   PublicSafeUser,
   NewUser,
   UpdateUser,
-  TokenClaim
+  TokenClaim,
+  NewTopic
 } from "./simple-comment"
 import {
   Collection,
@@ -35,10 +36,12 @@ import {
   isDeletedComment,
   toAdminSafeUser,
   toPublicSafeUser,
-  toSafeUser
+  toSafeUser,
+  toTopic
 } from "./utilities"
 import { policy } from "../policy"
 import {
+  error400BadRequest,
   error400CommentIdMissing,
   error400NoUpdate,
   error400PasswordMissing,
@@ -802,9 +805,9 @@ export class MongodbService extends Service {
    * authUserId
    * returns Success 201
    **/
-  topicPOST = (topic: Topic, authUserId?: UserId) =>
+  topicPOST = (newTopic: NewTopic, authUserId?: UserId) =>
     new Promise<Success<Topic> | Error>(async (resolve, reject) => {
-      if (!authUserId) {
+      if (!policy.canPublicCreateTopic && !authUserId) {
         reject(error401UserNotAuthenticated)
         return
       }
@@ -812,15 +815,52 @@ export class MongodbService extends Service {
       const users: Collection<User> = (await this.getDb()).collection("users")
       const authUser = await users.findOne({ id: authUserId })
 
-      if (!authUser) {
+      if (authUserId && !authUser) {
         reject(error404UserUnknown)
         return
       }
 
-      if (!authUser.isAdmin) {
+      if (!policy.canPublicCreateTopic && !authUser.isAdmin) {
         reject(error403UserNotAuthorized)
         return
       }
+
+      if (!authUserId && policy.refererRestrictions) {
+        // User is anonymous, public can create topics, and referrer restrictions are true
+        // Let's validate the topic. We do that by comparing the proposed topicId with the `referer` header
+        // They should be the same. If not, reject it
+
+        if (!newTopic.referer) {
+          reject(error403UserNotAuthorized)
+          return
+        }
+
+        const allowedId = newTopic.referer
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, "-")
+        const isAllowed = allowedId === newTopic.id
+
+        if (!isAllowed) {
+          reject({
+            ...error403Forbidden,
+            body: `Unknown referer ${newTopic.referer}`
+          })
+          return
+        }
+      }
+
+      const hasInvalidCharacters = newTopic.id.match(/[^a-z0-9\-]/)
+      if (hasInvalidCharacters) {
+        const invalidChar = hasInvalidCharacters ? hasInvalidCharacters[0] : ""
+        reject({
+          ...error400BadRequest,
+          body: `Invalid character '${invalidChar}' in topicId`
+        })
+        return
+      }
+
+      // remove extraneous information like 'referer'
+      const topic: Topic = { ...toTopic(newTopic), dateCreated: new Date() }
 
       const discussions: Collection<Discussion> = (
         await this.getDb()
@@ -845,7 +885,7 @@ export class MongodbService extends Service {
           else
             resolve({
               statusCode: 201,
-              body: `Discssion '${topic.title}' created`
+              body: `Topic ${topic.id}:'${topic.title}' created`
             })
         })
         .catch(e => {

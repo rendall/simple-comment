@@ -1,4 +1,3 @@
-
 import { TopicId, UserId } from "./../../lib/simple-comment"
 
 const processResponse = (res: Response) => {

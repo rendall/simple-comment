@@ -21,6 +21,7 @@ const setStatus = (message, isError = false) => {
   } else {
     document.querySelector("#status-display").classList.toggle("error", isError)
     document.querySelector("#status-display").innerHTML = message
+    console.error(message)
   }
 }
 

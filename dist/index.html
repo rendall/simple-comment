@@ -1,50 +1,49 @@
 <!DOCTYPE html>
 <html>
-
-<head>
+  <head>
     <title>Simple Comment API</title>
     <style>
-        textarea#reply-textarea {
-            display: block;
-            width: 25rem;
-            height: 7rem;
-        }
+      textarea#reply-textarea {
+        display: block;
+        width: 25rem;
+        height: 7rem;
+      }
 
-        #log-out-button {
-            display: none;
-        }
+      #log-out-button {
+        display: none;
+      }
 
-        .is-logged-in #log-out-button {
-            display: unset;
-        }
+      .is-logged-in #log-out-button {
+        display: unset;
+      }
 
-        .is-logged-in #log-in-form {
-            display: none;
-        }
+      .is-logged-in #log-in-form {
+        display: none;
+      }
 
-        .error {
-            font-weight: bold;
-            color: red;
-        }
+      .error {
+        font-weight: bold;
+        color: red;
+      }
 
-        div.is-reply button.comment-button {
-            display: none;
-        }
+      div.is-reply button.comment-button {
+        display: none;
+      }
     </style>
     <script type="module" src="./js/apiClient.js"></script>
-</head>
+  </head>
 
-<body>
+  <body>
     <div id="user-display">
-        <p id="user-name"></p>
-        <button id="log-out-button">Log out</button>
-        <div id="log-in-form">
-            <label for="userid">Username:</label>
-            <input id="userid" t></input>
-            <label for="password">Password:</label>
-            <input id="password" type="password"></input>
-            <button id="log-in-button">Log in</button>
-        </div>
+      <p id="user-name"></p>
+      <button id="log-out-button">Log out</button>
+      <div id="log-in-form">
+        <label for="userid">Username:</label>
+        <input id="userid" />
+        <label for="password">Password:</label>
+        <input id="password" type="password" />
+        <button id="log-in-button">Log in</button>
+      </div>
     </div>
     <p id="status-display"></p>
     <ul id="topic-list"></ul>

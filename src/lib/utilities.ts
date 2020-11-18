@@ -95,7 +95,7 @@ const hasHeader = (headers: { [header: string]: string }, header: string) =>
 const getHeader = (headers: { [header: string]: string }, header: string) =>
   Object.keys(headers).find(h => h.toLowerCase() === header.toLowerCase())
 
-const getHeaderValue = (
+export const getHeaderValue = (
   headers: { [header: string]: string },
   header: string
 ) => headers[getHeader(headers, header)]
@@ -278,7 +278,7 @@ export const getTargetId = (
   return getTargetId(path, endpoint, dirs.splice(1))
 }
 
-type GenericObj = { [key: string]: string | number | boolean }
+type GenericObj = { [key: string]: string | number | boolean | Date }
 
 const parseBody = (body: string): GenericObj =>
   body
@@ -315,8 +315,11 @@ const updatedUserKeys: (keyof UpdateUser)[] = [
 export const getUpdatedUserInfo = (body: string): UpdateUser =>
   narrowType<UpdateUser>(parseBody(body), updatedUserKeys) as UpdateUser
 
-export const getNewTopicInfo = (body: string): Topic =>
-  narrowType<Topic>(parseBody(body), ["id", "title", "isLocked"]) as Topic
+export const getNewTopicInfo = (body: string): Topic => toTopic(parseBody(body))
+
+export const toTopic = (obj: GenericObj) =>
+  narrowType<Topic>(obj, ["id", "title", "isLocked"]) as Topic
+
 export const getUpdateTopicInfo = (body: string): Topic =>
   narrowType<Topic>(parseBody(body), ["title", "isLocked"]) as Topic
 

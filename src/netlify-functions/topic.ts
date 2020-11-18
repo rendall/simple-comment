@@ -16,6 +16,7 @@ import {
 import {
   getAllowedOrigins,
   getAllowOriginHeaders,
+  getHeaderValue,
   getNewTopicInfo,
   getTargetId,
   getUpdateTopicInfo,
@@ -59,7 +60,16 @@ export const handler = async (event: APIGatewayEvent, context: Context) => {
         if (targetId) return service.topicGET(targetId, authUserId)
         else return service.topicListGET(authUserId)
       case "POST":
-        return service.topicPOST(getNewTopicInfo(event.body), authUserId)
+        if (targetId)
+          return new Promise<Error>(resolve =>
+            resolve({
+              ...error404TopicNotFound,
+              body: `${event.path} is not valid`
+            })
+          )
+        const referer = getHeaderValue(event.headers, "Referer")
+        const newTopic = { ...getNewTopicInfo(event.body), referer }
+        return service.topicPOST(newTopic, authUserId)
       case "PUT":
         return service.topicPUT(
           targetId,

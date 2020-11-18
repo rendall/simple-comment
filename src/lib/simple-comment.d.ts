@@ -39,6 +39,10 @@ export type Topic = Pick<
   Discussion,
   "id" | "title" | "isLocked" | "dateCreated"
 >
+export type NewTopic = Pick<
+  Discussion,
+  "id" | "title" | "isLocked" | "dateCreated"
+> & { referer: string }
 
 export interface Comment {
   _id?: ObjectId
