@@ -2,6 +2,35 @@
 
 _Simple Comment_ allows visitors to your web pages to leave and read comments. It is _truly free_ (as in no cost) and entirely controlled by you from end to end
 
+## Status
+
+Nearly there! Steps to minimum viable product (MVP):
+
+### To be done
+
+- Visitor can post anonymously
+  - Comment includes temporary user
+  - Spam prevention measures
+- Moderator can hold posts for approval
+  - Can change policy
+- Visitor can claim ownership over anonymous posts
+  - Temporary uuid
+- Minimal script to add Simple Comment functionality to any webpage
+
+### Done!
+
+- API works entirely as expected
+  - Each endpoint and each verb behaves properly
+  - `Access-Control-Allow-Origin` responds to `.env` variables
+- Authentication and Identification works as expected
+- Anonymous user can create topics
+  - This is useful for pages that do not have topics yet
+  - Restrictions apply:
+    - The `Referer` header and the `topicId` must map properly
+    - The `Origin` must be on the `Access-Control-Allow-Origin` list
+- Setup instructions
+  - Are complicated but work when followed
+  
 ## Features
 
 - Visitors can read and reply to comments
@@ -29,6 +58,7 @@ _Simple Comment_ allows visitors to your web pages to leave and read comments. I
   - user admininstration
 - GraphQL endpoint
 - GDPR compliance
+  - Users can view and delete their own data without moderator
 - Support for other databases and hosting services
 - Moderators can restrict visitor read and write access
   - IP whitelists, graylists and blacklists
