@@ -1,4 +1,8 @@
 import { Success, Error } from "./simple-comment"
+export const error400BadRequest: Error = {
+  statusCode: 400,
+  body: "Bad Request"
+}
 export const error400CommentIdMissing: Error = {
   statusCode: 400,
   body: "Comment id missing"
@@ -81,6 +85,10 @@ export const success201UserCreated: Success = {
 export const success202CommentDeleted: Success = {
   statusCode: 202,
   body: "Comment deleted"
+}
+export const success202LoggedOut: Success = {
+  statusCode: 202,
+  body: "Logged out"
 }
 export const success202TopicDeleted: Success = {
   statusCode: 202,

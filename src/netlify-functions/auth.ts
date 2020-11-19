@@ -27,7 +27,9 @@ const service: MongodbService = new MongodbService(
 )
 
 const getAllowHeaders = (event: APIGatewayEvent) => {
-  const allowedMethods = { "Access-Control-Allow-Methods": "POST,GET,OPTION" }
+  const allowedMethods = {
+    "Access-Control-Allow-Methods": "POST,GET,OPTION,DELETE"
+  }
   const allowedOriginHeaders = getAllowOriginHeaders(
     event.headers,
     getAllowedOrigins()
@@ -44,7 +46,10 @@ export const handler = async (
   const isValidPath = dirs.length <= 5
 
   if (!isValidPath)
-    return { ...error404CommentNotFound, body: `${event.path} is not valid` }
+    return {
+      ...error404CommentNotFound,
+      body: `${event.path} is not valid`
+    }
 
   const handleMethod = (method): Promise<Success | Error> => {
     switch (method) {
@@ -53,6 +58,8 @@ export const handler = async (
         return handleAuth(event)
       case "OPTION":
         return handleOption(event)
+      case "DELETE":
+        return service.authDELETE()
       default:
         const headers = getAllowHeaders(event)
         return new Promise<Error>(resolve =>
@@ -100,8 +107,12 @@ const handleAuth = async (event: APIGatewayEvent) => {
     const token = authUser.body as AuthToken
 
     const COOKIE_HEADER = isProduction
-      ? { "Set-Cookie": `token=${token}; path=/; Secure; HttpOnly; SameSite` }
-      : { "Set-Cookie": `token=${token}; path=/; HttpOnly; SameSite` }
+      ? {
+          "Set-Cookie": `simple_comment_token=${token}; path=/; Secure; HttpOnly; SameSite`
+        }
+      : {
+          "Set-Cookie": `simple_comment_token=${token}; path=/; HttpOnly; SameSite`
+        }
     const headers = { ...allowHeaders, ...COOKIE_HEADER }
 
     return { ...success200OK, headers }

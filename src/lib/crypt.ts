@@ -7,16 +7,18 @@ dotenv.config()
 
 const DAY = 60 * 24
 
-// Rounds down to the nearest second before adding `minutes`
+/** Returns a date value some minutes from "now" */
 const getExpirationTime = (minutes: number): number =>
   new Date(
     Math.floor(new Date().valueOf() / 10000) * 10000 + minutes * 60 * 1000
   ).valueOf()
 
+/** Get a password hash from the plaintext password */
 export const hashPassword = (password: string) =>
   crypto
+    //TODO: change this to bcrypt - but bcrypt causes an error for now
     .createHmac("sha256", process.env.HASH_SECRET)
-    .update(password)
+    .update(`${password}${process.env.SALT_SECRET}`)
     .digest("hex")
 
 export const comparePassword = (plainTextPassword: string, hash: string) =>

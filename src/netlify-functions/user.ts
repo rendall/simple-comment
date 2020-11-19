@@ -49,7 +49,10 @@ export const handler = async (
   const headers = getAllowHeaders(event)
 
   if (!isValidPath)
-    return { ...error404CommentNotFound, body: `${event.path} is not valid` }
+    return {
+      ...error404CommentNotFound,
+      body: `${event.path} is not valid`
+    }
 
   const authUserId = getUserId(event.headers)
   const targetId = getTargetId(event.path, "user") as UserId

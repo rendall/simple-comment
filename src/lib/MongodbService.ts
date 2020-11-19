@@ -13,10 +13,13 @@ import type {
   DeletedComment,
   PublicSafeUser,
   NewUser,
-  UpdateUser
+  UpdateUser,
+  TokenClaim,
+  NewTopic
 } from "./simple-comment"
 import {
   Collection,
+  Cursor,
   Db,
   FindAndModifyWriteOpResultObject,
   FindOneOptions,
@@ -29,13 +32,17 @@ import { Service } from "./Service"
 import {
   adminOnlyModifiableUserProperties,
   isComment,
+  isDeleted,
   isDeletedComment,
   toAdminSafeUser,
   toPublicSafeUser,
-  toSafeUser
+  toSafeUser,
+  toTopic,
+  toUpdatedUser
 } from "./utilities"
 import { policy } from "../policy"
 import {
+  error400BadRequest,
   error400CommentIdMissing,
   error400NoUpdate,
   error400PasswordMissing,
@@ -56,6 +63,7 @@ import {
   success200OK,
   success201UserCreated,
   success202CommentDeleted,
+  success202LoggedOut,
   success202TopicDeleted,
   success202UserDeleted,
   success204CommentUpdated,
@@ -64,6 +72,7 @@ import {
 import { comparePassword, getAuthToken, hashPassword, uuidv4 } from "./crypt"
 
 export class MongodbService extends Service {
+  private isProduction = process.env.SIMPLE_COMMENT_MODE === "production"
   private _client: MongoClient
   private _db: Db
   readonly _connectionString: string
@@ -96,14 +105,40 @@ export class MongodbService extends Service {
    *
    * returns AuthToken
    **/
-  authPOST = (username: string, password: string) =>
+  authPOST = (userid: string, password: string) =>
     new Promise<Success<AuthToken> | Error>((resolve, reject) =>
       this.getDb()
         .then(db => db.collection("users"))
-        .then(users => users.findOne({ id: username }))
+        .then(users => users.findOne({ id: userid }))
         .then(async (user: User) => {
-          if (user === null) reject(error404UserUnknown)
-          else {
+          if (user === null) {
+            // User is unknown. Reject them unless they claim to be Big Moderator
+            if (userid !== process.env.SIMPLE_COMMENT_MODERATOR_ID) {
+              reject(error404UserUnknown)
+              return
+            }
+
+            // At this stage some unknown user claims to be the Big Moderator
+            // but there is no user with that name! This is a problem!
+
+            // First, let's verify that they have the correct credentials
+            const isModeratorPassword =
+              process.env.SIMPLE_COMMENT_MODERATOR_PASSWORD === password
+
+            if (!isModeratorPassword) {
+              // Nope!
+              reject(error401BadCredentials)
+              return
+            }
+
+            // Done.
+
+            // Let's authenticate, and let the user endpoint handle this
+            const adminAuthToken = getAuthToken(userid)
+            resolve({ ...success200OK, body: adminAuthToken })
+
+            // At this point Big Moderator is authenticated but has no user object in the database
+          } else {
             const isSame = await comparePassword(password, user.hash)
             if (!isSame) reject(error401BadCredentials)
             else {
@@ -191,10 +226,37 @@ export class MongodbService extends Service {
       async (resolve, reject) => {
         const users: Collection<User> = (await this.getDb()).collection("users")
         const foundUser = await users.find({ id: userId }).limit(1).next()
+
         if (!foundUser) {
-          reject(error404UserUnknown)
+          const isModerator =
+            authUserId === userId &&
+            authUserId === process.env.SIMPLE_COMMENT_MODERATOR_ID
+
+          if (!isModerator) {
+            reject(error404UserUnknown)
+            return
+          }
+
+          // The Big Moderator is authenticated but has no user object in the database
+          // We shall create it now
+          const hash = await hashPassword(
+            process.env.SIMPLE_COMMENT_MODERATOR_PASSWORD
+          )
+          const adminUser: User = {
+            id: userId,
+            name: "Simple Comment Moderator",
+            isAdmin: true,
+            hash,
+            email: process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL
+          }
+          await users.insertOne(adminUser)
+
+          // Big Moderator is created, let's return it
+          const outUser = toAdminSafeUser(adminUser)
+          resolve({ ...success200OK, body: outUser })
           return
         }
+
         const authUser = await users.findOne({ id: authUserId })
         const isAdmin = authUser ? authUser.isAdmin : false
         const outUser = toSafeUser(foundUser, isAdmin)
@@ -227,9 +289,6 @@ export class MongodbService extends Service {
   /**
    * Update a user
    *
-   * NB: It is always safe to return AdminSafeUser because
-   * authUser is always an admin or the user themself
-   *
    * userId byte[]
    * returns Success<AdminSafeUser>
    **/
@@ -237,11 +296,6 @@ export class MongodbService extends Service {
     new Promise<Success<AdminSafeUser> | Error>(async (resolve, reject) => {
       if (!authUserId) {
         reject(error401UserNotAuthenticated)
-        return
-      }
-
-      if (!user.hasOwnProperty("id")) {
-        reject(error400UserIdMissing)
         return
       }
 
@@ -263,6 +317,25 @@ export class MongodbService extends Service {
         return
       }
 
+      if (authUserId === process.env.SIMPLE_COMMENT_MODERATOR_ID) {
+        // the user cannot modify the authuser password or other properties
+        const cannotModify: (keyof UpdateUser)[] = [
+          "password",
+          "isAdmin",
+          "email"
+        ]
+        const isForbidden = (Object.keys(
+          user
+        ) as (keyof UpdateUser)[]).some(key => cannotModify.includes(key))
+        if (isForbidden) {
+          reject({
+            ...error403ForbiddenToModify,
+            body: `Modify properties ${cannotModify.join(", ")} via .env file`
+          })
+          return
+        }
+      }
+
       // At this point, user.id exists and authUser can alter it
 
       const foundUser = await users.find({ id: targetId }).limit(1).next()
@@ -272,14 +345,17 @@ export class MongodbService extends Service {
         return
       }
 
-      const updatedUser = { ...foundUser, ...user }
+      // strip extraneous properties from the user, like "id"
+      const newProps = toUpdatedUser(user)
 
+      const updatedUser = { ...foundUser, ...newProps }
+
+      /* NB: It is always safe to return AdminSafeUser because
+       * authUser is always an admin or the user themself */
       users
         .findOneAndUpdate({ id: updatedUser.id }, { $set: updatedUser })
         .then((x: FindAndModifyWriteOpResultObject<User>) => {
-          // return isAdmin version of this user, because the user is either an admin or self
           const safeUser = toAdminSafeUser(updatedUser)
-
           resolve({ ...success204UserUpdated, body: safeUser })
         })
         .catch(e => reject(error500ServerError))
@@ -376,18 +452,23 @@ export class MongodbService extends Service {
       ).collection("comments")
       const parent = await comments.findOne({ id: parentId })
 
-      if (!parent || isDeletedComment(parent)) {
+      if (!parent || isDeleted(parent)) {
         reject({
           ...error404CommentNotFound,
-          body: `parentId '${parentId}' not found`
+          body: `Discussion '${parentId}' not found`
         })
         return
       }
 
       // Prevent duplicate comments
-      const findOptions: FindOneOptions<Comment> = { sort: { dateCreated: -1 } }
+      const findOptions: FindOneOptions<Comment> = {
+        sort: { dateCreated: -1 }
+      }
+
+      // We don't want to search for the exact comment {userId, text, parentId}
+      // because we only want to prevent accidental duplications
       const lastComment = (await comments.findOne(
-        { "user.id": authUserId },
+        { "userId": authUserId },
         findOptions
       )) as Comment
 
@@ -407,7 +488,7 @@ export class MongodbService extends Service {
         text,
         dateCreated: new Date(),
         parentId,
-        user: adminSafeUser
+        userId: authUserId
       } as Comment
 
       comments
@@ -416,11 +497,17 @@ export class MongodbService extends Service {
           const insertedComment: Comment = response.ops.find(x => true)
 
           if (insertComment.parentId !== parentId) {
-            reject({ statusCode: 500, body: "Database insertion error" })
+            reject({
+              statusCode: 500,
+              body: "Database insertion error"
+            })
             return
           }
 
-          resolve({ statusCode: 201, body: insertedComment })
+          resolve({
+            statusCode: 201,
+            body: { ...insertedComment, user: adminSafeUser }
+          })
         })
         .catch(e => {
           console.error(e)
@@ -518,7 +605,7 @@ export class MongodbService extends Service {
         {
           $unwind: {
             path: "$replies",
-            preserveNullAndEmptyArrays: false
+            preserveNullAndEmptyArrays: true
           }
         },
         {
@@ -540,6 +627,7 @@ export class MongodbService extends Service {
           $project: {
             "parentId": 1,
             "id": 1,
+            "title": 1,
             "text": 1,
             "dateCreated": 1,
             "user.id": 1,
@@ -601,6 +689,9 @@ export class MongodbService extends Service {
             },
             text: {
               $first: "$text"
+            },
+            title: {
+              $first: "$title"
             },
             user: {
               $first: "$user"
@@ -682,7 +773,10 @@ export class MongodbService extends Service {
       comments
         .findOneAndUpdate({ id: foundComment.id }, { $set: returnComment })
         .then((x: FindAndModifyWriteOpResultObject<Comment>) =>
-          resolve({ ...success204CommentUpdated, body: returnComment })
+          resolve({
+            ...success204CommentUpdated,
+            body: returnComment
+          })
         )
         .catch(e =>
           authUser.isAdmin
@@ -782,9 +876,9 @@ export class MongodbService extends Service {
    * authUserId
    * returns Success 201
    **/
-  topicPOST = (topic: Topic, authUserId?: UserId) =>
+  topicPOST = (newTopic: NewTopic, authUserId?: UserId) =>
     new Promise<Success<Topic> | Error>(async (resolve, reject) => {
-      if (!authUserId) {
+      if (!policy.canPublicCreateTopic && !authUserId) {
         reject(error401UserNotAuthenticated)
         return
       }
@@ -792,15 +886,52 @@ export class MongodbService extends Service {
       const users: Collection<User> = (await this.getDb()).collection("users")
       const authUser = await users.findOne({ id: authUserId })
 
-      if (!authUser) {
+      if (authUserId && !authUser) {
         reject(error404UserUnknown)
         return
       }
 
-      if (!authUser.isAdmin) {
+      if (!policy.canPublicCreateTopic && !authUser.isAdmin) {
         reject(error403UserNotAuthorized)
         return
       }
+
+      if ((!authUserId || !authUser.isAdmin) && policy.refererRestrictions) {
+        // User is anonymous, public can create topics, and referrer restrictions are true
+        // Let's validate the topic. We do that by comparing the proposed topicId with the `referer` header
+        // They should be the same. If not, reject it
+
+        if (!newTopic.referer) {
+          reject(error403UserNotAuthorized)
+          return
+        }
+
+        const allowedId = newTopic.referer
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, "-")
+        const isAllowed = allowedId === newTopic.id
+
+        if (!isAllowed) {
+          reject({
+            ...error403Forbidden,
+            body: `Unknown referer ${newTopic.referer}`
+          })
+          return
+        }
+      }
+
+      const hasInvalidCharacters = newTopic.id.match(/[^a-z0-9\-]/)
+      if (hasInvalidCharacters) {
+        const invalidChar = hasInvalidCharacters ? hasInvalidCharacters[0] : ""
+        reject({
+          ...error400BadRequest,
+          body: `Invalid character '${invalidChar}' in topicId`
+        })
+        return
+      }
+
+      // remove extraneous information like 'referer'
+      const topic: Topic = { ...toTopic(newTopic), dateCreated: new Date() }
 
       const discussions: Collection<Discussion> = (
         await this.getDb()
@@ -818,11 +949,14 @@ export class MongodbService extends Service {
           const insertedDiscussion: Discussion = response.ops.find(x => true)
 
           if (insertedDiscussion.id !== topic.id)
-            reject({ statusCode: 500, body: "Database insertion error" })
+            reject({
+              statusCode: 500,
+              body: "Database insertion error"
+            })
           else
             resolve({
               statusCode: 201,
-              body: `Discssion '${topic.title}' created`
+              body: `Topic ${topic.id}:'${topic.title}' created`
             })
         })
         .catch(e => {
@@ -900,7 +1034,7 @@ export class MongodbService extends Service {
         {
           $unwind: {
             path: "$replies",
-            preserveNullAndEmptyArrays: false
+            preserveNullAndEmptyArrays: true
           }
         },
         {
@@ -922,6 +1056,7 @@ export class MongodbService extends Service {
           $project: {
             "parentId": 1,
             "id": 1,
+            "title": 1,
             "text": 1,
             "dateCreated": 1,
             "user.id": 1,
@@ -984,6 +1119,9 @@ export class MongodbService extends Service {
             text: {
               $first: "$text"
             },
+            title: {
+              $first: "$title"
+            },
             user: {
               $first: "$user"
             },
@@ -1023,18 +1161,22 @@ export class MongodbService extends Service {
       }
 
       const users: Collection<User> = (await this.getDb()).collection("users")
-      const authUser = await users.findOne({ id: authUserId })
+      const authUser = await users.find({ id: authUserId }).limit(1)
 
       if (!authUser && !policy.canPublicRead) {
         reject(error404UserUnknown)
         return
       }
 
-      const comments: Collection<Comment | Topic> = (
-        await this.getDb()
-      ).collection("comments")
-      const allDiscussion = await comments.find({}).toArray()
-      const topics = allDiscussion.filter(c => !isComment(c)) as Topic[]
+      const db = await this.getDb()
+
+      const comments = db.collection("comments")
+
+      const topicsCursor: Cursor<Topic> = await comments.find({
+        parentId: null
+      })
+
+      const topics = await topicsCursor.toArray()
 
       resolve({ ...success200OK, body: topics })
     })
@@ -1180,6 +1322,22 @@ export class MongodbService extends Service {
             ? reject({ ...error500ServerError, body: e })
             : reject(error500ServerError)
         )
+    })
+
+  authDELETE = () =>
+    new Promise<Success>((resolve, reject) => {
+      const pastDate = new Date(0).toUTCString()
+      const COOKIE_HEADER = {
+        "Set-Cookie": `simple_comment_token=logged-out; path=/; HttpOnly; Expires=${pastDate}; SameSite${this.isProduction ? "; Secure" : ""
+          }`
+      }
+      resolve({ ...success202LoggedOut, headers: COOKIE_HEADER })
+    })
+
+  verifyGET = (claim: TokenClaim | null) =>
+    new Promise<Success<TokenClaim> | Error>((resolve, reject) => {
+      if (claim) return resolve({ ...success200OK, body: claim })
+      else reject(error404UserUnknown)
     })
 
   close = async () => {

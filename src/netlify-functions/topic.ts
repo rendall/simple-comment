@@ -1,6 +1,12 @@
 import * as dotenv from "dotenv"
 import type { APIGatewayEvent, Callback, Context } from "aws-lambda"
-import { TopicId, Success, Error, Topic } from "../lib/simple-comment"
+import {
+  TopicId,
+  Success,
+  Error,
+  Topic,
+  Discussion
+} from "../lib/simple-comment"
 import { MongodbService } from "../lib/MongodbService"
 import {
   error404TopicNotFound,
@@ -10,6 +16,7 @@ import {
 import {
   getAllowedOrigins,
   getAllowOriginHeaders,
+  getHeaderValue,
   getNewTopicInfo,
   getTargetId,
   getUpdateTopicInfo,
@@ -45,12 +52,24 @@ export const handler = async (event: APIGatewayEvent, context: Context) => {
   const authUserId = getUserId(event.headers)
   const targetId = getTargetId(event.path, "topic") as TopicId
 
-  const handleMethod = (method): Promise<Success<Topic> | Error> => {
+  const handleMethod = (
+    method
+  ): Promise<Success<Discussion> | Success<Topic[]> | Error> => {
     switch (method) {
       case "GET":
-        return service.topicGET(targetId, authUserId)
+        if (targetId) return service.topicGET(targetId, authUserId)
+        else return service.topicListGET(authUserId)
       case "POST":
-        return service.topicPOST(getNewTopicInfo(event.body), authUserId)
+        if (targetId)
+          return new Promise<Error>(resolve =>
+            resolve({
+              ...error404TopicNotFound,
+              body: `${event.path} is not valid`
+            })
+          )
+        const referer = getHeaderValue(event.headers, "Referer")
+        const newTopic = { ...getNewTopicInfo(event.body), referer }
+        return service.topicPOST(newTopic, authUserId)
       case "PUT":
         return service.topicPUT(
           targetId,
