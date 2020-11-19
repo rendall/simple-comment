@@ -251,7 +251,10 @@ export class MongodbService extends Service {
           }
           await users.insertOne(adminUser)
 
-          // Big Moderator is created, let's proceed as normal
+          // Big Moderator is created, let's return it
+          const outUser = toAdminSafeUser(adminUser)
+          resolve({ ...success200OK, body: outUser })
+          return
         }
 
         const authUser = await users.findOne({ id: authUserId })
@@ -1325,9 +1328,8 @@ export class MongodbService extends Service {
     new Promise<Success>((resolve, reject) => {
       const pastDate = new Date(0).toUTCString()
       const COOKIE_HEADER = {
-        "Set-Cookie": `simple_comment_token=logged-out; path=/; HttpOnly; Expires=${pastDate}; SameSite${
-          this.isProduction ? "; Secure" : ""
-        }`
+        "Set-Cookie": `simple_comment_token=logged-out; path=/; HttpOnly; Expires=${pastDate}; SameSite${this.isProduction ? "; Secure" : ""
+          }`
       }
       resolve({ ...success202LoggedOut, headers: COOKIE_HEADER })
     })
