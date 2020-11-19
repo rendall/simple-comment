@@ -1,8 +1,18 @@
-import { Context, APIGatewayEvent, APIGatewayEventRequestContext } from "aws-lambda"
+import {
+  Context,
+  APIGatewayEvent,
+  APIGatewayEventRequestContext
+} from "aws-lambda"
 import { error404CommentNotFound, success200OK } from "../lib/messages"
 import { MongodbService } from "../lib/MongodbService"
 import { UserId } from "../lib/simple-comment"
-import { getAllowedOrigins, getAllowOriginHeaders, getNewUserInfo, getTargetId, getUserId } from "../lib/utilities"
+import {
+  getAllowedOrigins,
+  getAllowOriginHeaders,
+  getNewUserInfo,
+  getTargetId,
+  getUserId
+} from "../lib/utilities"
 
 const getAllowHeaders = (event: APIGatewayEvent) => {
   const allowedMethods = { "Access-Control-Allow-Methods": "POST,GET,OPTION" }
@@ -33,7 +43,11 @@ export const handler = async (
   const headers = getAllowHeaders(event)
   const message = `Hello world ${Math.floor(Math.random() * 10)}`
   try {
-    return ({ ...success200OK, body: JSON.stringify({ message, event, context }), headers })
+    return {
+      ...success200OK,
+      body: JSON.stringify({ message, event, context }),
+      headers
+    }
   } catch (error) {
     return error
   }

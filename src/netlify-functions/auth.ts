@@ -27,7 +27,9 @@ const service: MongodbService = new MongodbService(
 )
 
 const getAllowHeaders = (event: APIGatewayEvent) => {
-  const allowedMethods = { "Access-Control-Allow-Methods": "POST,GET,OPTION,DELETE" }
+  const allowedMethods = {
+    "Access-Control-Allow-Methods": "POST,GET,OPTION,DELETE"
+  }
   const allowedOriginHeaders = getAllowOriginHeaders(
     event.headers,
     getAllowedOrigins()
