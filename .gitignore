@@ -1,11 +1,13 @@
 *.js
 .env
 /.git
+/RAW
 /coverage
+/cypress
 /functions
 /lib
 /netlify-functions
 /node_modules
-RAW
+debug.log
 globalConfig.json
 yarn-error.log
