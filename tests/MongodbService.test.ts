@@ -38,9 +38,8 @@ import {
 import * as dotenv from "dotenv"
 dotenv.config()
 
-// const MONGO_URI = "mongodb://localhost:27017/?readPreference=primary&ssl=false"
-// const MONGO_DB = process.env.DATABASE_NAME
-const MONGO_URI = global.__MONGO_URI__
+const MONGO_URI = "mongodb://localhost:27017/?readPreference=primary&ssl=false"
+// const MONGO_URI = global.__MONGO_URI__
 const MONGO_DB = global.__MONGO_DB_NAME__
 
 declare const global: any
@@ -161,8 +160,7 @@ const adminUserTest: User = {
   isAdmin: true,
   name: "Simple Comment Admin"
 }
-
-const adminUserPasswordTest = randomString(alphaAscii, 20)
+const adminUserPasswordTest = process.env.SIMPLE_COMMENT_MODERATOR_PASSWORD //randomString(alphaAscii, 20)
 const groupUsersTest = createRandomGroupUsers(100)
 let usedUsersTest: User[] = []
 
