@@ -4,7 +4,9 @@ import * as dotenv from "dotenv"
 import {
   getAuthCredentials,
   getAuthHeaderValue,
+  getCookieToken,
   hasBearerScheme,
+  hasTokenCookie,
   REALM
 } from "../lib/utilities"
 
@@ -30,18 +32,20 @@ export const handler: Handler = (
 
 const handleGet = (event: APIGatewayEvent, callback: Callback) => {
   const isBearer = hasBearerScheme(event.headers)
+  const hasCookie = hasTokenCookie(event.headers)
 
-  if (!isBearer)
+  if (!isBearer && !hasCookie)
     callback(
       null,
       buildResponse(`Unauthenticated`, 401, {
-        ...HEADERS,
-        ...{ "WWW-Authenticate": `Basic realm="${REALM}", charset="UTF-8"` }
+        ...HEADERS
+        // ...{ "WWW-Authenticate": `Basic realm="${REALM}", charset="UTF-8"` }
       })
     )
   else {
-    const authHeaderValue = getAuthHeaderValue(event.headers)
-    const token = getAuthCredentials(authHeaderValue)
+    const token = hasCookie
+      ? getCookieToken(event.headers)
+      : getAuthCredentials(getAuthHeaderValue(event.headers))
 
     try {
       callback(

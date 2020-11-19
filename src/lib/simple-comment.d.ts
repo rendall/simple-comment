@@ -9,6 +9,11 @@ export type UserId = string
 
 export type Headers = { [key: string]: string }
 
+/**
+ * This is the type returned by a decoded AuthToken
+ **/
+export type TokenClaim = { user: UserId; exp: number }
+
 export interface Success<T = string> {
   statusCode: number
   body: T
@@ -34,6 +39,10 @@ export type Topic = Pick<
   Discussion,
   "id" | "title" | "isLocked" | "dateCreated"
 >
+export type NewTopic = Pick<
+  Discussion,
+  "id" | "title" | "isLocked" | "dateCreated"
+> & { referer?: string }
 
 export interface Comment {
   _id?: ObjectId

@@ -12,7 +12,8 @@ import {
   DeletedComment,
   Discussion,
   PublicSafeUser,
-  User
+  User,
+  TokenClaim
 } from "./simple-comment"
 
 dotenv.config()
@@ -63,6 +64,10 @@ export const toAdminSafeUser = (user: User) =>
 
 export const isComment = (target: Comment | Discussion): target is Comment =>
   target && target.hasOwnProperty("parentId")
+
+export const isDeleted = (target: Comment | Discussion) =>
+  target.hasOwnProperty("dateDeleted")
+
 export const isDeletedComment = (
   target: Comment | Discussion
 ): target is DeletedComment =>
@@ -90,7 +95,7 @@ const hasHeader = (headers: { [header: string]: string }, header: string) =>
 const getHeader = (headers: { [header: string]: string }, header: string) =>
   Object.keys(headers).find(h => h.toLowerCase() === header.toLowerCase())
 
-const getHeaderValue = (
+export const getHeaderValue = (
   headers: { [header: string]: string },
   header: string
 ) => headers[getHeader(headers, header)]
@@ -161,6 +166,31 @@ export const hasBasicScheme = (
       : false
     : parse.scheme.toLowerCase() === BASIC_SCHEME.toLowerCase()
 
+/** Checks the Set-Cookie header for "simple_comment_token" and returns true if found, false otherwise */
+export const hasTokenCookie = (headers: { [header: string]: string }) =>
+  hasHeader(headers, "Cookie") &&
+  getHeaderValue(headers, "Cookie").indexOf("simple_comment_token=") >= 0
+
+// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cookie "Pairs in the list are separated by a semicolon and a space ('; ')"
+export const getCookieToken = (
+  headers: { [header: string]: string },
+  cookieHeader?: string
+) =>
+  cookieHeader
+    ? cookieHeader
+        .split("; ")
+        .reduce(
+          (auth, pair) =>
+            auth
+              ? auth
+              : pair.startsWith("simple_comment_token")
+              ? pair.split("=")[1]
+              : auth,
+          null
+        )
+    : getCookieToken(headers, getHeaderValue(headers, "Cookie"))
+
+/** Checks the Authorization header for "Bearer" + token and returns true if found, false otherwise */
 export const hasBearerScheme = (
   headers: { [header: string]: string },
   parse?: { scheme: string; credentials: string }
@@ -196,24 +226,35 @@ export const getUserIdPassword = eventHeaders =>
     eventHeaders
   )
 
-export const getUserId = (headers: {
+export const getTokenClaim = (headers: {
   [key: string]: string
-}): UserId | null => {
+}): TokenClaim | null => {
   const isBearer = hasBearerScheme(headers)
+  const hasCookie = hasTokenCookie(headers)
 
-  if (!isBearer) return null
+  if (!isBearer && !hasCookie) return null
 
-  const authHeaderValue = getAuthHeaderValue(headers)
-  const token = getAuthCredentials(authHeaderValue)
-  const claim: { user: UserId; exp: number } = jwt.verify(
-    token,
-    process.env.JWT_SECRET
-  ) as { user: UserId; exp: number }
+  const token = hasCookie
+    ? getCookieToken(headers)
+    : getAuthCredentials(getAuthHeaderValue(headers))
+
+  const claim: TokenClaim = jwt.verify(token, process.env.JWT_SECRET) as {
+    user: UserId
+    exp: number
+  }
   const isExpired = claim.exp <= new Date().valueOf()
 
   if (isExpired) return null
 
-  return claim.user
+  return claim
+}
+
+export const getUserId = (headers: {
+  [key: string]: string
+}): UserId | null => {
+  const claim = getTokenClaim(headers)
+  if (claim) return claim.user
+  else return null
 }
 
 /**
@@ -237,7 +278,7 @@ export const getTargetId = (
   return getTargetId(path, endpoint, dirs.splice(1))
 }
 
-type GenericObj = { [key: string]: string | number | boolean }
+type GenericObj = { [key: string]: string | number | boolean | Date }
 
 const parseBody = (body: string): GenericObj =>
   body
@@ -271,11 +312,18 @@ const updatedUserKeys: (keyof UpdateUser)[] = [
   "isVerified",
   "name"
 ]
-export const getUpdatedUserInfo = (body: string): UpdateUser =>
-  narrowType<UpdateUser>(parseBody(body), updatedUserKeys) as UpdateUser
 
-export const getNewTopicInfo = (body: string): Topic =>
-  narrowType<Topic>(parseBody(body), ["id", "title", "isLocked"]) as Topic
+export const toUpdatedUser = (obj: GenericObj) =>
+  narrowType<UpdateUser>(obj, updatedUserKeys) as UpdateUser
+
+export const getUpdatedUserInfo = (body: string): UpdateUser =>
+  toUpdatedUser(parseBody(body))
+
+export const getNewTopicInfo = (body: string): Topic => toTopic(parseBody(body))
+
+export const toTopic = (obj: GenericObj) =>
+  narrowType<Topic>(obj, ["id", "title", "isLocked"]) as Topic
+
 export const getUpdateTopicInfo = (body: string): Topic =>
   narrowType<Topic>(parseBody(body), ["title", "isLocked"]) as Topic
 
