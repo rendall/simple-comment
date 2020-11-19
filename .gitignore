@@ -12,3 +12,4 @@ debug.log
 globalConfig.json
 yarn-error.log
 !/cypress/**/*.js
+!/docs/**/*.js
