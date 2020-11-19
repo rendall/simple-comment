@@ -58,10 +58,10 @@ const randomString = (
   len === 0
     ? str
     : randomString(
-      alpha,
-      len - 1,
-      `${str}${alpha.charAt(Math.floor(Math.random() * alpha.length))}`
-    )
+        alpha,
+        len - 1,
+        `${str}${alpha.charAt(Math.floor(Math.random() * alpha.length))}`
+      )
 const randomDate = () => new Date(randomNumber(0, new Date().valueOf()))
 // Returns a random email that will validate but does not create examples of all possible valid emails
 const createRandomEmail = (): Email =>
@@ -87,12 +87,12 @@ const createRandomCommentTree = (
   replies <= 0
     ? chain
     : createRandomCommentTree(replies - 1, users, [
-      ...chain,
-      createRandomComment(
-        chooseRandomElement(chain).id,
-        chooseRandomElement(users)
-      )
-    ])
+        ...chain,
+        createRandomComment(
+          chooseRandomElement(chain).id,
+          chooseRandomElement(users)
+        )
+      ])
 const chooseRandomElement = <T>(arr: T[]) =>
   arr[Math.floor(Math.random() * arr.length)]
 const createRandomGroupUsers = (
@@ -278,7 +278,6 @@ describe("Full API service test", () => {
       .then((value: Success<AuthToken>) =>
         expect(value.statusCode).toEqual(200)
       )
-
   })
   // User Create
   // post to /user should return user and 201 User created
@@ -817,30 +816,30 @@ describe("Full API service test", () => {
 
   // Topic Create
   // post to /topic with no credentials should return 401
-  if (!policy.canPublicCreateTopic) test("POST to /topic with no credentials and policy.canPublicCreateTopic===false", () => {
-    expect.assertions(2)
-    const newTopic = createRandomTopic()
-    return service.topicPOST(newTopic).catch(async value => {
-      const deletedTopic = await db
-        .collection<Comment | Discussion>("comments")
-        .findOne({ id: newTopic.id })
-      expect(deletedTopic).toBeNull()
-      expect(value).toHaveProperty("statusCode", 401)
+  if (!policy.canPublicCreateTopic)
+    test("POST to /topic with no credentials and policy.canPublicCreateTopic===false", () => {
+      expect.assertions(2)
+      const newTopic = createRandomTopic()
+      return service.topicPOST(newTopic).catch(async value => {
+        const deletedTopic = await db
+          .collection<Comment | Discussion>("comments")
+          .findOne({ id: newTopic.id })
+        expect(deletedTopic).toBeNull()
+        expect(value).toHaveProperty("statusCode", 401)
+      })
     })
-  })
   // post to /topic with improper credentials should return 403
   test("POST to /topic with improper credentials", () => {
     const newTopic = createRandomTopic()
     const ordinaryUser = getAuthUser(u => !u.isAdmin)
     expect.assertions(2)
-    return service.topicPOST(newTopic, ordinaryUser.id)
-      .catch(async value => {
-        const deletedTopic = await db
-          .collection<Comment | Discussion>("comments")
-          .findOne({ id: newTopic.id })
-        expect(deletedTopic).toBeNull()
-        expect(value).toHaveProperty("statusCode", 403)
-      })
+    return service.topicPOST(newTopic, ordinaryUser.id).catch(async value => {
+      const deletedTopic = await db
+        .collection<Comment | Discussion>("comments")
+        .findOne({ id: newTopic.id })
+      expect(deletedTopic).toBeNull()
+      expect(value).toHaveProperty("statusCode", 403)
+    })
   })
   // post to /topic should return Discussion object and 201 Discussion created
   test("POST to /topic", () => {
@@ -848,7 +847,7 @@ describe("Full API service test", () => {
     return service
       .topicPOST(newTopicTest, adminUserTest.id)
       .then(async value => {
-        const insertedTopic:Discussion = await db
+        const insertedTopic: Discussion = await db
           .collection<Comment | Discussion>("comments")
           .findOne({ id: newTopicTest.id })
         expect(insertedTopic.id).toBe(newTopicTest.id)

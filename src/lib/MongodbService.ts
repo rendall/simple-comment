@@ -37,7 +37,8 @@ import {
   toAdminSafeUser,
   toPublicSafeUser,
   toSafeUser,
-  toTopic
+  toTopic,
+  toUpdatedUser
 } from "./utilities"
 import { policy } from "../policy"
 import {
@@ -121,7 +122,8 @@ export class MongodbService extends Service {
             // but there is no user with that name! This is a problem!
 
             // First, let's verify that they have the correct credentials
-            const isModeratorPassword = process.env.SIMPLE_COMMENT_MODERATOR_PASSWORD === password
+            const isModeratorPassword =
+              process.env.SIMPLE_COMMENT_MODERATOR_PASSWORD === password
 
             if (!isModeratorPassword) {
               // Nope!
@@ -136,8 +138,7 @@ export class MongodbService extends Service {
             resolve({ ...success200OK, body: adminAuthToken })
 
             // At this point Big Moderator is authenticated but has no user object in the database
-          }
-          else {
+          } else {
             const isSame = await comparePassword(password, user.hash)
             if (!isSame) reject(error401BadCredentials)
             else {
@@ -223,12 +224,13 @@ export class MongodbService extends Service {
   userGET = (userId?: UserId, authUserId?: UserId) =>
     new Promise<Success<PublicSafeUser | AdminSafeUser> | Error>(
       async (resolve, reject) => {
-
         const users: Collection<User> = (await this.getDb()).collection("users")
         const foundUser = await users.find({ id: userId }).limit(1).next()
 
         if (!foundUser) {
-          const isModerator = authUserId === userId && authUserId === process.env.SIMPLE_COMMENT_MODERATOR_ID
+          const isModerator =
+            authUserId === userId &&
+            authUserId === process.env.SIMPLE_COMMENT_MODERATOR_ID
 
           if (!isModerator) {
             reject(error404UserUnknown)
@@ -237,13 +239,15 @@ export class MongodbService extends Service {
 
           // The Big Moderator is authenticated but has no user object in the database
           // We shall create it now
-          const hash = await hashPassword(process.env.SIMPLE_COMMENT_MODERATOR_PASSWORD)
-          const adminUser:User = {
-            id:userId,
-            name:"Simple Comment Moderator",
+          const hash = await hashPassword(
+            process.env.SIMPLE_COMMENT_MODERATOR_PASSWORD
+          )
+          const adminUser: User = {
+            id: userId,
+            name: "Simple Comment Moderator",
             isAdmin: true,
             hash,
-            email:process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL
+            email: process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL
           }
           await users.insertOne(adminUser)
 
@@ -295,11 +299,6 @@ export class MongodbService extends Service {
         return
       }
 
-      if (!user.hasOwnProperty("id")) {
-        reject(error400UserIdMissing)
-        return
-      }
-
       const users: Collection<User> = (await this.getDb()).collection("users")
       const authUser = await users.findOne({ id: authUserId })
 
@@ -318,6 +317,25 @@ export class MongodbService extends Service {
         return
       }
 
+      if (authUserId === process.env.SIMPLE_COMMENT_MODERATOR_ID) {
+        // the user cannot modify the authuser password or other properties
+        const cannotModify: (keyof UpdateUser)[] = [
+          "password",
+          "isAdmin",
+          "email"
+        ]
+        const isForbidden = (Object.keys(
+          user
+        ) as (keyof UpdateUser)[]).some(key => cannotModify.includes(key))
+        if (isForbidden) {
+          reject({
+            ...error403ForbiddenToModify,
+            body: `Modify properties ${cannotModify.join(", ")} via .env file`
+          })
+          return
+        }
+      }
+
       // At this point, user.id exists and authUser can alter it
 
       const foundUser = await users.find({ id: targetId }).limit(1).next()
@@ -327,7 +345,10 @@ export class MongodbService extends Service {
         return
       }
 
-      const updatedUser = { ...foundUser, ...user }
+      // strip extraneous properties from the user, like "id"
+      const newProps = toUpdatedUser(user)
+
+      const updatedUser = { ...foundUser, ...newProps }
 
       users
         .findOneAndUpdate({ id: updatedUser.id }, { $set: updatedUser })
@@ -450,7 +471,6 @@ export class MongodbService extends Service {
         { "userId": authUserId },
         findOptions
       )) as Comment
-
 
       if (
         lastComment &&
@@ -876,7 +896,7 @@ export class MongodbService extends Service {
         return
       }
 
-      if (( !authUserId || !authUser.isAdmin) && policy.refererRestrictions) {
+      if ((!authUserId || !authUser.isAdmin) && policy.refererRestrictions) {
         // User is anonymous, public can create topics, and referrer restrictions are true
         // Let's validate the topic. We do that by comparing the proposed topicId with the `referer` header
         // They should be the same. If not, reject it
@@ -1308,8 +1328,9 @@ export class MongodbService extends Service {
     new Promise<Success>((resolve, reject) => {
       const pastDate = new Date(0).toUTCString()
       const COOKIE_HEADER = {
-        "Set-Cookie": `simple_comment_token=logged-out; path=/; HttpOnly; Expires=${pastDate}; SameSite${this.isProduction ? "; Secure" : ""
-          }`
+        "Set-Cookie": `simple_comment_token=logged-out; path=/; HttpOnly; Expires=${pastDate}; SameSite${
+          this.isProduction ? "; Secure" : ""
+        }`
       }
       resolve({ ...success202LoggedOut, headers: COOKIE_HEADER })
     })

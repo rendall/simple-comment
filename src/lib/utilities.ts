@@ -312,8 +312,12 @@ const updatedUserKeys: (keyof UpdateUser)[] = [
   "isVerified",
   "name"
 ]
+
+export const toUpdatedUser = (obj: GenericObj) =>
+  narrowType<UpdateUser>(obj, updatedUserKeys) as UpdateUser
+
 export const getUpdatedUserInfo = (body: string): UpdateUser =>
-  narrowType<UpdateUser>(parseBody(body), updatedUserKeys) as UpdateUser
+  toUpdatedUser(parseBody(body))
 
 export const getNewTopicInfo = (body: string): Topic => toTopic(parseBody(body))
 
