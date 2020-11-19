@@ -2,5 +2,6 @@
   "arrowParens": "avoid",
   "quoteProps": "preserve",
   "semi": false,
+  "tabWidth": 2,
   "trailingComma": "none"
 }

@@ -20,7 +20,7 @@ export default {
   // testEnvironment: "node",
 
   // An array of regexp pattern strings that are matched against all test paths, matched tests are skipped
-  testPathIgnorePatterns: ["\\\\node_modules\\\\", "RAW"]
+  testPathIgnorePatterns: ["\\\\node_modules\\\\", "RAW", ".js$"]
 
   // All imported modules in your tests should be mocked automatically
   // automock: false,
