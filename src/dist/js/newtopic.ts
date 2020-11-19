@@ -58,7 +58,7 @@ const onSubmitReply = (textarea, targetId) => e => {
   postComment(targetId, text).then(onPostCommentResponse).catch(setErrorStatus)
 }
 
-/** Handle the user's intent to reply: 
+/** Handle the user's intent to reply:
  * open the textfield and populate submit and cancel
  * buttons */
 const onReplyToComment = comment => e => {
@@ -73,7 +73,10 @@ const onReplyToComment = comment => e => {
   const submitReplyButton = document.createElement("button")
   submitReplyButton.innerHTML = "submit"
   submitReplyButton.setAttribute("id", "reply-submit-button")
-  submitReplyButton.addEventListener("click", onSubmitReply(commentField, comment.id))
+  submitReplyButton.addEventListener(
+    "click",
+    onSubmitReply(commentField, comment.id)
+  )
 
   const cancelReplyButton = document.createElement("button")
   cancelReplyButton.setAttribute("id", "reply-cancel-button")
@@ -115,7 +118,6 @@ const attachComment = (comment, elem) => {
 /** Populate the page with the discussion when the
  * server has responded with it */
 const onReceiveDiscussion = discussion => {
-
   const discussionDiv = document.querySelector("#discussion")
 
   while (discussionDiv.hasChildNodes()) {
@@ -189,8 +191,12 @@ const tryCreatingTopic = (discussionId, title) =>
       } else setErrorStatus(err)
     })
 
-
-const createElement = (type: string, parent?: Element, id?: string, innerHtml?:string) => {
+const createElement = (
+  type: string,
+  parent?: Element,
+  id?: string,
+  innerHtml?: string
+) => {
   const elem = document.createElement(type)
   if (id) elem.setAttribute("id", id)
   if (innerHtml) elem.innerHTML = innerHtml
@@ -208,7 +214,11 @@ const setupUserLogin = (div: HTMLElement) => {
   const userpasswordLabel = createElement("label", div, null, "Password")
   userpasswordLabel.setAttribute("for", "password")
 
-  const passwordField = createElement("input", div, "password") as HTMLInputElement
+  const passwordField = createElement(
+    "input",
+    div,
+    "password"
+  ) as HTMLInputElement
   passwordField.type = "password"
 
   const logoutButton = createElement("button", div, "log-out-button", "Log out")
@@ -219,7 +229,6 @@ const setupUserLogin = (div: HTMLElement) => {
 
   const signupButton = createElement("button", div, "sign-up-button", "Sign up")
   // signupButton.addEventListener("click", onSignupClick)
-
 }
 
 /** Add minimal Simple Comment UI and functionality to this page */
