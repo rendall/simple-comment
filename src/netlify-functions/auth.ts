@@ -107,8 +107,12 @@ const handleAuth = async (event: APIGatewayEvent) => {
     const token = authUser.body as AuthToken
 
     const COOKIE_HEADER = isProduction
-      ? { "Set-Cookie": `token=${token}; path=/; Secure; HttpOnly; SameSite` }
-      : { "Set-Cookie": `token=${token}; path=/; HttpOnly; SameSite` }
+      ? {
+          "Set-Cookie": `simple_comment_token=${token}; path=/; Secure; HttpOnly; SameSite`
+        }
+      : {
+          "Set-Cookie": `simple_comment_token=${token}; path=/; HttpOnly; SameSite`
+        }
     const headers = { ...allowHeaders, ...COOKIE_HEADER }
 
     return { ...success200OK, headers }
