@@ -269,7 +269,17 @@ describe("Full API service test", () => {
         expect(value.body.slice(0, 70)).toEqual(authToken.slice(0, 70))
       )
   })
+  // hardcoded moderator should always be able to log in
+  test("POST to auth with hardcoded credentials", () => {
+    const moderatorId = process.env.SIMPLE_COMMENT_MODERATOR_ID
+    const moderatorPassword = process.env.SIMPLE_COMMENT_MODERATOR_PASSWORD
+    return service
+      .authPOST(moderatorId, moderatorPassword)
+      .then((value: Success<AuthToken>) =>
+        expect(value.statusCode).toEqual(200)
+      )
 
+  })
   // User Create
   // post to /user should return user and 201 User created
   test("POST to /user", () => {

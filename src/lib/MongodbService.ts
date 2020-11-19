@@ -132,7 +132,7 @@ export class MongodbService extends Service {
             // Done.
 
             // Let's authenticate, and let the user endpoint handle this
-            const adminAuthToken = getAuthToken(user.id)
+            const adminAuthToken = getAuthToken(userid)
             resolve({ ...success200OK, body: adminAuthToken })
 
             // At this point Big Moderator is authenticated but has no user object in the database
