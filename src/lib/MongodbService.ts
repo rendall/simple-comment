@@ -286,9 +286,6 @@ export class MongodbService extends Service {
   /**
    * Update a user
    *
-   * NB: It is always safe to return AdminSafeUser because
-   * authUser is always an admin or the user themself
-   *
    * userId byte[]
    * returns Success<AdminSafeUser>
    **/
@@ -350,12 +347,12 @@ export class MongodbService extends Service {
 
       const updatedUser = { ...foundUser, ...newProps }
 
+      /* NB: It is always safe to return AdminSafeUser because
+       * authUser is always an admin or the user themself */
       users
         .findOneAndUpdate({ id: updatedUser.id }, { $set: updatedUser })
         .then((x: FindAndModifyWriteOpResultObject<User>) => {
-          // return isAdmin version of this user, because the user is either an admin or self
           const safeUser = toAdminSafeUser(updatedUser)
-
           resolve({ ...success204UserUpdated, body: safeUser })
         })
         .catch(e => reject(error500ServerError))
