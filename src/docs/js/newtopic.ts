@@ -204,32 +204,7 @@ const createElement = (
   return elem
 }
 
-const setupUserLogin = (div: HTMLElement) => {
-  const usernameLabel = createElement("label", div, null, "Username")
-  usernameLabel.setAttribute("for", "userid")
-
-  // username field
-  createElement("input", div, "userid")
-
-  const userpasswordLabel = createElement("label", div, null, "Password")
-  userpasswordLabel.setAttribute("for", "password")
-
-  const passwordField = createElement(
-    "input",
-    div,
-    "password"
-  ) as HTMLInputElement
-  passwordField.type = "password"
-
-  const logoutButton = createElement("button", div, "log-out-button", "Log out")
-  // logoutButton.addEventListener("click", onLogoutClick)
-
-  const loginButton = createElement("button", div, "log-in-button", "Log in")
-  // loginButton.addEventListener("click", onLoginClick)
-
-  const signupButton = createElement("button", div, "sign-up-button", "Sign up")
-  // signupButton.addEventListener("click", onSignupClick)
-}
+const setupUserLogin = (div: HTMLElement) => {}
 
 /** Add minimal Simple Comment UI and functionality to this page */
 const setup = async (

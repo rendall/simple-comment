@@ -35,6 +35,21 @@ export const deleteAuth = () =>
 export const postAuth = (user: string, password: string) => {
   const credentials: RequestCredentials = "include"
   const encode = `${user}:${password}`
+
+  const nonAsciiChars = encode.match(/[^\x00-\x7F]/g)
+
+  //TODO: Allow UTF-8 chars
+  // window.btoa will fail if encode includes non-ASCII chars
+  // This page seems to have good advice: https://attacomsian.com/blog/javascript-base64-encode-decode
+  // Until then, throw an error if it's attempted
+  if (nonAsciiChars) {
+    throw Error(
+      `Username / password combination included non-ASCII characters ${nonAsciiChars.join(
+        ", "
+      )}`
+    )
+  }
+
   const basicCred = window.btoa(encode)
 
   const authReqInfo = {

@@ -9,6 +9,14 @@
         height: 7rem;
       }
 
+      #login-pulser {
+        display: none;
+      }
+
+      .is-logging-in #login-pulser {
+        display: inline;
+      }
+
       #log-out-button {
         display: none;
       }
@@ -26,7 +34,7 @@
         color: red;
       }
 
-      div.is-reply button.comment-button {
+      .is-reply button.comment-button {
         display: none;
       }
     </style>
@@ -35,6 +43,7 @@
 
   <body>
     <div id="user-display">
+      <p id="login-pulser">Logging in... Please wait</p>
       <p id="user-name"></p>
       <button id="log-out-button">Log out</button>
       <div id="log-in-form">
@@ -47,7 +56,9 @@
     </div>
     <p id="status-display"></p>
     <ul id="topic-list"></ul>
-    <div id="discussion"></div>
+    <div id="simple-comment-area">
+      <div id="discussion"></div>
+    </div>
     <script type="module" src="./js/index.js"></script>
   </body>
 </html>

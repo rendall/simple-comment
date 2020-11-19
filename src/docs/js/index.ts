@@ -5,7 +5,10 @@ import {
   getCurrentUser,
   deleteAuth,
   postAuth,
-  getOneUser
+  getOneUser,
+  getDefaultDiscussionId,
+  createNewTopic,
+  getOneTopic
 } from "./apiClient.js"
 
 const clearStatus = () => {
@@ -26,6 +29,7 @@ const setStatus = (message, isError = false) => {
 }
 
 const setErrorStatus = message => {
+  document.querySelector("#user-display").classList.remove("is-logging-in")
   setStatus(message, true)
 }
 
@@ -44,9 +48,10 @@ const setUserStatus = (user?: {
   else document.querySelector("body").classList.remove("is-admin")
 
   document.querySelector("#user-name").innerHTML = userName
-  document
-    .querySelector("#user-display")
-    .classList.toggle("is-logged-in", !!user)
+
+  const userDisplay = document.querySelector("#user-display")
+  userDisplay.classList.remove("is-logging-in")
+  userDisplay.classList.toggle("is-logged-in", !!user)
 }
 
 const clearReply = () => {
@@ -226,10 +231,14 @@ const onLoginClick = e => {
   const password = passwordvalue ? passwordvalue.trim() : passwordvalue
 
   clearStatus()
+
   if (!username || !password) {
     setStatus("Enter username and password")
     return
   }
+
+  const userDisplay = document.querySelector("#user-display") as HTMLDivElement
+  userDisplay.classList.add("is-logging-in")
 
   postAuth(username, password).then(updateLoginStatus).catch(setErrorStatus)
 }
@@ -243,16 +252,68 @@ const updateLoginStatus = () =>
       } else setErrorStatus(currUserError)
     })
 
-const setup = () => {
+const setupUserLogin = () => {
   const logoutButton = document.querySelector("#log-out-button")
   logoutButton.addEventListener("click", onLogoutClick)
-
   const loginButton = document.querySelector("#log-in-button")
   loginButton.addEventListener("click", onLoginClick)
-
   updateLoginStatus()
+}
 
-  getAllTopics().then(onReceiveTopics, setStatus)
+const downloadDiscussion = discussionId =>
+  getOneTopic(discussionId).then(resp => {
+    setStatus("Discussion downloaded! - attempting to populate discussion...")
+    onReceiveDiscussion(resp)
+  })
+
+/** Send a POST request to create a topic for discussion */
+const tryCreatingTopic = (discussionId, title) =>
+  createNewTopic(discussionId, title)
+    .then(() => setStatus("Topic created!"))
+    .then(() => downloadDiscussion(discussionId))
+    .catch(err => {
+      if (err.status === 401) {
+        setErrorStatus(
+          "Simple Comment policy disallows anonymous discussion creation."
+        )
+      } else setErrorStatus(err)
+    })
+
+const setup = async (
+  discussionId = getDefaultDiscussionId(),
+  title = document.title
+) => {
+  console.info("Looking for Simple Comment area...")
+  const simpleCommentArea = document.querySelector("#simple-comment-area")
+
+  if (!simpleCommentArea) {
+    console.error(
+      "Simple Comment area not found. q.v. https://github.com/rendall/simple-comment "
+    )
+    return
+  }
+
+  console.info("Simple Comment area found! - attempting to set up UI...")
+
+  const statusDisplay = document.createElement("p")
+  statusDisplay.setAttribute("id", "status-display")
+  simpleCommentArea.appendChild(statusDisplay)
+
+  const discussionDiv = document.createElement("div")
+  discussionDiv.setAttribute("id", "discussion")
+  simpleCommentArea.appendChild(discussionDiv)
+
+  setStatus("UI setup complete - attempting download...")
+
+  setupUserLogin()
+
+  downloadDiscussion(discussionId).catch(err => {
+    if (err.status === 404) {
+      setErrorStatus("Discussion not found - attempting to create it...")
+      tryCreatingTopic(discussionId, title)
+    } else setErrorStatus(err)
+  })
+  // getAllTopics().then(onReceiveTopics, setStatus)
 }
 
 setup()
