@@ -58,10 +58,10 @@ const randomString = (
   len === 0
     ? str
     : randomString(
-        alpha,
-        len - 1,
-        `${str}${alpha.charAt(Math.floor(Math.random() * alpha.length))}`
-      )
+      alpha,
+      len - 1,
+      `${str}${alpha.charAt(Math.floor(Math.random() * alpha.length))}`
+    )
 const randomDate = () => new Date(randomNumber(0, new Date().valueOf()))
 // Returns a random email that will validate but does not create examples of all possible valid emails
 const createRandomEmail = (): Email =>
@@ -87,12 +87,12 @@ const createRandomCommentTree = (
   replies <= 0
     ? chain
     : createRandomCommentTree(replies - 1, users, [
-        ...chain,
-        createRandomComment(
-          chooseRandomElement(chain).id,
-          chooseRandomElement(users)
-        )
-      ])
+      ...chain,
+      createRandomComment(
+        chooseRandomElement(chain).id,
+        chooseRandomElement(users)
+      )
+    ])
 const chooseRandomElement = <T>(arr: T[]) =>
   arr[Math.floor(Math.random() * arr.length)]
 const createRandomGroupUsers = (
@@ -112,7 +112,7 @@ const createRandomListOfTopics = (
     : createRandomListOfTopics(num - 1, [...topics, createRandomTopic()])
 
 let topicCount = 0
-const getTopicId = prepend => `${prepend}topicId-${topicCount++}`
+const getTopicId = prepend => `${prepend}topic-id-${topicCount++}`
 
 const createRandomTopic = (prepend = ""): Topic => ({
   // id: randomString(alphaAscii, randomNumber(10, 40)),
@@ -153,14 +153,7 @@ const isAdminSafeUser = (u: Partial<User>) =>
   )
 
 // Fake data objects
-const adminUserTest: User = {
-  id: process.env.SIMPLE_COMMENT_MODERATOR_ID,
-  isVerified: true,
-  email: createRandomEmail(),
-  isAdmin: true,
-  name: "Simple Comment Admin"
-}
-const adminUserPasswordTest = process.env.SIMPLE_COMMENT_MODERATOR_PASSWORD //randomString(alphaAscii, 20)
+
 const groupUsersTest = createRandomGroupUsers(100)
 let usedUsersTest: User[] = []
 
@@ -180,6 +173,14 @@ const deleteTopicCommentsTest = createRandomCommentTree(20, groupUsersTest, [
 
 const topicsTest: Topic[] = createRandomListOfTopics()
 const commentTreeTest = createRandomCommentTree(500, groupUsersTest, topicsTest)
+
+// This user tests that login happens
+const authUserTest = {
+  ...createRandomUser("auth-"),
+  isAdmin: true,
+  password: randomString(),
+  email: createRandomEmail()
+}
 
 // Testing randomly from testGroupUsers causes test fails if the user has been
 // deleted or otherwise altered. Using this function ensures that users are not
@@ -222,8 +223,11 @@ describe("Full API service test", () => {
     service = new MongodbService(connectionString, databaseName)
     client = await service.getClient()
     db = await service.getDb()
-    const hash = await hashPassword(adminUserPasswordTest)
-    testAllUsers = [{ ...adminUserTest, hash }, ...groupUsersTest]
+
+    // authUserTest needs a real hash
+    const hash = await hashPassword(authUserTest.password)
+
+    testAllUsers = [...groupUsersTest, { ...authUserTest, hash }]
     const users = db.collection("users")
     await users.insertMany(testAllUsers)
     const comments = db.collection<Comment | DeletedComment | Discussion>(
@@ -234,7 +238,7 @@ describe("Full API service test", () => {
   }, 120000)
 
   afterAll(async () => {
-    // await db.dropDatabase()
+    //  await db.dropDatabase()
     await service.close()
   }, 120000)
 
@@ -248,18 +252,19 @@ describe("Full API service test", () => {
   // post to auth with incorrect credentials should return error 401
   test("POST to auth with incorrect password", () => {
     expect.assertions(1)
+    const adminUserTest = getAuthUser(u => u.isAdmin)
     return service
       .authPOST(adminUserTest.id, randomString(alphaUserInput, 40))
       .catch(e => expect(e).toEqual(error401BadCredentials))
   })
   // post to auth with correct credentials should return authtoken
   test("POST to auth with correct credentials", () => {
-    const authToken = getAuthToken(adminUserTest.id)
+    const authToken = getAuthToken(authUserTest.id)
     // The difference in timing between the line above and the authToken returned from the service
     // can change the two. We will compare only the first 70 characters, just to be sure that it
     // is correct. It does not have to be exact for this purpose
     return service
-      .authPOST(adminUserTest.id, adminUserPasswordTest)
+      .authPOST(authUserTest.id, authUserTest.password)
       .then((value: Success<AuthToken>) =>
         expect(value.body.slice(0, 70)).toEqual(authToken.slice(0, 70))
       )
@@ -364,6 +369,7 @@ describe("Full API service test", () => {
   // User Read
   // get to /user/{userId} where userId does not exist should return 404
   test("GET to /user/{userId} where userId does not exist", () => {
+    const adminUserTest = getAuthUser(u => u.isAdmin)
     expect.assertions(1)
     return service
       .userGET(randomString(), adminUserTest.id)
@@ -398,6 +404,7 @@ describe("Full API service test", () => {
   })
   // get to /user with admin credentials can return list of users with email
   test("GET /user admin", () => {
+    const adminUserTest = getAuthUser(u => u.isAdmin)
     return service
       .userListGET(adminUserTest.id)
       .then((res: Success<User[]>) => {
@@ -412,6 +419,7 @@ describe("Full API service test", () => {
   }) // get to /user/{userId} should return user
   test("GET to /user/{userId} with admin", () => {
     const user = getAuthUser()
+    const adminUserTest = getAuthUser(u => u.isAdmin)
     return service
       .userGET(user.id, adminUserTest.id)
       .then((res: Success<User>) => {
@@ -546,9 +554,10 @@ describe("Full API service test", () => {
   // delete to /user/{userId} with hardcoded admin userId should return 403
   test("DELETE to /user/{userId} targeting hardcoded admin userId", () => {
     const adminAuthUser = getAuthUser(u => u.isAdmin)
+    const simpleCommentModeratorId = process.env.SIMPLE_COMMENT_MODERATOR_ID
     expect.assertions(1)
     return service
-      .userDELETE(adminUserTest.id, adminAuthUser.id)
+      .userDELETE(simpleCommentModeratorId, adminAuthUser.id)
       .catch(e => expect(e).toBe(error403Forbidden))
   })
   // delete to /user/{userId} should delete user and return 202 User deleted
@@ -716,6 +725,7 @@ describe("Full API service test", () => {
   // put comment to /comment/{commentId} where Id does not exist should return 404
   test("PUT comment to /comment/{commentId} where Id does not exist", () => {
     const unknownComment = { text: randomString(), id: uuidv4() }
+    const adminUserTest = authUserTest
     expect.assertions(1)
     return service
       .commentPUT(unknownComment.id, unknownComment.text, adminUserTest.id)
@@ -797,7 +807,7 @@ describe("Full API service test", () => {
 
   // Topic Create
   // post to /topic with no credentials should return 401
-  test("POST to /topic with no credentials and public-can-create-topic=false policy", () => {
+  if (!policy.canPublicCreateTopic) test("POST to /topic with no credentials and policy.canPublicCreateTopic===false", () => {
     expect.assertions(2)
     const newTopic = createRandomTopic()
     return service.topicPOST(newTopic).catch(async value => {
@@ -813,23 +823,27 @@ describe("Full API service test", () => {
     const newTopic = createRandomTopic()
     const ordinaryUser = getAuthUser(u => !u.isAdmin)
     expect.assertions(2)
-    return service.topicPOST(newTopic, ordinaryUser.id).catch(async value => {
-      const deletedTopic = await db
-        .collection<Comment | Discussion>("comments")
-        .findOne({ id: newTopic.id })
-      expect(deletedTopic).toBeNull()
-      expect(value).toHaveProperty("statusCode", 403)
-    })
+    return service.topicPOST(newTopic, ordinaryUser.id)
+      .catch(async value => {
+        const deletedTopic = await db
+          .collection<Comment | Discussion>("comments")
+          .findOne({ id: newTopic.id })
+        expect(deletedTopic).toBeNull()
+        expect(value).toHaveProperty("statusCode", 403)
+      })
   })
   // post to /topic should return Discussion object and 201 Discussion created
   test("POST to /topic", () => {
+    const adminUserTest = getAuthUser(u => u.isAdmin)
     return service
       .topicPOST(newTopicTest, adminUserTest.id)
       .then(async value => {
-        const insertedTopic = await db
+        const insertedTopic:Discussion = await db
           .collection<Comment | Discussion>("comments")
           .findOne({ id: newTopicTest.id })
-        expect(insertedTopic).toEqual(newTopicTest)
+        expect(insertedTopic.id).toBe(newTopicTest.id)
+        expect(insertedTopic.title).toBe(newTopicTest.title)
+        expect(insertedTopic.isLocked).toBe(newTopicTest.isLocked)
         expect(value).toHaveProperty("statusCode", 201)
       })
   })
@@ -861,6 +875,7 @@ describe("Full API service test", () => {
       dateCreated: new Date(),
       title: randomString()
     }
+    const adminUserTest = getAuthUser(u => u.isAdmin)
     return service
       .topicPUT(putTopic.id, putTopic, adminUserTest.id)
       .then((res: Success<Topic>) => {
@@ -900,6 +915,7 @@ describe("Full API service test", () => {
   test("PUT topic to /topic/{topicId} where Id does not exist", () => {
     const topic = chooseRandomElement(topicsTest)
     const putTopic = { ...topic, id: randomString() }
+    const adminUserTest = getAuthUser(u => u.isAdmin)
     expect.assertions(1)
     return service
       .topicPUT(putTopic.id, putTopic, adminUserTest.id)
@@ -909,6 +925,7 @@ describe("Full API service test", () => {
   test("PUT topic to /topic/{topicId}", () => {
     const topic = chooseRandomElement(topicsTest)
     const putTopic = { ...topic, title: randomString() }
+    const adminUserTest = getAuthUser(u => u.isAdmin)
     return service
       .topicPUT(putTopic.id, putTopic, adminUserTest.id)
       .then((res: Success) => {
@@ -935,12 +952,14 @@ describe("Full API service test", () => {
   // delete to /topic/{topicId} where Id does not exist should return 404
   test("DELETE topic to /topic/{topicId} where Id does not exist", () => {
     const deleteTopicId = uuidv4()
+    const adminUserTest = getAuthUser(u => u.isAdmin)
     return service
       .topicDELETE(deleteTopicId, adminUserTest.id)
       .catch(e => expect(e).toHaveProperty("statusCode", 404))
   })
   // delete to /topic/{topicId} should delete the topic and return 202 Discussion deleted
   test("DELETE topic to /topic/{topicId} should delete the topic", () => {
+    const adminUserTest = getAuthUser(u => u.isAdmin)
     return service
       .topicDELETE(deleteTopicTest.id, adminUserTest.id)
       .then((res: Success) => expect(res).toBe(success202TopicDeleted))

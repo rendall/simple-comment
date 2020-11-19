@@ -104,13 +104,39 @@ export class MongodbService extends Service {
    *
    * returns AuthToken
    **/
-  authPOST = (username: string, password: string) =>
+  authPOST = (userid: string, password: string) =>
     new Promise<Success<AuthToken> | Error>((resolve, reject) =>
       this.getDb()
         .then(db => db.collection("users"))
-        .then(users => users.findOne({ id: username }))
+        .then(users => users.findOne({ id: userid }))
         .then(async (user: User) => {
-          if (user === null) reject(error404UserUnknown)
+          if (user === null) {
+            // User is unknown. Reject them unless they claim to be Big Moderator
+            if (userid !== process.env.SIMPLE_COMMENT_MODERATOR_ID) {
+              reject(error404UserUnknown)
+              return
+            }
+
+            // At this stage some unknown user claims to be the Big Moderator
+            // but there is no user with that name! This is a problem!
+
+            // First, let's verify that they have the correct credentials
+            const isModeratorPassword = process.env.SIMPLE_COMMENT_MODERATOR_PASSWORD === password
+
+            if (!isModeratorPassword) {
+              // Nope!
+              reject(error401BadCredentials)
+              return
+            }
+
+            // Done.
+
+            // Let's authenticate, and let the user endpoint handle this
+            const adminAuthToken = getAuthToken(user.id)
+            resolve({ ...success200OK, body: adminAuthToken })
+
+            // At this point Big Moderator is authenticated but has no user object in the database
+          }
           else {
             const isSame = await comparePassword(password, user.hash)
             if (!isSame) reject(error401BadCredentials)
@@ -197,12 +223,33 @@ export class MongodbService extends Service {
   userGET = (userId?: UserId, authUserId?: UserId) =>
     new Promise<Success<PublicSafeUser | AdminSafeUser> | Error>(
       async (resolve, reject) => {
+
         const users: Collection<User> = (await this.getDb()).collection("users")
         const foundUser = await users.find({ id: userId }).limit(1).next()
+
         if (!foundUser) {
-          reject(error404UserUnknown)
-          return
+          const isModerator = authUserId === userId && authUserId === process.env.SIMPLE_COMMENT_MODERATOR_ID
+
+          if (!isModerator) {
+            reject(error404UserUnknown)
+            return
+          }
+
+          // The Big Moderator is authenticated but has no user object in the database
+          // We shall create it now
+          const hash = await hashPassword(process.env.SIMPLE_COMMENT_MODERATOR_PASSWORD)
+          const adminUser:User = {
+            id:userId,
+            name:"Simple Comment Moderator",
+            isAdmin: true,
+            hash,
+            email:process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL
+          }
+          await users.insertOne(adminUser)
+
+          // Big Moderator is created, let's proceed as normal
         }
+
         const authUser = await users.findOne({ id: authUserId })
         const isAdmin = authUser ? authUser.isAdmin : false
         const outUser = toSafeUser(foundUser, isAdmin)
@@ -396,10 +443,14 @@ export class MongodbService extends Service {
       const findOptions: FindOneOptions<Comment> = {
         sort: { dateCreated: -1 }
       }
+
+      // We don't want to search for the exact comment {userId, text, parentId}
+      // because we only want to prevent accidental duplications
       const lastComment = (await comments.findOne(
-        { "user.id": authUserId },
+        { "userId": authUserId },
         findOptions
       )) as Comment
+
 
       if (
         lastComment &&
@@ -825,7 +876,7 @@ export class MongodbService extends Service {
         return
       }
 
-      if (!authUserId && policy.refererRestrictions) {
+      if (( !authUserId || !authUser.isAdmin) && policy.refererRestrictions) {
         // User is anonymous, public can create topics, and referrer restrictions are true
         // Let's validate the topic. We do that by comparing the proposed topicId with the `referer` header
         // They should be the same. If not, reject it
@@ -1257,9 +1308,8 @@ export class MongodbService extends Service {
     new Promise<Success>((resolve, reject) => {
       const pastDate = new Date(0).toUTCString()
       const COOKIE_HEADER = {
-        "Set-Cookie": `simple_comment_token=logged-out; path=/; HttpOnly; Expires=${pastDate}; SameSite${
-          this.isProduction ? "; Secure" : ""
-        }`
+        "Set-Cookie": `simple_comment_token=logged-out; path=/; HttpOnly; Expires=${pastDate}; SameSite${this.isProduction ? "; Secure" : ""
+          }`
       }
       resolve({ ...success202LoggedOut, headers: COOKIE_HEADER })
     })
