@@ -655,6 +655,7 @@
       },
       "post": {
         "summary": "Create a user",
+        "description": "Creates an authenticated user who can log in over mutliple devices. If the authId is a temporary user, link the temporary user to the authenticated user",
         "responses": {
           "201": {
             "description": "User created",
@@ -909,7 +910,7 @@
     "/auth": {
       "get": {
         "summary": "Accept a user name and password, return authentication token",
-        "description": "The authentication token is set via the Set-Cookie header with a 'simple_comment_token' key or as an Authentication header with Bearer scheme, depending on Simple Comment configuration",
+        "description": "The authentication token is set via the Set-Cookie header with a 'simple_comment_token' key or as an Authentication header with Bearer scheme, depending on Simple Comment configuration. If the authId is a temporary user, link the temporary user to the authenticated user",
         "responses": {
           "200": {
             "description": "User authenticated",
@@ -960,7 +961,7 @@
       },
       "post": {
         "summary": "Accept a user name and password, return authentication token",
-        "description": "The authentication token is set via the Set-Cookie header with a 'simple_comment_token' key or as an Authentication header with Bearer scheme, depending on Simple Comment configuration",
+        "description": "The authentication token is set via the Set-Cookie header with a 'simple_comment_token' key or as an Authentication header with Bearer scheme, depending on Simple Comment configuration. If the authId is a temporary user, link the temporary user to the authenticated user",
         "responses": {
           "200": {
             "description": "User authenticated",
@@ -1026,9 +1027,37 @@
         }
       }
     },
+    "/auth/temp": {
+      "get": {
+        "summary": "Receive tempororary or non-authenticated credentials",
+        "description": "The authentication token is set via Authentication header with Bearer scheme, expected to be set as a cookie in the user's browser and used until an authenticated user is created. The activity of the temporary user should be linked to the authenticated user if possible",
+        "responses": {
+          "200": {
+            "description": "User authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthToken"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many hits on this endpoint in a short amount of time",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/verify": {
       "get": {
-        "summary": "Return the claim in the security token or 404",
+        "summary": "Return a representation of a claim in the Cookie header 'simple-comment-token' value",
         "responses": {
           "200": {
             "description": "User authenticated",
@@ -1040,15 +1069,11 @@
               }
             }
           },
-          "404": {
-            "description": "Unknown user",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
+          "204": {
+            "description": "No Cookie header 'simple-comment-token' value"
+          },
+          "400": {
+            "description": "Token is corrupted"
           }
         },
         "security": [
@@ -1062,7 +1087,10 @@
   "components": {
     "schemas": {
       "Success": {
-        "required": ["statusCode", "body"],
+        "required": [
+          "statusCode",
+          "body"
+        ],
         "type": "object",
         "properties": {
           "body": {
@@ -1077,7 +1105,10 @@
         "description": "Success message when no other information is expected"
       },
       "Error": {
-        "required": ["statusCode", "body"],
+        "required": [
+          "statusCode",
+          "body"
+        ],
         "type": "object",
         "properties": {
           "body": {
@@ -1092,7 +1123,13 @@
         "description": "Error message "
       },
       "Comment": {
-        "required": ["id", "userId", "text", "parentId", "dateCreated"],
+        "required": [
+          "id",
+          "userId",
+          "text",
+          "parentId",
+          "dateCreated"
+        ],
         "type": "object",
         "properties": {
           "id": {
@@ -1131,7 +1168,10 @@
       },
       "User": {
         "type": "object",
-        "required": ["id", "name"],
+        "required": [
+          "id",
+          "name"
+        ],
         "properties": {
           "id": {
             "type": "string",
@@ -1161,7 +1201,12 @@
       },
       "Topic": {
         "type": "object",
-        "required": ["id", "title", "isLocked", "dateCreated"],
+        "required": [
+          "id",
+          "title",
+          "isLocked",
+          "dateCreated"
+        ],
         "properties": {
           "id": {
             "type": "string",
@@ -1181,7 +1226,12 @@
       },
       "Discussion": {
         "type": "object",
-        "required": ["id", "title", "isLocked", "dateCreated"],
+        "required": [
+          "id",
+          "title",
+          "isLocked",
+          "dateCreated"
+        ],
         "properties": {
           "id": {
             "type": "string",
