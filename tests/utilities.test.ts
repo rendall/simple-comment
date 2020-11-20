@@ -1,4 +1,5 @@
-import { getAllowOriginHeaders } from "../src/lib/utilities"
+import { getAllowOriginHeaders, isGuestId } from "../src/lib/utilities"
+import { v4 as uuidv4 } from "uuid"
 
 describe("test the `getAllowOriginHeaders` function", () => {
   it("should return {headers} if there is a header match", () => {
@@ -34,5 +35,14 @@ describe("test the `getAllowOriginHeaders` function", () => {
     expect(getAllowOriginHeaders(headers, allowedOrigin)).toEqual({
       "Access-Control-Allow-Origin": "*"
     })
+  })
+})
+
+describe("Test guest id utility", () => {
+  test("isGuestId should fail anything other than a uuid", () => {
+    //TODO: make this more random
+    expect(isGuestId("rendall")).toBe(false)
+    const guestId = uuidv4()
+    expect(isGuestId(guestId)).toBe(true)
   })
 })

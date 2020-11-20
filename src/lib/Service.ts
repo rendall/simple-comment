@@ -161,6 +161,14 @@ export abstract class Service {
     })
 
   /**
+   * returns an authenticated guest token
+   **/
+  abstract gauthGET = () =>
+    new Promise<AuthToken | Error>((resolve, reject) => {
+      reject(this.abstractError)
+    })
+
+  /**
    * Create a discussion
    *
    * topicId

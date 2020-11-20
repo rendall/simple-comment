@@ -25,7 +25,6 @@ import {
   FindOneOptions,
   InsertOneWriteOpResult,
   MongoClient,
-  UpdateWriteOpResult,
   WithId
 } from "mongodb"
 import { Service } from "./Service"
@@ -33,6 +32,7 @@ import {
   adminOnlyModifiableUserProperties,
   isComment,
   isDeleted,
+  isGuestId,
   isDeletedComment,
   toAdminSafeUser,
   toPublicSafeUser,
@@ -167,8 +167,17 @@ export class MongodbService extends Service {
         return
       }
 
+      // This is a necessary check because the moderator creation flow is outside of the normal user creation flow
       if (newUser.id === process.env.SIMPLE_COMMENT_MODERATOR_ID) {
         reject(error403ForbiddenToModify)
+        return
+      }
+
+      if (isGuestId(newUser.id)) {
+        reject({
+          ...error403Forbidden,
+          body: "New user id must not be in a uuid format"
+        })
         return
       }
 
@@ -296,6 +305,11 @@ export class MongodbService extends Service {
     new Promise<Success<AdminSafeUser> | Error>(async (resolve, reject) => {
       if (!authUserId) {
         reject(error401UserNotAuthenticated)
+        return
+      }
+
+      if (isGuestId(targetId)) {
+        reject({ ...error403Forbidden, body: "Guest users cannot be edited" })
         return
       }
 
@@ -865,6 +879,17 @@ export class MongodbService extends Service {
               : reject(error500ServerError)
           )
       }
+    })
+
+  /**
+   * returns AuthToken with a guest id
+   *
+   **/
+  gauthGET = () =>
+    new Promise<Success<AuthToken> | Error>(resolve => {
+      const guestUserId = uuidv4()
+      const gauthToken = getAuthToken(guestUserId)
+      resolve({ ...success200OK, body: gauthToken })
     })
 
   /**

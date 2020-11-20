@@ -1,3 +1,4 @@
+import { validate as isUuid } from "uuid"
 import * as jwt from "jsonwebtoken"
 import * as dotenv from "dotenv"
 import {
@@ -19,8 +20,9 @@ import {
 dotenv.config()
 
 /**
- * Return object with properties in props removed
+ * Returns true if userId is a guest id
  */
+export const isGuestId = (userId: UserId) => isUuid(userId)
 
 /**
  * These are user properties that are unsafe to return to admins
@@ -142,6 +144,7 @@ const parseAuthHeaderValue = (
       }
 
 export const REALM = "Access to restricted resources"
+
 /** nowPlusMinutes returns the numericDate `minutes` from now */
 export const nowPlusMinutes = (minutes: number): number =>
   new Date(new Date().valueOf() + minutes * 60 * 1000).valueOf()

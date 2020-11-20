@@ -357,6 +357,22 @@ describe("Full API service test", () => {
         .catch(error => expect(error).toHaveProperty("statusCode", 403))
     })
   }
+  test("POST to /user with a guestUserId as targetId should fail", () => {
+    const newUser = {
+      ...createRandomUser(),
+      id: uuidv4(),
+      password: randomString(),
+      email: createRandomEmail(),
+      isAdmin: false,
+      isVerified: false
+    }
+
+    const adminUser = getAuthUser(u => u.isAdmin)
+    expect.assertions(1)
+    return service
+      .userPOST(newUser, adminUser.id)
+      .catch(value => expect(value).toHaveProperty("statusCode", 403))
+  })
   // post to /user with existing username should return 409 user exists
   test("POST to /user with identical credentials", () => {
     const authUser = getAuthUser(u => u.isAdmin)
@@ -519,6 +535,24 @@ describe("Full API service test", () => {
         expect(res).toHaveProperty("body", toAdminSafeUser(updatedUser))
         expect(res.body).toHaveProperty("isAdmin", true)
         expect(res.body).toHaveProperty("isVerified", true)
+      })
+  })
+  // put to /user/{userId} with userId as uuid should fail
+  test("PUT to /user/{userId} as uuid", () => {
+    const tUser = getTargetUser(u => !u.isAdmin && !u.isVerified)
+    const targetUser = { ...tUser, id: uuidv4() }
+    const adminAuthUser = getAuthUser(u => u.isAdmin)
+    const updatedUser: User = {
+      ...targetUser,
+      name: randomString(alphaUserInput, 25),
+      isAdmin: true,
+      isVerified: true
+    }
+    expect.assertions(1)
+    return service
+      .userPUT(updatedUser.id, updatedUser, adminAuthUser.id)
+      .catch(error => {
+        expect(error).toHaveProperty("statusCode", 403)
       })
   })
   // put to /user/{userId} where userId does not exist (and admin credentials) should return 404
