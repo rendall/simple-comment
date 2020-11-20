@@ -36,8 +36,11 @@
     "postbuild": "rimraf ./netlify-functions && rimraf ./lib",
     "prebuild": "rimraf ./functions",
     "start:frontend": "http-server ./dist --proxy http://localhost:9000",
-    "start": "yarn run build:ts && netlify-lambda serve ./netlify-functions",
+    "start:backend": "yarn run build:ts && netlify-lambda serve ./netlify-functions",
+    "start": "start:backend",
     "test": "jest",
+    "watch:backend":"tsc -p tsconfig.netlify.functions.json --listEmittedFiles --watch",
+    "watch:frontend":"tsc --listEmittedFiles --watch",
     "test:watch": "jest --watch --noStackTrace",
     "posttest": "rimraf ./globalConfig.json"
   },
