@@ -39,8 +39,8 @@
     "start:backend": "yarn run build:ts && netlify-lambda serve ./netlify-functions",
     "start": "start:backend",
     "test": "jest",
-    "watch:backend":"tsc -p tsconfig.netlify.functions.json --listEmittedFiles --watch",
-    "watch:frontend":"tsc --listEmittedFiles --watch",
+    "watch:backend": "tsc -p tsconfig.netlify.functions.json --listEmittedFiles --watch",
+    "watch:frontend": "tsc --listEmittedFiles --watch",
     "test:watch": "jest --watch --noStackTrace",
     "posttest": "rimraf ./globalConfig.json"
   },
