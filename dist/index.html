@@ -3,9 +3,85 @@
   <head>
     <title>Simple Comment demo</title>
     <style>
+      body {
+        -moz-osx-font-smoothing: grayscale;
+        -webkit-font-smoothing: antialiased;
+        background-color: #f8fcff;
+        color: #33475c;
+        font-family: "AvenirNext", "Helvetica Neue", Helvetica, Arial,
+          sans-serif;
+        font-size: 1.125rem;
+        font-weight: 500;
+        line-height: 1.61111em;
+        margin-bottom: 1em;
+        margin-top: 1em;
+        margin: 0 auto;
+        padding: 0 1rem;
+      }
+
+      main {
+        max-width: 38rem;
+        margin: 0 auto;
+      }
+
+      h1 {
+        color: #3287e6;
+      }
+
+      input {
+        height: 2rem;
+        width: 100%;
+        font-size: 1.65rem;
+        padding: 0.5rem;
+        border-radius: 0.5rem;
+        border: 1px solid;
+        font-family: monospace;
+      }
+
+      textarea {
+        display: block;
+        height: 7rem;
+        width: 100%;
+        border-radius: 0.5rem;
+        border: 1px solid;
+        font-size: 1.65rem;
+        padding: 0.5rem;
+        font-family: monospace;
+      }
+
+      button:hover {
+        font-weight: bold;
+      }
+
+      button {
+        appearance: none;
+        border: none;
+        background: transparent;
+        background-color: transparent;
+        cursor: pointer;
+        font-size: inherit;
+        padding: 0.5rem 1rem;
+        width: 7rem;
+        text-align: center;
+        border: 1px solid;
+        border-radius: 0.65rem;
+        margin: 0.5rem 1rem 0.5rem 0;
+      }
+
+      a:hover {
+        color: #007b8c;
+        text-decoration: underline;
+      }
+
+      a {
+        color: #0090ae;
+        font-weight: 600;
+        text-decoration: none;
+      }
+
       textarea#reply-textarea {
         display: block;
-        width: 25rem;
+        width: 100%;
         height: 7rem;
       }
 
@@ -46,84 +122,54 @@
   </head>
 
   <body>
-    <h1>Simple Comment demo</h1>
-    <p>Welcome to the Simple Comment demo!</p>
-    <p>
-      Simple Comment is designed as a barebones commenting system that is secure
-      and customizable, so you can be confident that your visitors' data and
-      online activity is secure and entirely under your (and their) control.
-    </p>
-    <p>
-      Want a public forum? Want a private space? Want to limit participation to
-      specific IPs? Simple Comment doesn't judge!
-    </p>
-    <p>
-      Simple Comment is also scaleable, from free-tier to enterprise. It grows
-      as your audience grows.
-    </p>
-    <p>
-      MIT licensing is available, so you can do what you want with the software.
-      No strings.
-    </p>
-    <p>Here on this page you can give it a test drive:</p>
-    <ul>
-      <li>Comment as a visitor</li>
-      <li>Sign up and comment as an authenticated user</li>
-      <li>Edit and delete your own comments</li>
-      <li>Log out and comment anonymously</li>
-      <li>
-        With an admin account, you could:
-        <ul>
-          <li>Lockdown any discussion entirely</li>
-          <li>Limit participation only to identified users</li>
-          <li>Delete inappropriate or annoying user comments</li>
-          <li>
-            Hold comments from display for unidentified users until moderator
-            review
-          </li>
-          <li>Hold comments for all users</li>
-          <li>And more!</li>
-        </ul>
-      </li>
-      <li>
-        These settings are all easily customizable by policy, which can:
-        <ul>
-          <li>Disallow comments from unidentified visitors</li>
-          <li>Disallow unidentified visitors to read discussions</li>
-          <li>Allow only moderators to create new users</li>
-          <ul>
-            <li>No public sign ups</li>
-          </ul>
-          <li>Allow only moderators to delete users</li>
-          <li>Allow only moderators to delete or edit comments</li>
-          <li>
-            Allow users total control over viewing, and editing, their own data.
-            <ul>
-              <li>Perfect if you're concerned about GDPR compliance!</li>
-            </ul>
-          </li>
-          <li>Other policy flags, as requested</li>
-        </ul>
-      </li>
-    </ul>
-    <p>What do you think of Simple Comment?</p>
-    <div id="simple-comment-area">
-      <div id="discussion"></div>
-    </div>
-    <div id="user-display">
-      <p id="login-pulser">Logging in... Please wait</p>
-      <p id="user-name"></p>
-      <button id="log-out-button">Log out</button>
-      <div id="log-in-form">
-        <label for="userid">Username:</label>
-        <input id="userid" />
-        <label for="password">Password:</label>
-        <input id="password" type="password" />
-        <button id="log-in-button">Log in</button>
+    <main>
+      <h1>Simple Comment demo</h1>
+      <p>Welcome to the Simple Comment demo!</p>
+      <p>
+        Simple Comment allows visitors to your webpage to add comments and reply
+        to other visitors. It is designed to be secure and customizable, so your
+        visitors' data and online activity is untracked, and entirely under your
+        (and their) control.
+      </p>
+      <p>
+        Want a public forum? Want a private space? Want to limit participation
+        to specific IP addresses? Want to exclude IPs? Simple Comment doesn't
+        judge!
+      </p>
+      <p>
+        Simple Comment is also scaleable, from free-tier to enterprise. It grows
+        as your audience grows.
+      </p>
+      <p>
+        MIT licensing is available, so you can do what you want with the
+        software. No strings.
+      </p>
+      <p>Here on this page you can give it a test drive:</p>
+      <ul>
+        <li>Comment as a visitor</li>
+        <li>Sign up and comment as an authenticated user</li>
+        <li>Edit and delete your own comments</li>
+        <li>Log out and comment anonymously</li>
+      </ul>
+      <p>What do you think of Simple Comment?</p>
+      <div id="simple-comment-area">
+        <div id="discussion"></div>
       </div>
-    </div>
-    <p id="status-display"></p>
-    <ul id="topic-list"></ul>
+      <div id="user-display">
+        <p id="login-pulser">Logging in... Please wait</p>
+        <p id="user-name"></p>
+        <button id="log-out-button">Log out</button>
+        <div id="log-in-form">
+          <label for="userid">Username:</label>
+          <input id="userid" />
+          <label for="password">Password:</label>
+          <input id="password" type="password" />
+          <button id="log-in-button">Log in</button>
+        </div>
+      </div>
+      <p id="status-display"></p>
+      <ul id="topic-list"></ul>
+    </main>
     <script type="module" src="./js/index.js"></script>
   </body>
 </html>

@@ -49,7 +49,9 @@ const setUserStatus = (user?: AdminSafeUser) => {
     document.querySelector("body").classList.add("is-admin")
   else document.querySelector("body").classList.remove("is-admin")
 
-  document.querySelector("#user-name").innerHTML = userName
+  const userNameField = document.querySelector("#user-name")
+  userNameField.innerHTML = userName
+  document.querySelector("#name-input").toggleAttribute("disabled", !!user)
 
   const userDisplay = document.querySelector("#user-display")
   userDisplay.classList.remove("is-logging-in")
@@ -79,18 +81,19 @@ const onSubmitReply = (textarea, targetId) => e => {
 const insertReplyInput = (commentId: CommentId, target: Element) => {
   const nameLabel = document.createElement("label")
   nameLabel.setAttribute("for", "name-input")
-  nameLabel.innerHTML = "Name"
+  nameLabel.innerHTML = "Name:"
 
   const nameInput = document.createElement("input")
   nameInput.setAttribute("id", "name-input")
-  nameInput.setAttribute(
-    "placeholder",
-    "Enter the name that will appear next to your comments"
-  )
+  nameInput.setAttribute("placeholder", "What's your name?")
   if (currUser) nameInput.value = currUser.name
 
   const replyTextarea = document.createElement("textarea")
   replyTextarea.setAttribute("id", "reply-textarea")
+  replyTextarea.setAttribute("placeholder", "What's on your mind?")
+
+  const buttonGroup = document.createElement("div")
+  buttonGroup.classList.add("button-group")
 
   const submitReplyButton = document.createElement("button")
   submitReplyButton.innerHTML = "submit"
@@ -99,18 +102,19 @@ const insertReplyInput = (commentId: CommentId, target: Element) => {
     "click",
     onSubmitReply(replyTextarea, commentId)
   )
+  buttonGroup.appendChild(submitReplyButton)
 
   const cancelReplyButton = document.createElement("button")
   cancelReplyButton.innerHTML = "cancel"
   cancelReplyButton.setAttribute("id", "reply-cancel-button")
+  buttonGroup.appendChild(cancelReplyButton)
 
   const parentElement = target.parentElement
   parentElement.classList.add("is-reply")
   parentElement.insertBefore(replyTextarea, target)
   parentElement.insertBefore(nameLabel, target)
   parentElement.insertBefore(nameInput, target)
-  parentElement.insertBefore(submitReplyButton, target)
-  parentElement.insertBefore(cancelReplyButton, target)
+  parentElement.insertBefore(buttonGroup, target)
 
   clearReply = () => {
     parentElement.classList.remove("is-reply")
@@ -119,6 +123,7 @@ const insertReplyInput = (commentId: CommentId, target: Element) => {
     cancelReplyButton.remove()
     nameInput.remove()
     nameLabel.remove()
+    buttonGroup.remove()
   }
 
   cancelReplyButton.addEventListener("click", clearReply)
