@@ -1027,7 +1027,7 @@
         }
       }
     },
-    "/auth/temp": {
+    "/gauth": {
       "get": {
         "summary": "Receive tempororary or non-authenticated credentials",
         "description": "The authentication token is set via Authentication header with Bearer scheme, expected to be set as a cookie in the user's browser and used until an authenticated user is created. The activity of the temporary user should be linked to the authenticated user if possible",
