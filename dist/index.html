@@ -1,12 +1,16 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Simple Comment API</title>
+    <title>Simple Comment demo</title>
     <style>
       textarea#reply-textarea {
         display: block;
         width: 25rem;
         height: 7rem;
+      }
+
+      #discussion-title {
+        display: none;
       }
 
       #login-pulser {
@@ -42,6 +46,70 @@
   </head>
 
   <body>
+    <h1>Simple Comment demo</h1>
+    <p>Welcome to the Simple Comment demo!</p>
+    <p>
+      Simple Comment is designed as a barebones commenting system that is secure
+      and customizable, so you can be confident that your visitors' data and
+      online activity is secure and entirely under your (and their) control.
+    </p>
+    <p>
+      Want a public forum? Want a private space? Want to limit participation to
+      specific IPs? Simple Comment doesn't judge!
+    </p>
+    <p>
+      Simple Comment is also scaleable, from free-tier to enterprise. It grows
+      as your audience grows.
+    </p>
+    <p>
+      MIT licensing is available, so you can do what you want with the software.
+      No strings.
+    </p>
+    <p>Here on this page you can give it a test drive:</p>
+    <ul>
+      <li>Comment as a visitor</li>
+      <li>Sign up and comment as an authenticated user</li>
+      <li>Edit and delete your own comments</li>
+      <li>Log out and comment anonymously</li>
+      <li>
+        With an admin account, you could:
+        <ul>
+          <li>Lockdown any discussion entirely</li>
+          <li>Limit participation only to identified users</li>
+          <li>Delete inappropriate or annoying user comments</li>
+          <li>
+            Hold comments from display for unidentified users until moderator
+            review
+          </li>
+          <li>Hold comments for all users</li>
+          <li>And more!</li>
+        </ul>
+      </li>
+      <li>
+        These settings are all easily customizable by policy, which can:
+        <ul>
+          <li>Disallow comments from unidentified visitors</li>
+          <li>Disallow unidentified visitors to read discussions</li>
+          <li>Allow only moderators to create new users</li>
+          <ul>
+            <li>No public sign ups</li>
+          </ul>
+          <li>Allow only moderators to delete users</li>
+          <li>Allow only moderators to delete or edit comments</li>
+          <li>
+            Allow users total control over viewing, and editing, their own data.
+            <ul>
+              <li>Perfect if you're concerned about GDPR compliance!</li>
+            </ul>
+          </li>
+          <li>Other policy flags, as requested</li>
+        </ul>
+      </li>
+    </ul>
+    <p>What do you think of Simple Comment?</p>
+    <div id="simple-comment-area">
+      <div id="discussion"></div>
+    </div>
     <div id="user-display">
       <p id="login-pulser">Logging in... Please wait</p>
       <p id="user-name"></p>
@@ -56,9 +124,6 @@
     </div>
     <p id="status-display"></p>
     <ul id="topic-list"></ul>
-    <div id="simple-comment-area">
-      <div id="discussion"></div>
-    </div>
     <script type="module" src="./js/index.js"></script>
   </body>
 </html>

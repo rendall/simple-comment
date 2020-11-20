@@ -1,6 +1,6 @@
 /**
  * Simple Comment demo
- * 
+ *
  * A very basic demo of Simple Comment capabilities.
  **/
 import type { AdminSafeUser, CommentId } from "../../lib/simple-comment"
@@ -13,7 +13,7 @@ import {
   getOneTopic,
   getOneUser,
   postAuth,
-  postComment,
+  postComment
 } from "./apiClient.js"
 
 const clearStatus = () => {
@@ -29,7 +29,8 @@ const setStatus = (message, isError = false) => {
   } else {
     document.querySelector("#status-display").classList.toggle("error", isError)
     document.querySelector("#status-display").innerHTML = message
-    console.error(message)
+    if (isError) console.error(message)
+    else console.log(message)
   }
 }
 
@@ -56,11 +57,12 @@ const setUserStatus = (user?: AdminSafeUser) => {
 
   currUser = user
   const nameInput = document.querySelector("#name-input") as HTMLInputElement
-  if (nameInput) if (user) nameInput.value = user.name
-  else nameInput.value = ""
+  if (nameInput)
+    if (user) nameInput.value = user.name
+    else nameInput.value = ""
 }
 
-let clearReply = () => { }
+let clearReply = () => {}
 
 const onSubmitReply = (textarea, targetId) => e => {
   const text = textarea.value
@@ -75,14 +77,16 @@ const onSubmitReply = (textarea, targetId) => e => {
 }
 
 const insertReplyInput = (commentId: CommentId, target: Element) => {
-
   const nameLabel = document.createElement("label")
   nameLabel.setAttribute("for", "name-input")
   nameLabel.innerHTML = "Name"
 
   const nameInput = document.createElement("input")
   nameInput.setAttribute("id", "name-input")
-  nameInput.setAttribute("placeholder", "Enter the name that will appear next to your comments")
+  nameInput.setAttribute(
+    "placeholder",
+    "Enter the name that will appear next to your comments"
+  )
   if (currUser) nameInput.value = currUser.name
 
   const replyTextarea = document.createElement("textarea")
@@ -91,7 +95,10 @@ const insertReplyInput = (commentId: CommentId, target: Element) => {
   const submitReplyButton = document.createElement("button")
   submitReplyButton.innerHTML = "submit"
   submitReplyButton.setAttribute("id", "reply-submit-button")
-  submitReplyButton.addEventListener("click", onSubmitReply(replyTextarea, commentId))
+  submitReplyButton.addEventListener(
+    "click",
+    onSubmitReply(replyTextarea, commentId)
+  )
 
   const cancelReplyButton = document.createElement("button")
   cancelReplyButton.innerHTML = "cancel"
@@ -185,6 +192,7 @@ const onReceiveDiscussion = discussion => {
 
   const title = document.createElement("h2")
   title.innerText = discussion.title
+  title.setAttribute("id", "discussion-title")
   discussionDiv.appendChild(title)
   const replyTopicButton = document.createElement("button")
   replyTopicButton.innerText = "reply"
@@ -204,6 +212,7 @@ const onReceiveDiscussion = discussion => {
   replyLI.appendChild(replyTopicButton)
 
   insertReplyInput(discussion.id, replyTopicButton)
+  setStatus("Ready!")
 }
 
 const onReceiveTopics = (topics = []) => {
