@@ -104,11 +104,6 @@ const insertReplyInput = (commentId: CommentId, target: Element) => {
   )
   buttonGroup.appendChild(submitReplyButton)
 
-  const cancelReplyButton = document.createElement("button")
-  cancelReplyButton.innerHTML = "cancel"
-  cancelReplyButton.setAttribute("id", "reply-cancel-button")
-  buttonGroup.appendChild(cancelReplyButton)
-
   const parentElement = target.parentElement
   parentElement.classList.add("is-reply")
   parentElement.insertBefore(replyTextarea, target)
@@ -120,13 +115,10 @@ const insertReplyInput = (commentId: CommentId, target: Element) => {
     parentElement.classList.remove("is-reply")
     replyTextarea.remove()
     submitReplyButton.remove()
-    cancelReplyButton.remove()
     nameInput.remove()
     nameLabel.remove()
     buttonGroup.remove()
   }
-
-  cancelReplyButton.addEventListener("click", clearReply)
 }
 
 const onReplyToComment = comment => e => {
