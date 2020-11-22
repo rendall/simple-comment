@@ -70,7 +70,7 @@ import {
   success204UserUpdated
 } from "./messages"
 import { comparePassword, getAuthToken, hashPassword, uuidv4 } from "./crypt"
-
+import * as jwt from "jsonwebtoken"
 export class MongodbService extends Service {
   private isProduction = process.env.SIMPLE_COMMENT_MODE === "production"
   private _client: MongoClient
@@ -1360,10 +1360,29 @@ export class MongodbService extends Service {
       resolve({ ...success202LoggedOut, headers: COOKIE_HEADER })
     })
 
-  verifyGET = (claim: TokenClaim | null) =>
+  verifyGET = (token?: AuthToken) =>
     new Promise<Success<TokenClaim> | Error>((resolve, reject) => {
-      if (claim) return resolve({ ...success200OK, body: claim })
-      else reject(error404UserUnknown)
+      try {
+        const claim: TokenClaim = jwt.verify(
+          token,
+          process.env.JWT_SECRET
+        ) as TokenClaim
+        return resolve({ ...success200OK, body: claim })
+      } catch (error) {
+        console.error(error)
+        switch (error.name) {
+          case "TokenExpiredError":
+            resolve({
+              ...error403Forbidden,
+              body: `token expired at ${error.expiredAt}`
+            })
+            break
+
+          default:
+            resolve(error400BadRequest)
+            break
+        }
+      }
     })
 
   close = async () => {

@@ -227,7 +227,7 @@ export abstract class Service {
       reject(this.abstractError)
     })
 
-  abstract verifyGET = (claim: TokenClaim | null) =>
+  abstract verifyGET = (authToken: AuthToken) =>
     new Promise<Success<TokenClaim> | Error>((resolve, reject) => {
       reject(this.abstractError)
     })

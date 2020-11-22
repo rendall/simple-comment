@@ -1074,6 +1074,9 @@
           },
           "400": {
             "description": "Token is corrupted"
+          },
+          "403": {
+            "description": "Token is expired"
           }
         },
         "security": [
