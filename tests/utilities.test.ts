@@ -46,3 +46,29 @@ describe("Test guest id utility", () => {
     expect(isGuestId(guestId)).toBe(true)
   })
 })
+
+// Tests to do:
+// toSafeUser
+// toPublicSafeUser
+// toAdminSafeUser
+// isAdminSafeUser
+// isPublicSafeUser
+// getAuthHeaderValue
+// getAuthCredentials
+// hasBasicScheme
+// hasTokenCookie
+// getCookieToken
+// hasBearerScheme
+// decodeAuthHeader
+// parseAuthHeader
+// getUserIdPassword
+// getTokenClaim
+// getUserId
+// getTargetId
+// getNewUserInfo
+// toUpdatedUser
+// getUpdatedUserInfo
+// getNewTopicInfo
+// toTopic
+// getUpdateTopicInfo
+// isError
