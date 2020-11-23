@@ -742,6 +742,16 @@
               }
             }
           },
+          "204": {
+            "description": "User is Guest",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Success"
+                }
+              }
+            }
+          },
           "401": {
             "description": "User is not authenticated",
             "content": {
@@ -1069,11 +1079,18 @@
               }
             }
           },
-          "204": {
-            "description": "No Cookie header 'simple-comment-token' value"
-          },
           "400": {
             "description": "Token is corrupted"
+          },
+          "401": {
+            "description": "User is not authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           },
           "403": {
             "description": "Token is expired"

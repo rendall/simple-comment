@@ -13,7 +13,8 @@ import {
 } from "../lib/utilities"
 import { Success, TokenClaim, Error } from "../lib/simple-comment"
 import {
-  error404TopicNotFound,
+  error401UserNotAuthenticated,
+  error404NotFound,
   error405MethodNotAllowed,
   success204NoContent
 } from "../lib/messages"
@@ -47,14 +48,14 @@ export const handler: Handler = async (
   const headers = getAllowHeaders(event)
 
   if (!isValidPath)
-    return { ...error404TopicNotFound, body: `${event.path} is not valid` }
+    return { ...error404NotFound, body: `${event.path} is not valid` }
 
   const isBearer = hasBearerScheme(event.headers)
   const hasCookie = hasTokenCookie(event.headers)
 
   if (!isBearer && !hasCookie) {
     return {
-      ...success204NoContent,
+      ...error401UserNotAuthenticated,
       body: "No Cookie header 'simple-comment-token' value"
     }
   }
