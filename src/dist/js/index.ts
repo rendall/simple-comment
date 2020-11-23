@@ -1,19 +1,35 @@
 /**
  * Simple Comment demo
+ * 
+ * This illustrates a prototypical user flow
+ * 
+ * - Visitor visits page
+ * - A request to `/verify` endpont returns a claim (status code 200  and login) or not (204) 
+ *   - With 204, the user can retrieve a temporary user
+ * - A request to `/topic/{id}` returns a topic (200) or not (404). A topic is a "root" comment, to which top-level comments are made
+ *   - If 404, submit a POST (create) request
+ *     - If the user has permissions OR policy allows, the topic is created
+ *     - Typically, policy is allowed to be created by non-privs under specific situations
+ *       - Designed so that admin does not have to create every topic
+ *       - (Typically) Allowed only if the topic id is based on the URL and the Referer header is correct
+ *     - If the create request is granted, continue:
+ * - What is returned is a Discussion, which is a Topic (root comment) + all replies (child comments)
+ * 
+ * This file relies on the apiClient library, which is a group of async functions that connect to the API
  *
- * A very basic demo of Simple Comment capabilities.
  **/
-import type { AdminSafeUser, CommentId } from "../../lib/simple-comment"
+import type { AdminSafeUser, CommentId, TokenClaim } from "../../lib/simple-comment"
 import {
   createNewTopic,
   deleteAuth,
-  getCurrentUser,
+  verifyUser,
   getDefaultDiscussionId,
   getDiscussion,
   getOneTopic,
   getOneUser,
   postAuth,
-  postComment
+  postComment,
+  getGuestToken
 } from "./apiClient.js"
 
 const clearStatus = () => {
@@ -64,7 +80,7 @@ const setUserStatus = (user?: AdminSafeUser) => {
     else nameInput.value = ""
 }
 
-let clearReply = () => {}
+let clearReply = () => { }
 
 const onSubmitReply = (textarea, targetId) => e => {
   const text = textarea.value
@@ -241,8 +257,11 @@ const onLogoutClick = e => {
   deleteAuth().then(updateLoginStatus).catch(setErrorStatus)
 }
 
-const getSelf = (userObj?: { user: string }) =>
-  getOneUser(userObj.user).then(setUserStatus).catch(setErrorStatus)
+const getSelf = (claim: TokenClaim) =>
+  getOneUser(claim.user)
+    .then(res => res.body as AdminSafeUser)
+    .then(setUserStatus)
+    .catch(setErrorStatus)
 
 const onLoginClick = e => {
   const usernamevalue = (document.querySelector("#userid") as HTMLInputElement)
@@ -268,11 +287,12 @@ const onLoginClick = e => {
 }
 
 const updateLoginStatus = () =>
-  getCurrentUser()
+  verifyUser()
+    .then(res => res.body as TokenClaim)
     .then(getSelf)
     .catch(currUserError => {
       if (currUserError.status && currUserError.status === 401) {
-        setUserStatus()
+        return getGuestToken().then(updateLoginStatus)
       } else setErrorStatus(currUserError)
     })
 
@@ -330,6 +350,7 @@ const setup = async (
   setStatus("UI setup complete - attempting download...")
 
   setupUserLogin()
+  console.log("afterSetupsetupUserLogin")
 
   downloadDiscussion(discussionId).catch(err => {
     if (err.status === 404) {
