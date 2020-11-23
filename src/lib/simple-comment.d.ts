@@ -26,6 +26,16 @@ export interface Error {
   headers?: Headers
 }
 
+/**
+ * Holds salient values of a Response,
+ * particularly the value of `body` after ReadableStream is read **/
+export type ResolvedResponse<T = string> = {
+  status: number
+  ok: boolean
+  statusText: string
+  body: T
+}
+
 export interface Discussion {
   _id?: ObjectId
   id: TopicId
