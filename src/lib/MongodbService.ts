@@ -67,6 +67,7 @@ import {
   success202TopicDeleted,
   success202UserDeleted,
   success204CommentUpdated,
+  success204NoContent,
   success204UserUpdated
 } from "./messages"
 import { comparePassword, getAuthToken, hashPassword, uuidv4 } from "./crypt"
@@ -158,10 +159,14 @@ export class MongodbService extends Service {
   userPOST = (newUser: NewUser, authUserId?: UserId) =>
     new Promise<Success<AdminSafeUser> | Error>(async (resolve, reject) => {
       if (!authUserId && !policy.canPublicCreateUser) {
-        reject({ error401UserNotAuthenticated })
+        reject(error401UserNotAuthenticated)
         return
       }
 
+      if (isGuestId(authUserId) && !policy.canGuestCreateUser) {
+        reject(error401UserNotAuthenticated)
+        return
+      }
       if (!newUser.id) {
         reject(error400UserIdMissing)
         return
@@ -230,15 +235,27 @@ export class MongodbService extends Service {
    * userId byte[]
    * returns User
    **/
-  userGET = (userId?: UserId, authUserId?: UserId) =>
+  userGET = (targetUserId?: UserId, authUserId?: UserId) =>
     new Promise<Success<PublicSafeUser | AdminSafeUser> | Error>(
       async (resolve, reject) => {
+        if (
+          (!authUserId && !policy.canPublicReadUser) ||
+          (isGuestId(authUserId) && !policy.canGuestReadUser)
+        ) {
+          reject(error401UserNotAuthenticated)
+          return
+        }
+
+        if (isGuestId(targetUserId)) {
+          resolve({ ...success204NoContent, body: "User is Guest" })
+        }
+
         const users: Collection<User> = (await this.getDb()).collection("users")
-        const foundUser = await users.find({ id: userId }).limit(1).next()
+        const foundUser = await users.find({ id: targetUserId }).limit(1).next()
 
         if (!foundUser) {
           const isModerator =
-            authUserId === userId &&
+            authUserId === targetUserId &&
             authUserId === process.env.SIMPLE_COMMENT_MODERATOR_ID
 
           if (!isModerator) {
@@ -252,7 +269,7 @@ export class MongodbService extends Service {
             process.env.SIMPLE_COMMENT_MODERATOR_PASSWORD
           )
           const adminUser: User = {
-            id: userId,
+            id: targetUserId,
             name: "Simple Comment Moderator",
             isAdmin: true,
             hash,
@@ -383,12 +400,12 @@ export class MongodbService extends Service {
    **/
   userDELETE = (userId: UserId, authUserId?: UserId) =>
     new Promise<Success | Error>(async (resolve, reject) => {
-      const users: Collection<User> = (await this.getDb()).collection("users")
-
-      if (!authUserId) {
+      if (!authUserId || isGuestId(authUserId)) {
         reject(error401UserNotAuthenticated)
         return
       }
+
+      const users: Collection<User> = (await this.getDb()).collection("users")
 
       //TODO: username admin as .env variable
       if (userId === process.env.SIMPLE_COMMENT_MODERATOR_ID) {
@@ -437,7 +454,10 @@ export class MongodbService extends Service {
    **/
   commentPOST = (
     parentId: TopicId | CommentId,
-    text: string,
+    data: {
+      text: string
+      user?: { name: string; email: string; website?: string }
+    },
     authUserId?: UserId
   ) =>
     new Promise<Success<Comment> | Error>(async (resolve, reject) => {
@@ -445,6 +465,8 @@ export class MongodbService extends Service {
         reject(error401UserNotAuthenticated)
         return
       }
+
+      const { text, user } = data
 
       if (text.length > policy.maxCommentLengthChars) {
         reject(error413CommentTooLong)
@@ -545,7 +567,7 @@ export class MongodbService extends Service {
         return
       }
 
-      if (!authUserId && !policy.canPublicRead) {
+      if (!authUserId && !policy.canPublicReadDiscussion) {
         reject(error401UserNotAuthenticated)
         return
       }
@@ -555,7 +577,7 @@ export class MongodbService extends Service {
         ? await users.findOne({ id: authUserId })
         : null
 
-      if (!authUser && !policy.canPublicRead) {
+      if (!authUser && !policy.canPublicReadDiscussion) {
         reject(error401UserNotAuthenticated)
         return
       }
@@ -998,7 +1020,7 @@ export class MongodbService extends Service {
    **/
   topicGET = (targetId: TopicId, authUserId?: UserId) =>
     new Promise<Success<Discussion> | Error>(async (resolve, reject) => {
-      if (!authUserId && !policy.canPublicRead) {
+      if (!authUserId && !policy.canPublicReadDiscussion) {
         reject(error401UserNotAuthenticated)
         return
       }
@@ -1006,7 +1028,7 @@ export class MongodbService extends Service {
       const users: Collection<User> = (await this.getDb()).collection("users")
       const authUser = await users.findOne({ id: authUserId })
 
-      if (!authUser && !policy.canPublicRead) {
+      if (!authUser && !policy.canPublicReadDiscussion) {
         reject(error404UserUnknown)
         return
       }
@@ -1180,7 +1202,7 @@ export class MongodbService extends Service {
    **/
   topicListGET = (authUserId?: UserId) =>
     new Promise<Success<Topic[]> | Error>(async (resolve, reject) => {
-      if (!authUserId && !policy.canPublicRead) {
+      if (!authUserId && !policy.canPublicReadDiscussion) {
         reject(error401UserNotAuthenticated)
         return
       }
@@ -1188,7 +1210,7 @@ export class MongodbService extends Service {
       const users: Collection<User> = (await this.getDb()).collection("users")
       const authUser = await users.find({ id: authUserId }).limit(1)
 
-      if (!authUser && !policy.canPublicRead) {
+      if (!authUser && !policy.canPublicReadDiscussion) {
         reject(error404UserUnknown)
         return
       }
