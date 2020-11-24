@@ -1,10 +1,10 @@
 /**
  * Simple Comment demo
- * 
+ *
  * This illustrates a prototypical user flow
- * 
+ *
  * - Visitor visits page
- * - A request to `/verify` endpont returns a claim (status code 200  and login) or not (204) 
+ * - A request to `/verify` endpont returns a claim (status code 200  and login) or not (204)
  *   - With 204, the user can retrieve a temporary user
  * - A request to `/topic/{id}` returns a topic (200) or not (404). A topic is a "root" comment, to which top-level comments are made
  *   - If 404, submit a POST (create) request
@@ -14,11 +14,17 @@
  *       - (Typically) Allowed only if the topic id is based on the URL and the Referer header is correct
  *     - If the create request is granted, continue:
  * - What is returned is a Discussion, which is a Topic (root comment) + all replies (child comments)
- * 
+ *
  * This file relies on the apiClient library, which is a group of async functions that connect to the API
  *
  **/
-import type { AdminSafeUser, CommentId, TokenClaim } from "../../lib/simple-comment"
+import type {
+  AdminSafeUser,
+  CommentId,
+  Discussion,
+  ResolvedResponse,
+  TokenClaim
+} from "../../lib/simple-comment"
 import {
   createNewTopic,
   deleteAuth,
@@ -35,24 +41,44 @@ import {
 const clearStatus = () => {
   document.querySelector("#status-display").innerHTML = ""
   document.querySelector("#status-display").classList.remove("error")
-}
-
-const setStatus = (message, isError = false) => {
-  if (typeof message !== "string") {
-    if (typeof message.text === "function") {
-      message.text().then(msg => setStatus(msg, isError))
-    } else return setStatus(JSON.stringify(message), isError)
-  } else {
-    document.querySelector("#status-display").classList.toggle("error", isError)
-    document.querySelector("#status-display").innerHTML = message
-    if (isError) console.error(message)
-    else console.log(message)
-  }
-}
-
-const setErrorStatus = message => {
   document.querySelector("#user-display").classList.remove("is-logging-in")
-  setStatus(message, true)
+}
+
+// string type guard
+const isString = (x: any): x is string => typeof x === "string"
+// Response type guard
+const isResponse = (
+  res: string | ResolvedResponse | Response
+): res is Response =>
+  !isString(res) && "text" in res && typeof res.text === "function"
+// Resolved Response type guard
+const isResolvedResponse = (
+  res: string | ResolvedResponse | Response
+): res is Response => !isString(res) && "body" in res
+
+const setStatus = (
+  message: string | ResolvedResponse | Response,
+  isError = false
+) => {
+  if (isResponse(message))
+    return message.text().then(msg => setStatus(msg, isError))
+  if (isResolvedResponse(message))
+    return setStatus(JSON.stringify(message.body), isError)
+  if (!isString(message)) return setStatus(JSON.stringify(message), isError)
+  clearStatus()
+  document.querySelector("#status-display").classList.toggle("error", isError)
+  document.querySelector("#status-display").innerHTML = message
+  if (!isError) console.log(message)
+}
+
+const setErrorStatus = (
+  error: Error | ResolvedResponse | Response | string
+) => {
+  console.error(error)
+  if (typeof error === "string") return setStatus(error, true)
+  if ("message" in error)
+    return setStatus(`${error.name}:${error.message}`, true)
+  else setStatus(error, true)
 }
 
 let currUser: AdminSafeUser
@@ -67,7 +93,6 @@ const setUserStatus = (user?: AdminSafeUser) => {
 
   const userNameField = document.querySelector("#user-name")
   userNameField.innerHTML = userName
-  document.querySelector("#name-input").toggleAttribute("disabled", !!user)
 
   const userDisplay = document.querySelector("#user-display")
   userDisplay.classList.remove("is-logging-in")
@@ -75,12 +100,13 @@ const setUserStatus = (user?: AdminSafeUser) => {
 
   currUser = user
   const nameInput = document.querySelector("#name-input") as HTMLInputElement
-  if (nameInput)
-    if (user) nameInput.value = user.name
-    else nameInput.value = ""
+  if (nameInput) {
+    nameInput.value = !!user ? user.name : ""
+    nameInput.toggleAttribute("disabled", !!user)
+  }
 }
 
-let clearReply = () => { }
+let clearReply = () => {}
 
 const onSubmitReply = (textarea, targetId) => e => {
   const text = textarea.value
@@ -169,7 +195,10 @@ const attachComment = (comment, elem) => {
 
 const onReplyToTopic = onReplyToComment
 
-const onReceiveDiscussion = discussion => {
+const onReceiveDiscussion = (
+  discussionResponse: ResolvedResponse<Discussion>
+) => {
+  const discussion: Discussion = discussionResponse.body as Discussion
   const discussionDiv = document.querySelector("#discussion")
 
   while (discussionDiv.hasChildNodes()) {
@@ -213,7 +242,7 @@ const onReceiveDiscussion = discussion => {
 
   replyTopicButton.addEventListener("click", onReplyToTopic(discussion))
 
-  threadReplies(discussionDiv, discussion.id)
+  if (comments) threadReplies(discussionDiv, discussion.id)
 
   const commentUL = discussionDiv.querySelector("ul")
   const replyLI = document.createElement("li")
@@ -250,7 +279,7 @@ const onReceiveTopics = (topics = []) => {
 const onTopicClick = e => {
   e.preventDefault()
   const topicId = e.target.id
-  getDiscussion(topicId).then(onReceiveDiscussion, setStatus)
+  getDiscussion(topicId).then(onReceiveDiscussion, setErrorStatus)
 }
 
 const onLogoutClick = e => {
@@ -305,10 +334,12 @@ const setupUserLogin = () => {
 }
 
 const downloadDiscussion = discussionId =>
-  getOneTopic(discussionId).then(resp => {
-    setStatus("Discussion downloaded! - attempting to populate discussion...")
-    onReceiveDiscussion(resp)
-  })
+  getOneTopic(discussionId)
+    .then(resp => {
+      setStatus("Discussion downloaded! - attempting to populate discussion...")
+      onReceiveDiscussion(resp as ResolvedResponse<Discussion>)
+    })
+    .catch(setErrorStatus)
 
 /** Send a POST request to create a topic for discussion */
 const tryCreatingTopic = (discussionId, title) =>
@@ -339,6 +370,8 @@ const setup = async (
 
   console.info("Simple Comment area found! - attempting to set up UI...")
 
+  setupUserLogin()
+
   const statusDisplay = document.createElement("p")
   statusDisplay.setAttribute("id", "status-display")
   simpleCommentArea.appendChild(statusDisplay)
@@ -348,9 +381,6 @@ const setup = async (
   simpleCommentArea.appendChild(discussionDiv)
 
   setStatus("UI setup complete - attempting download...")
-
-  setupUserLogin()
-  console.log("afterSetupsetupUserLogin")
 
   downloadDiscussion(discussionId).catch(err => {
     if (err.status === 404) {
