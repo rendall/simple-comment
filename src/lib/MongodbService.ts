@@ -163,10 +163,15 @@ export class MongodbService extends Service {
         return
       }
 
-      if (!policy.canPublicCreateUser && isGuestId(authUserId) && !policy.canGuestCreateUser) {
+      if (
+        !policy.canPublicCreateUser &&
+        isGuestId(authUserId) &&
+        !policy.canGuestCreateUser
+      ) {
         reject(error401UserNotAuthenticated)
         return
       }
+
       if (!newUser.id) {
         reject(error400UserIdMissing)
         return
@@ -178,7 +183,8 @@ export class MongodbService extends Service {
         return
       }
 
-      if (isGuestId(newUser.id)) {
+      // Only the guest id with the same credential can create a guest user
+      if (isGuestId(newUser.id) && authUserId !== newUser.id) {
         reject({
           ...error403Forbidden,
           body: "New user id must not be in a uuid format"
@@ -218,8 +224,14 @@ export class MongodbService extends Service {
         return
       }
 
-      const hash = await hashPassword(newUser.password)
-      const user: User = { ...toAdminSafeUser(newUser), hash } as User
+      // A guest user can never log in, so do not have hash
+      const hash = isGuestId(newUser.id)
+        ? ""
+        : await hashPassword(newUser.password)
+      const adminSafeUser = toAdminSafeUser(newUser)
+      const user: User = isGuestId(newUser.id)
+        ? adminSafeUser
+        : ({ ...adminSafeUser, hash } as User)
 
       users
         .insertOne(user)
@@ -240,7 +252,9 @@ export class MongodbService extends Service {
       async (resolve, reject) => {
         if (
           (!authUserId && !policy.canPublicReadUser) ||
-          (isGuestId(authUserId) && !policy.canGuestReadUser && !policy.canPublicReadUser)
+          (isGuestId(authUserId) &&
+            !policy.canGuestReadUser &&
+            !policy.canPublicReadUser)
         ) {
           reject(error401UserNotAuthenticated)
           return
@@ -577,7 +591,11 @@ export class MongodbService extends Service {
         return
       }
 
-      if (isGuestId(authUserId) && !policy.canPublicReadDiscussion && !policy.canGuestReadDiscussion) {
+      if (
+        isGuestId(authUserId) &&
+        !policy.canPublicReadDiscussion &&
+        !policy.canGuestReadDiscussion
+      ) {
         reject(error401UserNotAuthenticated)
         return
       }
@@ -1375,8 +1393,9 @@ export class MongodbService extends Service {
     new Promise<Success>((resolve, reject) => {
       const pastDate = new Date(0).toUTCString()
       const COOKIE_HEADER = {
-        "Set-Cookie": `simple_comment_token=logged-out; path=/; HttpOnly; Expires=${pastDate}; SameSite${this.isProduction ? "; Secure" : ""
-          }`
+        "Set-Cookie": `simple_comment_token=logged-out; path=/; HttpOnly; Expires=${pastDate}; SameSite${
+          this.isProduction ? "; Secure" : ""
+        }`
       }
       resolve({ ...success202LoggedOut, headers: COOKIE_HEADER })
     })
