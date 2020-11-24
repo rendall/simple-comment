@@ -163,7 +163,7 @@ export class MongodbService extends Service {
         return
       }
 
-      if (isGuestId(authUserId) && !policy.canGuestCreateUser) {
+      if (!policy.canPublicCreateUser && isGuestId(authUserId) && !policy.canGuestCreateUser) {
         reject(error401UserNotAuthenticated)
         return
       }
@@ -240,7 +240,7 @@ export class MongodbService extends Service {
       async (resolve, reject) => {
         if (
           (!authUserId && !policy.canPublicReadUser) ||
-          (isGuestId(authUserId) && !policy.canGuestReadUser)
+          (isGuestId(authUserId) && !policy.canGuestReadUser && !policy.canPublicReadUser)
         ) {
           reject(error401UserNotAuthenticated)
           return
@@ -573,6 +573,11 @@ export class MongodbService extends Service {
         : null
 
       if (!authUser && !policy.canPublicReadDiscussion) {
+        reject(error401UserNotAuthenticated)
+        return
+      }
+
+      if (isGuestId(authUserId) && !policy.canPublicReadDiscussion && !policy.canGuestReadDiscussion) {
         reject(error401UserNotAuthenticated)
         return
       }
@@ -920,7 +925,7 @@ export class MongodbService extends Service {
    **/
   topicPOST = (newTopic: NewTopic, authUserId?: UserId) =>
     new Promise<Success<Topic> | Error>(async (resolve, reject) => {
-      if (!policy.canPublicCreateTopic && !authUserId) {
+      if (!policy.canFirstVisitCreateTopic && !authUserId) {
         reject(error401UserNotAuthenticated)
         return
       }
@@ -933,7 +938,7 @@ export class MongodbService extends Service {
         return
       }
 
-      if (!policy.canPublicCreateTopic && !authUser.isAdmin) {
+      if (!policy.canFirstVisitCreateTopic && !authUser.isAdmin) {
         reject(error403UserNotAuthorized)
         return
       }
@@ -1370,9 +1375,8 @@ export class MongodbService extends Service {
     new Promise<Success>((resolve, reject) => {
       const pastDate = new Date(0).toUTCString()
       const COOKIE_HEADER = {
-        "Set-Cookie": `simple_comment_token=logged-out; path=/; HttpOnly; Expires=${pastDate}; SameSite${
-          this.isProduction ? "; Secure" : ""
-        }`
+        "Set-Cookie": `simple_comment_token=logged-out; path=/; HttpOnly; Expires=${pastDate}; SameSite${this.isProduction ? "; Secure" : ""
+          }`
       }
       resolve({ ...success202LoggedOut, headers: COOKIE_HEADER })
     })

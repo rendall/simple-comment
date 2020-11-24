@@ -850,7 +850,7 @@ describe("Full API service test", () => {
 
   // Topic Create
   // post to /topic with no credentials should return 401
-  if (!policy.canPublicCreateTopic)
+  if (!policy.canFirstVisitCreateTopic)
     test("POST to /topic with no credentials and policy.canPublicCreateTopic===false", () => {
       expect.assertions(2)
       const newTopic = createRandomTopic()
