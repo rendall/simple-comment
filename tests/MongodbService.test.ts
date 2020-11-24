@@ -58,10 +58,10 @@ const randomString = (
   len === 0
     ? str
     : randomString(
-      alpha,
-      len - 1,
-      `${str}${alpha.charAt(Math.floor(Math.random() * alpha.length))}`
-    )
+        alpha,
+        len - 1,
+        `${str}${alpha.charAt(Math.floor(Math.random() * alpha.length))}`
+      )
 const randomDate = () => new Date(randomNumber(0, new Date().valueOf()))
 // Returns a random email that will validate but does not create examples of all possible valid emails
 const createRandomEmail = (): Email =>
@@ -87,12 +87,12 @@ const createRandomCommentTree = (
   replies <= 0
     ? chain
     : createRandomCommentTree(replies - 1, users, [
-      ...chain,
-      createRandomComment(
-        chooseRandomElement(chain).id,
-        chooseRandomElement(users)
-      )
-    ])
+        ...chain,
+        createRandomComment(
+          chooseRandomElement(chain).id,
+          chooseRandomElement(users)
+        )
+      ])
 const chooseRandomElement = <T>(arr: T[]) =>
   arr[Math.floor(Math.random() * arr.length)]
 const createRandomGroupUsers = (
@@ -283,9 +283,11 @@ describe("Full API service test", () => {
   // post to /user should return user and 201 User created
   test("POST to /user", () => {
     const authUser = getAuthUser(u => u.isAdmin)
-    return service
-      .userPOST(newUserTest, authUser.id)
-      .then(value => expect(value).toHaveProperty("statusCode", 201))
+    return service.userPOST(newUserTest, authUser.id).then(value => {
+      expect(value).toHaveProperty("statusCode", 201)
+      expect(value).toHaveProperty("body")
+      expect(value.body).toHaveProperty("email", newUserTest.email)
+    })
   })
   // POST to /user with id uuid with admin credentials should fail
   test("POST to /user with id uuid with admin credentials", () => {
@@ -594,7 +596,9 @@ describe("Full API service test", () => {
       .catch(error => {
         expect(error).toHaveProperty("statusCode", 403)
       })
-  })  // put to /user/{userId} where userId does not exist (and admin credentials) should return 404
+  })
+
+  // put to /user/{userId} where userId does not exist (and admin credentials) should return 404
   test("PUT to /user/{userId} where userId does not exist and admin credentials", () => {
     const targetUser = createRandomUser()
     const adminAuthUser = getAuthUser(u => u.isAdmin)
