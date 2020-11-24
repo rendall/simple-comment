@@ -192,7 +192,8 @@ export class MongodbService extends Service {
         return
       }
 
-      if (!newUser.password) {
+      // Guests do not need and cannot have a password, because they are identified only by credentials
+      if (!isGuestId(newUser.id) && !newUser.password) {
         reject(error400PasswordMissing)
         return
       }
@@ -216,8 +217,15 @@ export class MongodbService extends Service {
       )
 
       if (hasAdminOnlyProps && (!authUser || !authUser.isAdmin)) {
-        const adminOnlyProp = Object.keys(newUser).find( ( prop:keyof User ) => adminOnlyModifiableUserProperties.includes(prop))
-        reject({ ...error403ForbiddenToModify, body:`Forbidden to modify ${adminOnlyProp}` })
+        const adminOnlyProp = Object.keys(newUser).find((prop: keyof User) =>
+          adminOnlyModifiableUserProperties.includes(prop)
+        )
+        // It's possible that revealing which props are admin-only is a security risk,
+        // but on the other hand, the code is open-source so it probably makes no difference
+        reject({
+          ...error403ForbiddenToModify,
+          body: `Forbidden to modify ${adminOnlyProp}`
+        })
         return
       }
 
@@ -262,10 +270,6 @@ export class MongodbService extends Service {
         ) {
           reject(error401UserNotAuthenticated)
           return
-        }
-
-        if (isGuestId(targetUserId)) {
-          resolve({ ...success204NoContent, body: "User is Guest" })
         }
 
         const users: Collection<User> = (await this.getDb()).collection("users")
