@@ -3,6 +3,7 @@ import {
   AdminSafeUser,
   AuthToken,
   Discussion,
+  NewUser,
   PublicSafeUser,
   ResolvedResponse,
   TokenClaim,
@@ -43,6 +44,17 @@ export const getOneUser = (userId: UserId) =>
     resolveBody<AdminSafeUser | PublicSafeUser>(res)
   )
 
+export const createUser = (newUserInfo: NewUser) =>
+  fetch(`/.netlify/functions/user/`, {
+    body: objToQuery(newUserInfo),
+    method: "POST"
+  }).then(res => resolveBody<AdminSafeUser>(res))
+
+export const createGuestUser = (userInfo: {
+  id: string
+  name: string
+  email: string
+}) => createUser({ ...userInfo, password: "" })
 /**
  * A discussion is a topic with all comments attached
  **/
@@ -53,7 +65,7 @@ export const getDiscussion = topicId =>
 
 export const postComment = (targetId, text, user?) =>
   fetch(`/.netlify/functions/comment/${targetId}`, {
-    body: JSON.stringify({ text, user }),
+    body: text,
     method: "POST"
   }).then(res => resolveBody(res))
 
@@ -119,3 +131,15 @@ export const createNewTopic = (id, title, isLocked = false) => {
     resolveBody(res)
   )
 }
+
+export const objToQuery = (obj: {}) =>
+  Object.entries(obj)
+    .map(entry => `${entry[0]}=${entry[1]}`)
+    .join("&")
+
+/** Tests user id and returns true if it is a Guest ID
+ * All guest ids are uuidv4 **/
+export const isGuestId = (id: UserId) =>
+  id.match(
+    /^(?:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|00000000-0000-0000-0000-000000000000)$/i
+  )
