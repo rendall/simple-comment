@@ -454,10 +454,7 @@ export class MongodbService extends Service {
    **/
   commentPOST = (
     parentId: TopicId | CommentId,
-    data: {
-      text: string
-      user?: { name: string; email: string; website?: string }
-    },
+    text: string,
     authUserId?: UserId
   ) =>
     new Promise<Success<Comment> | Error>(async (resolve, reject) => {
@@ -465,8 +462,6 @@ export class MongodbService extends Service {
         reject(error401UserNotAuthenticated)
         return
       }
-
-      const { text, user } = data
 
       if (text.length > policy.maxCommentLengthChars) {
         reject(error413CommentTooLong)
