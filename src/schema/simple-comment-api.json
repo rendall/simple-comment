@@ -742,16 +742,6 @@
               }
             }
           },
-          "204": {
-            "description": "User is Guest",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Success"
-                }
-              }
-            }
-          },
           "401": {
             "description": "User is not authenticated",
             "content": {
