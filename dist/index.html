@@ -101,11 +101,15 @@
         display: none;
       }
 
-      .is-logged-in #log-out-button {
+      .is-logged-in:not(.is-guest) #log-out-button {
         display: unset;
       }
 
       .is-logged-in #log-in-form {
+        display: none;
+      }
+
+      .is-logged-in:not(.is-guest) .user-info {
         display: none;
       }
 
@@ -157,6 +161,7 @@
       </div>
       <div id="user-display">
         <p id="login-pulser">Logging in... Please wait</p>
+        <input type="hidden" id="claim-user" />
         <p id="user-name"></p>
         <button id="log-out-button">Log out</button>
         <div id="log-in-form">
