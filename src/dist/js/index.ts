@@ -4,8 +4,7 @@
  * This illustrates a prototypical user flow
  *
  * - Visitor visits page
- * - A request to `/verify` endpont returns a claim (status code 200  and login) or not (204)
- *   - With 204, the user can retrieve a temporary user
+ * - A request to `/verify` endpont returns a claim (status code 200  and login) or not (401)
  * - A request to `/topic/{id}` returns a topic (200) or not (404). A topic is a "root" comment, to which top-level comments are made
  *   - If 404, submit a POST (create) request
  *     - If the user has permissions OR policy allows, the topic is created
@@ -14,6 +13,13 @@
  *       - (Typically) Allowed only if the topic id is based on the URL and the Referer header is correct
  *     - If the create request is granted, continue:
  * - What is returned is a Discussion, which is a Topic (root comment) + all replies (child comments)
+ *
+ * If the user submits a comment and credentials do not exist:
+ *   - Validate information client-side
+ *   - Visit to `/gauth` acquires a guest credential
+ *   - POST to /user with guest credential and user info creates a guest user
+ *     - Validate information server-side
+ *   - POST to /comment with guest credential
  *
  * This file relies on the apiClient library, which is a group of async functions that connect to the API
  *
@@ -35,13 +41,16 @@ import {
   getOneUser,
   postAuth,
   postComment,
-  getGuestToken
+  getGuestToken,
+  isGuestId,
+  createUser,
+  createGuestUser
 } from "./apiClient.js"
 
 const clearStatus = () => {
   document.querySelector("#status-display").innerHTML = ""
   document.querySelector("#status-display").classList.remove("error")
-  document.querySelector("#user-display").classList.remove("is-logging-in")
+  document.querySelector("body").classList.remove("is-logging-in")
 }
 
 // string type guard
@@ -84,19 +93,23 @@ const setErrorStatus = (
 let currUser: AdminSafeUser
 
 const setUserStatus = (user?: AdminSafeUser) => {
+  const docBody = document.querySelector("body")
   const userName = user
-    ? `Logged in as: ${user.name} ${user.isAdmin ? "(admin)" : ""}`
+    ? `Logged in as: ${user.name} ${isGuestId(user.id) ? "(guest)" : ""}${
+        user.isAdmin ? "(admin)" : ""
+      }`
     : "Not logged in"
-  if (user && user.isAdmin)
-    document.querySelector("body").classList.add("is-admin")
-  else document.querySelector("body").classList.remove("is-admin")
+  if (user && user.isAdmin) docBody.classList.add("is-admin")
+  else docBody.classList.remove("is-admin")
+
+  if (user && isGuestId(user.id)) docBody.classList.add("is-guest")
+  else docBody.classList.remove("is-guest")
 
   const userNameField = document.querySelector("#user-name")
   userNameField.innerHTML = userName
 
-  const userDisplay = document.querySelector("#user-display")
-  userDisplay.classList.remove("is-logging-in")
-  userDisplay.classList.toggle("is-logged-in", !!user)
+  docBody.classList.remove("is-logging-in")
+  docBody.classList.toggle("is-logged-in", !!user)
 
   currUser = user
   const nameInput = document.querySelector("#name-input") as HTMLInputElement
@@ -104,31 +117,78 @@ const setUserStatus = (user?: AdminSafeUser) => {
     nameInput.value = !!user ? user.name : ""
     nameInput.toggleAttribute("disabled", !!user)
   }
+  const emailInput = document.querySelector("#email-input") as HTMLInputElement
+  if (emailInput) {
+    emailInput.value = !!user ? user.email : ""
+    emailInput.toggleAttribute("disabled", !!user)
+  }
 }
 
 let clearReply = () => {}
 
-const onSubmitReply = (textarea, targetId) => e => {
-  const text = textarea.value
+const onCommentSubmit = (submitElems, targetId) => async e => {
+  const { replyTextarea, nameInput, emailInput } = submitElems
+  const text = replyTextarea.value
+  const name = nameInput.value
+  const email = emailInput.value
 
-  const onPostCommentResponse = comment => {
-    attachComment(comment, textarea.parentElement)
-    clearReply()
-    console.log({ comment })
+  const isLoggedIn = document
+    .querySelector("body")
+    .classList.contains("is-logged-in")
+  // if not isLoggedIn in we need to verify some things then create a guest user
+
+  if (!isLoggedIn) {
+    //TODO: due validation of email and name
+    const id = (document.querySelector("#claim-user") as HTMLInputElement).value
+    const createGuestUserResult = await createGuestUser({ id, name, email })
+    // A successful createGuestUserResult would look like this:
+    // {
+    //   status: 201,
+    //   ok: true,
+    //   statusText: "Created",
+    //   body: {
+    //     id: "de066dc8-07ba-40d7-8f27-eca9c0647b37",
+    //     name: "Fang!",
+    //     email: "fang@example.net"
+    //   }
+    // }
+    if (createGuestUserResult.status === 201) updateLoginStatus()
+    else setErrorStatus(createGuestUserResult as ResolvedResponse)
   }
 
-  postComment(targetId, text).then(onPostCommentResponse).catch(setErrorStatus)
+  const onCommentResponse = comment => {
+    attachComment(comment, text.parentElement)
+    clearReply()
+  }
+
+  postComment(targetId, text).then(onCommentResponse).catch(setErrorStatus)
 }
 
 const insertReplyInput = (commentId: CommentId, target: Element) => {
+  const userInfoGroup = document.createElement("div")
+  userInfoGroup.classList.add("user-info")
+
   const nameLabel = document.createElement("label")
   nameLabel.setAttribute("for", "name-input")
   nameLabel.innerHTML = "Name:"
+  userInfoGroup.appendChild(nameLabel)
 
   const nameInput = document.createElement("input")
   nameInput.setAttribute("id", "name-input")
   nameInput.setAttribute("placeholder", "What's your name?")
   if (currUser) nameInput.value = currUser.name
+  userInfoGroup.appendChild(nameInput)
+
+  const emailLabel = document.createElement("label")
+  emailLabel.setAttribute("for", "email-input")
+  emailLabel.innerHTML = "Email:"
+  userInfoGroup.appendChild(emailLabel)
+
+  const emailInput = document.createElement("input")
+  emailInput.setAttribute("id", "email-input")
+  emailInput.setAttribute("placeholder", "What's your email?")
+  if (currUser) emailInput.value = currUser.email
+  userInfoGroup.appendChild(emailInput)
 
   const replyTextarea = document.createElement("textarea")
   replyTextarea.setAttribute("id", "reply-textarea")
@@ -142,15 +202,14 @@ const insertReplyInput = (commentId: CommentId, target: Element) => {
   submitReplyButton.setAttribute("id", "reply-submit-button")
   submitReplyButton.addEventListener(
     "click",
-    onSubmitReply(replyTextarea, commentId)
+    onCommentSubmit({ replyTextarea, nameInput, emailInput }, commentId)
   )
   buttonGroup.appendChild(submitReplyButton)
 
   const parentElement = target.parentElement
   parentElement.classList.add("is-reply")
   parentElement.insertBefore(replyTextarea, target)
-  parentElement.insertBefore(nameLabel, target)
-  parentElement.insertBefore(nameInput, target)
+  parentElement.insertBefore(userInfoGroup, target)
   parentElement.insertBefore(buttonGroup, target)
 
   clearReply = () => {
@@ -159,6 +218,8 @@ const insertReplyInput = (commentId: CommentId, target: Element) => {
     submitReplyButton.remove()
     nameInput.remove()
     nameLabel.remove()
+    emailInput.remove()
+    emailLabel.remove()
     buttonGroup.remove()
   }
 }
@@ -290,7 +351,12 @@ const getSelf = (claim: TokenClaim) =>
   getOneUser(claim.user)
     .then(res => res.body as AdminSafeUser)
     .then(setUserStatus)
-    .catch(setErrorStatus)
+    .catch(error => {
+      const isUnbornGuest = error.status === 404 && isGuestId(claim.user)
+      if (!isUnbornGuest) return setErrorStatus(error)
+      else setUserStatus()
+      // we won't create the guest user until the user submits a comment!
+    })
 
 const onLoginClick = e => {
   const usernamevalue = (document.querySelector("#userid") as HTMLInputElement)
@@ -309,8 +375,7 @@ const onLoginClick = e => {
     return
   }
 
-  const userDisplay = document.querySelector("#user-display") as HTMLDivElement
-  userDisplay.classList.add("is-logging-in")
+  document.querySelector("body").classList.add("is-logging-in")
 
   postAuth(username, password).then(updateLoginStatus).catch(setErrorStatus)
 }
@@ -318,6 +383,13 @@ const onLoginClick = e => {
 const updateLoginStatus = () =>
   verifyUser()
     .then(res => res.body as TokenClaim)
+    .then(claim => {
+      const claimUserField = document.querySelector(
+        "#claim-user"
+      ) as HTMLInputElement
+      claimUserField.value = claim.user
+      return claim
+    })
     .then(getSelf)
     .catch(currUserError => {
       if (currUserError.status && currUserError.status === 401) {
