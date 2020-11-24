@@ -200,7 +200,10 @@ export class MongodbService extends Service {
       const users: Collection<User> = (await this.getDb()).collection("users")
       const authUser = await users.find({ id: authUserId }).limit(1).next()
 
-      if (authUserId && !authUser) {
+      const isValidGuest = isGuestId(authUserId) && policy.canGuestCreateUser
+      const isUnknownUser = !isValidGuest && authUserId && !authUser
+
+      if (isUnknownUser) {
         reject({
           ...error404UserUnknown,
           body: "Authenticating user is unknown"
@@ -213,7 +216,8 @@ export class MongodbService extends Service {
       )
 
       if (hasAdminOnlyProps && (!authUser || !authUser.isAdmin)) {
-        reject({ ...error403ForbiddenToModify })
+        const adminOnlyProp = Object.keys(newUser).find( ( prop:keyof User ) => adminOnlyModifiableUserProperties.includes(prop))
+        reject({ ...error403ForbiddenToModify, body:`Forbidden to modify ${adminOnlyProp}` })
         return
       }
 

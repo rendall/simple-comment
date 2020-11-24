@@ -41,7 +41,7 @@
     "start:backend": "yarn run build:backend && netlify-lambda serve ./netlify-functions",
     "start:frontend": "yarn run build:frontend && http-server ./dist --proxy http://localhost:9000",
     "test": "jest",
-    "test:watch": "jest --watch --noStackTrace",
+    "watch:test": "jest --watch --noStackTrace",
     "watch:backend": "tsc -p tsconfig.netlify.functions.json --listEmittedFiles --watch",
     "watch:frontend": "tsc --listEmittedFiles --watch"
   },

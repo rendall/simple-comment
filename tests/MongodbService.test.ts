@@ -58,10 +58,10 @@ const randomString = (
   len === 0
     ? str
     : randomString(
-        alpha,
-        len - 1,
-        `${str}${alpha.charAt(Math.floor(Math.random() * alpha.length))}`
-      )
+      alpha,
+      len - 1,
+      `${str}${alpha.charAt(Math.floor(Math.random() * alpha.length))}`
+    )
 const randomDate = () => new Date(randomNumber(0, new Date().valueOf()))
 // Returns a random email that will validate but does not create examples of all possible valid emails
 const createRandomEmail = (): Email =>
@@ -87,12 +87,12 @@ const createRandomCommentTree = (
   replies <= 0
     ? chain
     : createRandomCommentTree(replies - 1, users, [
-        ...chain,
-        createRandomComment(
-          chooseRandomElement(chain).id,
-          chooseRandomElement(users)
-        )
-      ])
+      ...chain,
+      createRandomComment(
+        chooseRandomElement(chain).id,
+        chooseRandomElement(users)
+      )
+    ])
 const chooseRandomElement = <T>(arr: T[]) =>
   arr[Math.floor(Math.random() * arr.length)]
 const createRandomGroupUsers = (
@@ -285,6 +285,28 @@ describe("Full API service test", () => {
     const authUser = getAuthUser(u => u.isAdmin)
     return service
       .userPOST(newUserTest, authUser.id)
+      .then(value => expect(value).toHaveProperty("statusCode", 201))
+  })
+  // POST to /user with id uuid with admin credentials should fail
+  test("POST to /user with id uuid with admin credentials", () => {
+    const guestUser = { ...newUserTest, id: uuidv4() }
+    const authUser = getAuthUser(u => u.isAdmin)
+    expect.assertions(1)
+    return service
+      .userPOST(guestUser, authUser.id)
+      .catch(error => expect(error).toHaveProperty("statusCode", 403))
+  })
+  // POST to /user with id uuid with same credentials should succeed
+  test("POST to /user with id uuid with same credentials", () => {
+    const id = uuidv4()
+    const guestUser = {
+      id,
+      name: randomString(alphaUserInput),
+      password: randomString(),
+      email: createRandomEmail()
+    }
+    return service
+      .userPOST(guestUser, id)
       .then(value => expect(value).toHaveProperty("statusCode", 201))
   })
   // post to /user without credentials should return according to policy
@@ -538,7 +560,7 @@ describe("Full API service test", () => {
       })
   })
   // put to /user/{userId} with userId as uuid should fail
-  test("PUT to /user/{userId} as uuid", () => {
+  test("PUT to /user/{userId} with userId as uuid should fail", () => {
     const tUser = getTargetUser(u => !u.isAdmin && !u.isVerified)
     const targetUser = { ...tUser, id: uuidv4() }
     const adminAuthUser = getAuthUser(u => u.isAdmin)
@@ -555,7 +577,24 @@ describe("Full API service test", () => {
         expect(error).toHaveProperty("statusCode", 403)
       })
   })
-  // put to /user/{userId} where userId does not exist (and admin credentials) should return 404
+
+  test("PUT to /user/{userId} with userId as uuid should fail", () => {
+    const tUser = getTargetUser(u => !u.isAdmin && !u.isVerified)
+    const targetUser = { ...tUser, id: uuidv4() }
+    const adminAuthUser = getAuthUser(u => u.isAdmin)
+    const updatedUser: User = {
+      ...targetUser,
+      name: randomString(alphaUserInput, 25),
+      isAdmin: true,
+      isVerified: true
+    }
+    expect.assertions(1)
+    return service
+      .userPUT(updatedUser.id, updatedUser, adminAuthUser.id)
+      .catch(error => {
+        expect(error).toHaveProperty("statusCode", 403)
+      })
+  })  // put to /user/{userId} where userId does not exist (and admin credentials) should return 404
   test("PUT to /user/{userId} where userId does not exist and admin credentials", () => {
     const targetUser = createRandomUser()
     const adminAuthUser = getAuthUser(u => u.isAdmin)
