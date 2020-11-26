@@ -20,12 +20,12 @@ Nearly there! Steps to minimum viable product (MVP):
     - The `Origin` must be on the `Access-Control-Allow-Origin` list
 - Setup instructions
   - Are complicated but work when followed
+- Visitor can post anonymously
+  - Comment includes guest user
 
 ### To be done
 
-- Visitor can post anonymously
-  - Comment includes temporary user
-  - Spam prevention measures
+- Spam prevention measures
 - Moderator can hold posts for approval
   - Can change policy
 - Visitor can claim ownership over anonymous posts
