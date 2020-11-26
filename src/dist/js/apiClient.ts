@@ -1,4 +1,4 @@
-import { TopicId, UserId } from "./../../lib/simple-comment"
+import { TopicId, UserId } from "../../lib/simple-comment"
 
 const processResponse = (res: Response) => {
   if (res.ok === false) {
