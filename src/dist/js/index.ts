@@ -1,14 +1,19 @@
+/**
+ * Simple Comment demo
+ * 
+ * A very basic demo of Simple Comment capabilities.
+ **/
+import type { AdminSafeUser, CommentId } from "../../lib/simple-comment"
 import {
-  postComment,
-  getAllTopics,
-  getDiscussion,
-  getCurrentUser,
-  deleteAuth,
-  postAuth,
-  getOneUser,
-  getDefaultDiscussionId,
   createNewTopic,
-  getOneTopic
+  deleteAuth,
+  getCurrentUser,
+  getDefaultDiscussionId,
+  getDiscussion,
+  getOneTopic,
+  getOneUser,
+  postAuth,
+  postComment,
 } from "./apiClient.js"
 
 const clearStatus = () => {
@@ -33,13 +38,9 @@ const setErrorStatus = message => {
   setStatus(message, true)
 }
 
-const setUserStatus = (user?: {
-  id: string
-  name: string
-  email: string
-  isAdmin: string
-  isVerified: string
-}) => {
+let currUser: AdminSafeUser
+
+const setUserStatus = (user?: AdminSafeUser) => {
   const userName = user
     ? `Logged in as: ${user.name} ${user.isAdmin ? "(admin)" : ""}`
     : "Not logged in"
@@ -52,21 +53,14 @@ const setUserStatus = (user?: {
   const userDisplay = document.querySelector("#user-display")
   userDisplay.classList.remove("is-logging-in")
   userDisplay.classList.toggle("is-logged-in", !!user)
+
+  currUser = user
+  const nameInput = document.querySelector("#name-input") as HTMLInputElement
+  if (nameInput) if (user) nameInput.value = user.name
+  else nameInput.value = ""
 }
 
-const clearReply = () => {
-  const oldTextArea = document.querySelector("#reply-textarea")
-  if (oldTextArea) {
-    oldTextArea.parentElement.classList.remove("is-reply")
-    oldTextArea.remove()
-  }
-
-  const oldSubmitReplyButton = document.querySelector("#reply-submit-button")
-  if (oldSubmitReplyButton) oldSubmitReplyButton.remove()
-
-  const oldCancelReply = document.querySelector("#reply-cancel-button")
-  if (oldCancelReply) oldCancelReply.remove()
-}
+let clearReply = () => { }
 
 const onSubmitReply = (textarea, targetId) => e => {
   const text = textarea.value
@@ -80,32 +74,54 @@ const onSubmitReply = (textarea, targetId) => e => {
   postComment(targetId, text).then(onPostCommentResponse).catch(setErrorStatus)
 }
 
-const onReplyToComment = comment => e => {
-  clearReply()
+const insertReplyInput = (commentId: CommentId, target: Element) => {
 
-  const parentElement = e.target.parentElement
-  parentElement.classList.add("is-reply")
+  const nameLabel = document.createElement("label")
+  nameLabel.setAttribute("for", "name-input")
+  nameLabel.innerHTML = "Name"
 
-  const textarea = document.createElement("textarea")
-  textarea.setAttribute("id", "reply-textarea")
+  const nameInput = document.createElement("input")
+  nameInput.setAttribute("id", "name-input")
+  nameInput.setAttribute("placeholder", "Enter the name that will appear next to your comments")
+  if (currUser) nameInput.value = currUser.name
+
+  const replyTextarea = document.createElement("textarea")
+  replyTextarea.setAttribute("id", "reply-textarea")
+
   const submitReplyButton = document.createElement("button")
   submitReplyButton.innerHTML = "submit"
   submitReplyButton.setAttribute("id", "reply-submit-button")
-  submitReplyButton.addEventListener(
-    "click",
-    onSubmitReply(textarea, comment.id)
-  )
+  submitReplyButton.addEventListener("click", onSubmitReply(replyTextarea, commentId))
 
   const cancelReplyButton = document.createElement("button")
-
   cancelReplyButton.innerHTML = "cancel"
   cancelReplyButton.setAttribute("id", "reply-cancel-button")
-  cancelReplyButton.addEventListener("click", clearReply)
 
-  parentElement.insertBefore(textarea, e.target)
-  parentElement.insertBefore(submitReplyButton, e.target)
-  parentElement.insertBefore(cancelReplyButton, e.target)
-  console.log(`reply to ${comment.id}`, parentElement)
+  const parentElement = target.parentElement
+  parentElement.classList.add("is-reply")
+  parentElement.insertBefore(replyTextarea, target)
+  parentElement.insertBefore(nameLabel, target)
+  parentElement.insertBefore(nameInput, target)
+  parentElement.insertBefore(submitReplyButton, target)
+  parentElement.insertBefore(cancelReplyButton, target)
+
+  clearReply = () => {
+    parentElement.classList.remove("is-reply")
+    replyTextarea.remove()
+    submitReplyButton.remove()
+    cancelReplyButton.remove()
+    nameInput.remove()
+    nameLabel.remove()
+  }
+
+  cancelReplyButton.addEventListener("click", clearReply)
+}
+
+const onReplyToComment = comment => e => {
+  clearReply()
+  insertReplyInput(comment.id, e.target)
+
+  console.log(`reply to ${comment.id}`, e.target.parentElement)
 }
 
 const attachComment = (comment, elem) => {
@@ -124,7 +140,7 @@ const attachComment = (comment, elem) => {
   commentDisplay.appendChild(commentText)
 
   const replyCommentButton = document.createElement("button")
-  replyCommentButton.innerText = "comment"
+  replyCommentButton.innerText = "reply"
   replyCommentButton.classList.add("comment-button")
   commentDisplay.appendChild(replyCommentButton)
 
@@ -186,6 +202,8 @@ const onReceiveDiscussion = discussion => {
   else commentUL.appendChild(replyLI)
 
   replyLI.appendChild(replyTopicButton)
+
+  insertReplyInput(discussion.id, replyTopicButton)
 }
 
 const onReceiveTopics = (topics = []) => {
@@ -313,7 +331,6 @@ const setup = async (
       tryCreatingTopic(discussionId, title)
     } else setErrorStatus(err)
   })
-  // getAllTopics().then(onReceiveTopics, setStatus)
 }
 
 setup()
