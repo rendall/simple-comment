@@ -6,18 +6,6 @@ _Simple Comment_ allows visitors to your web pages to leave and read comments. I
 
 Nearly there! Steps to minimum viable product (MVP):
 
-### To be done
-
-- Visitor can post anonymously
-  - Comment includes temporary user
-  - Spam prevention measures
-- Moderator can hold posts for approval
-  - Can change policy
-- Visitor can claim ownership over anonymous posts
-  - Temporary uuid
-- Minimal script to add Simple Comment functionality to any webpage
-- Working example on Github pages
-
 ### Done!
 
 - API works entirely as expected
@@ -32,6 +20,18 @@ Nearly there! Steps to minimum viable product (MVP):
     - The `Origin` must be on the `Access-Control-Allow-Origin` list
 - Setup instructions
   - Are complicated but work when followed
+
+### To be done
+
+- Visitor can post anonymously
+  - Comment includes temporary user
+  - Spam prevention measures
+- Moderator can hold posts for approval
+  - Can change policy
+- Visitor can claim ownership over anonymous posts
+  - Temporary uuid
+- Minimal script to add Simple Comment functionality to any webpage
+- Working example on Github pages
 
 ### Nice to haves
 
