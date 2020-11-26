@@ -283,8 +283,32 @@ describe("Full API service test", () => {
   // post to /user should return user and 201 User created
   test("POST to /user", () => {
     const authUser = getAuthUser(u => u.isAdmin)
+    return service.userPOST(newUserTest, authUser.id).then(value => {
+      expect(value).toHaveProperty("statusCode", 201)
+      expect(value).toHaveProperty("body")
+      expect(value.body).toHaveProperty("email", newUserTest.email)
+    })
+  })
+  // POST to /user with id uuid with admin credentials should fail
+  test("POST to /user with id uuid with admin credentials", () => {
+    const guestUser = { ...newUserTest, id: uuidv4() }
+    const authUser = getAuthUser(u => u.isAdmin)
+    expect.assertions(1)
     return service
-      .userPOST(newUserTest, authUser.id)
+      .userPOST(guestUser, authUser.id)
+      .catch(error => expect(error).toHaveProperty("statusCode", 403))
+  })
+  // POST to /user with id uuid with same credentials should succeed
+  test("POST to /user with id uuid with same credentials", () => {
+    const id = uuidv4()
+    const guestUser = {
+      id,
+      name: randomString(alphaUserInput),
+      password: randomString(),
+      email: createRandomEmail()
+    }
+    return service
+      .userPOST(guestUser, id)
       .then(value => expect(value).toHaveProperty("statusCode", 201))
   })
   // post to /user without credentials should return according to policy
@@ -357,6 +381,22 @@ describe("Full API service test", () => {
         .catch(error => expect(error).toHaveProperty("statusCode", 403))
     })
   }
+  test("POST to /user with a guestUserId as targetId should fail", () => {
+    const newUser = {
+      ...createRandomUser(),
+      id: uuidv4(),
+      password: randomString(),
+      email: createRandomEmail(),
+      isAdmin: false,
+      isVerified: false
+    }
+
+    const adminUser = getAuthUser(u => u.isAdmin)
+    expect.assertions(1)
+    return service
+      .userPOST(newUser, adminUser.id)
+      .catch(value => expect(value).toHaveProperty("statusCode", 403))
+  })
   // post to /user with existing username should return 409 user exists
   test("POST to /user with identical credentials", () => {
     const authUser = getAuthUser(u => u.isAdmin)
@@ -521,6 +561,43 @@ describe("Full API service test", () => {
         expect(res.body).toHaveProperty("isVerified", true)
       })
   })
+  // put to /user/{userId} with userId as uuid should fail
+  test("PUT to /user/{userId} with userId as uuid should fail", () => {
+    const tUser = getTargetUser(u => !u.isAdmin && !u.isVerified)
+    const targetUser = { ...tUser, id: uuidv4() }
+    const adminAuthUser = getAuthUser(u => u.isAdmin)
+    const updatedUser: User = {
+      ...targetUser,
+      name: randomString(alphaUserInput, 25),
+      isAdmin: true,
+      isVerified: true
+    }
+    expect.assertions(1)
+    return service
+      .userPUT(updatedUser.id, updatedUser, adminAuthUser.id)
+      .catch(error => {
+        expect(error).toHaveProperty("statusCode", 403)
+      })
+  })
+
+  test("PUT to /user/{userId} with userId as uuid should fail", () => {
+    const tUser = getTargetUser(u => !u.isAdmin && !u.isVerified)
+    const targetUser = { ...tUser, id: uuidv4() }
+    const adminAuthUser = getAuthUser(u => u.isAdmin)
+    const updatedUser: User = {
+      ...targetUser,
+      name: randomString(alphaUserInput, 25),
+      isAdmin: true,
+      isVerified: true
+    }
+    expect.assertions(1)
+    return service
+      .userPUT(updatedUser.id, updatedUser, adminAuthUser.id)
+      .catch(error => {
+        expect(error).toHaveProperty("statusCode", 403)
+      })
+  })
+
   // put to /user/{userId} where userId does not exist (and admin credentials) should return 404
   test("PUT to /user/{userId} where userId does not exist and admin credentials", () => {
     const targetUser = createRandomUser()
@@ -816,7 +893,7 @@ describe("Full API service test", () => {
 
   // Topic Create
   // post to /topic with no credentials should return 401
-  if (!policy.canPublicCreateTopic)
+  if (!policy.canFirstVisitCreateTopic)
     test("POST to /topic with no credentials and policy.canPublicCreateTopic===false", () => {
       expect.assertions(2)
       const newTopic = createRandomTopic()

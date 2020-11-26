@@ -30,20 +30,25 @@
     "webpack-cli": "^4.2.0"
   },
   "scripts": {
-    "build": "yarn run build:netlify",
-    "build:netlify": "yarn run build:ts && netlify-lambda build ./netlify-functions",
-    "build:ts": "tsc -p tsconfig.netlify.functions.json --listEmittedFiles",
+    "build": "yarn run build:backend && yarn run build:frontend",
+    "build:backend": "yarn run build:netlify",
+    "build:frontend": "tsc --listEmittedFiles",
+    "build:netlify": "tsc -p tsconfig.netlify.functions.json --listEmittedFiles && netlify-lambda build ./netlify-functions",
     "postbuild": "rimraf ./netlify-functions && rimraf ./lib",
+    "posttest": "rimraf ./globalConfig.json",
     "prebuild": "rimraf ./functions",
-    "start:frontend": "http-server ./dist --proxy http://localhost:9000",
-    "start": "yarn run build:ts && netlify-lambda serve ./netlify-functions",
+    "start": "start:backend",
+    "start:backend": "yarn run build:backend && netlify-lambda serve ./netlify-functions",
+    "start:frontend": "yarn run build:frontend && http-server ./dist --proxy http://localhost:9000",
     "test": "jest",
-    "test:watch": "jest --watch --noStackTrace",
-    "posttest": "rimraf ./globalConfig.json"
+    "watch:test": "jest --watch --noStackTrace",
+    "watch:backend": "tsc -p tsconfig.netlify.functions.json --listEmittedFiles --watch",
+    "watch:frontend": "tsc --listEmittedFiles --watch"
   },
   "dependencies": {
     "dotenv": "^8.2.0",
     "jsonwebtoken": "^8.5.1",
-    "mongodb": "^3.2.3"
+    "mongodb": "^3.2.3",
+    "uuid": "8.3.1"
   }
 }

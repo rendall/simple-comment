@@ -69,12 +69,13 @@ Nearly there! Steps to minimum viable product (MVP):
 - GraphQL endpoint
 - GDPR compliance
   - Users can view and delete their own data without moderator
-- Support for other databases and hosting services
 - Moderators can restrict visitor read and write access
   - IP whitelists, graylists and blacklists
   - User whitelists, graylists and blacklists
 - User self-verification
 - Optional connection to the Fediverse
+- Support for other databases (PostgreSQL, Firestore, CockroachDB, etc) and hosting services (Heroku, AWS Lambda, GCS)
+- Support Web Authentication API <https://w3c.github.io/webauthn/>
 
 ## Setup
 

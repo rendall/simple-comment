@@ -161,6 +161,14 @@ export abstract class Service {
     })
 
   /**
+   * returns an authenticated guest token
+   **/
+  abstract gauthGET = () =>
+    new Promise<AuthToken | Error>((resolve, reject) => {
+      reject(this.abstractError)
+    })
+
+  /**
    * Create a discussion
    *
    * topicId
@@ -219,7 +227,7 @@ export abstract class Service {
       reject(this.abstractError)
     })
 
-  abstract verifyGET = (claim: TokenClaim | null) =>
+  abstract verifyGET = (authToken: AuthToken) =>
     new Promise<Success<TokenClaim> | Error>((resolve, reject) => {
       reject(this.abstractError)
     })

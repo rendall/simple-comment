@@ -19,7 +19,8 @@ import {
   getNewUserInfo,
   getTargetId,
   getUpdatedUserInfo,
-  getUserId
+  getUserId,
+  isGuestId
 } from "../lib/utilities"
 dotenv.config()
 
@@ -30,7 +31,7 @@ const service: MongodbService = new MongodbService(
 
 const getAllowHeaders = (event: APIGatewayEvent) => {
   const allowedMethods = {
-    "Access-Control-Allow-Methods": "POST,GET,OPTION,PUT,DELETE,OPTION"
+    "Access-Control-Allow-Methods": "POST,GET,PUT,DELETE,OPTION"
   }
   const allowedOriginHeaders = getAllowOriginHeaders(
     event.headers,
@@ -56,6 +57,8 @@ export const handler = async (
 
   const authUserId = getUserId(event.headers)
   const targetId = getTargetId(event.path, "user") as UserId
+
+  const isGuest = isGuestId(authUserId)
 
   const handleMethod = (
     method
