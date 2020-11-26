@@ -44,6 +44,10 @@ export const error404CommentNotFound: Error = {
   statusCode: 404,
   body: "Comment not found"
 }
+export const error404NotFound: Error = {
+  statusCode: 404,
+  body: "Not found"
+}
 export const error404TopicNotFound: Error = {
   statusCode: 404,
   body: "Topic not found"

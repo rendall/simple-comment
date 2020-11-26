@@ -1,3 +1,4 @@
+import { validate as isUuid } from "uuid"
 import * as jwt from "jsonwebtoken"
 import * as dotenv from "dotenv"
 import {
@@ -18,9 +19,19 @@ import {
 
 dotenv.config()
 
+export const REALM = "Access to restricted resources"
+const AUTHORIZATION_HEADER = "Authorization"
+const BEARER_SCHEME = "Bearer"
+const BASIC_SCHEME = "Basic"
+const ACCESS_CONTROL_ALLOW_ORIGIN = "Access-Control-Allow-Origin"
+const EXPIRED_AUTHENTICATE_HEADER = {
+  "WWW-Authenticate": `Basic realm="${REALM}", error="invalid_token", error_description="The access token expired at ${null}", charset="UTF-8"`
+}
+
 /**
- * Return object with properties in props removed
+ * Returns true if userId is a guest id
  */
+export const isGuestId = (userId: UserId) => isUuid(userId)
 
 /**
  * These are user properties that are unsafe to return to admins
@@ -82,11 +93,6 @@ export const isPublicSafeUser = (user: Partial<User>): user is PublicSafeUser =>
     key => !publicUnsafeUserProperties.includes(key)
   )
 
-const AUTHORIZATION_HEADER = "Authorization"
-const BEARER_SCHEME = "Bearer"
-const BASIC_SCHEME = "Basic"
-const ACCESS_CONTROL_ALLOW_ORIGIN = "Access-Control-Allow-Origin"
-
 const hasHeader = (headers: { [header: string]: string }, header: string) =>
   Object.keys(headers).some(
     h => h.toLowerCase() === header.toLowerCase() && headers[h] !== undefined
@@ -141,7 +147,6 @@ const parseAuthHeaderValue = (
         credentials: authHeaderValue.slice(spaceIndex + 1)
       }
 
-export const REALM = "Access to restricted resources"
 /** nowPlusMinutes returns the numericDate `minutes` from now */
 export const nowPlusMinutes = (minutes: number): number =>
   new Date(new Date().valueOf() + minutes * 60 * 1000).valueOf()
@@ -238,12 +243,17 @@ export const getTokenClaim = (headers: {
     ? getCookieToken(headers)
     : getAuthCredentials(getAuthHeaderValue(headers))
 
+  //TODO: This will actually throw an error if the token has expired, and needs to be handled
+  // the error.name is "TokenExpiredError" q.v. https://github.com/auth0/node-jsonwebtoken#errors--codes
   const claim: TokenClaim = jwt.verify(token, process.env.JWT_SECRET) as {
     user: UserId
     exp: number
   }
+
+  //TODO: This isn't really a thing because jwt.verify will have thrown an error
   const isExpired = claim.exp <= new Date().valueOf()
 
+  // we probably need to return an Error type of some sort
   if (isExpired) return null
 
   return claim

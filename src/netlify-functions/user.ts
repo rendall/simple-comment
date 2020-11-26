@@ -19,7 +19,8 @@ import {
   getNewUserInfo,
   getTargetId,
   getUpdatedUserInfo,
-  getUserId
+  getUserId,
+  isGuestId
 } from "../lib/utilities"
 dotenv.config()
 
@@ -56,6 +57,8 @@ export const handler = async (
 
   const authUserId = getUserId(event.headers)
   const targetId = getTargetId(event.path, "user") as UserId
+
+  const isGuest = isGuestId(authUserId)
 
   const handleMethod = (
     method

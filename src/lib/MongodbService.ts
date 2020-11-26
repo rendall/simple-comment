@@ -25,7 +25,6 @@ import {
   FindOneOptions,
   InsertOneWriteOpResult,
   MongoClient,
-  UpdateWriteOpResult,
   WithId
 } from "mongodb"
 import { Service } from "./Service"
@@ -33,6 +32,7 @@ import {
   adminOnlyModifiableUserProperties,
   isComment,
   isDeleted,
+  isGuestId,
   isDeletedComment,
   toAdminSafeUser,
   toPublicSafeUser,
@@ -67,10 +67,11 @@ import {
   success202TopicDeleted,
   success202UserDeleted,
   success204CommentUpdated,
+  success204NoContent,
   success204UserUpdated
 } from "./messages"
 import { comparePassword, getAuthToken, hashPassword, uuidv4 } from "./crypt"
-
+import * as jwt from "jsonwebtoken"
 export class MongodbService extends Service {
   private isProduction = process.env.SIMPLE_COMMENT_MODE === "production"
   private _client: MongoClient
@@ -158,7 +159,16 @@ export class MongodbService extends Service {
   userPOST = (newUser: NewUser, authUserId?: UserId) =>
     new Promise<Success<AdminSafeUser> | Error>(async (resolve, reject) => {
       if (!authUserId && !policy.canPublicCreateUser) {
-        reject({ error401UserNotAuthenticated })
+        reject(error401UserNotAuthenticated)
+        return
+      }
+
+      if (
+        !policy.canPublicCreateUser &&
+        isGuestId(authUserId) &&
+        !policy.canGuestCreateUser
+      ) {
+        reject(error401UserNotAuthenticated)
         return
       }
 
@@ -167,12 +177,23 @@ export class MongodbService extends Service {
         return
       }
 
+      // This is a necessary check because the moderator creation flow is outside of the normal user creation flow
       if (newUser.id === process.env.SIMPLE_COMMENT_MODERATOR_ID) {
         reject(error403ForbiddenToModify)
         return
       }
 
-      if (!newUser.password) {
+      // Only the guest id with the same credential can create a guest user
+      if (isGuestId(newUser.id) && authUserId !== newUser.id) {
+        reject({
+          ...error403Forbidden,
+          body: "New user id must not be in a uuid format"
+        })
+        return
+      }
+
+      // Guests do not need and cannot have a password, because they are identified only by credentials
+      if (!isGuestId(newUser.id) && !newUser.password) {
         reject(error400PasswordMissing)
         return
       }
@@ -180,7 +201,10 @@ export class MongodbService extends Service {
       const users: Collection<User> = (await this.getDb()).collection("users")
       const authUser = await users.find({ id: authUserId }).limit(1).next()
 
-      if (authUserId && !authUser) {
+      const isValidGuest = isGuestId(authUserId) && policy.canGuestCreateUser
+      const isUnknownUser = !isValidGuest && authUserId && !authUser
+
+      if (isUnknownUser) {
         reject({
           ...error404UserUnknown,
           body: "Authenticating user is unknown"
@@ -193,7 +217,15 @@ export class MongodbService extends Service {
       )
 
       if (hasAdminOnlyProps && (!authUser || !authUser.isAdmin)) {
-        reject({ ...error403ForbiddenToModify })
+        const adminOnlyProp = Object.keys(newUser).find((prop: keyof User) =>
+          adminOnlyModifiableUserProperties.includes(prop)
+        )
+        // It's possible that revealing which props are admin-only is a security risk,
+        // but on the other hand, the code is open-source so it probably makes no difference
+        reject({
+          ...error403ForbiddenToModify,
+          body: `Forbidden to modify ${adminOnlyProp}`
+        })
         return
       }
 
@@ -204,8 +236,14 @@ export class MongodbService extends Service {
         return
       }
 
-      const hash = await hashPassword(newUser.password)
-      const user: User = { ...toAdminSafeUser(newUser), hash } as User
+      // A guest user can never log in, so do not have hash
+      const hash = isGuestId(newUser.id)
+        ? ""
+        : await hashPassword(newUser.password)
+      const adminSafeUser = toAdminSafeUser(newUser)
+      const user: User = isGuestId(newUser.id)
+        ? adminSafeUser
+        : ({ ...adminSafeUser, hash } as User)
 
       users
         .insertOne(user)
@@ -221,15 +259,25 @@ export class MongodbService extends Service {
    * userId byte[]
    * returns User
    **/
-  userGET = (userId?: UserId, authUserId?: UserId) =>
+  userGET = (targetUserId?: UserId, authUserId?: UserId) =>
     new Promise<Success<PublicSafeUser | AdminSafeUser> | Error>(
       async (resolve, reject) => {
+        if (
+          (!authUserId && !policy.canPublicReadUser) ||
+          (isGuestId(authUserId) &&
+            !policy.canGuestReadUser &&
+            !policy.canPublicReadUser)
+        ) {
+          reject(error401UserNotAuthenticated)
+          return
+        }
+
         const users: Collection<User> = (await this.getDb()).collection("users")
-        const foundUser = await users.find({ id: userId }).limit(1).next()
+        const foundUser = await users.find({ id: targetUserId }).limit(1).next()
 
         if (!foundUser) {
           const isModerator =
-            authUserId === userId &&
+            authUserId === targetUserId &&
             authUserId === process.env.SIMPLE_COMMENT_MODERATOR_ID
 
           if (!isModerator) {
@@ -243,7 +291,7 @@ export class MongodbService extends Service {
             process.env.SIMPLE_COMMENT_MODERATOR_PASSWORD
           )
           const adminUser: User = {
-            id: userId,
+            id: targetUserId,
             name: "Simple Comment Moderator",
             isAdmin: true,
             hash,
@@ -296,6 +344,11 @@ export class MongodbService extends Service {
     new Promise<Success<AdminSafeUser> | Error>(async (resolve, reject) => {
       if (!authUserId) {
         reject(error401UserNotAuthenticated)
+        return
+      }
+
+      if (isGuestId(targetId)) {
+        reject({ ...error403Forbidden, body: "Guest users cannot be edited" })
         return
       }
 
@@ -369,12 +422,12 @@ export class MongodbService extends Service {
    **/
   userDELETE = (userId: UserId, authUserId?: UserId) =>
     new Promise<Success | Error>(async (resolve, reject) => {
-      const users: Collection<User> = (await this.getDb()).collection("users")
-
-      if (!authUserId) {
+      if (!authUserId || isGuestId(authUserId)) {
         reject(error401UserNotAuthenticated)
         return
       }
+
+      const users: Collection<User> = (await this.getDb()).collection("users")
 
       //TODO: username admin as .env variable
       if (userId === process.env.SIMPLE_COMMENT_MODERATOR_ID) {
@@ -531,7 +584,7 @@ export class MongodbService extends Service {
         return
       }
 
-      if (!authUserId && !policy.canPublicRead) {
+      if (!authUserId && !policy.canPublicReadDiscussion) {
         reject(error401UserNotAuthenticated)
         return
       }
@@ -541,7 +594,16 @@ export class MongodbService extends Service {
         ? await users.findOne({ id: authUserId })
         : null
 
-      if (!authUser && !policy.canPublicRead) {
+      if (!authUser && !policy.canPublicReadDiscussion) {
+        reject(error401UserNotAuthenticated)
+        return
+      }
+
+      if (
+        isGuestId(authUserId) &&
+        !policy.canPublicReadDiscussion &&
+        !policy.canGuestReadDiscussion
+      ) {
         reject(error401UserNotAuthenticated)
         return
       }
@@ -868,6 +930,17 @@ export class MongodbService extends Service {
     })
 
   /**
+   * returns AuthToken with a guest id
+   *
+   **/
+  gauthGET = () =>
+    new Promise<Success<AuthToken> | Error>(resolve => {
+      const guestUserId = uuidv4()
+      const gauthToken = getAuthToken(guestUserId)
+      resolve({ ...success200OK, body: gauthToken })
+    })
+
+  /**
    * Create a discussion
    *
    * Discussion
@@ -878,7 +951,7 @@ export class MongodbService extends Service {
    **/
   topicPOST = (newTopic: NewTopic, authUserId?: UserId) =>
     new Promise<Success<Topic> | Error>(async (resolve, reject) => {
-      if (!policy.canPublicCreateTopic && !authUserId) {
+      if (!policy.canFirstVisitCreateTopic && !authUserId) {
         reject(error401UserNotAuthenticated)
         return
       }
@@ -891,7 +964,7 @@ export class MongodbService extends Service {
         return
       }
 
-      if (!policy.canPublicCreateTopic && !authUser.isAdmin) {
+      if (!policy.canFirstVisitCreateTopic && !authUser.isAdmin) {
         reject(error403UserNotAuthorized)
         return
       }
@@ -973,7 +1046,7 @@ export class MongodbService extends Service {
    **/
   topicGET = (targetId: TopicId, authUserId?: UserId) =>
     new Promise<Success<Discussion> | Error>(async (resolve, reject) => {
-      if (!authUserId && !policy.canPublicRead) {
+      if (!authUserId && !policy.canPublicReadDiscussion) {
         reject(error401UserNotAuthenticated)
         return
       }
@@ -981,7 +1054,7 @@ export class MongodbService extends Service {
       const users: Collection<User> = (await this.getDb()).collection("users")
       const authUser = await users.findOne({ id: authUserId })
 
-      if (!authUser && !policy.canPublicRead) {
+      if (!authUser && !policy.canPublicReadDiscussion) {
         reject(error404UserUnknown)
         return
       }
@@ -1155,7 +1228,7 @@ export class MongodbService extends Service {
    **/
   topicListGET = (authUserId?: UserId) =>
     new Promise<Success<Topic[]> | Error>(async (resolve, reject) => {
-      if (!authUserId && !policy.canPublicRead) {
+      if (!authUserId && !policy.canPublicReadDiscussion) {
         reject(error401UserNotAuthenticated)
         return
       }
@@ -1163,7 +1236,7 @@ export class MongodbService extends Service {
       const users: Collection<User> = (await this.getDb()).collection("users")
       const authUser = await users.find({ id: authUserId }).limit(1)
 
-      if (!authUser && !policy.canPublicRead) {
+      if (!authUser && !policy.canPublicReadDiscussion) {
         reject(error404UserUnknown)
         return
       }
@@ -1328,16 +1401,36 @@ export class MongodbService extends Service {
     new Promise<Success>((resolve, reject) => {
       const pastDate = new Date(0).toUTCString()
       const COOKIE_HEADER = {
-        "Set-Cookie": `simple_comment_token=logged-out; path=/; HttpOnly; Expires=${pastDate}; SameSite${this.isProduction ? "; Secure" : ""
-          }`
+        "Set-Cookie": `simple_comment_token=logged-out; path=/; HttpOnly; Expires=${pastDate}; SameSite${
+          this.isProduction ? "; Secure" : ""
+        }`
       }
       resolve({ ...success202LoggedOut, headers: COOKIE_HEADER })
     })
 
-  verifyGET = (claim: TokenClaim | null) =>
+  verifyGET = (token?: AuthToken) =>
     new Promise<Success<TokenClaim> | Error>((resolve, reject) => {
-      if (claim) return resolve({ ...success200OK, body: claim })
-      else reject(error404UserUnknown)
+      try {
+        const claim: TokenClaim = jwt.verify(
+          token,
+          process.env.JWT_SECRET
+        ) as TokenClaim
+        return resolve({ ...success200OK, body: claim })
+      } catch (error) {
+        console.error(error)
+        switch (error.name) {
+          case "TokenExpiredError":
+            resolve({
+              ...error403Forbidden,
+              body: `token expired at ${error.expiredAt}`
+            })
+            break
+
+          default:
+            resolve(error400BadRequest)
+            break
+        }
+      }
     })
 
   close = async () => {

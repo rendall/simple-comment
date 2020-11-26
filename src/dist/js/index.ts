@@ -1,130 +1,206 @@
-/**
+/*
  * Simple Comment demo
- * 
- * A very basic demo of Simple Comment capabilities.
- **/
-import type { AdminSafeUser, CommentId } from "../../lib/simple-comment"
+ *
+ * This illustrates a prototypical user flow
+ *
+ * - Visitor visits page
+ * - A request to `/verify` endpont returns a claim (status code 200  and login) or not (401)
+ * - A request to `/topic/{id}` returns a topic (200) or not (404). A topic is a "root" comment, to which top-level comments are made
+ *   - If 404, submit a POST (create) request
+ *     - If the user has permissions OR policy allows, the topic is created
+ *     - Typically, policy is allowed to be created by non-privs under specific situations
+ *       - Designed so that admin does not have to create every topic
+ *       - (Typically) Allowed only if the topic id is based on the URL and the Referer header is correct
+ *     - If the create request is granted, continue:
+ * - What is returned is a Discussion, which is a Topic (root comment) + all replies (child comments)
+ *
+ * If the user submits a comment and credentials do not exist:
+ *   - Validate information client-side
+ *   - Visit to `/gauth` acquires a guest credential
+ *   - POST to /user with guest credential and user info creates a guest user
+ *     - Validate information server-side
+ *   - POST to /comment with guest credential
+ *
+ * This file relies on the apiClient library, which is a group of async functions that connect to the API
+ *
+ */
+import type {
+  AdminSafeUser,
+  CommentId,
+  Discussion,
+  ResolvedResponse,
+  TokenClaim
+} from "../../lib/simple-comment"
 import {
   createNewTopic,
   deleteAuth,
-  getCurrentUser,
+  verifyUser,
   getDefaultDiscussionId,
   getDiscussion,
   getOneTopic,
   getOneUser,
   postAuth,
   postComment,
+  getGuestToken,
+  isGuestId,
+  createGuestUser,
+  isValidEmail,
+  createUser
 } from "./apiClient.js"
 
-const clearStatus = () => {
-  document.querySelector("#status-display").innerHTML = ""
-  document.querySelector("#status-display").classList.remove("error")
-}
-
-const setStatus = (message, isError = false) => {
-  if (typeof message !== "string") {
-    if (typeof message.text === "function") {
-      message.text().then(msg => setStatus(msg, isError))
-    } else return setStatus(JSON.stringify(message), isError)
-  } else {
-    document.querySelector("#status-display").classList.toggle("error", isError)
-    document.querySelector("#status-display").innerHTML = message
-    console.error(message)
-  }
-}
-
-const setErrorStatus = message => {
-  document.querySelector("#user-display").classList.remove("is-logging-in")
-  setStatus(message, true)
-}
-
 let currUser: AdminSafeUser
-
-const setUserStatus = (user?: AdminSafeUser) => {
-  const userName = user
-    ? `Logged in as: ${user.name} ${user.isAdmin ? "(admin)" : ""}`
-    : "Not logged in"
-  if (user && user.isAdmin)
-    document.querySelector("body").classList.add("is-admin")
-  else document.querySelector("body").classList.remove("is-admin")
-
-  document.querySelector("#user-name").innerHTML = userName
-
-  const userDisplay = document.querySelector("#user-display")
-  userDisplay.classList.remove("is-logging-in")
-  userDisplay.classList.toggle("is-logged-in", !!user)
-
-  currUser = user
-  const nameInput = document.querySelector("#name-input") as HTMLInputElement
-  if (nameInput) if (user) nameInput.value = user.name
-  else nameInput.value = ""
-}
-
 let clearReply = () => { }
 
-const onSubmitReply = (textarea, targetId) => e => {
-  const text = textarea.value
+// string type guard
+const isString = (x: any): x is string => typeof x === "string"
+// Response type guard
+const isResponse = (
+  res: string | ResolvedResponse | Response
+): res is Response =>
+  !isString(res) && "text" in res && typeof res.text === "function"
+// Resolved Response type guard
+const isResolvedResponse = (
+  res: string | ResolvedResponse | Response
+): res is Response => !isString(res) && "body" in res
 
-  const onPostCommentResponse = comment => {
-    attachComment(comment, textarea.parentElement)
-    clearReply()
-    console.log({ comment })
-  }
+/* UI methods
+ * -----------
+ * Methods that manipulate the DOM
+ * Swap these out for your favored front-end framework
+ */
 
-  postComment(targetId, text).then(onPostCommentResponse).catch(setErrorStatus)
-}
-
+/* insertReplyInput
+ * Creates UI for replying to a comment and inserts it into the
+ * document above target element */
 const insertReplyInput = (commentId: CommentId, target: Element) => {
+  const userInfoGroup = document.createElement("div")
+  userInfoGroup.classList.add("user-info")
 
   const nameLabel = document.createElement("label")
   nameLabel.setAttribute("for", "name-input")
-  nameLabel.innerHTML = "Name"
+  nameLabel.innerHTML = "Name:"
+  userInfoGroup.appendChild(nameLabel)
 
   const nameInput = document.createElement("input")
   nameInput.setAttribute("id", "name-input")
-  nameInput.setAttribute("placeholder", "Enter the name that will appear next to your comments")
+  nameInput.setAttribute("placeholder", "What's your name?")
   if (currUser) nameInput.value = currUser.name
+  userInfoGroup.appendChild(nameInput)
+
+  const emailLabel = document.createElement("label")
+  emailLabel.setAttribute("for", "email-input")
+  emailLabel.innerHTML = "Email:"
+  userInfoGroup.appendChild(emailLabel)
+
+  const emailInput = document.createElement("input")
+  emailInput.setAttribute("id", "email-input")
+  emailInput.setAttribute("placeholder", "What's your email?")
+  if (currUser) emailInput.value = currUser.email
+  userInfoGroup.appendChild(emailInput)
 
   const replyTextarea = document.createElement("textarea")
   replyTextarea.setAttribute("id", "reply-textarea")
+  replyTextarea.setAttribute("placeholder", "What's on your mind?")
+
+  const buttonGroup = document.createElement("div")
+  buttonGroup.classList.add("button-group")
 
   const submitReplyButton = document.createElement("button")
   submitReplyButton.innerHTML = "submit"
   submitReplyButton.setAttribute("id", "reply-submit-button")
-  submitReplyButton.addEventListener("click", onSubmitReply(replyTextarea, commentId))
-
-  const cancelReplyButton = document.createElement("button")
-  cancelReplyButton.innerHTML = "cancel"
-  cancelReplyButton.setAttribute("id", "reply-cancel-button")
+  submitReplyButton.addEventListener(
+    "click",
+    onCommentSubmit({ replyTextarea, nameInput, emailInput }, commentId)
+  )
+  buttonGroup.appendChild(submitReplyButton)
 
   const parentElement = target.parentElement
   parentElement.classList.add("is-reply")
   parentElement.insertBefore(replyTextarea, target)
-  parentElement.insertBefore(nameLabel, target)
-  parentElement.insertBefore(nameInput, target)
-  parentElement.insertBefore(submitReplyButton, target)
-  parentElement.insertBefore(cancelReplyButton, target)
+  parentElement.insertBefore(userInfoGroup, target)
+  parentElement.insertBefore(buttonGroup, target)
 
   clearReply = () => {
     parentElement.classList.remove("is-reply")
     replyTextarea.remove()
     submitReplyButton.remove()
-    cancelReplyButton.remove()
     nameInput.remove()
     nameLabel.remove()
+    emailInput.remove()
+    emailLabel.remove()
+    buttonGroup.remove()
   }
-
-  cancelReplyButton.addEventListener("click", clearReply)
 }
 
-const onReplyToComment = comment => e => {
-  clearReply()
-  insertReplyInput(comment.id, e.target)
+/* setupSignup
+ * Add event listener and handler for signup flow */
+const setupSignup = () => {
+  const signupButton = document.querySelector(
+    "#sign-up-button"
+  ) as HTMLButtonElement
+  const setSignupStatus = (message: string = "", isError: boolean = false) => {
+    document
+      .querySelector("#sign-up-status")
+      .classList.toggle("is-error", isError)
+    document.querySelector("#sign-up-status").innerHTML = message
+  }
+  const getElem = id => document.querySelector(`#sign-up-${id}`) as HTMLElement
+  const getValue = id => (getElem(id) as HTMLInputElement).value
+  const clearSignupForm = () =>
+    Array.from(getElem("form").querySelectorAll("input")).forEach(
+      i => (i.value = "")
+    )
 
-  console.log(`reply to ${comment.id}`, e.target.parentElement)
+  signupButton.addEventListener("click", () => {
+    setSignupStatus("... please wait ...")
+
+    const id = getValue("userid")
+    if (id === "") return setSignupStatus("Username is required", true)
+    if (!id.match(/[A-Za-z0-9]{5,20}/))
+      return setSignupStatus(
+        `Invalid username '${id}'. ` +
+        "The username must contain only letters or numbers and be between 5 and 20 characters. Go hog-wild on the display name, though!",
+        true
+      )
+
+    const password = getValue("password")
+    if (password === "") return setSignupStatus("Password is required", true)
+
+    const password2 = getValue("password-2")
+    if (password !== password2)
+      return setSignupStatus("Password fields must both match", true)
+
+    const email = getValue("email")
+    if (!isValidEmail(email))
+      return setSignupStatus("Email must be valid", true)
+
+    const name = getValue("display-name")
+    if (name.trim() === "")
+      (getElem("display-name") as HTMLInputElement).value = id
+
+    createUser({ id, name, email, password })
+      .then(resp => {
+        if (resp.status === 201)
+          setSignupStatus(`User '${name}' created. Signing in...`)
+        else throw Error(`Unknown response code ${resp.status} from POST /user`)
+        clearSignupForm()
+        return resp
+      })
+      .then(() =>
+        postAuth(id, password).then(updateLoginStatus).catch(setErrorStatus)
+      )
+      .catch((err: ResolvedResponse) =>
+        setSignupStatus(
+          `Error ${err.status} ${err.statusText}: ${err.body}`,
+          true
+        )
+      )
+  })
 }
 
-const attachComment = (comment, elem) => {
+/* appendComment
+ * Creates the UI for displaying a single comment, and appends it to HTMLElement `elem` */
+const appendComment = (comment, elem) => {
   const commentDisplay = document.createElement("div")
   commentDisplay.classList.add("comment-display")
   elem.appendChild(commentDisplay)
@@ -146,10 +222,124 @@ const attachComment = (comment, elem) => {
 
   replyCommentButton.addEventListener("click", onReplyToComment(comment))
 }
+/* setupUserLogin
+ * Adds eventlisteners to the login UI */
+const setupUserLogin = () => {
+  const logoutButton = document.querySelector("#log-out-button")
+  logoutButton.addEventListener("click", onLogoutClick)
+  const loginButton = document.querySelector("#log-in-button")
+  loginButton.addEventListener("click", onLoginClick)
+  updateLoginStatus()
+}
 
-const onReplyToTopic = onReplyToComment
+// Status display methods
+/* updateLoginStatus
+ * Login status may have changed, and the display needs to change to update that */
+const updateLoginStatus = () =>
+  verifyUser()
+    .then(res => res.body as TokenClaim)
+    .then(claim => {
+      const claimUserField = document.querySelector(
+        "#claim-user"
+      ) as HTMLInputElement
+      claimUserField.value = claim.user
+      return claim
+    })
+    .then(getSelf)
+    .catch(currUserError => {
+      if (currUserError.status && currUserError.status === 401) {
+        return getGuestToken().then(updateLoginStatus)
+      } else setErrorStatus(currUserError)
+    })
 
-const onReceiveDiscussion = discussion => {
+const clearStatus = () => {
+  document.querySelector("#status-display").innerHTML = ""
+  document.querySelector("#status-display").classList.remove("error")
+  document.querySelector("body").classList.remove("is-logging-in")
+}
+
+const setStatus = (
+  message: string | ResolvedResponse | Response,
+  isError = false
+) => {
+  if (isResponse(message))
+    return message.text().then(msg => setStatus(msg, isError))
+  if (isResolvedResponse(message))
+    return setStatus(JSON.stringify(message.body), isError)
+  if (!isString(message)) return setStatus(JSON.stringify(message), isError)
+  clearStatus()
+  document.querySelector("#status-display").classList.toggle("error", isError)
+  document.querySelector("#status-display").innerHTML = message
+  if (!isError) console.log(message)
+}
+
+const setErrorStatus = (
+  error: Error | ResolvedResponse | Response | string
+) => {
+  console.error(error)
+  if (typeof error === "string") return setStatus(error, true)
+  if ("message" in error)
+    return setStatus(`${error.name}:${error.message}`, true)
+  else setStatus(error, true)
+}
+
+const setUserStatus = (user?: AdminSafeUser) => {
+  const docBody = document.querySelector("body")
+  const userName = user
+    ? `Logged in as: ${user.name} ${isGuestId(user.id) ? "(guest)" : ""}${user.isAdmin ? "(admin)" : ""
+    }`
+    : "Not logged in"
+  if (user && user.isAdmin) docBody.classList.add("is-admin")
+  else docBody.classList.remove("is-admin")
+
+  if (user && isGuestId(user.id)) docBody.classList.add("is-guest")
+  else docBody.classList.remove("is-guest")
+
+  const userNameField = document.querySelector("#user-name")
+  userNameField.innerHTML = userName
+
+  docBody.classList.remove("is-logging-in")
+  docBody.classList.toggle("is-logged-in", !!user)
+
+  currUser = user
+  const nameInput = document.querySelector("#name-input") as HTMLInputElement
+  if (nameInput) {
+    nameInput.value = !!user ? user.name : ""
+    nameInput.toggleAttribute("disabled", !!user)
+  }
+  const emailInput = document.querySelector("#email-input") as HTMLInputElement
+  if (emailInput) {
+    emailInput.value = !!user ? user.email : ""
+    emailInput.toggleAttribute("disabled", !!user)
+  }
+}
+
+/* getSelf
+ * Request information about the current user and display it */
+const getSelf = (claim: TokenClaim) =>
+  getOneUser(claim.user)
+    .then(res => res.body as AdminSafeUser)
+    .then(setUserStatus)
+    .catch(error => {
+      const isUnbornGuest = error.status === 404 && isGuestId(claim.user)
+      if (!isUnbornGuest) return setErrorStatus(error)
+      else setUserStatus()
+      // we won't create the guest user until the user submits a comment!
+    })
+
+
+/* Methods handling responses from the server
+ * -------------------------------------------
+ * When the server sends a response, these methods handle and
+ * client-side logic and display the result */
+/* onReceiveDiscussion
+ * The server has responded to a request to the `/topic/{topicId}`
+ * endpoint, requesting a single topic and its replies. This method
+ * handles the response. */
+const onReceiveDiscussion = (
+  discussionResponse: ResolvedResponse<Discussion>
+) => {
+  const discussion: Discussion = discussionResponse.body as Discussion
   const discussionDiv = document.querySelector("#discussion")
 
   while (discussionDiv.hasChildNodes()) {
@@ -168,7 +358,7 @@ const onReceiveDiscussion = discussion => {
   const threadReplies = (listItem, parentId) => {
     const comment = comments.find(c => c.id === parentId)
 
-    if (comment) attachComment(comment, listItem)
+    if (comment) appendComment(comment, listItem)
 
     const replies = comments.filter(c => c.parentId === parentId)
     const replyList = document.createElement("ul")
@@ -185,6 +375,7 @@ const onReceiveDiscussion = discussion => {
 
   const title = document.createElement("h2")
   title.innerText = discussion.title
+  title.setAttribute("id", "discussion-title")
   discussionDiv.appendChild(title)
   const replyTopicButton = document.createElement("button")
   replyTopicButton.innerText = "reply"
@@ -192,7 +383,7 @@ const onReceiveDiscussion = discussion => {
 
   replyTopicButton.addEventListener("click", onReplyToTopic(discussion))
 
-  threadReplies(discussionDiv, discussion.id)
+  if (comments) threadReplies(discussionDiv, discussion.id)
 
   const commentUL = discussionDiv.querySelector("ul")
   const replyLI = document.createElement("li")
@@ -204,14 +395,17 @@ const onReceiveDiscussion = discussion => {
   replyLI.appendChild(replyTopicButton)
 
   insertReplyInput(discussion.id, replyTopicButton)
+  setStatus("Discussion received and displayed")
 }
-
+/* onReceiveTopics
+ * The server has responded to a request to the `/topic`
+ * endpoint, requesting the entire list of current topics. This
+ * method handles the response. */
 const onReceiveTopics = (topics = []) => {
   const topicList = document.querySelector("#topic-list")
   while (topicList.hasChildNodes()) {
     topicList.removeChild(topicList.lastChild)
   }
-
   if (topics.length)
     topics.forEach(topic => {
       const listItem = document.createElement("li")
@@ -225,19 +419,84 @@ const onReceiveTopics = (topics = []) => {
     })
 }
 
+/* Methods responding to user events
+ * ---------------------------------- */
+/* onCommentSubmit
+ * The user has pressed the submit button and expects something to happen. This function handles those possiblities */
+const onCommentSubmit = (submitElems, targetId) => async e => {
+  const { replyTextarea, nameInput, emailInput } = submitElems
+  const text = replyTextarea.value
+  const name = nameInput.value
+  const email = emailInput.value
+  const isLoggedIn = document
+    .querySelector("body")
+    .classList.contains("is-logged-in")
+  // if not isLoggedIn in we need to verify some things then create a guest user
+  if (!isLoggedIn) {
+    //TODO: due validation of email and name
+    const id = (document.querySelector("#claim-user") as HTMLInputElement).value
+    const createGuestUserResult = await createGuestUser({ id, name, email })
+    // A successful createGuestUserResult would look like this:
+    // {
+    //   status: 201,
+    //   ok: true,
+    //   statusText: "Created",
+    //   body: {
+    //     id: "de066dc8-07ba-40d7-8f27-eca9c0647b37",
+    //     name: "Fang!",
+    //     email: "fang@example.net"
+    //   }
+    // }
+    if (createGuestUserResult.status === 201) updateLoginStatus()
+    else setErrorStatus(createGuestUserResult as ResolvedResponse)
+  }
+
+  const onCommentResponse = comment => {
+    appendComment(comment, text.parentElement)
+    clearReply()
+  }
+
+  postComment(targetId, text).then(onCommentResponse).catch(setErrorStatus)
+}
+
+/* onReplyToComment
+ * The user has pushed the 'reply' button adjacent to a comment. This
+ * method responds by coordinating building the UI */
+const onReplyToComment = comment => e => {
+  clearReply()
+  insertReplyInput(comment.id, e.target)
+
+  console.log(`reply to ${comment.id}`, e.target.parentElement)
+}
+
+/* onReplyToTopic
+ * The user has pushed the 'comment' button below the main topic.
+ * This method is equivalent to 'onReplyToComment', responds by
+ * coordinating building the UI. They are conceptually different,
+ * though functionally the same */
+const onReplyToTopic = onReplyToComment
+
+/* onTopicClick
+ * The user has clicked on a link for a topic, expecting to see
+ * comments. This method requests the discussion */
 const onTopicClick = e => {
   e.preventDefault()
   const topicId = e.target.id
-  getDiscussion(topicId).then(onReceiveDiscussion, setStatus)
+  getDiscussion(topicId).then(onReceiveDiscussion, setErrorStatus)
 }
 
+/* onLogoutClick
+ * The user has pressed the logout button. This method coordinates
+ * the response of deleting authentication and updating the user
+ * display */
 const onLogoutClick = e => {
   deleteAuth().then(updateLoginStatus).catch(setErrorStatus)
 }
 
-const getSelf = (userObj?: { user: string }) =>
-  getOneUser(userObj.user).then(setUserStatus).catch(setErrorStatus)
-
+/* onLoginClick
+ * The user has pressed the login button. This method coordinates
+ * validating the input and sending the authentication request to the
+ * server. */
 const onLoginClick = e => {
   const usernamevalue = (document.querySelector("#userid") as HTMLInputElement)
     .value
@@ -255,36 +514,20 @@ const onLoginClick = e => {
     return
   }
 
-  const userDisplay = document.querySelector("#user-display") as HTMLDivElement
-  userDisplay.classList.add("is-logging-in")
+  document.querySelector("body").classList.add("is-logging-in")
 
   postAuth(username, password).then(updateLoginStatus).catch(setErrorStatus)
 }
 
-const updateLoginStatus = () =>
-  getCurrentUser()
-    .then(getSelf)
-    .catch(currUserError => {
-      if (currUserError.status && currUserError.status === 401) {
-        setUserStatus()
-      } else setErrorStatus(currUserError)
-    })
-
-const setupUserLogin = () => {
-  const logoutButton = document.querySelector("#log-out-button")
-  logoutButton.addEventListener("click", onLogoutClick)
-  const loginButton = document.querySelector("#log-in-button")
-  loginButton.addEventListener("click", onLoginClick)
-  updateLoginStatus()
-}
-
 const downloadDiscussion = discussionId =>
-  getOneTopic(discussionId).then(resp => {
-    setStatus("Discussion downloaded! - attempting to populate discussion...")
-    onReceiveDiscussion(resp)
-  })
+  getOneTopic(discussionId)
+    .then(resp => {
+      setStatus("Discussion downloaded! - attempting to populate discussion...")
+      onReceiveDiscussion(resp as ResolvedResponse<Discussion>)
+    })
+    .catch(setErrorStatus)
 
-/** Send a POST request to create a topic for discussion */
+/* Send a POST request to create a topic for discussion */
 const tryCreatingTopic = (discussionId, title) =>
   createNewTopic(discussionId, title)
     .then(() => setStatus("Topic created!"))
@@ -313,6 +556,9 @@ const setup = async (
 
   console.info("Simple Comment area found! - attempting to set up UI...")
 
+  setupUserLogin()
+  setupSignup()
+
   const statusDisplay = document.createElement("p")
   statusDisplay.setAttribute("id", "status-display")
   simpleCommentArea.appendChild(statusDisplay)
@@ -323,8 +569,6 @@ const setup = async (
 
   setStatus("UI setup complete - attempting download...")
 
-  setupUserLogin()
-
   downloadDiscussion(discussionId).catch(err => {
     if (err.status === 404) {
       setErrorStatus("Discussion not found - attempting to create it...")
@@ -333,4 +577,5 @@ const setup = async (
   })
 }
 
+// setup("some-topic-id") will link this page to "some-topic-id"
 setup()
