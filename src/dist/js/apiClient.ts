@@ -1,5 +1,4 @@
-import { stringify } from "querystring"
-import {
+import type {
   AdminSafeUser,
   AuthToken,
   Discussion,
@@ -12,10 +11,7 @@ import {
   UserId
 } from "./../../lib/simple-comment"
 
-/**
- * Return the response with the body field read and resolved
- *
- **/
+//  * Return the response with the body field read and resolved
 const resolveBody = async <T>(
   res: Response
 ): Promise<ResolvedResponse<string | T>> => {
@@ -55,9 +51,7 @@ export const createGuestUser = (userInfo: {
   name: string
   email: string
 }) => createUser({ ...userInfo, password: "" })
-/**
- * A discussion is a topic with all comments attached
- **/
+// A discussion is a topic with all comments attached
 export const getDiscussion = topicId =>
   fetch(`/.netlify/functions/topic/${topicId}`).then(res =>
     resolveBody<Discussion>(res)
@@ -132,18 +126,23 @@ export const createNewTopic = (id, title, isLocked = false) => {
   )
 }
 
+// UTILITY
+
+// objToQuery
+// convert an object of type { prop1:val1, prop2:val2, ... } to
+// string "prop1=val1&prop2=val2..."
 export const objToQuery = (obj: {}) =>
   Object.entries(obj)
     .map(entry => `${entry[0]}=${entry[1]}`)
     .join("&")
 
-/** Tests user id and returns true if it is a Guest ID
- * All guest ids are uuidv4 **/
+//  Tests user id and returns true if it is a Guest ID
+//  All guest ids are uuidv4 
 export const isGuestId = (id: UserId) =>
   id.match(
     /^(?:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|00000000-0000-0000-0000-000000000000)$/i
   )
-/** Validate email **/
+// Validate email
 export const isValidEmail = (x: string) =>
   x.match(
     /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/

@@ -1,4 +1,4 @@
-/**
+/*
  * Simple Comment demo
  *
  * This illustrates a prototypical user flow
@@ -23,7 +23,7 @@
  *
  * This file relies on the apiClient library, which is a group of async functions that connect to the API
  *
- **/
+ */
 import type {
   AdminSafeUser,
   CommentId,
@@ -49,7 +49,7 @@ import {
 } from "./apiClient.js"
 
 let currUser: AdminSafeUser
-let clearReply = () => {}
+let clearReply = () => { }
 
 // string type guard
 const isString = (x: any): x is string => typeof x === "string"
@@ -63,15 +63,15 @@ const isResolvedResponse = (
   res: string | ResolvedResponse | Response
 ): res is Response => !isString(res) && "body" in res
 
-/** UI methods
+/* UI methods
  * -----------
  * Methods that manipulate the DOM
  * Swap these out for your favored front-end framework
- **/
+ */
 
-/** insertReplyInput
+/* insertReplyInput
  * Creates UI for replying to a comment and inserts it into the
- * document above target element **/
+ * document above target element */
 const insertReplyInput = (commentId: CommentId, target: Element) => {
   const userInfoGroup = document.createElement("div")
   userInfoGroup.classList.add("user-info")
@@ -132,8 +132,8 @@ const insertReplyInput = (commentId: CommentId, target: Element) => {
   }
 }
 
-/** setupSignup
- * Add event listener and handler for signup flow **/
+/* setupSignup
+ * Add event listener and handler for signup flow */
 const setupSignup = () => {
   const signupButton = document.querySelector(
     "#sign-up-button"
@@ -159,7 +159,7 @@ const setupSignup = () => {
     if (!id.match(/[A-Za-z0-9]{5,20}/))
       return setSignupStatus(
         `Invalid username '${id}'. ` +
-          "The username must contain only letters or numbers and be between 5 and 20 characters. Go hog-wild on the display name, though!",
+        "The username must contain only letters or numbers and be between 5 and 20 characters. Go hog-wild on the display name, though!",
         true
       )
 
@@ -198,8 +198,8 @@ const setupSignup = () => {
   })
 }
 
-/** appendComment
- * Creates the UI for displaying a single comment, and appends it to HTMLElement `elem` **/
+/* appendComment
+ * Creates the UI for displaying a single comment, and appends it to HTMLElement `elem` */
 const appendComment = (comment, elem) => {
   const commentDisplay = document.createElement("div")
   commentDisplay.classList.add("comment-display")
@@ -222,7 +222,7 @@ const appendComment = (comment, elem) => {
 
   replyCommentButton.addEventListener("click", onReplyToComment(comment))
 }
-/** setupUserLogin
+/* setupUserLogin
  * Adds eventlisteners to the login UI */
 const setupUserLogin = () => {
   const logoutButton = document.querySelector("#log-out-button")
@@ -233,8 +233,8 @@ const setupUserLogin = () => {
 }
 
 // Status display methods
-/** updateLoginStatus
- * Login status may have changed, and the display needs to change to update that **/
+/* updateLoginStatus
+ * Login status may have changed, and the display needs to change to update that */
 const updateLoginStatus = () =>
   verifyUser()
     .then(res => res.body as TokenClaim)
@@ -286,9 +286,8 @@ const setErrorStatus = (
 const setUserStatus = (user?: AdminSafeUser) => {
   const docBody = document.querySelector("body")
   const userName = user
-    ? `Logged in as: ${user.name} ${isGuestId(user.id) ? "(guest)" : ""}${
-        user.isAdmin ? "(admin)" : ""
-      }`
+    ? `Logged in as: ${user.name} ${isGuestId(user.id) ? "(guest)" : ""}${user.isAdmin ? "(admin)" : ""
+    }`
     : "Not logged in"
   if (user && user.isAdmin) docBody.classList.add("is-admin")
   else docBody.classList.remove("is-admin")
@@ -315,8 +314,8 @@ const setUserStatus = (user?: AdminSafeUser) => {
   }
 }
 
-/** getSelf
- * Request information about the current user and display it **/
+/* getSelf
+ * Request information about the current user and display it */
 const getSelf = (claim: TokenClaim) =>
   getOneUser(claim.user)
     .then(res => res.body as AdminSafeUser)
@@ -329,14 +328,14 @@ const getSelf = (claim: TokenClaim) =>
     })
 
 
-/** Methods handling responses from the server
+/* Methods handling responses from the server
  * -------------------------------------------
  * When the server sends a response, these methods handle and
- * client-side logic and display the result **/
-/** onReceiveDiscussion
+ * client-side logic and display the result */
+/* onReceiveDiscussion
  * The server has responded to a request to the `/topic/{topicId}`
  * endpoint, requesting a single topic and its replies. This method
- * handles the response. **/
+ * handles the response. */
 const onReceiveDiscussion = (
   discussionResponse: ResolvedResponse<Discussion>
 ) => {
@@ -398,10 +397,10 @@ const onReceiveDiscussion = (
   insertReplyInput(discussion.id, replyTopicButton)
   setStatus("Discussion received and displayed")
 }
-/** onReceiveTopics
+/* onReceiveTopics
  * The server has responded to a request to the `/topic`
  * endpoint, requesting the entire list of current topics. This
- * method handles the response. **/
+ * method handles the response. */
 const onReceiveTopics = (topics = []) => {
   const topicList = document.querySelector("#topic-list")
   while (topicList.hasChildNodes()) {
@@ -420,9 +419,9 @@ const onReceiveTopics = (topics = []) => {
     })
 }
 
-/** Methods responding to user events
- * ---------------------------------- **/
-/** onCommentSubmit
+/* Methods responding to user events
+ * ---------------------------------- */
+/* onCommentSubmit
  * The user has pressed the submit button and expects something to happen. This function handles those possiblities */
 const onCommentSubmit = (submitElems, targetId) => async e => {
   const { replyTextarea, nameInput, emailInput } = submitElems
@@ -460,7 +459,7 @@ const onCommentSubmit = (submitElems, targetId) => async e => {
   postComment(targetId, text).then(onCommentResponse).catch(setErrorStatus)
 }
 
-/** onReplyToComment
+/* onReplyToComment
  * The user has pushed the 'reply' button adjacent to a comment. This
  * method responds by coordinating building the UI */
 const onReplyToComment = comment => e => {
@@ -470,34 +469,34 @@ const onReplyToComment = comment => e => {
   console.log(`reply to ${comment.id}`, e.target.parentElement)
 }
 
-/** onReplyToTopic
+/* onReplyToTopic
  * The user has pushed the 'comment' button below the main topic.
  * This method is equivalent to 'onReplyToComment', responds by
  * coordinating building the UI. They are conceptually different,
- * though functionally the same **/
+ * though functionally the same */
 const onReplyToTopic = onReplyToComment
 
-/** onTopicClick
+/* onTopicClick
  * The user has clicked on a link for a topic, expecting to see
- * comments. This method requests the discussion **/
+ * comments. This method requests the discussion */
 const onTopicClick = e => {
   e.preventDefault()
   const topicId = e.target.id
   getDiscussion(topicId).then(onReceiveDiscussion, setErrorStatus)
 }
 
-/** onLogoutClick
+/* onLogoutClick
  * The user has pressed the logout button. This method coordinates
  * the response of deleting authentication and updating the user
- * display **/
+ * display */
 const onLogoutClick = e => {
   deleteAuth().then(updateLoginStatus).catch(setErrorStatus)
 }
 
-/** onLoginClick
+/* onLoginClick
  * The user has pressed the login button. This method coordinates
  * validating the input and sending the authentication request to the
- * server. **/
+ * server. */
 const onLoginClick = e => {
   const usernamevalue = (document.querySelector("#userid") as HTMLInputElement)
     .value
@@ -528,7 +527,7 @@ const downloadDiscussion = discussionId =>
     })
     .catch(setErrorStatus)
 
-/** Send a POST request to create a topic for discussion */
+/* Send a POST request to create a topic for discussion */
 const tryCreatingTopic = (discussionId, title) =>
   createNewTopic(discussionId, title)
     .then(() => setStatus("Topic created!"))
