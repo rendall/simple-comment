@@ -6,7 +6,7 @@
 import {
   createNewTopic,
   getDefaultDiscussionId,
-  getOneTopic,
+  getOneDiscussion,
   postComment
 } from "./apiClient.js"
 
@@ -52,7 +52,6 @@ const onSubmitReply = (textarea, targetId) => e => {
   const onPostCommentResponse = comment => {
     attachComment(comment, textarea.parentElement)
     clearReply()
-    console.log({ comment })
   }
 
   postComment(targetId, text).then(onPostCommentResponse).catch(setErrorStatus)
@@ -86,7 +85,6 @@ const onReplyToComment = comment => e => {
   parentElement.insertBefore(commentField, e.target)
   parentElement.insertBefore(submitReplyButton, e.target)
   parentElement.insertBefore(cancelReplyButton, e.target)
-  console.log(`reply to ${comment.id}`, parentElement)
 }
 
 const onReplyToTopic = onReplyToComment
@@ -173,7 +171,7 @@ const onReceiveDiscussion = discussion => {
 
 /** Send a request for a specific discussion */
 const downloadDiscussion = discussionId =>
-  getOneTopic(discussionId).then(resp => {
+  getOneDiscussion(discussionId).then(resp => {
     setStatus("Discussion downloaded! - attempting to populate discussion...")
     onReceiveDiscussion(resp)
   })

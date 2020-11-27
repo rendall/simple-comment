@@ -2,8 +2,10 @@
 .env
 /.git
 /RAW
+/cypress/fixtures
 /cypress/integration/examples
 /cypress/screenshots
+/cypress/support
 /functions
 /lib
 /netlify-functions

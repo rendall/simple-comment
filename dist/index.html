@@ -109,7 +109,7 @@
         display: none;
       }
 
-      .is-logged-in:not(.is-guest) .user-info {
+      .is-logged-in .user-info {
         display: none;
       }
 
@@ -123,7 +123,16 @@
         color: red;
       }
 
-      .is-reply button.comment-button {
+      .is-reply > .comment-display .comment-button {
+        display: none;
+      }
+
+      .is-deleted {
+        font-style: italic;
+        opacity: 0.5;
+      }
+
+      .is-deleted > .comment-button {
         display: none;
       }
     </style>

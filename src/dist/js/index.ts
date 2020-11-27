@@ -26,6 +26,7 @@
  */
 import type {
   AdminSafeUser,
+  Comment,
   CommentId,
   Discussion,
   ResolvedResponse,
@@ -36,8 +37,7 @@ import {
   deleteAuth,
   verifyUser,
   getDefaultDiscussionId,
-  getDiscussion,
-  getOneTopic,
+  getOneDiscussion,
   getOneUser,
   postAuth,
   postComment,
@@ -45,11 +45,15 @@ import {
   isGuestId,
   createGuestUser,
   isValidEmail,
-  createUser
+  createUser,
+  deleteComment,
+  formatDate,
+  isTopic
 } from "./apiClient.js"
 
 let currUser: AdminSafeUser
-let clearReply = () => { }
+let clearReply = () => {}
+let updateReply = () => {}
 
 // string type guard
 const isString = (x: any): x is string => typeof x === "string"
@@ -69,12 +73,27 @@ const isResolvedResponse = (
  * Swap these out for your favored front-end framework
  */
 
+let firstTopic: CommentId
 /* insertReplyInput
  * Creates UI for replying to a comment and inserts it into the
  * document above target element */
-const insertReplyInput = (commentId: CommentId, target: Element) => {
+const insertReplyInput = (commentId: CommentId) => {
+  if (!firstTopic) firstTopic = commentId
+  if (clearReply) clearReply()
+
+  const user = currUser
+  const ul = document.querySelector(
+    `ul[data-comment='${commentId}']`
+  ) as HTMLUListElement
+  const target = ul.parentElement
+
+  const replyInputGroup = document.createElement("div")
+  replyInputGroup.classList.add("reply-input-group")
+  target.insertBefore(replyInputGroup, ul)
+
   const userInfoGroup = document.createElement("div")
   userInfoGroup.classList.add("user-info")
+  userInfoGroup.setAttribute("id", "user-info")
 
   const nameLabel = document.createElement("label")
   nameLabel.setAttribute("for", "name-input")
@@ -84,8 +103,9 @@ const insertReplyInput = (commentId: CommentId, target: Element) => {
   const nameInput = document.createElement("input")
   nameInput.setAttribute("id", "name-input")
   nameInput.setAttribute("placeholder", "What's your name?")
-  if (currUser) nameInput.value = currUser.name
   userInfoGroup.appendChild(nameInput)
+  nameInput.value = !!user ? user.name : ""
+  nameInput.toggleAttribute("disabled", !!user)
 
   const emailLabel = document.createElement("label")
   emailLabel.setAttribute("for", "email-input")
@@ -95,7 +115,8 @@ const insertReplyInput = (commentId: CommentId, target: Element) => {
   const emailInput = document.createElement("input")
   emailInput.setAttribute("id", "email-input")
   emailInput.setAttribute("placeholder", "What's your email?")
-  if (currUser) emailInput.value = currUser.email
+  emailInput.value = !!user ? user.email : ""
+  emailInput.toggleAttribute("disabled", !!user)
   userInfoGroup.appendChild(emailInput)
 
   const replyTextarea = document.createElement("textarea")
@@ -114,14 +135,13 @@ const insertReplyInput = (commentId: CommentId, target: Element) => {
   )
   buttonGroup.appendChild(submitReplyButton)
 
-  const parentElement = target.parentElement
-  parentElement.classList.add("is-reply")
-  parentElement.insertBefore(replyTextarea, target)
-  parentElement.insertBefore(userInfoGroup, target)
-  parentElement.insertBefore(buttonGroup, target)
+  target.classList.add("is-reply")
+  replyInputGroup.appendChild(replyTextarea)
+  replyInputGroup.appendChild(userInfoGroup)
+  replyInputGroup.appendChild(buttonGroup)
 
   clearReply = () => {
-    parentElement.classList.remove("is-reply")
+    target.classList.remove("is-reply")
     replyTextarea.remove()
     submitReplyButton.remove()
     nameInput.remove()
@@ -129,7 +149,10 @@ const insertReplyInput = (commentId: CommentId, target: Element) => {
     emailInput.remove()
     emailLabel.remove()
     buttonGroup.remove()
+    replyInputGroup.remove()
   }
+
+  updateReply = () => insertReplyInput(commentId)
 }
 
 /* setupSignup
@@ -159,7 +182,7 @@ const setupSignup = () => {
     if (!id.match(/[A-Za-z0-9]{5,20}/))
       return setSignupStatus(
         `Invalid username '${id}'. ` +
-        "The username must contain only letters or numbers and be between 5 and 20 characters. Go hog-wild on the display name, though!",
+          "The username must contain only letters or numbers and be between 5 and 20 characters. Go hog-wild on the display name, though!",
         true
       )
 
@@ -200,27 +223,77 @@ const setupSignup = () => {
 
 /* appendComment
  * Creates the UI for displaying a single comment, and appends it to HTMLElement `elem` */
-const appendComment = (comment, elem) => {
+const appendComment = (comment: Comment, li: HTMLLIElement) => {
+  if (!li) throw new Error("parameter 'elem' is undefined in appendComment")
   const commentDisplay = document.createElement("div")
   commentDisplay.classList.add("comment-display")
-  elem.appendChild(commentDisplay)
+  li.appendChild(commentDisplay)
+
+  const isDeleted = !!comment.dateDeleted
+  const hasUser = comment.user && comment.user.id
 
   const userDisplay = document.createElement("P")
-  userDisplay.setAttribute("id", comment.user.id)
-  userDisplay.innerText = comment.user.name
-  commentDisplay.appendChild(userDisplay)
+  if (hasUser) {
+    userDisplay.setAttribute("id", comment.user.id)
+    userDisplay.innerText = comment.user.name
+  } else {
+    userDisplay.classList.add("user-unknown")
+    userDisplay.innerText = "Unknown user"
+  }
+
+  if (!isDeleted) commentDisplay.appendChild(userDisplay)
 
   const commentText = document.createElement("p")
-  commentText.innerText = comment.text
   commentText.setAttribute("id", comment.id)
   commentDisplay.appendChild(commentText)
 
-  const replyCommentButton = document.createElement("button")
-  replyCommentButton.innerText = "reply"
-  replyCommentButton.classList.add("comment-button")
-  commentDisplay.appendChild(replyCommentButton)
+  if (isDeleted) {
+    commentText.innerText = `Comment deleted ${formatDate(comment.dateDeleted)}`
+    commentDisplay.classList.add("is-deleted")
+  } else {
+    commentText.innerText = comment.text
 
-  replyCommentButton.addEventListener("click", onReplyToComment(comment))
+    const replyCommentButton = document.createElement("button")
+    replyCommentButton.innerText = "reply"
+    replyCommentButton.classList.add("comment-button")
+    replyCommentButton.classList.add("reply-button")
+    replyCommentButton.addEventListener(
+      "click",
+      onReplyToComment(comment, commentDisplay)
+    )
+    commentDisplay.appendChild(replyCommentButton)
+
+    const isOwnComment =
+      comment.user && currUser && comment.user.id === currUser.id
+
+    const isAdmin = currUser && currUser.isAdmin
+
+    if (isOwnComment || isAdmin) {
+      // This comment is from the current user
+      const deleteCommentButton = document.createElement("button")
+      deleteCommentButton.innerText = "delete"
+      deleteCommentButton.classList.add("comment-button")
+      deleteCommentButton.classList.add("delete-button")
+      commentDisplay.appendChild(deleteCommentButton)
+
+      deleteCommentButton.addEventListener("click", () => {
+        deleteComment(comment.id)
+          .then((res: ResolvedResponse) => {
+            if (res.status !== 202) {
+              console.error(res)
+              throw new Error(`Unknown response status code ${res.status}`)
+            }
+            commentDisplay.classList.add("is-deleted")
+            commentText.innerText = "Comment deleted"
+            setStatus("Comment deleted")
+          })
+          .catch(setErrorStatus)
+      })
+    }
+  }
+  const ul = document.createElement("ul")
+  ul.dataset.comment = comment.id
+  li.appendChild(ul)
 }
 /* setupUserLogin
  * Adds eventlisteners to the login UI */
@@ -230,6 +303,100 @@ const setupUserLogin = () => {
   const loginButton = document.querySelector("#log-in-button")
   loginButton.addEventListener("click", onLoginClick)
   updateLoginStatus()
+}
+
+let currDiscussion: ResolvedResponse<Discussion>
+const updateDiscussionDisplay = (
+  discussionResponse: ResolvedResponse<Discussion>
+) => {
+  const discussion: Discussion = discussionResponse.body as Discussion
+  const discussionDiv = document.querySelector("#discussion") as HTMLDivElement
+
+  while (discussionDiv.hasChildNodes()) {
+    discussionDiv.removeChild(discussionDiv.lastChild)
+  }
+
+  clearStatus()
+  if (!discussion) {
+    setStatus("No discussion on that topic")
+    return
+  }
+
+  const commentDisplay = document.createElement("div")
+  commentDisplay.classList.add("comment-display")
+  discussionDiv.appendChild(commentDisplay)
+  const commentButton = document.createElement("button")
+  commentButton.innerText = "comment"
+  commentButton.classList.add("comment-button")
+  commentButton.classList.add("reply-button")
+  commentButton.addEventListener(
+    "click",
+    onReplyToComment(discussion, discussionDiv)
+  )
+  commentDisplay.appendChild(commentButton)
+
+  const comments = discussion.replies
+
+  // replies can be threaded, although they arrive in a flat array
+  const threadReplies = (
+    parent: Comment | Discussion,
+    listItem: HTMLLIElement | HTMLDivElement
+  ) => {
+    const parentId = parent.id
+    const comment = comments.find(c => c.id === parentId)
+    if (comment) appendComment(comment, listItem as HTMLLIElement)
+    const replies = comments
+      .filter(c => c.parentId === parentId)
+      .sort(
+        (a, b) =>
+          new Date(b.dateCreated).valueOf() - new Date(a.dateCreated).valueOf()
+      )
+
+    const replyList = listItem.querySelector(
+      `ul[data-comment='${parentId}']`
+    ) as HTMLUListElement
+
+    if (replies.length) {
+      replies.forEach(reply => {
+        const li = document.createElement("li")
+        replyList.appendChild(li)
+        threadReplies(reply, li)
+      })
+    }
+
+    if (isTopic(parent)) insertReplyInput(parentId)
+  }
+
+  const title = document.createElement("h2")
+  title.innerText = discussion.title
+  title.setAttribute("id", "discussion-title")
+  discussionDiv.appendChild(title)
+  const replyTopicButton = document.createElement("button")
+  replyTopicButton.innerText = "reply"
+  replyTopicButton.classList.add("comment-button")
+
+  const ul = document.createElement("ul")
+  ul.dataset.comment = discussion.id
+  discussionDiv.appendChild(ul)
+
+  replyTopicButton.addEventListener(
+    "click",
+    onReplyToTopic(discussion, discussionDiv)
+  )
+
+  if (comments) threadReplies(discussion, discussionDiv)
+
+  // const commentUL = discussionDiv.querySelector("ul")
+  // const replyLI = document.createElement("li")
+
+  // if (commentUL.firstChild)
+  // commentUL.insertBefore(replyLI, commentUL.firstChild)
+  // else commentUL.appendChild(replyLI)
+
+  // replyLI.appendChild(replyTopicButton)
+
+  // insertReplyInput(discussion.id, replyTopicButton)
+  setStatus("Discussion received and displayed")
 }
 
 // Status display methods
@@ -246,6 +413,10 @@ const updateLoginStatus = () =>
       return claim
     })
     .then(getSelf)
+    .then(() => {
+      if (currDiscussion) updateDiscussionDisplay(currDiscussion)
+    })
+    .then(updateReply)
     .catch(currUserError => {
       if (currUserError.status && currUserError.status === 401) {
         return getGuestToken().then(updateLoginStatus)
@@ -270,7 +441,6 @@ const setStatus = (
   clearStatus()
   document.querySelector("#status-display").classList.toggle("error", isError)
   document.querySelector("#status-display").innerHTML = message
-  if (!isError) console.log(message)
 }
 
 const setErrorStatus = (
@@ -286,8 +456,9 @@ const setErrorStatus = (
 const setUserStatus = (user?: AdminSafeUser) => {
   const docBody = document.querySelector("body")
   const userName = user
-    ? `Logged in as: ${user.name} ${isGuestId(user.id) ? "(guest)" : ""}${user.isAdmin ? "(admin)" : ""
-    }`
+    ? `Logged in as: ${user.name} ${isGuestId(user.id) ? "(guest)" : ""}${
+        user.isAdmin ? "(admin)" : ""
+      }`
     : "Not logged in"
   if (user && user.isAdmin) docBody.classList.add("is-admin")
   else docBody.classList.remove("is-admin")
@@ -302,16 +473,6 @@ const setUserStatus = (user?: AdminSafeUser) => {
   docBody.classList.toggle("is-logged-in", !!user)
 
   currUser = user
-  const nameInput = document.querySelector("#name-input") as HTMLInputElement
-  if (nameInput) {
-    nameInput.value = !!user ? user.name : ""
-    nameInput.toggleAttribute("disabled", !!user)
-  }
-  const emailInput = document.querySelector("#email-input") as HTMLInputElement
-  if (emailInput) {
-    emailInput.value = !!user ? user.email : ""
-    emailInput.toggleAttribute("disabled", !!user)
-  }
 }
 
 /* getSelf
@@ -327,7 +488,6 @@ const getSelf = (claim: TokenClaim) =>
       // we won't create the guest user until the user submits a comment!
     })
 
-
 /* Methods handling responses from the server
  * -------------------------------------------
  * When the server sends a response, these methods handle and
@@ -339,63 +499,8 @@ const getSelf = (claim: TokenClaim) =>
 const onReceiveDiscussion = (
   discussionResponse: ResolvedResponse<Discussion>
 ) => {
-  const discussion: Discussion = discussionResponse.body as Discussion
-  const discussionDiv = document.querySelector("#discussion")
-
-  while (discussionDiv.hasChildNodes()) {
-    discussionDiv.removeChild(discussionDiv.lastChild)
-  }
-
-  clearStatus()
-  if (!discussion) {
-    setStatus("No discussion on that topic")
-    return
-  }
-
-  const comments = discussion.replies
-
-  // replies can be threaded, although they arrive in a flat array
-  const threadReplies = (listItem, parentId) => {
-    const comment = comments.find(c => c.id === parentId)
-
-    if (comment) appendComment(comment, listItem)
-
-    const replies = comments.filter(c => c.parentId === parentId)
-    const replyList = document.createElement("ul")
-    listItem.appendChild(replyList)
-
-    if (replies.length) {
-      replies.forEach(reply => {
-        const li = document.createElement("li")
-        replyList.appendChild(li)
-        threadReplies(li, reply.id)
-      })
-    }
-  }
-
-  const title = document.createElement("h2")
-  title.innerText = discussion.title
-  title.setAttribute("id", "discussion-title")
-  discussionDiv.appendChild(title)
-  const replyTopicButton = document.createElement("button")
-  replyTopicButton.innerText = "reply"
-  replyTopicButton.classList.add("comment-button")
-
-  replyTopicButton.addEventListener("click", onReplyToTopic(discussion))
-
-  if (comments) threadReplies(discussionDiv, discussion.id)
-
-  const commentUL = discussionDiv.querySelector("ul")
-  const replyLI = document.createElement("li")
-
-  if (commentUL.firstChild)
-    commentUL.insertBefore(replyLI, commentUL.firstChild)
-  else commentUL.appendChild(replyLI)
-
-  replyLI.appendChild(replyTopicButton)
-
-  insertReplyInput(discussion.id, replyTopicButton)
-  setStatus("Discussion received and displayed")
+  currDiscussion = discussionResponse
+  updateDiscussionDisplay(currDiscussion)
 }
 /* onReceiveTopics
  * The server has responded to a request to the `/topic`
@@ -418,7 +523,6 @@ const onReceiveTopics = (topics = []) => {
       listItem.appendChild(anchor)
     })
 }
-
 /* Methods responding to user events
  * ---------------------------------- */
 /* onCommentSubmit
@@ -451,22 +555,33 @@ const onCommentSubmit = (submitElems, targetId) => async e => {
     else setErrorStatus(createGuestUserResult as ResolvedResponse)
   }
 
-  const onCommentResponse = comment => {
-    appendComment(comment, text.parentElement)
+  const ul = document.querySelector(
+    `ul[data-comment='${targetId}']`
+  ) as HTMLUListElement
+  const li = document.createElement("li")
+
+  if (ul.firstChild) ul.insertBefore(li, ul.firstChild)
+  else ul.appendChild(li)
+
+  const onCommentResponse = parentElement => (
+    response: ResolvedResponse<Comment>
+  ) => {
+    const comment = response.body
+    appendComment(comment, parentElement)
     clearReply()
   }
 
-  postComment(targetId, text).then(onCommentResponse).catch(setErrorStatus)
+  postComment(targetId, text).then(onCommentResponse(li)).catch(setErrorStatus)
 }
-
 /* onReplyToComment
  * The user has pushed the 'reply' button adjacent to a comment. This
  * method responds by coordinating building the UI */
-const onReplyToComment = comment => e => {
+const onReplyToComment = (
+  comment: Comment | Discussion,
+  commentDisplay: Element
+) => e => {
   clearReply()
-  insertReplyInput(comment.id, e.target)
-
-  console.log(`reply to ${comment.id}`, e.target.parentElement)
+  insertReplyInput(comment.id)
 }
 
 /* onReplyToTopic
@@ -482,7 +597,7 @@ const onReplyToTopic = onReplyToComment
 const onTopicClick = e => {
   e.preventDefault()
   const topicId = e.target.id
-  getDiscussion(topicId).then(onReceiveDiscussion, setErrorStatus)
+  getOneDiscussion(topicId).then(onReceiveDiscussion, setErrorStatus)
 }
 
 /* onLogoutClick
@@ -520,7 +635,7 @@ const onLoginClick = e => {
 }
 
 const downloadDiscussion = discussionId =>
-  getOneTopic(discussionId)
+  getOneDiscussion(discussionId)
     .then(resp => {
       setStatus("Discussion downloaded! - attempting to populate discussion...")
       onReceiveDiscussion(resp as ResolvedResponse<Discussion>)
@@ -562,10 +677,6 @@ const setup = async (
   const statusDisplay = document.createElement("p")
   statusDisplay.setAttribute("id", "status-display")
   simpleCommentArea.appendChild(statusDisplay)
-
-  const discussionDiv = document.createElement("div")
-  discussionDiv.setAttribute("id", "discussion")
-  simpleCommentArea.appendChild(discussionDiv)
 
   setStatus("UI setup complete - attempting download...")
 

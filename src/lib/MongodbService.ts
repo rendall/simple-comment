@@ -38,7 +38,8 @@ import {
   toPublicSafeUser,
   toSafeUser,
   toTopic,
-  toUpdatedUser
+  toUpdatedUser,
+  validateUserId
 } from "./utilities"
 import { policy } from "../policy"
 import {
@@ -46,7 +47,6 @@ import {
   error400CommentIdMissing,
   error400NoUpdate,
   error400PasswordMissing,
-  error400TopicExists,
   error400UserIdMissing,
   error401BadCredentials,
   error401UserNotAuthenticated,
@@ -56,9 +56,10 @@ import {
   error404CommentNotFound,
   error404TopicNotFound,
   error404UserUnknown,
+  error409DuplicateComment,
+  error409DuplicateTopic,
   error409UserExists,
   error413CommentTooLong,
-  error425DuplicateComment,
   error500ServerError,
   success200OK,
   success201UserCreated,
@@ -67,7 +68,6 @@ import {
   success202TopicDeleted,
   success202UserDeleted,
   success204CommentUpdated,
-  success204NoContent,
   success204UserUpdated
 } from "./messages"
 import { comparePassword, getAuthToken, hashPassword, uuidv4 } from "./crypt"
@@ -177,6 +177,15 @@ export class MongodbService extends Service {
         return
       }
 
+      const idCheck = validateUserId(newUser.id)
+      if (idCheck.isValid === false) {
+        reject({
+          ...error400BadRequest,
+          body: `UserId '${newUser.id}' is invalid`
+        })
+        return
+      }
+
       // This is a necessary check because the moderator creation flow is outside of the normal user creation flow
       if (newUser.id === process.env.SIMPLE_COMMENT_MODERATOR_ID) {
         reject(error403ForbiddenToModify)
@@ -262,13 +271,17 @@ export class MongodbService extends Service {
   userGET = (targetUserId?: UserId, authUserId?: UserId) =>
     new Promise<Success<PublicSafeUser | AdminSafeUser> | Error>(
       async (resolve, reject) => {
-        if (
-          (!authUserId && !policy.canPublicReadUser) ||
-          (isGuestId(authUserId) &&
-            !policy.canGuestReadUser &&
-            !policy.canPublicReadUser)
-        ) {
+        if (!authUserId && !policy.canPublicReadUser) {
           reject(error401UserNotAuthenticated)
+          return
+        }
+
+        if (
+          isGuestId(authUserId) &&
+          !policy.canGuestReadUser &&
+          !policy.canPublicReadUser
+        ) {
+          reject(error403UserNotAuthorized)
           return
         }
 
@@ -307,7 +320,8 @@ export class MongodbService extends Service {
 
         const authUser = await users.findOne({ id: authUserId })
         const isAdmin = authUser ? authUser.isAdmin : false
-        const outUser = toSafeUser(foundUser, isAdmin)
+        const isSelf = targetUserId === authUser.id
+        const outUser = toSafeUser(foundUser, isSelf || isAdmin)
         resolve({ ...success200OK, body: outUser })
       }
     )
@@ -530,7 +544,7 @@ export class MongodbService extends Service {
         lastComment.text === text &&
         lastComment.parentId === parentId
       ) {
-        reject(error425DuplicateComment)
+        reject(error409DuplicateComment)
         return
       }
 
@@ -635,10 +649,14 @@ export class MongodbService extends Service {
 
       const fullCommentPipeline = (id: CommentId, isAdminSafe: boolean) => [
         {
-          $match: { id }
+          $match: {
+            id
+          }
         },
         {
-          $addFields: { isAdminSafe }
+          $addFields: {
+            isAdminSafe
+          }
         },
         {
           $lookup: {
@@ -687,25 +705,29 @@ export class MongodbService extends Service {
         },
         {
           $project: {
-            "parentId": 1,
-            "id": 1,
-            "title": 1,
-            "text": 1,
-            "dateCreated": 1,
+            parentId: 1,
+            id: 1,
+            title: 1,
+            text: 1,
+            dateCreated: 1,
             "user.id": 1,
             "user.email": {
               $cond: {
-                if: { $eq: ["$isAdminSafe", true] },
+                "if": {
+                  $eq: ["$isAdminSafe", true]
+                },
                 then: "$user.email",
-                else: "$$REMOVE"
+                "else": "$$REMOVE"
               }
             },
             "user.name": 1,
             "user.isVerified": {
               $cond: {
-                if: { $eq: ["$isAdminSafe", true] },
+                "if": {
+                  $eq: ["$isAdminSafe", true]
+                },
                 then: "$user.isVerified",
-                else: "$$REMOVE"
+                "else": "$$REMOVE"
               }
             },
             "user.isAdmin": 1,
@@ -713,21 +735,26 @@ export class MongodbService extends Service {
             "replies.id": 1,
             "replies.text": 1,
             "replies.dateCreated": 1,
+            "replies.dateDeleted": 1,
             "replies.user.id": 1,
             "replies.user.name": 1,
             "replies.user.isAdmin": 1,
             "replies.user.isVerified": {
               $cond: {
-                if: { $eq: ["$isAdminSafe", true] },
+                "if": {
+                  $eq: ["$isAdminSafe", true]
+                },
                 then: "$replies.user.isVerified",
-                else: "$$REMOVE"
+                "else": "$$REMOVE"
               }
             },
             "replies.user.email": {
               $cond: {
-                if: { $eq: ["$isAdminSafe", true] },
+                "if": {
+                  $eq: ["$isAdminSafe", true]
+                },
                 then: "$replies.user.email",
-                else: "$$REMOVE"
+                "else": "$$REMOVE"
               }
             }
           }
@@ -775,7 +802,6 @@ export class MongodbService extends Service {
         .aggregate(fullCommentPipeline(targetId, isAdmin))
         .next()) as Comment
       const body = comment
-
       resolve({ ...success200OK, body })
     })
 
@@ -1012,7 +1038,7 @@ export class MongodbService extends Service {
       const oldDiscussion = await discussions.findOne({ id: topic.id })
 
       if (oldDiscussion) {
-        reject(error400TopicExists)
+        reject(error409DuplicateTopic)
         return
       }
 
@@ -1132,6 +1158,7 @@ export class MongodbService extends Service {
             "title": 1,
             "text": 1,
             "dateCreated": 1,
+            "dateDeleted": 1,
             "user.id": 1,
             "user.email": {
               $cond: {
@@ -1153,6 +1180,7 @@ export class MongodbService extends Service {
             "replies.id": 1,
             "replies.text": 1,
             "replies.dateCreated": 1,
+            "replies.dateDeleted": 1,
             "replies.user.id": 1,
             "replies.user.name": 1,
             "replies.user.isAdmin": 1,

@@ -122,6 +122,6 @@ const formatReason = (error: Error | string) =>
   typeof error === "string" ? error : `${error.name}:${error.message}`
 
 const tap = message => arg => {
-  console.log(message, arg)
+  console.info(message, arg)
   return arg
 }
