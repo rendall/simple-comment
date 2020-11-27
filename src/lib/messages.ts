@@ -11,10 +11,7 @@ export const error400NoUpdate: Error = {
   statusCode: 400,
   body: "Comment text is same"
 }
-export const error400TopicExists: Error = {
-  statusCode: 400,
-  body: "Discussion already exists"
-}
+
 export const error400UserIdMissing: Error = {
   statusCode: 400,
   body: "UserId missing"
@@ -60,6 +57,14 @@ export const error405MethodNotAllowed: Error = {
   statusCode: 405,
   body: "Method not allowed"
 }
+export const error409DuplicateTopic: Error = {
+  statusCode: 409,
+  body: "Discussion already exists"
+}
+export const error409DuplicateComment: Error = {
+  statusCode: 409,
+  body: "Duplicate comment"
+}
 export const error409UserExists: Error = {
   statusCode: 409,
   body: "UserId exists"
@@ -67,10 +72,6 @@ export const error409UserExists: Error = {
 export const error413CommentTooLong: Error = {
   statusCode: 413,
   body: "Comment too long"
-}
-export const error425DuplicateComment: Error = {
-  statusCode: 425,
-  body: "Duplicate comment"
 }
 export const error500ServerError: Error = {
   statusCode: 500,

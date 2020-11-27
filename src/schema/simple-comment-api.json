@@ -117,7 +117,7 @@
               }
             }
           },
-          "425": {
+          "409": {
             "description": "Duplicate topic",
             "content": {
               "application/json": {
@@ -697,8 +697,8 @@
               }
             }
           },
-          "425": {
-            "description": "Possible duplicate user",
+          "409": {
+            "description": "UserId exists",
             "content": {
               "application/json": {
                 "schema": {

@@ -7,22 +7,11 @@ import type {
   ResolvedResponse,
   TokenClaim,
   Topic,
-  TopicId,
+  Comment,
   UserId
 } from "./../../lib/simple-comment"
 
-//  * Return the response with the body field read and resolved
-const resolveBody = async <T>(
-  res: Response
-): Promise<ResolvedResponse<string | T>> => {
-  const textRes = res.clone()
-  const body = await res.json().catch(() => textRes.text())
-  const { status, ok, statusText } = res
-  const resolvedRes = { status, ok, statusText, body }
-
-  if (!resolvedRes.ok) throw resolvedRes
-  else return resolvedRes
-}
+// USER & AUTH
 
 export const getGuestToken = () =>
   fetch("/.netlify/functions/gauth").then(res => resolveBody<AuthToken>(res))
@@ -51,18 +40,6 @@ export const createGuestUser = (userInfo: {
   name: string
   email: string
 }) => createUser({ ...userInfo, password: "" })
-// A discussion is a topic with all comments attached
-export const getDiscussion = topicId =>
-  fetch(`/.netlify/functions/topic/${topicId}`).then(res =>
-    resolveBody<Discussion>(res)
-  )
-
-export const postComment = (targetId, text, user?) =>
-  fetch(`/.netlify/functions/comment/${targetId}`, {
-    body: text,
-    method: "POST"
-  }).then(res => resolveBody(res))
-
 export const deleteAuth = () =>
   fetch(`/.netlify/functions/auth`, {
     method: "DELETE"
@@ -101,16 +78,31 @@ export const postAuth = (user: string, password: string) => {
   )
 }
 
-// TOPICS
+// COMMENT
 
-export const getAllTopics = () =>
-  fetch("/.netlify/functions/topic").then(res => resolveBody<Topic[]>(res))
+export const postComment = (targetId, text) =>
+  fetch(`/.netlify/functions/comment/${targetId}`, {
+    body: text,
+    method: "POST"
+  }).then(res => resolveBody(res))
 
-export const getOneTopic = (topicId: TopicId) =>
+export const deleteComment = commentId =>
+  fetch(`/.netlify/functions/comment/${commentId}`, {
+    method: "DELETE"
+  }).then(res => resolveBody(res))
+
+// TOPIC & DISCUSSION
+
+// A discussion is a topic with all comments attached
+export const getOneDiscussion = topicId =>
   fetch(`/.netlify/functions/topic/${topicId}`).then(res =>
     resolveBody<Discussion>(res)
   )
 
+export const getAllTopics = () =>
+  fetch("/.netlify/functions/topic").then(res => resolveBody<Topic[]>(res))
+
+// By default a topic/discussion id is a normalized string of the page url
 export const getDefaultDiscussionId = () =>
   window.location.href.toLowerCase().replace(/[^a-z0-9]/g, "-")
 
@@ -137,13 +129,30 @@ export const objToQuery = (obj: {}) =>
     .join("&")
 
 //  Tests user id and returns true if it is a Guest ID
-//  All guest ids are uuidv4 
+//  All guest ids are uuidv4
 export const isGuestId = (id: UserId) =>
   id.match(
     /^(?:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|00000000-0000-0000-0000-000000000000)$/i
   )
+export const formatDate = (dateStr: string | Date) =>
+  `${new Date(dateStr).toLocaleString()}`
 // Validate email
 export const isValidEmail = (x: string) =>
   x.match(
     /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/
   )
+//  Return the response with the body field read and resolved
+const resolveBody = async <T>(
+  res: Response
+): Promise<ResolvedResponse<string | T>> => {
+  const textRes = res.clone()
+  const body = await res.json().catch(() => textRes.text())
+  const { status, ok, statusText } = res
+  const resolvedRes = { status, ok, statusText, body }
+
+  if (!resolvedRes.ok) throw resolvedRes
+  else return resolvedRes
+}
+export const isTopic = (
+  discussion: Discussion | Comment
+): discussion is Topic => !(discussion as Comment).parentId

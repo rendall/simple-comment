@@ -351,3 +351,18 @@ export class HeaderList {
     return this._headers
   }
 }
+
+export interface ValidResult {
+  isValid: boolean
+  result?: RegExpMatchArray
+}
+
+export const validateUserId = (
+  userId: string,
+  result?: RegExpMatchArray
+): ValidResult =>
+  result === undefined
+    ? validateUserId(userId, userId.match(/[a-z-]{5,20}/))
+    : result === null
+    ? { isValid: true }
+    : { isValid: false, result }
