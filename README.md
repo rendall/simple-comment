@@ -32,6 +32,9 @@ Nearly there! Steps to minimum viable product (MVP):
   - Temporary uuid
 - Minimal script to add Simple Comment functionality to any webpage
 - Working example on Github pages
+- Validation for server-side entries
+- Edit button
+- Delete / edit time windows in policy
 
 ### Nice to haves
 
