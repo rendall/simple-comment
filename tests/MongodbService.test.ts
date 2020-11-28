@@ -15,20 +15,20 @@ import {
 import { MongodbService } from "../src/lib/MongodbService"
 import { Db, MongoClient } from "mongodb"
 import {
-  success202CommentDeleted,
-  error425DuplicateComment,
-  error413CommentTooLong,
-  error403Forbidden,
   error401BadCredentials,
-  error404UserUnknown,
-  success202UserDeleted,
   error401UserNotAuthenticated,
-  error403UserNotAuthorized,
-  success202TopicDeleted,
+  error403Forbidden,
   error403ForbiddenToModify,
-  error409UserExists
+  error403UserNotAuthorized,
+  error404UserUnknown,
+  error409DuplicateComment,
+  error409UserExists,
+  error413CommentTooLong,
+  success202CommentDeleted,
+  success202TopicDeleted,
+  success202UserDeleted
 } from "../src/lib/messages"
-import { getAuthToken, hashPassword, uuidv4 } from "../src/lib/crypt"
+import { getAuthToken, hashPassword, uuidv4, isUuid } from "../src/lib/crypt"
 import { policy } from "../src/policy"
 import {
   isComment,
@@ -123,7 +123,7 @@ const createRandomTopic = (prepend = ""): Topic => ({
 })
 
 let userCount = 0
-const createUserId = (prepend = "") => `${prepend}userId-${userCount++}`
+const createUserId = (prepend = "") => `${prepend}user-id-${userCount++}`
 const createRandomUser = (prepend = ""): User => ({
   id: createUserId(prepend),
   email: createRandomEmail(),
@@ -220,6 +220,7 @@ describe("Full API service test", () => {
   beforeAll(async () => {
     const connectionString = MONGO_URI
     const databaseName = MONGO_DB
+
     service = new MongodbService(connectionString, databaseName)
     client = await service.getClient()
     db = await service.getDb()
@@ -238,7 +239,7 @@ describe("Full API service test", () => {
   }, 120000)
 
   afterAll(async () => {
-    //  await db.dropDatabase()
+    await db.dropDatabase()
     await service.close()
   }, 120000)
 
@@ -721,7 +722,7 @@ describe("Full API service test", () => {
         newCommentTest.text,
         newCommentTest.userId
       )
-      .catch(e => expect(e).toBe(error425DuplicateComment))
+      .catch(e => expect(e).toBe(error409DuplicateComment))
   })
 
   // Comment Read

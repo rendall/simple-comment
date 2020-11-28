@@ -1,4 +1,4 @@
-import { v4 } from "uuid"
+import { v4, validate as isValidUuid } from "uuid"
 import * as crypto from "crypto"
 import * as jwt from "jsonwebtoken"
 import * as dotenv from "dotenv"
@@ -30,3 +30,5 @@ export const getAuthToken = (
 ) => jwt.sign({ user, exp }, process.env.JWT_SECRET)
 
 export const uuidv4 = () => v4()
+
+export const isUuid = isValidUuid

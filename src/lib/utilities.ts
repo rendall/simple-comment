@@ -361,8 +361,10 @@ export const validateUserId = (
   userId: string,
   result?: RegExpMatchArray
 ): ValidResult =>
-  result === undefined
-    ? validateUserId(userId, userId.match(/[a-z-]{5,20}/))
-    : result === null
-    ? { isValid: true }
-    : { isValid: false, result }
+  userId.length < 5 || userId.length > 36
+  ? { isValid: false }
+    : result === undefined
+      ? validateUserId(userId, userId.match(/[^a-z0-9-_]/g))
+      : result === null
+        ? { isValid: true }
+        : { isValid: false, result }

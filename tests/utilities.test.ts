@@ -1,4 +1,8 @@
-import { getAllowOriginHeaders, isGuestId } from "../src/lib/utilities"
+import {
+  getAllowOriginHeaders,
+  isGuestId,
+  validateUserId
+} from "../src/lib/utilities"
 import { v4 as uuidv4 } from "uuid"
 
 describe("test the `getAllowOriginHeaders` function", () => {
@@ -47,28 +51,62 @@ describe("Test guest id utility", () => {
   })
 })
 
+describe("Test validations", () => {
+  test("good validateUserId", () => {
+    expect(validateUserId("rendall-775-id")).toEqual(
+      expect.objectContaining({ isValid: true })
+    )
+  })
+
+  test("uuidv4 in validateUserId", () => {
+    expect(validateUserId(uuidv4())).toEqual(
+      expect.objectContaining({ isValid: true })
+    )
+  })
+
+  test("incorrect characters in validateUserId", () => {
+    expect(validateUserId("A-rendall-775-id")).toEqual(
+      expect.objectContaining({ isValid: false })
+    )
+  })
+
+  test("not enough characters in validateUserId", () => {
+    expect(validateUserId("ad")).toEqual(
+      expect.objectContaining({ isValid: false })
+    )
+  })
+
+  test("too many  characters in validateUserId", () => {
+    const tooMany = uuidv4() + "a"
+    expect(tooMany.length).toBeGreaterThan(36)
+    expect(validateUserId(tooMany)).toEqual(
+      expect.objectContaining({ isValid: false })
+    )
+  })
+})
+
 // Tests to do:
-// toSafeUser
-// toPublicSafeUser
-// toAdminSafeUser
-// isAdminSafeUser
-// isPublicSafeUser
-// getAuthHeaderValue
-// getAuthCredentials
-// hasBasicScheme
-// hasTokenCookie
-// getCookieToken
-// hasBearerScheme
 // decodeAuthHeader
-// parseAuthHeader
-// getUserIdPassword
-// getTokenClaim
-// getUserId
-// getTargetId
-// getNewUserInfo
-// toUpdatedUser
-// getUpdatedUserInfo
+// getAuthCredentials
+// getAuthHeaderValue
+// getCookieToken
 // getNewTopicInfo
-// toTopic
+// getNewUserInfo
+// getTargetId
+// getTokenClaim
 // getUpdateTopicInfo
+// getUpdatedUserInfo
+// getUserId
+// getUserIdPassword
+// hasBasicScheme
+// hasBearerScheme
+// hasTokenCookie
+// isAdminSafeUser
 // isError
+// isPublicSafeUser
+// parseAuthHeader
+// toAdminSafeUser
+// toPublicSafeUser
+// toSafeUser
+// toTopic
+// toUpdatedUser

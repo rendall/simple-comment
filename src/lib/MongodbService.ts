@@ -320,7 +320,7 @@ export class MongodbService extends Service {
 
         const authUser = await users.findOne({ id: authUserId })
         const isAdmin = authUser ? authUser.isAdmin : false
-        const isSelf = targetUserId === authUser.id
+        const isSelf = authUser && targetUserId === authUser.id
         const outUser = toSafeUser(foundUser, isSelf || isAdmin)
         resolve({ ...success200OK, body: outUser })
       }
