@@ -25,24 +25,28 @@ Nearly there! Steps to minimum viable product (MVP):
 
 ### To be done
 
-- Spam prevention measures
-- Moderator can hold posts for approval
-  - Can change policy
-- Visitor can claim ownership over anonymous posts
-  - Temporary uuid
 - Minimal script to add Simple Comment functionality to any webpage
-- Working example on Github pages
+- Working example
 - Validation for server-side entries
-- Edit button
-- Delete / edit time windows in policy
+
+### Top priority after MVP
+
+- Styling
+- Moderator holds posts for approval
+- Spam prevention measures
+- Extensive helpful comments!
+- API tests
 
 ### Nice to haves
 
-- Comprehensive front-end tests
-  - Give users confidence it works as expected
-  - ... or useful error messages if not
 - _"Powered by Simple Comment"_ badge
-- Extensive helpful comments!
+- Moderator change policy on holding posts for approval
+- Visitor can claim ownership over anonymous posts
+- Edit button
+- Delete / edit time windows in policy
+- User profiles
+  - See comments
+  - Avatar
 
 ## Features
 
@@ -79,6 +83,8 @@ Nearly there! Steps to minimum viable product (MVP):
 - Optional connection to the Fediverse
 - Support for other databases (PostgreSQL, Firestore, CockroachDB, etc) and hosting services (Heroku, AWS Lambda, GCS)
 - Support Web Authentication API <https://w3c.github.io/webauthn/>
+- User profiles
+- Upvoting / Reactions
 
 ## Setup
 
