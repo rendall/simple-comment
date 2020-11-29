@@ -1,5 +1,5 @@
 import { v4, validate as isValidUuid } from "uuid"
-import * as crypto from "crypto"
+import { hash, compare } from "bcrypt"
 import * as jwt from "jsonwebtoken"
 import * as dotenv from "dotenv"
 
@@ -14,15 +14,12 @@ const getExpirationTime = (minutes: number): number =>
   ).valueOf()
 
 /** Get a password hash from the plaintext password */
-export const hashPassword = (password: string) =>
-  crypto
-    //TODO: change this to bcrypt - but bcrypt causes an error for now
-    .createHmac("sha256", process.env.HASH_SECRET)
-    .update(`${password}${process.env.SALT_SECRET}`)
-    .digest("hex")
+export const hashPassword = async (password: string) => await hash(password, 13)
 
-export const comparePassword = (plainTextPassword: string, hash: string) =>
-  hashPassword(plainTextPassword) === hash
+export const comparePassword = async (
+  plainTextPassword: string,
+  hash: string
+) => await compare(plainTextPassword, hash)
 
 export const getAuthToken = (
   user: string,
