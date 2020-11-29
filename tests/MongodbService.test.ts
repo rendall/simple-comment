@@ -38,9 +38,13 @@ import {
 import * as dotenv from "dotenv"
 dotenv.config()
 
-const MONGO_URI = "mongodb://localhost:27017/?readPreference=primary&ssl=false"
-// const MONGO_URI = global.__MONGO_URI__
+// const MONGO_DB = process.env.DATABASE_NAME
+// const MONGO_URI = "mongodb://localhost:27017/?readPreference=primary&ssl=false"
+const MONGO_URI = global.__MONGO_URI__
 const MONGO_DB = global.__MONGO_DB_NAME__
+
+// This is set to false in order to inspect data directly in the database
+const doDropTestDatabase = true
 
 declare const global: any
 
@@ -239,7 +243,7 @@ describe("Full API service test", () => {
   }, 120000)
 
   afterAll(async () => {
-    await db.dropDatabase()
+    if (doDropTestDatabase) await db.dropDatabase()
     await service.close()
   }, 120000)
 
