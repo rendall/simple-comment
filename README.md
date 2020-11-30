@@ -8,7 +8,7 @@ Try it out! <https://simple-comment.netlify.app>
 
 [![Netlify Status](https://api.netlify.com/api/v1/badges/fb816766-6f5b-4dff-9c27-3f5948ac9705/deploy-status)](https://app.netlify.com/sites/simple-comment/deploys)
 
-<!-- [![David](https://img.shields.io/david/rendall/simple-comment)](https://david-dm.org/rendall/simple-comment) -->
+[![David](https://img.shields.io/david/rendall/simple-comment)](https://david-dm.org/rendall/simple-comment)
 
 [![Swagger Validator](https://img.shields.io/swagger/valid/3.0?specUrl=https%3A%2F%2Fraw.githubusercontent.com%2Frendall%2Fsimple-comment%2Fmaster%2Fsrc%2Fschema%2Fsimple-comment-api.json)](https://app.swaggerhub.com/apis/rendall-dev/simple-comment_api/1.0.0)
 
