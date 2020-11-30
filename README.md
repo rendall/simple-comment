@@ -4,6 +4,14 @@ _Simple Comment_ allows visitors to your web pages to leave and read comments. I
 
 ## Status
 
+[![Netlify Status](https://api.netlify.com/api/v1/badges/fb816766-6f5b-4dff-9c27-3f5948ac9705/deploy-status)](https://app.netlify.com/sites/simple-comment/deploys)
+
+![David](https://img.shields.io/david/rendall/simple-comment)
+
+![Swagger Validator](https://img.shields.io/swagger/valid/3.0?specUrl=https%3A%2F%2Fraw.githubusercontent.com%2Frendall%2Fsimple-comment%2Fmaster%2Fsrc%2Fschema%2Fsimple-comment-api.json)
+
+![Website](https://img.shields.io/website?url=https%3A%2F%2Fsimple-comment.netlify.app%2F)
+
 Nearly there! Steps to minimum viable product (MVP):
 
 ### Done!
