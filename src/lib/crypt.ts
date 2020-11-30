@@ -1,5 +1,5 @@
 import { v4, validate as isValidUuid } from "uuid"
-import { hash, compare } from "bcrypt"
+import { hash, compare } from "bcryptjs";
 import * as jwt from "jsonwebtoken"
 import * as dotenv from "dotenv"
 
