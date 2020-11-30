@@ -30,11 +30,11 @@ Nearly there! Steps to minimum viable product (MVP):
   - Are complicated but work when followed
 - Visitor can post anonymously
   - Comment includes guest user
+- Working example <https://simple-comment.netlify.app>
 
 ### To be done
 
 - Minimal script to add Simple Comment functionality to any webpage
-- Working example
 - Validation for server-side entries
 
 ### Top priority after MVP
