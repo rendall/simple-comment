@@ -224,6 +224,7 @@ const setupSignup = () => {
 /* appendComment
  * Creates the UI for displaying a single comment, and appends it to HTMLElement `elem` */
 const appendComment = (comment: Comment, li: HTMLLIElement) => {
+  console.log("appendComment", comment, li)
   if (!li) throw new Error("parameter 'elem' is undefined in appendComment")
   const commentDisplay = document.createElement("div")
   commentDisplay.classList.add("comment-display")
@@ -551,7 +552,7 @@ const onCommentSubmit = (submitElems, targetId) => async e => {
     //     email: "fang@example.net"
     //   }
     // }
-    if (createGuestUserResult.status === 201) updateLoginStatus()
+    if (createGuestUserResult.status === 201) await updateLoginStatus()
     else setErrorStatus(createGuestUserResult as ResolvedResponse)
   }
 
@@ -559,6 +560,8 @@ const onCommentSubmit = (submitElems, targetId) => async e => {
     `ul[data-comment='${targetId}']`
   ) as HTMLUListElement
   const li = document.createElement("li")
+
+  console.log({ul, li})
 
   if (ul.firstChild) ul.insertBefore(li, ul.firstChild)
   else ul.appendChild(li)
