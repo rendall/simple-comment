@@ -640,7 +640,6 @@ const downloadDiscussion = discussionId =>
       setStatus("Discussion downloaded! - attempting to populate discussion...")
       onReceiveDiscussion(resp as ResolvedResponse<Discussion>)
     })
-    .catch(setErrorStatus)
 
 /* Send a POST request to create a topic for discussion */
 const tryCreatingTopic = (discussionId, title) =>
