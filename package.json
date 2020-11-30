@@ -5,7 +5,6 @@
     "@babel/preset-typescript": "^7.12.1",
     "@shelf/jest-mongodb": "^1.2.3",
     "@types/aws-lambda": "^8.10.64",
-    "@types/bcrypt": "^3.0.0",
     "@types/jest": "^26.0.15",
     "@types/jsonwebtoken": "^8.5.0",
     "@types/mongodb": "^3.1.23",
@@ -38,7 +37,7 @@
     "posttest": "rimraf ./globalConfig.json",
     "prebuild": "rimraf ./functions",
     "start": "start:backend",
-    "start:backend": "yarn run build:backend && netlify-lambda serve ./netlify-functions",
+    "start:backend": "yarn run build:backend && netlify-lambda serve --timeout 60 --config ./webpack.netlify.functions.js ./netlify-functions",
     "start:frontend": "yarn run build:frontend && http-server ./dist --proxy http://localhost:9000",
     "test": "jest",
     "watch:test": "jest --watch --noStackTrace",
@@ -46,10 +45,13 @@
     "watch:frontend": "tsc --listEmittedFiles --watch"
   },
   "dependencies": {
-    "bcrypt": "5.0.0",
+    "@types/bcryptjs": "^2.4.2",
+    "bcryptjs": "^2.4.3",
+    "bson-ext": "^2.0.5",
     "dotenv": "^8.2.0",
     "jsonwebtoken": "^8.5.1",
     "mongodb": "^3.2.3",
+    "mongodb-client-encryption": "^1.1.0",
     "uuid": "8.3.1"
   }
 }
