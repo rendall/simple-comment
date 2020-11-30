@@ -16,24 +16,6 @@ Try it out! <https://simple-comment.netlify.app>
 
 Nearly there! Steps to minimum viable product (MVP):
 
-### Done!
-
-- API works entirely as expected
-  - Each endpoint and each verb behaves properly
-  - `Access-Control-Allow-Origin` responds to `.env` variables
-- Authentication and Identification works as expected
-- Authenticated users and admins can interact with Simple Comment entirely as expected
-- Anonymous user can create topics
-  - This is useful for pages that do not have topics yet
-  - Restrictions apply:
-    - The `Referer` header and the `topicId` must map properly
-    - The `Origin` must be on the `Access-Control-Allow-Origin` list
-- Setup instructions
-  - Are complicated but work when followed
-- Visitor can post anonymously
-  - Comment includes guest user
-- Working example <https://simple-comment.netlify.app>
-
 ### To be done
 
 - Minimal script to add Simple Comment functionality to any webpage
@@ -57,6 +39,26 @@ Nearly there! Steps to minimum viable product (MVP):
 - User profiles
   - See comments
   - Avatar
+  
+ <details>
+  <summary><b>Done!</b></summary>
+
+- API works entirely as expected
+  - Each endpoint and each verb behaves properly
+  - `Access-Control-Allow-Origin` responds to `.env` variables
+- Authentication and Identification works as expected
+- Authenticated users and admins can interact with Simple Comment entirely as expected
+- Anonymous user can create topics
+  - This is useful for pages that do not have topics yet
+  - Restrictions apply:
+    - The `Referer` header and the `topicId` must map properly
+    - The `Origin` must be on the `Access-Control-Allow-Origin` list
+- Setup instructions
+  - Are complicated but work when followed
+- Visitor can post anonymously
+  - Comment includes guest user
+- Working example <https://simple-comment.netlify.app>
+</details>
 
 ## Features
 
