@@ -28,7 +28,9 @@ export abstract class Service {
    * returns AuthToken
    **/
   abstract authPOST = (username: string, password: string) =>
-    new Promise<AuthToken | Error>((resolve, reject) => {})
+    new Promise<AuthToken | Error>((resolve, reject) =>
+      reject("Error: not implemented")
+    )
 
   /**
    * Accept a user name and password, return authentication token
@@ -36,14 +38,18 @@ export abstract class Service {
    * returns AuthToken
    **/
   abstract authGET = (username: string, password: string) =>
-    new Promise<AuthToken | Error>((resolve, reject) => {})
+    new Promise<AuthToken | Error>((resolve, reject) =>
+      reject("Error: not implemented")
+    )
 
   /**
    * Create user
    * returns Success | Error
    **/
   abstract userPOST = (newUser: NewUser, authUserId?: UserId) =>
-    new Promise<Success<User> | Error>((resolve, reject) => {})
+    new Promise<Success<User> | Error>((resolve, reject) =>
+      reject("Error: not implemented")
+    )
 
   /**
    * Read user
@@ -52,7 +58,9 @@ export abstract class Service {
    * returns User
    **/
   abstract userGET = (userId?: UserId, authUserId?: UserId) =>
-    new Promise<Success<Partial<User>> | Error>(async (resolve, reject) => {})
+    new Promise<Success<Partial<User>> | Error>(async (resolve, reject) =>
+      reject("Error: not implemented")
+    )
   /**
    * Read all users
    *
@@ -60,7 +68,7 @@ export abstract class Service {
    **/
   abstract userListGET = (authUserId?: UserId) =>
     new Promise<Success<AdminSafeUser[] | PublicSafeUser[]> | Error>(
-      async (resolve, reject) => {}
+      async (resolve, reject) => reject("Error: not implemented")
     )
 
   /**
@@ -73,7 +81,10 @@ export abstract class Service {
     targetId: UserId,
     user: UpdateUser,
     authUserId?: UserId
-  ) => new Promise<Success<User> | Error>((resolve, reject) => {})
+  ) =>
+    new Promise<Success<User> | Error>((resolve, reject) =>
+      reject("Error: not implemented")
+    )
 
   /**
    * Delete user
@@ -82,7 +93,9 @@ export abstract class Service {
    * returns Success
    **/
   abstract userDELETE = (userId: UserId, authUser: UserId) =>
-    new Promise<Success | Error>((resolve, reject) => {})
+    new Promise<Success | Error>((resolve, reject) =>
+      reject("Error: not implemented")
+    )
 
   /**
    * Create a comment
@@ -94,7 +107,10 @@ export abstract class Service {
     parentId: TopicId | CommentId,
     text: string,
     authUser?: UserId
-  ) => new Promise<Success<Comment> | Error>((resolve, reject) => {})
+  ) =>
+    new Promise<Success<Comment> | Error>((resolve, reject) =>
+      reject("Error: not implemented")
+    )
 
   /**
    * Read a comment
@@ -105,7 +121,7 @@ export abstract class Service {
    **/
   abstract commentGET = (targetId: TopicId | CommentId, authUserId?: UserId) =>
     new Promise<Success<Comment | Discussion> | Error>(
-      async (resolve, reject) => {}
+      async (resolve, reject) => reject("Error: not implemented")
     )
 
   /**
@@ -119,7 +135,10 @@ export abstract class Service {
     targetId: CommentId,
     text: string,
     authUser?: UserId
-  ) => new Promise<Success<Comment> | Error>((resolve, reject) => {})
+  ) =>
+    new Promise<Success<Comment> | Error>((resolve, reject) =>
+      reject("Error: not implemented")
+    )
 
   /**
    * Delete a specific comment
@@ -132,13 +151,18 @@ export abstract class Service {
     topicId: TopicId,
     commentId: CommentId,
     authUser: UserId
-  ) => new Promise<Success | Error>((resolve, reject) => {})
+  ) =>
+    new Promise<Success | Error>((resolve, reject) =>
+      reject("Error: not implemented")
+    )
 
   /**
    * returns an authenticated guest token
    **/
   abstract gauthGET = () =>
-    new Promise<AuthToken | Error>((resolve, reject) => {})
+    new Promise<AuthToken | Error>((resolve, reject) =>
+      reject("Error: not implemented")
+    )
 
   /**
    * Create a discussion
@@ -148,7 +172,9 @@ export abstract class Service {
    * returns Success 201
    **/
   abstract topicPOST = (topic: Topic, authUserId?: UserId) =>
-    new Promise<Success<Discussion> | Error>((resolve, reject) => {})
+    new Promise<Success<Discussion> | Error>((resolve, reject) =>
+      reject("Error: not implemented")
+    )
 
   /**
    * Read specific discussion
@@ -157,7 +183,9 @@ export abstract class Service {
    * returns Discussion
    **/
   abstract topicGET = (topicId: TopicId, authUser?: UserId) =>
-    new Promise<Success<Discussion> | Error>((resolve, reject) => {})
+    new Promise<Success<Discussion> | Error>((resolve, reject) =>
+      reject("Error: not implemented")
+    )
 
   /**
    * Read a list of all discussions
@@ -166,13 +194,18 @@ export abstract class Service {
    * returns List
    **/
   abstract topicListGET = (authUser?: UserId) =>
-    new Promise<Success<Discussion[]> | Error>((resolve, reject) => {})
+    new Promise<Success<Discussion[]> | Error>((resolve, reject) =>
+      reject("Error: not implemented")
+    )
 
   abstract topicPUT = (
     topicId: TopicId,
     topic: Pick<Topic, "title" | "isLocked">,
     authUserId?: UserId
-  ) => new Promise<Success<Topic> | Error>((resolve, reject) => {})
+  ) =>
+    new Promise<Success<Topic> | Error>((resolve, reject) =>
+      reject("Error: not implemented")
+    )
 
   /**
    * Delete a discussion
@@ -181,16 +214,23 @@ export abstract class Service {
    * returns Success
    **/
   abstract topicDELETE = (topicId: TopicId, authUser?: UserId) =>
-    new Promise<Success | Error>((resolve, reject) => {})
+    new Promise<Success | Error>((resolve, reject) =>
+      reject("Error: not implemented")
+    )
 
   abstract authDELETE = () =>
-    new Promise<Success | Error>((resolve, reject) => {})
+    new Promise<Success | Error>((resolve, reject) =>
+      reject("Error: not implemented")
+    )
 
   abstract verifyGET = (authToken: AuthToken) =>
-    new Promise<Success<TokenClaim> | Error>((resolve, reject) => {})
+    new Promise<Success<TokenClaim> | Error>((resolve, reject) =>
+      reject("Error: not implemented")
+    )
 
   /**
    * Close connections, cleanup
    **/
-  abstract close = () => new Promise<void>((resolve, reject) => {})
+  abstract close = (): Promise<void> =>
+    new Promise<void>((resolve, reject) => reject("Error: not implemented"))
 }
