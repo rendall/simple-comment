@@ -106,9 +106,6 @@ const getOrigin = (headers: { [header: string]: string }) =>
   getHeaderValue(headers, "origin")
 
 export const getAllowedOrigins = () => process.env.ALLOW_ORIGIN.split(",")
-// const isAllAllowed = (allowedOrigins) => allowedOrigins.includes("*")
-const isOriginAllowed = (origin: string, allowedOrigins: string[]) =>
-  allowedOrigins.includes("*") || getAllowedOrigins().includes(origin)
 
 /** Returns the proper headers for Access-Control-Allow-Origin
  * as set in .env and as determined by the Request Origin header

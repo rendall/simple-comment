@@ -580,8 +580,7 @@ const onCommentSubmit = (submitElems, targetId) => async e => {
  * The user has pushed the 'reply' button adjacent to a comment. This
  * method responds by coordinating building the UI */
 const onReplyToComment = (
-  comment: Comment | Discussion,
-  commentDisplay: Element
+  comment: Comment | Discussion
 ) => e => {
   clearReply()
   insertReplyInput(comment.id)
@@ -597,11 +596,12 @@ const onReplyToTopic = onReplyToComment
 /* onTopicClick
  * The user has clicked on a link for a topic, expecting to see
  * comments. This method requests the discussion */
-const onTopicClick = e => {
-  e.preventDefault()
-  const topicId = e.target.id
-  getOneDiscussion(topicId).then(onReceiveDiscussion, setErrorStatus)
-}
+// kept as an example
+// const onTopicClick = e => {
+//   e.preventDefault()
+//   const topicId = e.target.id
+//   getOneDiscussion(topicId).then(onReceiveDiscussion, setErrorStatus)
+// }
 
 /* onLogoutClick
  * The user has pressed the logout button. This method coordinates
