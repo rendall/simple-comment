@@ -39,7 +39,7 @@ import {
   toSafeUser,
   toTopic,
   toUpdatedUser,
-  validateUserId
+  validateUser
 } from "./utilities"
 import { policy } from "../policy"
 import {
@@ -177,17 +177,20 @@ export class MongodbService extends Service {
         return
       }
 
-      const idCheck = validateUserId(newUser.id)
-      if (idCheck.isValid === false) {
+      const userCheck = validateUser(newUser)
+      if (!userCheck.isValid) {
         reject({
           ...error400BadRequest,
-          body: `UserId '${newUser.id}' is invalid`
+          body: userCheck.reason
         })
         return
       }
 
-      // This is a necessary check because the moderator creation flow is outside of the normal user creation flow
+      // This is a necessary check because the moderator creation
+      // flow is outside of the normal user creation flow
       if (newUser.id === process.env.SIMPLE_COMMENT_MODERATOR_ID) {
+        // moderator username and password are changed by .env
+        // to create this user, log in with those credentials
         reject(error403ForbiddenToModify)
         return
       }
@@ -249,7 +252,10 @@ export class MongodbService extends Service {
       const hash = isGuestId(newUser.id)
         ? ""
         : await hashPassword(newUser.password)
-      const adminSafeUser = toAdminSafeUser(newUser)
+      const adminSafeUser = {
+        ...toAdminSafeUser(newUser),
+        name: newUser.name.trim()
+      }
       const user: User = isGuestId(newUser.id)
         ? adminSafeUser
         : ({ ...adminSafeUser, hash } as User)
@@ -361,6 +367,15 @@ export class MongodbService extends Service {
         return
       }
 
+      const checkUser = validateUser(user as User)
+      if (!checkUser.isValid) {
+        reject({
+          ...error400BadRequest,
+          body: checkUser.reason
+        })
+      }
+
+      //TODO: Guests should be able to PUT in order to change their name or email
       if (isGuestId(targetId)) {
         reject({ ...error403Forbidden, body: "Guest users cannot be edited" })
         return
@@ -416,6 +431,8 @@ export class MongodbService extends Service {
       const newProps = toUpdatedUser(user)
 
       const updatedUser = { ...foundUser, ...newProps }
+
+      // one final check for validity
 
       /* NB: It is always safe to return AdminSafeUser because
        * authUser is always an admin or the user themself */
@@ -1096,7 +1113,6 @@ export class MongodbService extends Service {
         await this.getDb()
       ).collection("comments")
 
-      console.log({ comments })
       const discussion = await comments.findOne({ id: targetId })
 
       if (!discussion || isComment(discussion)) {
