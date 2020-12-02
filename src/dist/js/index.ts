@@ -165,7 +165,7 @@ const setupSignup = () => {
     document
       .querySelector("#sign-up-status")
       .classList.toggle("is-error", isError)
-    document.querySelector("#sign-up-status").innerHTML = message
+    document.querySelector("#sign-up-status").innerHTML = encodeURI(message)
   }
   const getElem = id => document.querySelector(`#sign-up-${id}`) as HTMLElement
   const getValue = id => (getElem(id) as HTMLInputElement).value
@@ -224,7 +224,6 @@ const setupSignup = () => {
 /* appendComment
  * Creates the UI for displaying a single comment, and appends it to HTMLElement `elem` */
 const appendComment = (comment: Comment, li: HTMLLIElement) => {
-  console.log("appendComment", comment, li)
   if (!li) throw new Error("parameter 'elem' is undefined in appendComment")
   const commentDisplay = document.createElement("div")
   commentDisplay.classList.add("comment-display")
@@ -441,7 +440,7 @@ const setStatus = (
   if (!isString(message)) return setStatus(JSON.stringify(message), isError)
   clearStatus()
   document.querySelector("#status-display").classList.toggle("error", isError)
-  document.querySelector("#status-display").innerHTML = message
+  document.querySelector("#status-display").innerHTML = encodeURI(message)
 }
 
 const setErrorStatus = (
@@ -468,7 +467,7 @@ const setUserStatus = (user?: AdminSafeUser) => {
   else docBody.classList.remove("is-guest")
 
   const userNameField = document.querySelector("#user-name")
-  userNameField.innerHTML = userName
+  userNameField.innerHTML = encodeURI(userName)
 
   docBody.classList.remove("is-logging-in")
   docBody.classList.toggle("is-logged-in", !!user)
@@ -561,7 +560,7 @@ const onCommentSubmit = (submitElems, targetId) => async e => {
   ) as HTMLUListElement
   const li = document.createElement("li")
 
-  console.log({ul, li})
+  console.log({ ul, li })
 
   if (ul.firstChild) ul.insertBefore(li, ul.firstChild)
   else ul.appendChild(li)
@@ -638,11 +637,10 @@ const onLoginClick = e => {
 }
 
 const downloadDiscussion = discussionId =>
-  getOneDiscussion(discussionId)
-    .then(resp => {
-      setStatus("Discussion downloaded! - attempting to populate discussion...")
-      onReceiveDiscussion(resp as ResolvedResponse<Discussion>)
-    })
+  getOneDiscussion(discussionId).then(resp => {
+    setStatus("Discussion downloaded! - attempting to populate discussion...")
+    onReceiveDiscussion(resp as ResolvedResponse<Discussion>)
+  })
 
 /* Send a POST request to create a topic for discussion */
 const tryCreatingTopic = (discussionId, title) =>
