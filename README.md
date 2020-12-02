@@ -10,6 +10,8 @@ Try it out! <https://simple-comment.netlify.app>
 [![David](https://img.shields.io/david/rendall/simple-comment)](https://david-dm.org/rendall/simple-comment)
 [![Swagger Validator](https://img.shields.io/swagger/valid/3.0?specUrl=https%3A%2F%2Fraw.githubusercontent.com%2Frendall%2Fsimple-comment%2Fmaster%2Fsrc%2Fschema%2Fsimple-comment-api.json)](https://app.swaggerhub.com/apis/rendall-dev/simple-comment_api/1.0.0)
 [![Website](https://img.shields.io/website?url=https%3A%2F%2Fsimple-comment.netlify.app%2F)](https://simple-comment.netlify.app)
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/rendall/simple-comment.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/rendall/simple-comment/alerts/)
+[![Language grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/rendall/simple-comment.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/rendall/simple-comment/context:javascript)
 
 Nearly there! Steps to minimum viable product (MVP):
 
