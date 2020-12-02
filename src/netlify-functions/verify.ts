@@ -1,5 +1,4 @@
-import { Handler, Context, Callback, APIGatewayEvent } from "aws-lambda"
-import * as jwt from "jsonwebtoken"
+import { Handler, Context, APIGatewayEvent } from "aws-lambda"
 import * as dotenv from "dotenv"
 import {
   getAllowedOrigins,
@@ -8,8 +7,7 @@ import {
   getAuthHeaderValue,
   getCookieToken,
   hasBearerScheme,
-  hasTokenCookie,
-  REALM
+  hasTokenCookie
 } from "../lib/utilities"
 import { Success, TokenClaim, Error } from "../lib/simple-comment"
 import {

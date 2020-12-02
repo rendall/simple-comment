@@ -23,10 +23,6 @@ export const REALM = "Access to restricted resources"
 const AUTHORIZATION_HEADER = "Authorization"
 const BEARER_SCHEME = "Bearer"
 const BASIC_SCHEME = "Basic"
-const ACCESS_CONTROL_ALLOW_ORIGIN = "Access-Control-Allow-Origin"
-const EXPIRED_AUTHENTICATE_HEADER = {
-  "WWW-Authenticate": `Basic realm="${REALM}", error="invalid_token", error_description="The access token expired at ${null}", charset="UTF-8"`
-}
 
 /**
  * Returns true if userId is a guest id
@@ -362,9 +358,9 @@ export const validateUserId = (
   result?: RegExpMatchArray
 ): ValidResult =>
   userId.length < 5 || userId.length > 36
-  ? { isValid: false }
+    ? { isValid: false }
     : result === undefined
-      ? validateUserId(userId, userId.match(/[^a-z0-9-_]/g))
-      : result === null
-        ? { isValid: true }
-        : { isValid: false, result }
+    ? validateUserId(userId, userId.match(/[^a-z0-9-_]/g))
+    : result === null
+    ? { isValid: true }
+    : { isValid: false, result }

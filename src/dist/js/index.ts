@@ -506,23 +506,24 @@ const onReceiveDiscussion = (
  * The server has responded to a request to the `/topic`
  * endpoint, requesting the entire list of current topics. This
  * method handles the response. */
-const onReceiveTopics = (topics = []) => {
-  const topicList = document.querySelector("#topic-list")
-  while (topicList.hasChildNodes()) {
-    topicList.removeChild(topicList.lastChild)
-  }
-  if (topics.length)
-    topics.forEach(topic => {
-      const listItem = document.createElement("li")
-      topicList.appendChild(listItem)
-      const anchor = document.createElement("a")
-      anchor.innerText = topic.title
-      anchor.setAttribute("id", topic.id)
-      anchor.setAttribute("href", "#")
-      anchor.addEventListener("click", onTopicClick)
-      listItem.appendChild(anchor)
-    })
-}
+// const onReceiveTopics = (topics = []) => {
+// // kept here as an example
+//   const topicList = document.querySelector("#topic-list")
+//   while (topicList.hasChildNodes()) {
+//     topicList.removeChild(topicList.lastChild)
+//   }
+//   if (topics.length)
+//     topics.forEach(topic => {
+//       const listItem = document.createElement("li")
+//       topicList.appendChild(listItem)
+//       const anchor = document.createElement("a")
+//       anchor.innerText = topic.title
+//       anchor.setAttribute("id", topic.id)
+//       anchor.setAttribute("href", "#")
+//       anchor.addEventListener("click", onTopicClick)
+//       listItem.appendChild(anchor)
+//     })
+// }
 /* Methods responding to user events
  * ---------------------------------- */
 /* onCommentSubmit
