@@ -33,7 +33,6 @@ Nearly there! Steps to minimum viable product (MVP):
 
 ### Nice to haves
 
-- _"Powered by Simple Comment"_ badge
 - Moderator change policy on holding posts for approval
 - Visitor can claim ownership over anonymous posts
 - Edit button
@@ -45,6 +44,8 @@ Nearly there! Steps to minimum viable product (MVP):
  <details>
   <summary><b>Done!</b></summary>
 
+- [![Powered by Simple Comment](https://img.shields.io/badge/powered%20by-Simple%20Comment-%233287e6)](https://simple-comment.netlify.app)
+  - oh yeah!
 - Validation for server-side entries
 - All API endpoint respond as expected
   - `Access-Control-Allow-Origin` responds to `.env` variables
