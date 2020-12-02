@@ -351,6 +351,7 @@ export class HeaderList {
 export interface ValidResult {
   isValid: boolean
   result?: RegExpMatchArray
+  reason?: string
 }
 
 export const validateUserId = (
@@ -360,7 +361,274 @@ export const validateUserId = (
   userId.length < 5 || userId.length > 36
     ? { isValid: false }
     : result === undefined
-    ? validateUserId(userId, userId.match(/[^a-z0-9-_]/g))
+    ? validateUserId(userId, userId.match(/[^a-z0-9-_]/g)) // This match is designed to return invalid characters
     : result === null
     ? { isValid: true }
     : { isValid: false, result }
+
+export const validateEmail = (email: string, result?): ValidResult =>
+  result === undefined
+    ? validateEmail(
+        email,
+        email.match(
+          /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/
+        )
+      )
+    : result === null
+    ? { isValid: false }
+    : { isValid: true, result }
+
+// This validation is intended to be as broad as possible but
+// may still get it wrong in your use case
+// (q.v. https://www.kalzumeus.com/2010/06/17/falsehoods-programmers-believe-about-names/ )
+export const validateDisplayName = (name: string): ValidResult =>
+  name.length <= 3 || name.length >= 100
+    ? { isValid: false }
+    : { isValid: true }
+
+// Have a very loose password policy and encourage password complexity on the frontend.
+// Checking here only for length and common passwords
+export const validatePassword = (password: string): ValidResult => {
+  if (password !== password.trim())
+    return {
+      isValid: false,
+      reason: "Passwords cannot contain leading or trailing spaces"
+    }
+  if (commonPasswords.includes(password))
+    return { isValid: false, reason: `${password} is too easily guessed` }
+  if (password.length < 7)
+    return {
+      isValid: false,
+      reason: "Passwords must be longer than 6 characters"
+    }
+  //  bcrypt will only check the first 72 characters
+  //  therefore we truncate using sha-512
+  return { isValid: true }
+}
+
+export const validateUser = (user: UpdateUser & User): ValidResult => {
+  if (user.hasOwnProperty("id")) {
+    const idCheck = validateUserId(user.id)
+    if (!idCheck.isValid) {
+      const badChars = idCheck.result!.join(", ")
+      return {
+        ...idCheck,
+        reason: `UserId '${user.id}' contains invalid characters '${badChars}'. Only lowercase letters, numbers, '-' and '_' are valid.`
+      }
+    }
+  }
+  if (user.hasOwnProperty("email")) {
+    const checkEmail = validateEmail(user.email)
+    if (!checkEmail.isValid)
+      return { ...checkEmail, reason: "Email is not valid" }
+  }
+  if (user.hasOwnProperty("name")) {
+    const checkName = validateDisplayName(user.name)
+    if (!checkName.isValid) return checkName
+  }
+  if (user.hasOwnProperty("password")) {
+    const passwordCheck = validatePassword(user.password)
+    if (!passwordCheck.isValid) return passwordCheck
+  }
+
+  return { isValid: true }
+}
+
+const commonPasswords = [
+  "000000",
+  "00000000",
+  "101010",
+  "10203",
+  "102030",
+  "1111",
+  "111111",
+  "1111111",
+  "11111111",
+  "1111111111",
+  "112233",
+  "11223344",
+  "121212",
+  "123",
+  "123123",
+  "123123123",
+  "123321",
+  "1234",
+  "12341234",
+  "12345",
+  "123456",
+  "123456",
+  "1234567",
+  "12345678",
+  "123456789",
+  "123456789",
+  "1234567890",
+  "12345678910",
+  "123456789a",
+  "123456a",
+  "123456b",
+  "12345a",
+  "1234qwer",
+  "123654",
+  "123abc",
+  "123qwe",
+  "131313",
+  "142536",
+  "147258",
+  "147258369",
+  "159357",
+  "159753",
+  "1q2w3e",
+  "1q2w3e4r",
+  "1q2w3e4r5t",
+  "1qaz2wsx",
+  "20100728",
+  "222222",
+  "25251325",
+  "333333",
+  "456789",
+  "5201314",
+  "555555",
+  "654321",
+  "6655321",
+  "666666",
+  "686584",
+  "777777",
+  "7777777",
+  "789456",
+  "789456123",
+  "888888",
+  "88888888",
+  "987654",
+  "987654321",
+  "987654321",
+  "999999",
+  "Bangbang123",
+  "Million2",
+  "Sample123",
+  "a12345",
+  "a123456",
+  "a123456789",
+  "a801016",
+  "aaaaaa",
+  "aaron431",
+  "abc123",
+  "abcd1234",
+  "alexander",
+  "amanda",
+  "andrea",
+  "andrew",
+  "angel1",
+  "anhyeuem",
+  "anthony",
+  "asd123",
+  "asdasd",
+  "asdf1234",
+  "asdfgh",
+  "asdfghjkl",
+  "ashley",
+  "azerty",
+  "b123456",
+  "babygirl1",
+  "bailey",
+  "baseball",
+  "basketball",
+  "batman",
+  "blink182",
+  "buster",
+  "butterfly",
+  "charlie",
+  "chatbooks",
+  "cheese",
+  "chocolate",
+  "computer",
+  "cookie",
+  "daniel",
+  "default",
+  "dragon",
+  "evite",
+  "family",
+  "flower",
+  "football",
+  "football1",
+  "fuckyou",
+  "fuckyou1",
+  "gabriel",
+  "ginger",
+  "hannah",
+  "hello",
+  "hello123",
+  "hunter",
+  "iloveu",
+  "iloveyou",
+  "iloveyou1",
+  "jacket025",
+  "jakcgt333",
+  "jennifer",
+  "jessica",
+  "jesus1",
+  "jobandtalent",
+  "jordan",
+  "jordan23",
+  "joshua",
+  "justin",
+  "killer",
+  "letmein",
+  "lol123",
+  "love",
+  "love123",
+  "lovely",
+  "loveme",
+  "madison",
+  "maggie",
+  "master",
+  "matthew",
+  "michael",
+  "michael1",
+  "michelle",
+  "monkey",
+  "myspace1",
+  "naruto",
+  "nicole",
+  "ohmnamah23",
+  "omgpop",
+  "party",
+  "password",
+  "password1",
+  "password123",
+  "peanut",
+  "pepper",
+  "picture1",
+  "pokemon",
+  "princess",
+  "princess1",
+  "purple",
+  "q1w2e3r4",
+  "qazwsx",
+  "qqww1122",
+  "qwe123",
+  "qwer1234",
+  "qwer123456",
+  "qwerty",
+  "qwerty1",
+  "qwertyuiop",
+  "robert",
+  "samantha",
+  "samsung",
+  "senha",
+  "shadow",
+  "soccer",
+  "starwars",
+  "summer",
+  "sunshine",
+  "superman",
+  "taylor",
+  "tigger",
+  "trustno1",
+  "unknown",
+  "welcome",
+  "whatever",
+  "x4ivygA51F",
+  "yugioh",
+  "zing",
+  "zxcvbnm"
+]
