@@ -1,3 +1,5 @@
+ <a href="https://simple-comment.netlify.app"> <img src="/docs/simple-comment-logo.svg" height="72"> </a>
+
 # Simple Comment
 
 _Simple Comment_ allows visitors to your web pages to leave and read comments. It is _truly free_ (as in no cost) and entirely controlled by you from end to end.
