@@ -19,7 +19,6 @@ Nearly there! Steps to minimum viable product (MVP):
 ### To be done
 
 - Minimal script to add Simple Comment functionality to any webpage
-- Validation for server-side entries
 
 ### Top priority after MVP
 
@@ -43,11 +42,11 @@ Nearly there! Steps to minimum viable product (MVP):
  <details>
   <summary><b>Done!</b></summary>
 
-- API works entirely as expected
-  - Each endpoint and each verb behaves properly
+- Validation for server-side entries
+- All API endpoint respond as expected
   - `Access-Control-Allow-Origin` responds to `.env` variables
 - Authentication and Identification works as expected
-- Authenticated users and admins can interact with Simple Comment entirely as expected
+- Authenticated users and admins can interact with Simple Comment as expected
 - Anonymous user can create topics
   - This is useful for pages that do not have topics yet
   - Restrictions apply:
