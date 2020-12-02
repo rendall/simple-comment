@@ -1,4 +1,4 @@
- <a href="https://simple-comment.netlify.app"> <img src="/docs/simple-comment-logo.svg" width="50%" height="72"> </a>
+ <a href="https://simple-comment.netlify.app"> <img src="/docs/simple-comment-logo.svg" height="72"> </a>
 
 # Simple Comment
 
