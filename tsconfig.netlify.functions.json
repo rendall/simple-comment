@@ -1,5 +1,9 @@
 {
-  "include": ["./src/netlify-functions/**/*.ts", "./src/lib/*.ts", "./src/webpack.netlify.functions.ts"],
+  "include": [
+    "./src/lib/*.ts",
+    "./src/netlify-functions/**/*.ts",
+    "./src/webpack.netlify.functions.ts"
+  ],
   "exclude": ["src/**/*.test.ts"],
   "compilerOptions": {
     /* Basic Options */

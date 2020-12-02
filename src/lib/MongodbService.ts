@@ -990,12 +990,18 @@ export class MongodbService extends Service {
         return
       }
 
-      if (!policy.canFirstVisitCreateTopic && (!authUser || !authUser.isAdmin )) {
+      if (
+        !policy.canFirstVisitCreateTopic &&
+        (!authUser || !authUser.isAdmin)
+      ) {
         reject(error403UserNotAuthorized)
         return
       }
 
-      if ((!authUserId || !authUser || !authUser.isAdmin) && policy.refererRestrictions) {
+      if (
+        (!authUserId || !authUser || !authUser.isAdmin) &&
+        policy.refererRestrictions
+      ) {
         // User is anonymous, public can create topics, and referrer restrictions are true
         // Let's validate the topic. We do that by comparing the proposed topicId with the `referer` header
         // They should be the same. If not, reject it
@@ -1090,7 +1096,7 @@ export class MongodbService extends Service {
         await this.getDb()
       ).collection("comments")
 
-      console.log({comments})
+      console.log({ comments })
       const discussion = await comments.findOne({ id: targetId })
 
       if (!discussion || isComment(discussion)) {
