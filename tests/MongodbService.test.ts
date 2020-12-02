@@ -3,6 +3,7 @@ import {
   Comment,
   CommentId,
   Discussion,
+  Error,
   TopicId,
   Success,
   Topic,
@@ -10,7 +11,8 @@ import {
   AdminSafeUser,
   Email,
   DeletedComment,
-  NewUser
+  NewUser,
+  UpdateUser
 } from "../src/lib/simple-comment"
 import { MongodbService } from "../src/lib/MongodbService"
 import { Db, MongoClient } from "mongodb"
@@ -35,6 +37,7 @@ import {
   isDeletedComment,
   toAdminSafeUser
 } from "../src/lib/utilities"
+import * as fs from "fs"
 import * as dotenv from "dotenv"
 dotenv.config()
 
@@ -52,6 +55,7 @@ const alphaUserInput =
   "ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÅ abcdefghijklmnopqrstuvwxyzäöå 1234567890 !@#$%^&*()_+-= "
 const alphaAscii =
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890_-"
+const emailAscii = "abcdefghijklmnopqrstuvwxyz01234567890"
 const randomNumber = (min: number, max: number): number =>
   Math.floor(Math.random() * (max - min)) + min
 const randomString = (
@@ -69,8 +73,9 @@ const randomString = (
 const randomDate = () => new Date(randomNumber(0, new Date().valueOf()))
 // Returns a random email that will validate but does not create examples of all possible valid emails
 const createRandomEmail = (): Email =>
-  `${randomString(alphaAscii)}@${randomString(alphaAscii)}.${randomString(
-    alphaAscii
+  `${randomString(emailAscii)}@${randomString(emailAscii)}.${randomString(
+    emailAscii,
+    3
   )}`
 // Functions that generate fake data - these could be moved to a common file to help other Service tests
 const createRandomComment = (
@@ -224,6 +229,8 @@ describe("Full API service test", () => {
   beforeAll(async () => {
     const connectionString = MONGO_URI
     const databaseName = MONGO_DB
+
+    // open VeryLongPassword for use later
 
     service = new MongodbService(connectionString, databaseName)
     client = await service.getClient()
@@ -545,6 +552,44 @@ describe("Full API service test", () => {
         expect(res).toHaveProperty("body")
         expect(res.body.name).toBe(updatedUser.name)
         expect(isAdminSafeUser(res.body)).toBe(true)
+      })
+  })
+  // put to /user/{userId} with very long password should not timeout
+  test("PUT to /user/{userId} with very long password should not timeout", () => {
+    const longFile = `${process.cwd()}/tests/veryLongRandomTestString`
+    const veryLongPassword = fs.readFileSync(longFile, "utf8")
+    const targetUser = getTargetUser()
+    const updatedUser = {
+      id: targetUser.id,
+      name: randomString(alphaUserInput, 25),
+      password: veryLongPassword
+    }
+    return service
+      .userPUT(updatedUser.id, updatedUser, targetUser.id)
+      .then((res: Success<AdminSafeUser>) => {
+        expect(res).toHaveProperty("statusCode", 204)
+        expect(res).toHaveProperty("body")
+        expect(res.body.name).toBe(updatedUser.name)
+        expect(isAdminSafeUser(res.body)).toBe(true)
+      })
+  })
+  // put to /user/{userId} with invalid name, email, password should fail
+  test("PUT to /user/{userId} with invalid name, email, password should fail", () => {
+    const targetUser = getTargetUser(u => !u.isAdmin && !u.isVerified)
+    const adminAuthUser = getAuthUser(u => u.isAdmin)
+    const updatedUser: UpdateUser = {
+      ...targetUser,
+      name: " ",
+      email: " ",
+      password: " ",
+      isAdmin: true,
+      isVerified: true
+    }
+    expect.assertions(1)
+    return service
+      .userPUT(targetUser.id, updatedUser, adminAuthUser.id)
+      .catch((err: Error) => {
+        expect(err).toHaveProperty("statusCode", 400)
       })
   })
   // put to /user/{userId} with admin credentials should alter user return 204 User updated
