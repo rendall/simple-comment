@@ -165,7 +165,7 @@ const setupSignup = () => {
     document
       .querySelector("#sign-up-status")
       .classList.toggle("is-error", isError)
-    document.querySelector("#sign-up-status").innerHTML = encodeURI(message)
+    document.querySelector("#sign-up-status").textContent = message
   }
   const getElem = id => document.querySelector(`#sign-up-${id}`) as HTMLElement
   const getValue = id => (getElem(id) as HTMLInputElement).value
@@ -257,10 +257,7 @@ const appendComment = (comment: Comment, li: HTMLLIElement) => {
     replyCommentButton.innerText = "reply"
     replyCommentButton.classList.add("comment-button")
     replyCommentButton.classList.add("reply-button")
-    replyCommentButton.addEventListener(
-      "click",
-      onReplyToComment(comment)
-    )
+    replyCommentButton.addEventListener("click", onReplyToComment(comment))
     commentDisplay.appendChild(replyCommentButton)
 
     const isOwnComment =
@@ -329,10 +326,7 @@ const updateDiscussionDisplay = (
   commentButton.innerText = "comment"
   commentButton.classList.add("comment-button")
   commentButton.classList.add("reply-button")
-  commentButton.addEventListener(
-    "click",
-    onReplyToComment(discussion)
-  )
+  commentButton.addEventListener("click", onReplyToComment(discussion))
   commentDisplay.appendChild(commentButton)
 
   const comments = discussion.replies
@@ -379,10 +373,7 @@ const updateDiscussionDisplay = (
   ul.dataset.comment = discussion.id
   discussionDiv.appendChild(ul)
 
-  replyTopicButton.addEventListener(
-    "click",
-    onReplyToTopic(discussion)
-  )
+  replyTopicButton.addEventListener("click", onReplyToTopic(discussion))
 
   if (comments) threadReplies(discussion, discussionDiv)
 
@@ -424,7 +415,7 @@ const updateLoginStatus = () =>
     })
 
 const clearStatus = () => {
-  document.querySelector("#status-display").innerHTML = ""
+  document.querySelector("#status-display").textContent = ""
   document.querySelector("#status-display").classList.remove("error")
   document.querySelector("body").classList.remove("is-logging-in")
 }
@@ -440,7 +431,7 @@ const setStatus = (
   if (!isString(message)) return setStatus(JSON.stringify(message), isError)
   clearStatus()
   document.querySelector("#status-display").classList.toggle("error", isError)
-  document.querySelector("#status-display").innerHTML = encodeURI(message)
+  document.querySelector("#status-display").textContent = message
 }
 
 const setErrorStatus = (
@@ -467,7 +458,7 @@ const setUserStatus = (user?: AdminSafeUser) => {
   else docBody.classList.remove("is-guest")
 
   const userNameField = document.querySelector("#user-name")
-  userNameField.innerHTML = encodeURI(userName)
+  userNameField.textContent = userName
 
   docBody.classList.remove("is-logging-in")
   docBody.classList.toggle("is-logged-in", !!user)
