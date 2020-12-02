@@ -1,4 +1,4 @@
- <a href="https://simple-comment.netlify.app"> <img src="/docs/simple-comment-logo.svg" height="72"> </a>
+<a href="https://simple-comment.netlify.app"> <img src="/docs/simple-comment-logo.svg" height="72"> </a>
 
 # Simple Comment
 
@@ -60,6 +60,7 @@ Nearly there! Steps to minimum viable product (MVP):
 - Visitor can post anonymously
   - Comment includes guest user
 - Working example <https://simple-comment.netlify.app>
+
 </details>
 
 ## Features
