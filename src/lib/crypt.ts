@@ -14,7 +14,9 @@ const getExpirationTime = (minutes: number): number =>
   ).valueOf()
 
 /** Get a password hash from the plaintext password */
-export const hashPassword = async (password: string) => await hash(password, 13)
+export const hashPassword = async (password: string) =>
+  //TODO: sha-512 pre-hash per https://dropbox.tech/security/how-dropbox-securely-stores-your-passwords
+  await hash(password, 13)
 
 export const comparePassword = async (
   plainTextPassword: string,
