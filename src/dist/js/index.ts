@@ -259,7 +259,7 @@ const appendComment = (comment: Comment, li: HTMLLIElement) => {
     replyCommentButton.classList.add("reply-button")
     replyCommentButton.addEventListener(
       "click",
-      onReplyToComment(comment, commentDisplay)
+      onReplyToComment(comment)
     )
     commentDisplay.appendChild(replyCommentButton)
 
@@ -331,7 +331,7 @@ const updateDiscussionDisplay = (
   commentButton.classList.add("reply-button")
   commentButton.addEventListener(
     "click",
-    onReplyToComment(discussion, discussionDiv)
+    onReplyToComment(discussion)
   )
   commentDisplay.appendChild(commentButton)
 
@@ -381,7 +381,7 @@ const updateDiscussionDisplay = (
 
   replyTopicButton.addEventListener(
     "click",
-    onReplyToTopic(discussion, discussionDiv)
+    onReplyToTopic(discussion)
   )
 
   if (comments) threadReplies(discussion, discussionDiv)
@@ -579,9 +579,7 @@ const onCommentSubmit = (submitElems, targetId) => async e => {
 /* onReplyToComment
  * The user has pushed the 'reply' button adjacent to a comment. This
  * method responds by coordinating building the UI */
-const onReplyToComment = (
-  comment: Comment | Discussion
-) => e => {
+const onReplyToComment = (comment: Comment | Discussion) => e => {
   clearReply()
   insertReplyInput(comment.id)
 }
