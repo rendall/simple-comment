@@ -19,8 +19,7 @@ import {
   getNewUserInfo,
   getTargetId,
   getUpdatedUserInfo,
-  getUserId,
-  isGuestId
+  getUserId
 } from "../lib/utilities"
 dotenv.config()
 
