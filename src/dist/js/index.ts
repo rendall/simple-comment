@@ -531,7 +531,14 @@ const onCommentSubmit = (submitElems, targetId) => async e => {
   if (!isLoggedIn) {
     //TODO: due validation of email and name
     const id = (document.querySelector("#claim-user") as HTMLInputElement).value
-    const createGuestUserResult = await createGuestUser({ id, name, email })
+    try {
+      const createGuestUserResult = await createGuestUser({ id, name, email })
+      if (createGuestUserResult.status === 201) await updateLoginStatus()
+      else setErrorStatus(createGuestUserResult as ResolvedResponse)
+    } catch (error) {
+      setErrorStatus(error)
+      return
+    }
     // A successful createGuestUserResult would look like this:
     // {
     //   status: 201,
@@ -543,8 +550,6 @@ const onCommentSubmit = (submitElems, targetId) => async e => {
     //     email: "fang@example.net"
     //   }
     // }
-    if (createGuestUserResult.status === 201) await updateLoginStatus()
-    else setErrorStatus(createGuestUserResult as ResolvedResponse)
   }
 
   const ul = document.querySelector(
@@ -552,14 +557,13 @@ const onCommentSubmit = (submitElems, targetId) => async e => {
   ) as HTMLUListElement
   const li = document.createElement("li")
 
-  console.log({ ul, li })
-
   if (ul.firstChild) ul.insertBefore(li, ul.firstChild)
   else ul.appendChild(li)
 
   const onCommentResponse = parentElement => (
     response: ResolvedResponse<Comment>
   ) => {
+    setStatus("Successfully posted comment")
     const comment = response.body
     appendComment(comment, parentElement)
     clearReply()
