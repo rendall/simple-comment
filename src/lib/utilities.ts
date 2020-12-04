@@ -423,7 +423,9 @@ export const validateUser = (user: UpdateUser & User): ValidResult => {
     const checkName = validateDisplayName(user.name)
     if (!checkName.isValid) return checkName
   }
-  if (user.hasOwnProperty("password")) {
+
+  // do not validate guest user passwords
+  if (!isGuestId(user.id) && user.hasOwnProperty("password")) {
     const passwordCheck = validatePassword(user.password)
     if (!passwordCheck.isValid) return passwordCheck
   }
