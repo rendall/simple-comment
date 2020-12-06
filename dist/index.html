@@ -11,12 +11,11 @@
   <meta name="twitter:image:alt" content="Simple Comment logo: thought bubble with a slight smile">
   <meta name="twitter:site" content="@rendall">
   <style>
-
     @font-face {
       font-family: 'Comfortaa';
       font-style: normal;
       font-weight: 500;
-      font-display: swap;
+      font-display: block;
       src: url(./font/simple-comment.woff2) format('woff2');
     }
 
@@ -28,7 +27,6 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica,
         Arial, sans-serif;
       font-size: 1.125rem;
-      font-weight: 500;
       line-height: 1.61111em;
       margin-bottom: 1em;
       margin-top: 1em;
@@ -42,11 +40,12 @@
     }
 
     h1 {
-      font-family: "Comfortaa", sans-serif;
       color: #3287e6;
+      font-family: "Comfortaa", sans-serif;
       font-size: 3.4rem;
-      margin-left: 1rem;
+      font-weight: 500;
       line-height: 4rem;
+      margin-left: 1rem;
     }
 
     input {
@@ -110,6 +109,7 @@
       display: flex;
       margin: 0 auto;
       max-width: 59rem;
+      min-height: 10rem;
       align-items: center;
     }
 
