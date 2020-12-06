@@ -189,3 +189,18 @@ Returns the logged-in user id or `401`
 ## policy
 
 `policy` is an [object holding key-value pairs](./src/policy.ts) that governs how _Simple Comment_ behaves, determining for instance maximum comment length or whether ordinary users can delete themselves
+
+## Alternatives
+
+- Commentics <https://www.commentics.org/>
+- Commento <https://commento.io/>
+- Disqus <https://disqus.com/>
+- Facebook <https://developers.facebook.com/docs/plugins/comments/>
+- GraphComment <https://graphcomment.com/>
+- HTML Comment Box <https://www.htmlcommentbox.com/>
+- HashOver <https://www.barkdull.org/software/hashover>
+- IntenseDebate <https://intensedebate.com/>
+- Isso <https://posativ.org/isso/>
+- Remark42 <https://remark42.com/>
+- Valine <https://valine.js.org/en/index.html>
+- schnack! <https://schnack.cool/>
