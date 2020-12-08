@@ -26,7 +26,9 @@ const service: MongodbService = new MongodbService(
 
 const getAllowHeaders = (event: APIGatewayEvent) => {
   const allowedMethods = {
-    "Access-Control-Allow-Methods": "GET,OPTION"
+    "Access-Control-Allow-Methods": "GET,OPTION",
+    "Access-Control-Allow-Credentials": "true",
+    "Access-Control-Expose-Headers": "Set-Cookie"
   }
   const allowedOriginHeaders = getAllowOriginHeaders(
     event.headers,
@@ -44,7 +46,7 @@ export const handler = async (
   const isValidPath = dirs.length <= 5
   const headers = getAllowHeaders(event)
 
-  const convert = (res: { statusCode: number; body: any }) =>
+  const convert = (res: { statusCode: number; body: any }, headers) =>
     res.statusCode === 204
       ? { ...res, headers }
       : {
@@ -54,34 +56,36 @@ export const handler = async (
         }
 
   if (!isValidPath)
-    return convert({
-      ...error404CommentNotFound,
-      body: `${event.path} is not valid`
-    })
+    return convert(
+      {
+        ...error404CommentNotFound,
+        body: `${event.path} is not valid`
+      },
+      headers
+    )
 
   const handleMethod = (method): Promise<Success | Error> => {
     switch (method) {
       case "GET":
-        return handleTauth(event)
+        return handleGauth(event)
       case "OPTION":
         return handleOption(event)
       default:
-        const headers = getAllowHeaders(event)
         return new Promise<Error>(resolve =>
-          resolve({ ...error405MethodNotAllowed, headers })
+          resolve({ ...error405MethodNotAllowed })
         )
     }
   }
 
   try {
     const response = await handleMethod(event.httpMethod)
-    return convert(response)
+    return convert(response, response.headers)
   } catch (error) {
     return error
   }
 }
 
-const handleTauth = async (event: APIGatewayEvent) => {
+const handleGauth = async (event: APIGatewayEvent) => {
   const allowHeaders = getAllowHeaders(event)
 
   const gauthResponse = await service.gauthGET()
@@ -91,6 +95,10 @@ const handleTauth = async (event: APIGatewayEvent) => {
   }
 
   const token = gauthResponse.body as AuthToken
+
+  const expireDate = new Date(
+    new Date().valueOf() + 52 * 7 * 24 * 60 * 60 * 1000
+  ).toUTCString()
 
   const COOKIE_HEADER = {
     "Set-Cookie": `simple_comment_token=${token}; path=/; ${
