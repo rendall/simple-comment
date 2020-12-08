@@ -45,17 +45,26 @@ export const handler: Handler = async (
   const isValidPath = dirs.length <= 5
   const headers = getAllowHeaders(event)
 
+  const convert = (res: { statusCode: number; body: any }) =>
+    res.statusCode === 204
+      ? { ...res, headers }
+      : {
+        ...res,
+        body: JSON.stringify(res.body),
+        headers
+      }
+
   if (!isValidPath)
-    return { ...error404NotFound, body: `${event.path} is not valid` }
+    return convert({ ...error404NotFound, body: `${event.path} is not valid` })
 
   const isBearer = hasBearerScheme(event.headers)
   const hasCookie = hasTokenCookie(event.headers)
 
   if (!isBearer && !hasCookie) {
-    return {
+    return convert({
       ...error401UserNotAuthenticated,
       body: "No Cookie header 'simple-comment-token' value"
-    }
+    })
   }
 
   const handleMethod = (
@@ -78,14 +87,6 @@ export const handler: Handler = async (
     }
   }
 
-  const convert = (res: { statusCode: number; body: any }) =>
-    res.statusCode === 204
-      ? { ...res, headers }
-      : {
-          ...res,
-          body: JSON.stringify(res.body),
-          headers
-        }
 
   try {
     const response = await handleMethod(event.httpMethod)

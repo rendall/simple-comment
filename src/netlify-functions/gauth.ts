@@ -42,12 +42,24 @@ export const handler = async (
 ) => {
   const dirs = event.path.split("/")
   const isValidPath = dirs.length <= 5
+  const headers = getAllowHeaders(event)
+
+  const convert = (res: { statusCode: number; body: any }) =>
+    res.statusCode === 204
+      ? { ...res, headers }
+      : {
+        ...res,
+        body: JSON.stringify(res.body),
+        headers
+      }
+
+
 
   if (!isValidPath)
-    return {
+    return convert({
       ...error404CommentNotFound,
       body: `${event.path} is not valid`
-    }
+    })
 
   const handleMethod = (method): Promise<Success | Error> => {
     switch (method) {
@@ -62,11 +74,6 @@ export const handler = async (
         )
     }
   }
-
-  const convert = (res: Success | Error) => ({
-    ...res,
-    body: JSON.stringify(res.body)
-  })
 
   try {
     const response = await handleMethod(event.httpMethod)
@@ -88,9 +95,8 @@ const handleTauth = async (event: APIGatewayEvent) => {
   const token = gauthResponse.body as AuthToken
 
   const COOKIE_HEADER = {
-    "Set-Cookie": `simple_comment_token=${token}; path=/; ${
-      isProduction ? "Secure; " : ""
-    }HttpOnly; SameSite; Max-Age=${52 * 7 * 24 * 60 * 60 * 1000}`
+    "Set-Cookie": `simple_comment_token=${token}; path=/; ${isProduction ? "Secure; " : ""
+      }HttpOnly; SameSite; Max-Age=${52 * 7 * 24 * 60 * 60 * 1000}`
   }
 
   const headers = { ...allowHeaders, ...COOKIE_HEADER }

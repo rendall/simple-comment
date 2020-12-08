@@ -47,12 +47,21 @@ export const handler = async (
   const dirs = event.path.split("/")
   const isValidPath = dirs.length <= 5
   const headers = getAllowHeaders(event)
+  const convert = (res: { statusCode: number; body: any }) =>
+    res.statusCode === 204
+      ? { ...res, headers }
+      : {
+        ...res,
+        body: JSON.stringify(res.body),
+        headers
+      }
+
 
   if (!isValidPath)
-    return {
+    return convert({
       ...error404CommentNotFound,
       body: `${event.path} is not valid`
-    }
+    })
 
   const authUserId = getUserId(event.headers)
   const targetId = getTargetId(event.path, "user") as UserId
@@ -61,8 +70,8 @@ export const handler = async (
     method
   ): Promise<
     | Success<
-        (PublicSafeUser | AdminSafeUser) | (AdminSafeUser[] | PublicSafeUser[])
-      >
+      (PublicSafeUser | AdminSafeUser) | (AdminSafeUser[] | PublicSafeUser[])
+    >
     | Error
   > => {
     switch (method) {
@@ -88,15 +97,6 @@ export const handler = async (
         return new Promise<Error>(resolve => resolve(error405MethodNotAllowed))
     }
   }
-
-  const convert = (res: { statusCode: number; body: any }) =>
-    res.statusCode === 204
-      ? { ...res, headers }
-      : {
-          ...res,
-          body: JSON.stringify(res.body),
-          headers
-        }
 
   try {
     const response = await handleMethod(event.httpMethod)

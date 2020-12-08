@@ -45,9 +45,18 @@ export const handler = async (event: APIGatewayEvent, context: Context) => {
   const dirs = event.path.split("/")
   const isValidPath = dirs.length <= 5
   const headers = getAllowHeaders(event)
+  const convert = (res: { statusCode: number; body: any }) =>
+    res.statusCode === 204
+      ? { ...res, headers }
+      : {
+          ...res,
+          body: JSON.stringify(res.body),
+          headers
+        }
+
 
   if (!isValidPath)
-    return { ...error404TopicNotFound, body: `${event.path} is not valid` }
+    return convert( { ...error404TopicNotFound, body: `${event.path} is not valid` } )
 
   const authUserId = getUserId(event.headers)
   const targetId = getTargetId(event.path, "topic") as TopicId
@@ -86,15 +95,6 @@ export const handler = async (event: APIGatewayEvent, context: Context) => {
         return new Promise<Error>(resolve => resolve(error405MethodNotAllowed))
     }
   }
-
-  const convert = (res: { statusCode: number; body: any }) =>
-    res.statusCode === 204
-      ? { ...res, headers }
-      : {
-          ...res,
-          body: JSON.stringify(res.body),
-          headers
-        }
 
   try {
     const response = await handleMethod(event.httpMethod)
