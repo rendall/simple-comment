@@ -102,6 +102,24 @@ export const getHeaderValue = (
   header: string
 ) => headers[getHeader(headers, header)]
 
+export const addHeaders = (
+  res: { statusCode: number; body: any; headers?: { [key: string]: string } },
+  headers
+) => {
+  const resHeaders = res.hasOwnProperty("headers") ? res.headers : {}
+
+  return res.hasOwnProperty("body")
+    ? {
+        ...res,
+        body: JSON.stringify(res.body),
+        headers: { ...resHeaders, ...headers }
+      }
+    : {
+        ...res,
+        headers: { ...resHeaders, ...headers }
+      }
+}
+
 const getOrigin = (headers: { [header: string]: string }) =>
   getHeaderValue(headers, "origin")
 
