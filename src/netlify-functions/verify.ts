@@ -27,7 +27,7 @@ const service: MongodbService = new MongodbService(
 )
 
 const getAllowHeaders = (event: APIGatewayEvent) => {
-  const allowedMethods = {
+  const allowedHeaders = {
     "Access-Control-Allow-Methods": "GET,OPTION",
     "Access-Control-Allow-Credentials": "true",
     "Access-Control-Allow-Headers": "Cookie"
@@ -36,7 +36,7 @@ const getAllowHeaders = (event: APIGatewayEvent) => {
     event.headers,
     getAllowedOrigins()
   )
-  const headers = { ...allowedMethods, ...allowedOriginHeaders }
+  const headers = { ...allowedHeaders, ...allowedOriginHeaders }
   return headers
 }
 
@@ -98,6 +98,6 @@ export const handler: Handler = async (
     const response = await handleMethod(event.httpMethod)
     return addHeaders(response, headers)
   } catch (error) {
-    return error
+    return addHeaders(error, headers)
   }
 }

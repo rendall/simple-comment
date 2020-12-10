@@ -14,6 +14,7 @@ import {
   Error
 } from "../lib/simple-comment"
 import {
+  addHeaders,
   getAllowedOrigins,
   getAllowOriginHeaders,
   getNewUserInfo,
@@ -47,20 +48,15 @@ export const handler = async (
   const dirs = event.path.split("/")
   const isValidPath = dirs.length <= 5
   const headers = getAllowHeaders(event)
-  const convert = (res: { statusCode: number; body: any }) =>
-    res.statusCode === 204
-      ? { ...res, headers }
-      : {
-          ...res,
-          body: JSON.stringify(res.body),
-          headers
-        }
 
   if (!isValidPath)
-    return convert({
-      ...error404CommentNotFound,
-      body: `${event.path} is not valid`
-    })
+    return addHeaders(
+      {
+        ...error404CommentNotFound,
+        body: `${event.path} is not valid`
+      },
+      headers
+    )
 
   const authUserId = getUserId(event.headers)
   const targetId = getTargetId(event.path, "user") as UserId
@@ -99,8 +95,8 @@ export const handler = async (
 
   try {
     const response = await handleMethod(event.httpMethod)
-    return convert(response)
+    return addHeaders(response, headers)
   } catch (error) {
-    return error
+    return addHeaders(error, headers)
   }
 }

@@ -8,6 +8,7 @@ import {
   success204NoContent
 } from "./../lib/messages"
 import {
+  addHeaders,
   getAllowedOrigins,
   getAllowOriginHeaders,
   getTargetId,
@@ -38,11 +39,13 @@ export const handler = async (event: APIGatewayEvent, context: Context) => {
   const headers = getAllowHeaders(event)
 
   if (!isValidPath)
-    return {
-      ...error404CommentNotFound,
-      body: `${event.path} is not valid`,
+    return addHeaders(
+      {
+        ...error404CommentNotFound,
+        body: `${event.path} is not valid`
+      },
       headers
-    }
+    )
 
   const authUserId = getUserId(event.headers)
   const targetId = getTargetId(event.path, "comment") as CommentId
@@ -66,19 +69,10 @@ export const handler = async (event: APIGatewayEvent, context: Context) => {
     }
   }
 
-  const convert = (res: { statusCode: number; body: any }) =>
-    res.statusCode === 204
-      ? { ...res, headers }
-      : {
-          ...res,
-          body: JSON.stringify(res.body),
-          headers
-        }
-
   try {
     const response = await handleMethod(event.httpMethod)
-    return convert(response)
+    return addHeaders(response, headers)
   } catch (error) {
-    return error
+    return addHeaders(error, headers)
   }
 }
