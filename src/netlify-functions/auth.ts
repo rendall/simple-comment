@@ -122,5 +122,5 @@ const handleAuth = async (event: APIGatewayEvent) => {
 
 const handleOption = async (event: APIGatewayEvent) => {
   const headers = getAllowHeaders(event)
-  return { ...success204NoContent, headers }
+  return { ...success200OK, headers }
 }
