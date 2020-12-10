@@ -5,7 +5,7 @@ import { MongodbService } from "../lib/MongodbService"
 import {
   error404CommentNotFound,
   error405MethodNotAllowed,
-  success204NoContent
+  success200OK
 } from "./../lib/messages"
 import {
   addHeaders,
@@ -63,7 +63,7 @@ export const handler = async (event: APIGatewayEvent, context: Context) => {
         return service.commentDELETE(targetId, authUserId)
       case "OPTION":
         return new Promise<Success>(resolve =>
-          resolve({ ...success204NoContent, headers })
+          resolve({ ...success200OK, headers })
         )
       default:
         return new Promise<Error>(resolve => resolve(error405MethodNotAllowed))

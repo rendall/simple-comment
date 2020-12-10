@@ -3,6 +3,7 @@ import type { APIGatewayEvent, APIGatewayEventRequestContext } from "aws-lambda"
 import {
   error404CommentNotFound,
   error405MethodNotAllowed,
+  success200OK,
   success204NoContent
 } from "../lib/messages"
 import { MongodbService } from "../lib/MongodbService"
@@ -88,7 +89,7 @@ export const handler = async (
         return service.userDELETE(targetId, authUserId)
       case "OPTION":
         return new Promise<Success>(resolve =>
-          resolve({ ...success204NoContent, headers })
+          resolve({ ...success200OK, headers })
         )
       default:
         return new Promise<Error>(resolve => resolve(error405MethodNotAllowed))
