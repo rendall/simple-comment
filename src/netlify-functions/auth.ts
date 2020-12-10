@@ -15,7 +15,8 @@ import {
   REALM,
   isError,
   getAllowOriginHeaders,
-  getAllowedOrigins
+  getAllowedOrigins,
+  addHeaders
 } from "../lib/utilities"
 dotenv.config()
 
@@ -46,20 +47,14 @@ export const handler = async (
   const isValidPath = dirs.length <= 5
   const headers = getAllowHeaders(event)
 
-  const convert = (res: { statusCode: number; body: any }) =>
-    res.statusCode === 204
-      ? { ...res, headers }
-      : {
-          ...res,
-          body: JSON.stringify(res.body),
-          headers
-        }
-
   if (!isValidPath)
-    return convert({
-      ...error404CommentNotFound,
-      body: `${event.path} is not valid`
-    })
+    return addHeaders(
+      {
+        ...error404CommentNotFound,
+        body: `${event.path} is not valid`
+      },
+      headers
+    )
 
   const handleMethod = (method): Promise<Success | Error> => {
     switch (method) {
@@ -80,9 +75,9 @@ export const handler = async (
 
   try {
     const response = await handleMethod(event.httpMethod)
-    return convert(response)
+    return addHeaders(response, headers)
   } catch (error) {
-    return error
+    return addHeaders(error, headers)
   }
 }
 

@@ -13,7 +13,8 @@ import {
 import {
   isError,
   getAllowOriginHeaders,
-  getAllowedOrigins
+  getAllowedOrigins,
+  addHeaders
 } from "../lib/utilities"
 dotenv.config()
 
@@ -46,17 +47,8 @@ export const handler = async (
   const isValidPath = dirs.length <= 5
   const headers = getAllowHeaders(event)
 
-  const convert = (res: { statusCode: number; body: any }, headers) =>
-    res.statusCode === 204
-      ? { ...res, headers }
-      : {
-          ...res,
-          body: JSON.stringify(res.body),
-          headers
-        }
-
   if (!isValidPath)
-    return convert(
+    return addHeaders(
       {
         ...error404CommentNotFound,
         body: `${event.path} is not valid`
@@ -71,17 +63,15 @@ export const handler = async (
       case "OPTION":
         return handleOption(event)
       default:
-        return new Promise<Error>(resolve =>
-          resolve({ ...error405MethodNotAllowed })
-        )
+        return new Promise<Error>(resolve => resolve(error405MethodNotAllowed))
     }
   }
 
   try {
     const response = await handleMethod(event.httpMethod)
-    return convert(response, response.headers)
+    return addHeaders(response, headers)
   } catch (error) {
-    return error
+    return addHeaders(error, headers)
   }
 }
 

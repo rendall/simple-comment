@@ -1,20 +1,5 @@
+import type { APIGatewayEvent, Context } from "aws-lambda"
 import * as dotenv from "dotenv"
-import type { APIGatewayEvent, Callback, Context } from "aws-lambda"
-import {
-  TopicId,
-  Success,
-  Error,
-  Topic,
-  Discussion,
-  ResolvedResponse
-} from "../lib/simple-comment"
-import { MongodbService } from "../lib/MongodbService"
-import {
-  error404TopicNotFound,
-  error405MethodNotAllowed,
-  success200OK,
-  success204NoContent
-} from "./../lib/messages"
 import {
   addHeaders,
   getAllowedOrigins,
@@ -25,6 +10,20 @@ import {
   getUpdateTopicInfo,
   getUserId
 } from "../lib/utilities"
+import {
+  Discussion,
+  Error,
+  Success,
+  Topic,
+  TopicId
+} from "../lib/simple-comment"
+import {
+  error404TopicNotFound,
+  error405MethodNotAllowed,
+  success200OK
+} from "./../lib/messages"
+import { MongodbService } from "../lib/MongodbService"
+
 dotenv.config()
 
 const service: MongodbService = new MongodbService(
@@ -87,7 +86,7 @@ export const handler = async (event: APIGatewayEvent, context: Context) => {
       case "DELETE":
         return service.topicDELETE(targetId, authUserId)
       case "OPTION":
-        return new Promise<Success>(resolve => resolve({ ...success200OK }))
+        return new Promise<Success>(resolve => resolve(success200OK))
       default:
         return new Promise<Error>(resolve => resolve(error405MethodNotAllowed))
     }
@@ -97,6 +96,6 @@ export const handler = async (event: APIGatewayEvent, context: Context) => {
     const response = await handleMethod(event.httpMethod)
     return addHeaders(response, headers)
   } catch (error) {
-    return error
+    return addHeaders(error, headers)
   }
 }
