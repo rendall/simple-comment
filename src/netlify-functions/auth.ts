@@ -29,7 +29,7 @@ const service: MongodbService = new MongodbService(
 
 const getAllowHeaders = (event: APIGatewayEvent) => {
   const allowedMethods = {
-    "Access-Control-Allow-Methods": "POST,GET,OPTION,DELETE",
+    "Access-Control-Allow-Methods": "POST,GET,OPTIONS,DELETE",
     "Access-Control-Allow-Credentials": "true",
     "Access-Control-Allow-Headers": "Cookie"
   }
@@ -63,7 +63,7 @@ export const handler = async (
       case "POST":
       case "GET":
         return handleAuth(event)
-      case "OPTION":
+      case "OPTIONS":
         return handleOption(event)
       case "DELETE":
         return service.authDELETE()
