@@ -28,7 +28,7 @@ const service: MongodbService = new MongodbService(
 
 const getAllowHeaders = (event: APIGatewayEvent) => {
   const allowedHeaders = {
-    "Access-Control-Allow-Methods": "GET,OPTION",
+    "Access-Control-Allow-Methods": "GET,OPTIONS",
     "Access-Control-Allow-Credentials": "true",
     "Access-Control-Allow-Headers": "Cookie"
   }
@@ -87,7 +87,7 @@ export const handler: Handler = async (
     switch (method) {
       case "GET":
         return service.verifyGET(token)
-      case "OPTION":
+      case "OPTIONS":
         return new Promise<Success>(resolve => resolve({ ...success200OK }))
       default:
         return new Promise<Error>(resolve => resolve(error405MethodNotAllowed))
