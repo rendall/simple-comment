@@ -29,8 +29,7 @@ const service: MongodbService = new MongodbService(
 const getAllowHeaders = (event: APIGatewayEvent) => {
   const allowedHeaders = {
     "Access-Control-Allow-Methods": "GET,OPTIONS",
-    "Access-Control-Allow-Credentials": "true",
-    "Access-Control-Allow-Headers": "Cookie"
+    "Access-Control-Allow-Credentials": "true"
   }
   const allowedOriginHeaders = getAllowOriginHeaders(
     event.headers,
