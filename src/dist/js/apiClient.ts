@@ -15,11 +15,31 @@ const URL = "https://blog-rendall-dev-comments.netlify.app"
 
 // USER & AUTH
 
+export const getHttpCookie = (elem: HTMLElement, url: string) => new Promise<HTMLImageElement>((resolve, reject) => {
+
+  if (!document) throw new Error("apiClient.getHttpCookie has no document")
+
+  const img = document.createElement("img") as HTMLImageElement
+  try {
+    img.src = url
+    elem.appendChild(img)
+    resolve(img)
+  } catch (error) {
+    reject(error)
+  }
+
+})
+
 export const getGuestToken = () =>
-  fetch(`${URL}/.netlify/functions/gauth`).then(res => resolveBody<AuthToken>(res))
+  fetch(`${URL}/.netlify/functions/gauth`, {
+    credentials:"include"
+    
+  }).then(res => resolveBody<AuthToken>(res))
 
 export const verifyUser = () =>
-  fetch(`${URL}/.netlify/functions/verify`).then(res => resolveBody<TokenClaim>(res))
+  fetch(`${URL}/.netlify/functions/verify`, {
+    credentials:"include"
+  }).then(res => resolveBody<TokenClaim>(res))
 
 export const getAllUsers = () =>
   fetch(`${URL}/.netlify/functions/user`).then(res =>
