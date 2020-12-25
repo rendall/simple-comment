@@ -15,3 +15,4 @@ globalConfig.json
 yarn-error.log
 !/cypress/**/*.js
 !/docs/**/*.js
+!webpack.config.js

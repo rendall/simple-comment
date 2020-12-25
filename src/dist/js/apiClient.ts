@@ -11,16 +11,18 @@ import type {
   UserId
 } from "./../../lib/simple-comment"
 
+const URL = "https://blog-rendall-dev-comments.netlify.app"
+
 // USER & AUTH
 
 export const getGuestToken = () =>
-  fetch("/.netlify/functions/gauth").then(res => resolveBody<AuthToken>(res))
+  fetch(`${URL}/.netlify/functions/gauth`).then(res => resolveBody<AuthToken>(res))
 
 export const verifyUser = () =>
-  fetch("/.netlify/functions/verify").then(res => resolveBody<TokenClaim>(res))
+  fetch(`${URL}/.netlify/functions/verify`).then(res => resolveBody<TokenClaim>(res))
 
 export const getAllUsers = () =>
-  fetch("/.netlify/functions/user").then(res =>
+  fetch(`${URL}/.netlify/functions/user`).then(res =>
     resolveBody<AdminSafeUser[] | PublicSafeUser[]>(res)
   )
 
@@ -100,7 +102,7 @@ export const getOneDiscussion = topicId =>
   )
 
 export const getAllTopics = () =>
-  fetch("/.netlify/functions/topic").then(res => resolveBody<Topic[]>(res))
+  fetch(`${URL}/.netlify/functions/topic`).then(res => resolveBody<Topic[]>(res))
 
 // By default a topic/discussion id is a normalized string of the page url
 export const getDefaultDiscussionId = () =>
