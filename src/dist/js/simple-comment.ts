@@ -52,8 +52,8 @@ import {
 } from "./apiClient"
 
 let currUser: AdminSafeUser
-let clearReply = () => {}
-let updateReply = () => {}
+let clearReply = () => { }
+let updateReply = () => { }
 
 // string type guard
 const isString = (x: any): x is string => typeof x === "string"
@@ -182,7 +182,7 @@ const setupSignup = () => {
     if (!id.match(/[A-Za-z0-9]{5,20}/))
       return setSignupStatus(
         `Invalid username '${id}'. ` +
-          "The username must contain only letters or numbers and be between 5 and 20 characters. Go hog-wild on the display name, though!",
+        "The username must contain only letters or numbers and be between 5 and 20 characters. Go hog-wild on the display name, though!",
         true
       )
 
@@ -447,9 +447,8 @@ const setErrorStatus = (
 const setUserStatus = (user?: AdminSafeUser) => {
   const docBody = document.querySelector("body")
   const userName = user
-    ? `Logged in as: ${user.name} ${isGuestId(user.id) ? "(guest)" : ""}${
-        user.isAdmin ? "(admin)" : ""
-      }`
+    ? `Logged in as: ${user.name} ${isGuestId(user.id) ? "(guest)" : ""}${user.isAdmin ? "(admin)" : ""
+    }`
     : "Not logged in"
   if (user && user.isAdmin) docBody.classList.add("is-admin")
   else docBody.classList.remove("is-admin")
@@ -657,7 +656,7 @@ const setup = async (
 
   const existingDiv = document.querySelector("#simple-comment-area")
 
-  const createdDiv = existingDiv? null : document.createElement("div")
+  const createdDiv = existingDiv ? null : document.createElement("div")
 
   if (createdDiv) {
     // #simple-comment-area does not exist, so let us create it:
@@ -667,6 +666,7 @@ const setup = async (
     const body = document.querySelector("body")
     body.appendChild(createdDiv)
   }
+
 
   const simpleCommentArea = existingDiv || createdDiv
 
@@ -678,6 +678,13 @@ const setup = async (
   }
 
   console.info("Simple Comment area found! - attempting to set up UI...")
+
+  const createdDiscussionDiv = document.querySelector("#discussion") as HTMLDivElement? null : document.createElement("div")
+
+  if (createdDiscussionDiv) {
+    createdDiscussionDiv.setAttribute("id", "discussion")
+    simpleCommentArea.appendChild(createdDiscussionDiv)
+  }
 
   setupUserLogin()
   setupSignup()
