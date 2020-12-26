@@ -32,13 +32,13 @@ export const getHttpCookie = (elem: HTMLElement, url: string) => new Promise<HTM
 
 export const getGuestToken = () =>
   fetch(`${URL}/.netlify/functions/gauth`, {
-    credentials:"include"
-    
+    credentials: "include"
+
   }).then(res => resolveBody<AuthToken>(res))
 
 export const verifyUser = () =>
   fetch(`${URL}/.netlify/functions/verify`, {
-    credentials:"include"
+    credentials: "include"
   }).then(res => resolveBody<TokenClaim>(res))
 
 export const getAllUsers = () =>
@@ -47,12 +47,12 @@ export const getAllUsers = () =>
   )
 
 export const getOneUser = (userId: UserId) =>
-  fetch(`/.netlify/functions/user/${userId}`).then(res =>
+  fetch(`${URL}/.netlify/functions/user/${userId}`).then(res =>
     resolveBody<AdminSafeUser | PublicSafeUser>(res)
   )
 
 export const createUser = (newUserInfo: NewUser) =>
-  fetch(`/.netlify/functions/user/`, {
+  fetch(`${URL}/.netlify/functions/user/`, {
     body: objToQuery(newUserInfo),
     method: "POST"
   }).then(res => resolveBody<AdminSafeUser>(res))
@@ -63,7 +63,7 @@ export const createGuestUser = (userInfo: {
   email: string
 }) => createUser({ ...userInfo, password: "" })
 export const deleteAuth = () =>
-  fetch(`/.netlify/functions/auth`, {
+  fetch(`${URL}/.netlify/functions/auth`, {
     method: "DELETE"
   }).then(res => resolveBody(res))
 
@@ -95,7 +95,7 @@ export const postAuth = (user: string, password: string) => {
     }
   }
 
-  return fetch(`/.netlify/functions/auth`, authReqInfo).then(res =>
+  return fetch(`${URL}/.netlify/functions/auth`, authReqInfo).then(res =>
     resolveBody<AuthToken>(res)
   )
 }
@@ -103,13 +103,13 @@ export const postAuth = (user: string, password: string) => {
 // COMMENT
 
 export const postComment = (targetId, text) =>
-  fetch(`/.netlify/functions/comment/${targetId}`, {
+  fetch(`${URL}/.netlify/functions/comment/${targetId}`, {
     body: text,
     method: "POST"
   }).then(res => resolveBody(res))
 
 export const deleteComment = commentId =>
-  fetch(`/.netlify/functions/comment/${commentId}`, {
+  fetch(`${URL}/.netlify/functions/comment/${commentId}`, {
     method: "DELETE"
   }).then(res => resolveBody(res))
 
@@ -117,7 +117,7 @@ export const deleteComment = commentId =>
 
 // A discussion is a topic with all comments attached
 export const getOneDiscussion = topicId =>
-  fetch(`/.netlify/functions/topic/${topicId}`).then(res =>
+  fetch(`${URL}/.netlify/functions/topic/${topicId}`).then(res =>
     resolveBody<Discussion>(res)
   )
 
@@ -132,10 +132,13 @@ export const createNewTopic = (id, title, isLocked = false) => {
   const body = `id=${id}&title=${title}&isLocked=${isLocked}`
   const authReqInfo = {
     method: "POST",
+    headers: {
+      'Referrer-Policy': 'no-referrer-when-downgrade'
+    },
     body
   }
 
-  return fetch(`/.netlify/functions/topic`, authReqInfo).then(res =>
+  return fetch(`${URL}/.netlify/functions/topic`, authReqInfo).then(res =>
     resolveBody(res)
   )
 }
