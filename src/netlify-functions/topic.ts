@@ -35,7 +35,7 @@ const getAllowHeaders = (event: APIGatewayEvent) => {
   const allowHeaders = {
     "Access-Control-Allow-Methods": "GET,OPTIONS",
     "Access-Control-Allow-Credentials": "true",
-    "Access-Control-Allow-Headers": "Cookie"
+    "Access-Control-Allow-Headers": "Cookie,Referrer-Policy"
   }
   const allowedOriginHeaders = getAllowOriginHeaders(
     event.headers,
