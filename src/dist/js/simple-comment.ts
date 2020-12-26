@@ -654,7 +654,21 @@ const setup = async (
   title = document.title
 ) => {
   console.info("Looking for Simple Comment area...")
-  const simpleCommentArea = document.querySelector("#simple-comment-area")
+
+  const existingDiv = document.querySelector("#simple-comment-area")
+
+  const createdDiv = existingDiv? null : document.createElement("div")
+
+  if (createdDiv) {
+    // #simple-comment-area does not exist, so let us create it:
+    createdDiv.setAttribute("id", "simple-comment-area")
+
+    // append it to body:
+    const body = document.querySelector("body")
+    body.appendChild(createdDiv)
+  }
+
+  const simpleCommentArea = existingDiv || createdDiv
 
   if (!simpleCommentArea) {
     console.error(
