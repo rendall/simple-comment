@@ -48,12 +48,10 @@ export const handler = async (
     res.statusCode === 204
       ? { ...res, headers }
       : {
-        ...res,
-        body: JSON.stringify(res.body),
-        headers
-      }
-
-
+          ...res,
+          body: JSON.stringify(res.body),
+          headers
+        }
 
   if (!isValidPath)
     return convert({
@@ -95,8 +93,9 @@ const handleTauth = async (event: APIGatewayEvent) => {
   const token = gauthResponse.body as AuthToken
 
   const COOKIE_HEADER = {
-    "Set-Cookie": `simple_comment_token=${token}; path=/; ${isProduction ? "Secure; " : ""
-      }HttpOnly; SameSite; Max-Age=${52 * 7 * 24 * 60 * 60 * 1000}`
+    "Set-Cookie": `simple_comment_token=${token}; path=/; ${
+      isProduction ? "Secure; " : ""
+    }HttpOnly; SameSite; Max-Age=${52 * 7 * 24 * 60 * 60 * 1000}`
   }
 
   const headers = { ...allowHeaders, ...COOKIE_HEADER }

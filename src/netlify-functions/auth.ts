@@ -50,16 +50,16 @@ export const handler = async (
     res.statusCode === 204
       ? { ...res, headers }
       : {
-        ...res,
-        body: JSON.stringify(res.body),
-        headers
-      }
+          ...res,
+          body: JSON.stringify(res.body),
+          headers
+        }
 
   if (!isValidPath)
-    return convert( {
+    return convert({
       ...error404CommentNotFound,
       body: `${event.path} is not valid`
-    } )
+    })
 
   const handleMethod = (method): Promise<Success | Error> => {
     switch (method) {
