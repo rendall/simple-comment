@@ -74,7 +74,7 @@ const randomDate = () => new Date(randomNumber(0, new Date().valueOf()))
 // Returns a random email that will validate but does not create examples of all possible valid emails
 const createRandomEmail = (): Email =>
   `${randomString(emailAscii)}@${randomString(emailAscii)}.${randomString(
-    emailAscii,
+    "abcdefghijklmnopqrstuvwxyz",
     3
   )}`
 // Functions that generate fake data - these could be moved to a common file to help other Service tests
