@@ -15,25 +15,23 @@ const URL = "https://blog-rendall-dev-comments.netlify.app"
 
 // USER & AUTH
 
-export const getHttpCookie = (elem: HTMLElement, url: string) => new Promise<HTMLImageElement>((resolve, reject) => {
+export const getHttpCookie = (elem: HTMLElement, url: string) =>
+  new Promise<HTMLImageElement>((resolve, reject) => {
+    if (!document) throw new Error("apiClient.getHttpCookie has no document")
 
-  if (!document) throw new Error("apiClient.getHttpCookie has no document")
-
-  const img = document.createElement("img") as HTMLImageElement
-  try {
-    img.src = url
-    elem.appendChild(img)
-    resolve(img)
-  } catch (error) {
-    reject(error)
-  }
-
-})
+    const img = document.createElement("img") as HTMLImageElement
+    try {
+      img.src = url
+      elem.appendChild(img)
+      resolve(img)
+    } catch (error) {
+      reject(error)
+    }
+  })
 
 export const getGuestToken = () =>
   fetch(`${URL}/.netlify/functions/gauth`, {
     credentials: "include"
-
   }).then(res => resolveBody<AuthToken>(res))
 
 export const verifyUser = () =>
@@ -42,19 +40,20 @@ export const verifyUser = () =>
   }).then(res => resolveBody<TokenClaim>(res))
 
 export const getAllUsers = () =>
-  fetch(`${URL}/.netlify/functions/user`).then(res =>
-    resolveBody<AdminSafeUser[] | PublicSafeUser[]>(res)
-  )
+  fetch(`${URL}/.netlify/functions/user`, {
+    credentials: "include"
+  }).then(res => resolveBody<AdminSafeUser[] | PublicSafeUser[]>(res))
 
 export const getOneUser = (userId: UserId) =>
-  fetch(`${URL}/.netlify/functions/user/${userId}`).then(res =>
-    resolveBody<AdminSafeUser | PublicSafeUser>(res)
-  )
+  fetch(`${URL}/.netlify/functions/user/${userId}`, {
+    credentials: "include"
+  }).then(res => resolveBody<AdminSafeUser | PublicSafeUser>(res))
 
 export const createUser = (newUserInfo: NewUser) =>
   fetch(`${URL}/.netlify/functions/user/`, {
     body: objToQuery(newUserInfo),
-    method: "POST"
+    method: "POST",
+    credentials: "include"
   }).then(res => resolveBody<AdminSafeUser>(res))
 
 export const createGuestUser = (userInfo: {
@@ -62,9 +61,11 @@ export const createGuestUser = (userInfo: {
   name: string
   email: string
 }) => createUser({ ...userInfo, password: "" })
+
 export const deleteAuth = () =>
   fetch(`${URL}/.netlify/functions/auth`, {
-    method: "DELETE"
+    method: "DELETE",
+    credentials: "include"
   }).then(res => resolveBody(res))
 
 export const postAuth = (user: string, password: string) => {
@@ -105,24 +106,28 @@ export const postAuth = (user: string, password: string) => {
 export const postComment = (targetId, text) =>
   fetch(`${URL}/.netlify/functions/comment/${targetId}`, {
     body: text,
-    method: "POST"
+    method: "POST",
+    credentials: "include"
   }).then(res => resolveBody(res))
 
 export const deleteComment = commentId =>
   fetch(`${URL}/.netlify/functions/comment/${commentId}`, {
-    method: "DELETE"
+    method: "DELETE",
+    credentials: "include"
   }).then(res => resolveBody(res))
 
 // TOPIC & DISCUSSION
 
 // A discussion is a topic with all comments attached
 export const getOneDiscussion = topicId =>
-  fetch(`${URL}/.netlify/functions/topic/${topicId}`).then(res =>
-    resolveBody<Discussion>(res)
-  )
+  fetch(`${URL}/.netlify/functions/topic/${topicId}`, {
+    credentials: "include"
+  }).then(res => resolveBody<Discussion>(res))
 
 export const getAllTopics = () =>
-  fetch(`${URL}/.netlify/functions/topic`).then(res => resolveBody<Topic[]>(res))
+  fetch(`${URL}/.netlify/functions/topic`, {
+    credentials: "include"
+  }).then(res => resolveBody<Topic[]>(res))
 
 // By default a topic/discussion id is a normalized string of the page url
 export const getDefaultDiscussionId = () =>
@@ -130,12 +135,14 @@ export const getDefaultDiscussionId = () =>
 
 export const createNewTopic = (id, title, isLocked = false) => {
   const body = `id=${id}&title=${title}&isLocked=${isLocked}`
+  const credentials: RequestCredentials = "include"
   const authReqInfo = {
     method: "POST",
     headers: {
-      'Referrer-Policy': 'no-referrer-when-downgrade'
+      "Referrer-Policy": "no-referrer-when-downgrade"
     },
-    body
+    body,
+    credentials
   }
 
   return fetch(`${URL}/.netlify/functions/topic`, authReqInfo).then(res =>
