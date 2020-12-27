@@ -191,7 +191,10 @@ export class MongodbService extends Service {
       if (newUser.id === process.env.SIMPLE_COMMENT_MODERATOR_ID) {
         // moderator username and password are changed by .env
         // to create this user, log in with those credentials
-        reject(error403ForbiddenToModify)
+        reject({
+          ...error403ForbiddenToModify,
+          body: "Cannot modify root credentials"
+        })
         return
       }
 
