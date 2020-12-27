@@ -7,8 +7,7 @@ import { Success, Error, AuthToken } from "../lib/simple-comment"
 import {
   error404CommentNotFound,
   error405MethodNotAllowed,
-  success200OK,
-  success204NoContent
+  success200OK
 } from "../lib/messages"
 import {
   isError,
@@ -85,10 +84,6 @@ const handleGauth = async (event: APIGatewayEvent) => {
   }
 
   const token = gauthResponse.body as AuthToken
-
-  const expireDate = new Date(
-    new Date().valueOf() + 52 * 7 * 24 * 60 * 60 * 1000
-  ).toUTCString()
 
   const COOKIE_HEADER = {
     "Set-Cookie": `simple_comment_token=${token}; path=/; ${

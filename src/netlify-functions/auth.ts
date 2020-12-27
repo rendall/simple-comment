@@ -6,8 +6,7 @@ import {
   error401UserNotAuthenticated,
   error404CommentNotFound,
   error405MethodNotAllowed,
-  success200OK,
-  success204NoContent
+  success200OK
 } from "../lib/messages"
 import {
   getUserIdPassword,
