@@ -286,7 +286,7 @@ type GenericObj = { [key: string]: string | number | boolean | Date }
 const parseBody = (body: string): GenericObj =>
   body
     .split("&")
-    .map(i => i.split("="))
+    .map(i => i.split("=") as [string, string])
     .map(([key, value]: [string, string]) => [key, decodeURIComponent(value)])
     .reduce((obj, [key, value]) => ({ ...obj, [key]: value }), {})
 

@@ -54,9 +54,11 @@ export const handler = async (event: APIGatewayEvent, context: Context) => {
           headers
         }
 
-
   if (!isValidPath)
-    return convert( { ...error404TopicNotFound, body: `${event.path} is not valid` } )
+    return convert({
+      ...error404TopicNotFound,
+      body: `${event.path} is not valid`
+    })
 
   const authUserId = getUserId(event.headers)
   const targetId = getTargetId(event.path, "topic") as TopicId

@@ -51,11 +51,10 @@ export const handler = async (
     res.statusCode === 204
       ? { ...res, headers }
       : {
-        ...res,
-        body: JSON.stringify(res.body),
-        headers
-      }
-
+          ...res,
+          body: JSON.stringify(res.body),
+          headers
+        }
 
   if (!isValidPath)
     return convert({
@@ -70,8 +69,8 @@ export const handler = async (
     method
   ): Promise<
     | Success<
-      (PublicSafeUser | AdminSafeUser) | (AdminSafeUser[] | PublicSafeUser[])
-    >
+        (PublicSafeUser | AdminSafeUser) | (AdminSafeUser[] | PublicSafeUser[])
+      >
     | Error
   > => {
     switch (method) {

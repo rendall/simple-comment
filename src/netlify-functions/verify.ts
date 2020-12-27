@@ -49,10 +49,10 @@ export const handler: Handler = async (
     res.statusCode === 204
       ? { ...res, headers }
       : {
-        ...res,
-        body: JSON.stringify(res.body),
-        headers
-      }
+          ...res,
+          body: JSON.stringify(res.body),
+          headers
+        }
 
   if (!isValidPath)
     return convert({ ...error404NotFound, body: `${event.path} is not valid` })
@@ -86,7 +86,6 @@ export const handler: Handler = async (
         return new Promise<Error>(resolve => resolve(error405MethodNotAllowed))
     }
   }
-
 
   try {
     const response = await handleMethod(event.httpMethod)
