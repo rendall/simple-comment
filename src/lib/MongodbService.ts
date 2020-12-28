@@ -1456,7 +1456,7 @@ export class MongodbService extends Service {
     new Promise<Success>((resolve, reject) => {
       const pastDate = new Date(0).toUTCString()
       const COOKIE_HEADER = {
-        "Set-Cookie": `simple_comment_token=logged-out; path=/; HttpOnly; Expires=${pastDate}; SameSite${
+        "Set-Cookie": `simple_comment_token=logged-out; path=/; HttpOnly; Expires=${pastDate}; SameSite=None${
           this.isProduction ? "; Secure" : ""
         }`
       }
