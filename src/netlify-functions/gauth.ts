@@ -92,10 +92,12 @@ const handleGauth = async (event: APIGatewayEvent) => {
   }
 
   const headers = { ...allowHeaders, ...COOKIE_HEADER }
-  
+
   const allowToken = event.queryStringParameters.token
 
-  return allowToken ? { ...success200OK, headers, body: token } : { ...success200OK, headers }
+  return allowToken
+    ? { ...success200OK, headers, body: token }
+    : { ...success200OK, headers }
 }
 
 const handleOption = async (event: APIGatewayEvent) => {
