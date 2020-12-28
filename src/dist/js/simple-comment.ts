@@ -210,7 +210,7 @@ const setupSignup = () => {
         return resp
       })
       .then(() =>
-        postAuth(id, password).then(updateLoginStatus).catch(setErrorStatus)
+        postAuth(id, password).then(() => updateLoginStatus()).catch(setErrorStatus)
       )
       .catch((err: ResolvedResponse) =>
         setSignupStatus(
@@ -393,7 +393,7 @@ const updateDiscussionDisplay = (
 // Status display methods
 /* updateLoginStatus
  * Login status may have changed, and the display needs to change to update that */
-const updateLoginStatus = () =>
+const updateLoginStatus = (recurseLoop:number = 0) =>
   verifyUser()
     .then(res => res.body as TokenClaim)
     .then(claim => {
@@ -409,8 +409,8 @@ const updateLoginStatus = () =>
     })
     .then(updateReply)
     .catch(currUserError => {
-      if (currUserError.status && currUserError.status === 401) {
-        return getGuestToken().then(updateLoginStatus)
+      if (currUserError.status && currUserError.status === 401 && recurseLoop < 3) {
+        return getGuestToken().then(() => updateLoginStatus(recurseLoop+1))
       } else setErrorStatus(currUserError)
     })
 
@@ -600,7 +600,7 @@ const onReplyToTopic = onReplyToComment
  * the response of deleting authentication and updating the user
  * display */
 const onLogoutClick = e => {
-  deleteAuth().then(updateLoginStatus).catch(setErrorStatus)
+  deleteAuth().then(() => updateLoginStatus()).catch(setErrorStatus)
 }
 
 /* onLoginClick
@@ -626,7 +626,7 @@ const onLoginClick = e => {
 
   document.querySelector("body").classList.add("is-logging-in")
 
-  postAuth(username, password).then(updateLoginStatus).catch(setErrorStatus)
+  postAuth(username, password).then(() => updateLoginStatus()).catch(setErrorStatus)
 }
 
 const downloadDiscussion = discussionId =>
