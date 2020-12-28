@@ -205,9 +205,11 @@ const setupSignup = () => {
       .then(resp => {
         if (resp.status === 201) {
           setSignupStatus(`User '${name}' created. Signing in...`)
-          postAuth(id, password).then(() => updateLoginStatus()).catch(setErrorStatus)
-        }
-        else throw Error(`Unknown response code ${resp.status} from POST /user`)
+          postAuth(id, password)
+            .then(() => updateLoginStatus())
+            .catch(setErrorStatus)
+        } else
+          throw Error(`Unknown response code ${resp.status} from POST /user`)
         clearSignupForm()
         return resp
       })
@@ -408,7 +410,11 @@ const updateLoginStatus = (recurseLoop: number = 0) =>
     })
     .then(updateReply)
     .catch(currUserError => {
-      if (currUserError.status && currUserError.status === 401 && recurseLoop < 3) {
+      if (
+        currUserError.status &&
+        currUserError.status === 401 &&
+        recurseLoop < 3
+      ) {
         return getGuestToken().then(() => updateLoginStatus(recurseLoop + 1))
       } else setErrorStatus(currUserError)
     })
@@ -446,8 +452,8 @@ const setErrorStatus = (
 const setUserStatus = (user?: AdminSafeUser) => {
   const docBody = document.querySelector("body")
   const userName = user
-    ? `Logged in as: ${user.name} (${user.id}) ${isGuestId(user.id) ? "(guest)" : ""}${user.isAdmin ? "(admin)" : ""
-    }`
+    ? `Logged in as: ${user.name} (${user.id}) ${isGuestId(user.id) ? "(guest)" : ""
+    }${user.isAdmin ? "(admin)" : ""}`
     : "Not logged in"
   if (user && user.isAdmin) docBody.classList.add("is-admin")
   else docBody.classList.remove("is-admin")
@@ -599,7 +605,9 @@ const onReplyToTopic = onReplyToComment
  * the response of deleting authentication and updating the user
  * display */
 const onLogoutClick = e => {
-  deleteAuth().then(() => updateLoginStatus()).catch(setErrorStatus)
+  deleteAuth()
+    .then(() => updateLoginStatus())
+    .catch(setErrorStatus)
 }
 
 /* onLoginClick
@@ -625,7 +633,9 @@ const onLoginClick = e => {
 
   document.querySelector("body").classList.add("is-logging-in")
 
-  postAuth(username, password).then(() => updateLoginStatus()).catch(setErrorStatus)
+  postAuth(username, password)
+    .then(() => updateLoginStatus())
+    .catch(setErrorStatus)
 }
 
 const downloadDiscussion = discussionId =>
@@ -666,7 +676,6 @@ const setup = async (
     body.appendChild(createdDiv)
   }
 
-
   const simpleCommentArea = existingDiv || createdDiv
 
   if (!simpleCommentArea) {
@@ -678,12 +687,47 @@ const setup = async (
 
   console.info("Simple Comment area found! - attempting to set up UI...")
 
-  const createdDiscussionDiv = document.querySelector("#discussion") as HTMLDivElement ? null : document.createElement("div")
+  const createdDiscussionDiv = (document.querySelector(
+    "#discussion"
+  ) as HTMLDivElement)
+    ? null
+    : document.createElement("div")
 
   if (createdDiscussionDiv) {
     createdDiscussionDiv.setAttribute("id", "discussion")
     simpleCommentArea.appendChild(createdDiscussionDiv)
   }
+
+  const userDisplay = document.createElement("div")
+  userDisplay.setAttribute("id", "user-display")
+  simpleCommentArea.appendChild(userDisplay)
+  userDisplay.innerHTML = `
+    <p id="login-pulser">Logging in... Please wait</p>
+    <input type="hidden" id="claim-user">
+    <p id="user-name">Logged in as: Rendall (guest)</p>
+    <button id="log-out-button">Log out</button>
+    <div id="log-in-form">
+      <label for="userid">Username:</label>
+      <input id="userid" required="">
+      <label for="password">Password:</label>
+      <input id="password" type="password" required="">
+      <button id="log-in-button">Log in</button>
+    </div>
+    <div class="sign-up-form">
+      <p>Sign up for Simple Comment</p>
+      <p id="sign-up-status">&nbsp;</p>
+      <label for="sign-up-userid">Username:</label>
+      <input id="sign-up-userid" required="">
+      <label for="sign-up-password">Password:</label>
+      <input id="sign-up-password" type="password" required="">
+      <label for="sign-up-password-2">Same Password:</label>
+      <input id="sign-up-password-2" type="password" required="">
+      <label for="sign-up-email">Email:</label>
+      <input id="sign-up-email" required="">
+      <label for="sign-up-display-name">Display Name:</label>
+      <input id="sign-up-display-name" placeholder="How do you want to be known?">
+      <button id="sign-up-button">Sign up</button>
+  </div>`
 
   setupUserLogin()
   setupSignup()
@@ -704,4 +748,3 @@ const setup = async (
 
 // setup("some-topic-id") will link this page to "some-topic-id"
 setup()
-
