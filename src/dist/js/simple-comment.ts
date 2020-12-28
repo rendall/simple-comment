@@ -446,7 +446,7 @@ const setErrorStatus = (
 const setUserStatus = (user?: AdminSafeUser) => {
   const docBody = document.querySelector("body")
   const userName = user
-    ? `Logged in as: ${user.name} ${isGuestId(user.id) ? "(guest)" : ""}${user.isAdmin ? "(admin)" : ""
+    ? `Logged in as: ${user.name} (${user.id}) ${isGuestId(user.id) ? "(guest)" : ""}${user.isAdmin ? "(admin)" : ""
     }`
     : "Not logged in"
   if (user && user.isAdmin) docBody.classList.add("is-admin")
