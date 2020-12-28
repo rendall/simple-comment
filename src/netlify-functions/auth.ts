@@ -110,7 +110,7 @@ const handleAuth = async (event: APIGatewayEvent) => {
     const COOKIE_HEADER = {
       "Set-Cookie": `simple_comment_token=${token}; path=/; ${
         isProduction ? "Secure; " : ""
-      }HttpOnly; SameSite; Max-Age=${7 * 24 * 60 * 60 * 1000}`
+      }HttpOnly; SameSite=None; Max-Age=${52 * 7 * 24 * 60 * 60 * 1000}`
     }
 
     const headers = { ...allowHeaders, ...COOKIE_HEADER }
