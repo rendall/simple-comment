@@ -203,15 +203,14 @@ const setupSignup = () => {
 
     createUser({ id, name, email, password })
       .then(resp => {
-        if (resp.status === 201)
+        if (resp.status === 201) {
           setSignupStatus(`User '${name}' created. Signing in...`)
+          postAuth(id, password).then(() => updateLoginStatus()).catch(setErrorStatus)
+        }
         else throw Error(`Unknown response code ${resp.status} from POST /user`)
         clearSignupForm()
         return resp
       })
-      .then(() =>
-        postAuth(id, password).then(() => updateLoginStatus()).catch(setErrorStatus)
-      )
       .catch((err: ResolvedResponse) =>
         setSignupStatus(
           `Error ${err.status} ${err.statusText}: ${err.body}`,
@@ -393,7 +392,7 @@ const updateDiscussionDisplay = (
 // Status display methods
 /* updateLoginStatus
  * Login status may have changed, and the display needs to change to update that */
-const updateLoginStatus = (recurseLoop:number = 0) =>
+const updateLoginStatus = (recurseLoop: number = 0) =>
   verifyUser()
     .then(res => res.body as TokenClaim)
     .then(claim => {
@@ -410,7 +409,7 @@ const updateLoginStatus = (recurseLoop:number = 0) =>
     .then(updateReply)
     .catch(currUserError => {
       if (currUserError.status && currUserError.status === 401 && recurseLoop < 3) {
-        return getGuestToken().then(() => updateLoginStatus(recurseLoop+1))
+        return getGuestToken().then(() => updateLoginStatus(recurseLoop + 1))
       } else setErrorStatus(currUserError)
     })
 
@@ -679,7 +678,7 @@ const setup = async (
 
   console.info("Simple Comment area found! - attempting to set up UI...")
 
-  const createdDiscussionDiv = document.querySelector("#discussion") as HTMLDivElement? null : document.createElement("div")
+  const createdDiscussionDiv = document.querySelector("#discussion") as HTMLDivElement ? null : document.createElement("div")
 
   if (createdDiscussionDiv) {
     createdDiscussionDiv.setAttribute("id", "discussion")
