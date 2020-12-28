@@ -138,9 +138,6 @@ export const createNewTopic = (id, title, isLocked = false) => {
   const credentials: RequestCredentials = "include"
   const authReqInfo = {
     method: "POST",
-    headers: {
-      "Referrer-Policy": "no-referrer-when-downgrade"
-    },
     body,
     credentials
   }
@@ -170,7 +167,7 @@ export const formatDate = (dateStr: string | Date) =>
   `${new Date(dateStr).toLocaleString()}`
 // Validate email
 export const isValidEmail = (x: string) =>
-  x.match( /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i)
+  x.match(/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i)
 //  Return the response with the body field read and resolved
 const resolveBody = async <T>(
   res: Response

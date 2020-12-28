@@ -1,9 +1,9 @@
 @font-face {
-  font-family: 'Comfortaa';
+  font-family: "Comfortaa";
   font-style: normal;
   font-weight: 500;
   font-display: block;
-  src: url(./font/simple-comment.woff2) format('woff2');
+  src: url(./font/simple-comment.woff2) format("woff2");
 }
 
 body {
@@ -11,7 +11,8 @@ body {
   -webkit-font-smoothing: antialiased;
   background-color: #f8fcff;
   color: #33475c;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial,
+    sans-serif;
   font-size: 1.125rem;
   line-height: 1.61111em;
   margin-bottom: 1em;
@@ -27,7 +28,7 @@ main {
 
 h1 {
   color: #3287e6;
-  font-family: 'Comfortaa', sans-serif;
+  font-family: "Comfortaa", sans-serif;
   font-size: 3.4rem;
   font-weight: 500;
   line-height: 4rem;
