@@ -25,11 +25,13 @@ Nearly there! Steps to minimum viable product (MVP):
 
 ### Top priority after MVP
 
-- Styling
 - Moderator holds posts for approval
 - Spam prevention measures
+- Integration with 3rd party authentication
+- Email notification & integration
+- Framework-friendly frontends
 - Extensive helpful comments!
-- API tests
+- E2E tests
 
 ### Nice to haves
 
@@ -42,7 +44,7 @@ Nearly there! Steps to minimum viable product (MVP):
   - Avatar
 
  <details>
-  <summary><b>Done!</b></summary>
+  <summary><b>Completed!</b> (click to open)</summary>
 
 - [![Powered by Simple Comment](https://img.shields.io/badge/powered%20by-Simple%20Comment-%233287e6)](https://simple-comment.netlify.app)
   - oh yeah!
