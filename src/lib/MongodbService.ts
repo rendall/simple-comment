@@ -1474,10 +1474,9 @@ export class MongodbService extends Service {
   verifyGET = (token?: AuthToken) =>
     new Promise<Success<TokenClaim> | Error>((resolve, reject) => {
       try {
-        const claim: TokenClaim = jwt.verify(
-          token,
-          process.env.JWT_SECRET
-        ) as TokenClaim
+        const claim: TokenClaim = jwt.verify(token, process.env.JWT_SECRET, {
+          ignoreExpiration: false
+        }) as TokenClaim
         return resolve({ ...success200OK, body: claim })
       } catch (error) {
         console.error(error)
