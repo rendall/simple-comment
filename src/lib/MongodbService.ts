@@ -159,7 +159,11 @@ export class MongodbService extends Service {
   userPOST = (newUser: NewUser, authUserId?: UserId) =>
     new Promise<Success<AdminSafeUser> | Error>(async (resolve, reject) => {
       if (!authUserId && !policy.canPublicCreateUser) {
-        reject(error401UserNotAuthenticated)
+        reject({
+          ...error401UserNotAuthenticated,
+          body:
+            "Policy violation: no authentication and canPublicCreateUser is false"
+        })
         return
       }
 
@@ -168,7 +172,11 @@ export class MongodbService extends Service {
         isGuestId(authUserId) &&
         !policy.canGuestCreateUser
       ) {
-        reject(error401UserNotAuthenticated)
+        reject({
+          ...error401UserNotAuthenticated,
+          body:
+            "Policy violation: guest authentication and both canGuestCreateUsercan and PublicCreateUser is false"
+        })
         return
       }
 
