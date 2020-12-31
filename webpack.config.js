@@ -3,7 +3,7 @@ var path = require("path");
 module.exports = {
   mode: "production",
   entry: path.resolve(__dirname, "src/dist/js/simple-comment.ts"),
-  devtool: false,
+  devtool: "inline-source-map",
   output: {
     path: path.resolve(__dirname, "dist/js"),
     filename: "simple-comment.js"
