@@ -17,6 +17,8 @@ import {
 } from "../lib/utilities"
 dotenv.config()
 
+const DAY_SECONDS = 60 * 60 * 24 // 60s * 1 hour * 24 hours
+
 const isProduction = process.env.SIMPLE_COMMENT_MODE === "production"
 
 const service: MongodbService = new MongodbService(
@@ -88,7 +90,7 @@ const handleGauth = async (event: APIGatewayEvent) => {
   const COOKIE_HEADER = {
     "Set-Cookie": `simple_comment_token=${token}; path=/; ${
       isProduction ? "Secure; " : ""
-    }HttpOnly; SameSite=None; Max-Age=${52 * 7 * 24 * 60 * 60 * 1000}`
+    }HttpOnly; SameSite=None; Max-Age=${DAY_SECONDS}`
   }
 
   const headers = { ...allowHeaders, ...COOKIE_HEADER }
