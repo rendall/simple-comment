@@ -52,8 +52,8 @@ import {
 } from "./apiClient"
 
 let currUser: AdminSafeUser
-let clearReply = () => { }
-let updateReply = () => { }
+let clearReply = () => {}
+let updateReply = () => {}
 
 // string type guard
 const isString = (x: any): x is string => typeof x === "string"
@@ -182,7 +182,7 @@ const setupSignup = () => {
     if (!id.match(/[A-Za-z0-9]{5,20}/))
       return setSignupStatus(
         `Invalid username '${id}'. ` +
-        "The username must contain only letters or numbers and be between 5 and 20 characters. Go hog-wild on the display name, though!",
+          "The username must contain only letters or numbers and be between 5 and 20 characters. Go hog-wild on the display name, though!",
         true
       )
 
@@ -416,6 +416,8 @@ const updateLoginStatus = (recurseLoop: number = 0) =>
         recurseLoop < 3
       ) {
         return getGuestToken().then(() => updateLoginStatus(recurseLoop + 1))
+      } else if (currUserError.status && currUserError.status === 403) {
+        setErrorStatus("Login expired. Please log in again")
       } else setErrorStatus(currUserError)
     })
 
@@ -452,8 +454,9 @@ const setErrorStatus = (
 const setUserStatus = (user?: AdminSafeUser) => {
   const docBody = document.querySelector("body")
   const userName = user
-    ? `Logged in as: ${user.name} (${user.id}) ${isGuestId(user.id) ? "(guest)" : ""
-    }${user.isAdmin ? "(admin)" : ""}`
+    ? `Logged in as: ${user.name} (${user.id}) ${
+        isGuestId(user.id) ? "(guest)" : ""
+      }${user.isAdmin ? "(admin)" : ""}`
     : "Not logged in"
   if (user && user.isAdmin) docBody.classList.add("is-admin")
   else docBody.classList.remove("is-admin")
