@@ -256,20 +256,16 @@ export const getTokenClaim = (headers: {
     ? getCookieToken(headers)
     : getAuthCredentials(getAuthHeaderValue(headers))
 
-  //TODO: This will actually throw an error if the token has expired, and needs to be handled
-  // the error.name is "TokenExpiredError" q.v. https://github.com/auth0/node-jsonwebtoken#errors--codes
   const claim: TokenClaim = jwt.verify(token, process.env.JWT_SECRET) as {
     user: UserId
     exp: number
   }
 
-  //TODO: This isn't really a thing because jwt.verify will have thrown an error
   const isExpired = claim.exp <= new Date().valueOf()
 
-  // we probably need to return an Error type of some sort
-  if (isExpired) return null
-
-  return claim
+  if (isExpired)
+    throw new jwt.TokenExpiredError("jwt_expired", new Date(claim.exp * 1000))
+  else return claim
 }
 
 export const getUserId = (headers: {
