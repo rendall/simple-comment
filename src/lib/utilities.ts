@@ -261,7 +261,9 @@ export const getTokenClaim = (headers: {
     exp: number
   }
 
-  const isExpired = claim.exp <= new Date().valueOf()
+  // claim.exp comes in seconds, Date().valueOf() comes in milliseconds
+  // so multiply claim.exp by 1000
+  const isExpired = claim.exp * 1000 <= new Date().valueOf()
 
   if (isExpired)
     throw new jwt.TokenExpiredError("jwt_expired", new Date(claim.exp * 1000))
