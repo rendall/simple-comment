@@ -161,10 +161,9 @@ header {
 // use only guest auth
 
 div#user-display {
-    display: none;
+  display: none;
 }
 
 #log-in-form {
   display: none;
 }
-

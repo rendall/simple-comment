@@ -300,7 +300,6 @@ const setupUserLogin = () => {
   logoutButton.addEventListener("click", onLogoutClick)
   const loginButton = document.querySelector("#log-in-button")
   loginButton.addEventListener("click", onLoginClick)
-  updateLoginStatus()
 }
 
 let currDiscussion: ResolvedResponse<Discussion>
@@ -528,14 +527,39 @@ const onReceiveDiscussion = (
  * The user has pressed the submit button and expects something to happen. This function handles those possiblities */
 const onCommentSubmit = (submitElems, targetId) => async e => {
   const { replyTextarea, nameInput, emailInput } = submitElems
-  const text = replyTextarea.value
-  const name = nameInput.value
-  const email = emailInput.value
-  const isLoggedIn = document
-    .querySelector("body")
-    .classList.contains("is-logged-in")
+  const text: string = replyTextarea.value
+
+  if (text.trim().length === 0) {
+    setErrorStatus("Please leave a comment")
+    return
+  }
+
+  const name: string = nameInput.value
+
+  if (name.trim().length === 0) {
+    setErrorStatus("Please enter a name")
+    return
+  }
+
+  const email: string = emailInput.value
+  if (email.trim().length === 0) {
+    setErrorStatus("Please enter an email")
+    return
+  }
+
+  if (!isValidEmail(email)) {
+    setErrorStatus("Please enter a valid email")
+    return
+  }
+
+  const isLoggedIn = () =>
+    document.querySelector("body").classList.contains("is-logged-in")
+
+  if (!isLoggedIn()) {
+    await updateLoginStatus()
+  }
   // if not isLoggedIn in we need to verify some things then create a guest user
-  if (!isLoggedIn) {
+  if (!isLoggedIn()) {
     //TODO: due validation of email and name
     const id = (document.querySelector("#claim-user") as HTMLInputElement).value
     try {
@@ -706,42 +730,39 @@ const setup = async (
   claimUserInput.setAttribute("type", "hidden")
   simpleCommentArea.appendChild(claimUserInput)
 
-  //   <input type="hidden" id="claim-user">
+  const userDisplay = document.createElement("div")
+  userDisplay.setAttribute("id", "user-display")
+  simpleCommentArea.appendChild(userDisplay)
+  userDisplay.innerHTML = `
+    <p id="login-pulser">Logging in... Please wait</p>
+    <input type="hidden" id="claim-user">
+    <p id="user-name">Logged in as: Rendall (guest)</p>
+    <button id="log-out-button">Log out</button>
+    <div id="log-in-form">
+      <label for="userid">Username:</label>
+      <input id="userid" required="">
+      <label for="password">Password:</label>
+      <input id="password" type="password" required="">
+      <button id="log-in-button">Log in</button>
+    </div>
+    <div class="sign-up-form">
+      <p>Sign up for Simple Comment</p>
+      <p id="sign-up-status">&nbsp;</p>
+      <label for="sign-up-userid">Username:</label>
+      <input id="sign-up-userid" required="">
+      <label for="sign-up-password">Password:</label>
+      <input id="sign-up-password" type="password" required="">
+      <label for="sign-up-password-2">Same Password:</label>
+      <input id="sign-up-password-2" type="password" required="">
+      <label for="sign-up-email">Email:</label>
+      <input id="sign-up-email" required="">
+      <label for="sign-up-display-name">Display Name:</label>
+      <input id="sign-up-display-name" placeholder="How do you want to be known?">
+      <button id="sign-up-button">Sign up</button>
+  </div>`
 
-  
-  // const userDisplay = document.createElement("div")
-  // userDisplay.setAttribute("id", "user-display")
-  // simpleCommentArea.appendChild(userDisplay)
-  // userDisplay.innerHTML = `
-  //   <p id="login-pulser">Logging in... Please wait</p>
-  //   <input type="hidden" id="claim-user">
-  //   <p id="user-name">Logged in as: Rendall (guest)</p>
-  //   <button id="log-out-button">Log out</button>
-  //   <div id="log-in-form">
-  //     <label for="userid">Username:</label>
-  //     <input id="userid" required="">
-  //     <label for="password">Password:</label>
-  //     <input id="password" type="password" required="">
-  //     <button id="log-in-button">Log in</button>
-  //   </div>
-  //   <div class="sign-up-form">
-  //     <p>Sign up for Simple Comment</p>
-  //     <p id="sign-up-status">&nbsp;</p>
-  //     <label for="sign-up-userid">Username:</label>
-  //     <input id="sign-up-userid" required="">
-  //     <label for="sign-up-password">Password:</label>
-  //     <input id="sign-up-password" type="password" required="">
-  //     <label for="sign-up-password-2">Same Password:</label>
-  //     <input id="sign-up-password-2" type="password" required="">
-  //     <label for="sign-up-email">Email:</label>
-  //     <input id="sign-up-email" required="">
-  //     <label for="sign-up-display-name">Display Name:</label>
-  //     <input id="sign-up-display-name" placeholder="How do you want to be known?">
-  //     <button id="sign-up-button">Sign up</button>
-  // </div>`
-
-  // setupUserLogin()
-  // setupSignup()
+  setupUserLogin()
+  setupSignup()
 
   const statusDisplay = document.createElement("p")
   statusDisplay.setAttribute("id", "status-display")
