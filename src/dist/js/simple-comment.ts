@@ -732,7 +732,7 @@ const setup = async (
 
   const userDisplay = document.createElement("div")
   userDisplay.setAttribute("id", "user-display")
-  simpleCommentArea.appendChild(userDisplay)
+  userDisplay.setAttribute("style", "display: none;")
   userDisplay.innerHTML = `
     <p id="login-pulser">Logging in... Please wait</p>
     <input type="hidden" id="claim-user">
@@ -760,6 +760,7 @@ const setup = async (
       <input id="sign-up-display-name" placeholder="How do you want to be known?">
       <button id="sign-up-button">Sign up</button>
   </div>`
+  simpleCommentArea.appendChild(userDisplay)
 
   setupUserLogin()
   setupSignup()
