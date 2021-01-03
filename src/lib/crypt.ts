@@ -5,7 +5,7 @@ import * as dotenv from "dotenv"
 
 dotenv.config()
 
-const DAY_SECONDS = 60 * 60 * 24 // 60s * 1 hour * 24 hours
+const YEAR_SECONDS = 60 * 60 * 24 * 365 // 60s * 1 hour * 24 hours * 365 days
 
 /** Return a date in *seconds from epoch*
  * some number of (input) seconds in the future
@@ -31,7 +31,7 @@ export const comparePassword = async (
 
 export const getAuthToken = (
   user: string,
-  exp: number = getExpirationTime(DAY_SECONDS)
+  exp: number = getExpirationTime(YEAR_SECONDS)
 ) => jwt.sign({ user, exp }, process.env.JWT_SECRET)
 
 export const uuidv4 = () => v4()
