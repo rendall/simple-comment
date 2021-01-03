@@ -119,6 +119,9 @@ header {
 .is-logged-in:not(.is-guest) #log-out-button {
   display: unset;
 }
+.is-logged-in #log-in-form {
+  display: none;
+}
 
 .is-logged-in #log-in-form {
   display: none;
