@@ -271,10 +271,15 @@ export const getTokenClaim = (headers: {
 export const getUserId = (headers: {
   [key: string]: string
 }): UserId | null => {
-  const claim = getTokenClaim(headers)
-  console.log("claim", claim)
-  if (claim) return claim.user
-  else return null
+  try {
+    const claim = getTokenClaim(headers)
+    console.log("claim", claim)
+    if (claim) return claim.user
+    else return null
+  } catch (error) {
+    console.error(error)
+    return null
+  }
 }
 
 /**
