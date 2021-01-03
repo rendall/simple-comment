@@ -1,41 +1,4 @@
-@font-face {
-  font-family: "Comfortaa";
-  font-style: normal;
-  font-weight: 500;
-  font-display: block;
-  src: url(./font/simple-comment.woff2) format("woff2");
-}
-
-body {
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-font-smoothing: antialiased;
-  background-color: #f8fcff;
-  color: #33475c;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial,
-    sans-serif;
-  font-size: 1.125rem;
-  line-height: 1.61111em;
-  margin-bottom: 1em;
-  margin-top: 1em;
-  margin: 0 auto;
-  padding: 0 1rem;
-}
-
-main {
-  max-width: 38rem;
-  margin: 0 auto;
-}
-
-h1 {
-  color: #3287e6;
-  font-family: "Comfortaa", sans-serif;
-  font-size: 3.4rem;
-  font-weight: 500;
-  line-height: 4rem;
-  margin-left: 1rem;
-}
-
-input {
+#simple-comment-area input {
   height: 2rem;
   width: 100%;
   font-size: 1.65rem;
@@ -45,7 +8,7 @@ input {
   font-family: monospace;
 }
 
-textarea {
+#simple-comment-area textarea {
   display: block;
   height: 7rem;
   width: 100%;
@@ -56,11 +19,11 @@ textarea {
   font-family: monospace;
 }
 
-button:hover {
+#simple-comment-area button:hover {
   font-weight: bold;
 }
 
-button {
+#simple-comment-area button {
   appearance: none;
   border: none;
   background: transparent;
@@ -75,24 +38,24 @@ button {
   margin: 0.5rem 1rem 0.5rem 0;
 }
 
-a:hover {
+#simple-comment-area a:hover {
   color: #007b8c;
   text-decoration: underline;
 }
 
-a {
+#simple-comment-area a {
   color: #3287e6;
   font-weight: 600;
   text-decoration: none;
 }
 
-textarea#reply-textarea {
+#simple-comment-area textarea#reply-textarea {
   display: block;
   width: 100%;
   height: 7rem;
 }
 
-header {
+#simple-comment-area header {
   display: flex;
   margin: 0 auto;
   max-width: 59rem;
@@ -100,66 +63,66 @@ header {
   align-items: center;
 }
 
-#discussion-title {
+#simple-comment-area #discussion-title {
   display: none;
 }
 
-#login-pulser {
+#simple-comment-area #login-pulser {
   display: none;
 }
 
-.is-logging-in #login-pulser {
+#simple-comment-area .is-logging-in #login-pulser {
   display: inline;
 }
 
-#user-display {
+#simple-comment-area #user-display {
   display: none;
 }
 
-#log-in-form {
+#simple-comment-area #log-in-form {
   display: none;
 }
 
-#log-out-button {
+#simple-comment-area #log-out-button {
   display: none;
 }
 
-.is-logged-in:not(.is-guest) #log-out-button {
+#simple-comment-area .is-logged-in:not(.is-guest) #log-out-button {
   display: unset;
 }
 
-.is-logged-in #log-in-form {
+#simple-comment-area .is-logged-in #log-in-form {
   display: none;
 }
 
-.is-logged-in .user-info {
+#simple-comment-area .is-logged-in .user-info {
   display: none;
 }
 
-.is-logged-in:not(.is-guest) .sign-up-form {
+#simple-comment-area .is-logged-in:not(.is-guest) .sign-up-form {
   display: none;
 }
 
-.is-error,
-.error {
+#simple-comment-area .is-error,
+#simple-comment-area .error {
   font-weight: bold;
   color: red;
 }
 
-.is-reply > .comment-display .comment-button {
+#simple-comment-area .is-reply > .comment-display .comment-button {
   display: none;
 }
 
-.is-deleted {
+#simple-comment-area .is-deleted {
   font-style: italic;
   opacity: 0.5;
 }
 
-.is-deleted > .comment-button {
+#simple-comment-area .is-deleted > .comment-button {
   display: none;
 }
 
-.simple-comment-logo {
+#simple-comment-area .simple-comment-logo {
   max-width: 9.1rem;
   min-width: 9.1rem;
   fill: #3287e6;
