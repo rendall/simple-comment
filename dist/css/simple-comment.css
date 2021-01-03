@@ -112,6 +112,14 @@ header {
   display: inline;
 }
 
+#user-display {
+  display: none;
+}
+
+#log-in-form {
+  display: none;
+}
+
 #log-out-button {
   display: none;
 }
@@ -155,15 +163,4 @@ header {
   max-width: 9.1rem;
   min-width: 9.1rem;
   fill: #3287e6;
-}
-
-// Hide user auth things for now,
-// use only guest auth
-
-div#user-display {
-  display: none;
-}
-
-#log-in-form {
-  display: none;
 }

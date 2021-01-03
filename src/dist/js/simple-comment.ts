@@ -732,7 +732,6 @@ const setup = async (
 
   const userDisplay = document.createElement("div")
   userDisplay.setAttribute("id", "user-display")
-  userDisplay.setAttribute("style", "display: none;")
   userDisplay.innerHTML = `
     <p id="login-pulser">Logging in... Please wait</p>
     <input type="hidden" id="claim-user">
