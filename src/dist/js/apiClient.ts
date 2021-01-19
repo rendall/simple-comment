@@ -11,13 +11,20 @@ import type {
   UserId
 } from "./../../lib/simple-comment"
 
-const URL = "https://blog-rendall-dev-comments.netlify.app"
+let SIMPLE_COMMENT_API_URL = "https://blog-rendall-dev-comments.netlify.app"
+
+export const setSimpleCommentApiUrl = (url:string) => SIMPLE_COMMENT_API_URL = url
+
+const getSimpleCommentURL = () => {
+  if (SIMPLE_COMMENT_API_URL === undefined) throw new Error("Simple comment URL is not set. Call `setSimpleCommentApiUrl(<api url>)`");
+  else return SIMPLE_COMMENT_API_URL
+}
 
 /** Fetch a guest token for guest posts, if allowed
  * @returns {ResolvedResponse<AuthToken>}
  */
 export const getGuestToken = () =>
-  fetch(`${URL}/.netlify/functions/gauth`, {
+  fetch(`${getSimpleCommentURL()}/.netlify/functions/gauth`, {
     credentials: "include"
   }).then(res => resolveBody<AuthToken>(res))
 
@@ -27,7 +34,7 @@ export const getGuestToken = () =>
  * @returns {ResolvedResponse<TokenClaim>}
  */
 export const verifyUser = () =>
-  fetch(`${URL}/.netlify/functions/verify`, {
+  fetch(`${getSimpleCommentURL()}/.netlify/functions/verify`, {
     credentials: "include"
   }).then(res => resolveBody<TokenClaim>(res))
 
@@ -37,7 +44,7 @@ export const verifyUser = () =>
  * @returns {ResolvedResponse<User[]>}
  */
 export const getAllUsers = () =>
-  fetch(`${URL}/.netlify/functions/user`, {
+  fetch(`${getSimpleCommentURL()}/.netlify/functions/user`, {
     credentials: "include"
   }).then(res => resolveBody<AdminSafeUser[] | PublicSafeUser[]>(res))
 
@@ -48,7 +55,7 @@ export const getAllUsers = () =>
  * @returns {ResolvedResponse<User>}
  */
 export const getOneUser = (userId: UserId) =>
-  fetch(`${URL}/.netlify/functions/user/${userId}`, {
+  fetch(`${getSimpleCommentURL()}/.netlify/functions/user/${userId}`, {
     credentials: "include"
   }).then(res => resolveBody<AdminSafeUser | PublicSafeUser>(res))
 
@@ -59,7 +66,7 @@ export const getOneUser = (userId: UserId) =>
  * @returns {ResolvedResponse<User>}
  */
 export const createUser = (newUserInfo: NewUser) =>
-  fetch(`${URL}/.netlify/functions/user/`, {
+  fetch(`${getSimpleCommentURL()}/.netlify/functions/user/`, {
     body: objToQuery(newUserInfo),
     method: "POST",
     credentials: "include"
@@ -83,7 +90,7 @@ export const createGuestUser = (userInfo: {
  * @returns {ResolvedResponse}
  */
 export const deleteAuth = () =>
-  fetch(`${URL}/.netlify/functions/auth`, {
+  fetch(`${getSimpleCommentURL()}/.netlify/functions/auth`, {
     method: "DELETE",
     credentials: "include"
   }).then(res => resolveBody(res))
@@ -121,7 +128,7 @@ export const postAuth = (user: string, password: string) => {
     }
   }
 
-  return fetch(`${URL}/.netlify/functions/auth`, authReqInfo).then(res =>
+  return fetch(`${getSimpleCommentURL()}/.netlify/functions/auth`, authReqInfo).then(res =>
     resolveBody<AuthToken>(res)
   )
 }
@@ -136,7 +143,7 @@ export const postAuth = (user: string, password: string) => {
  * @returns {ResolvedResponse}
  */
 export const postComment = (targetId, text) =>
-  fetch(`${URL}/.netlify/functions/comment/${targetId}`, {
+  fetch(`${getSimpleCommentURL()}/.netlify/functions/comment/${targetId}`, {
     body: text,
     method: "POST",
     credentials: "include"
@@ -149,7 +156,7 @@ export const postComment = (targetId, text) =>
  * @return {ResolvedResponse}
  */
 export const deleteComment = commentId =>
-  fetch(`${URL}/.netlify/functions/comment/${commentId}`, {
+  fetch(`${getSimpleCommentURL()}/.netlify/functions/comment/${commentId}`, {
     method: "DELETE",
     credentials: "include"
   }).then(res => resolveBody(res))
@@ -164,7 +171,7 @@ export const deleteComment = commentId =>
  * @returns {Discussion}
  */
 export const getOneDiscussion = topicId =>
-  fetch(`${URL}/.netlify/functions/topic/${topicId}`, {
+  fetch(`${getSimpleCommentURL()}/.netlify/functions/topic/${topicId}`, {
     credentials: "include"
   }).then(res => resolveBody<Discussion>(res))
 
@@ -174,7 +181,7 @@ export const getOneDiscussion = topicId =>
  * @returns {Topic[]}
  */
 export const getAllTopics = () =>
-  fetch(`${URL}/.netlify/functions/topic`, {
+  fetch(`${getSimpleCommentURL()}/.netlify/functions/topic`, {
     credentials: "include"
   }).then(res => resolveBody<Topic[]>(res))
 
@@ -202,7 +209,7 @@ export const createNewTopic = (id, title, isLocked = false) => {
     credentials
   }
 
-  return fetch(`${URL}/.netlify/functions/topic`, authReqInfo).then(res =>
+  return fetch(`${getSimpleCommentURL()}/.netlify/functions/topic`, authReqInfo).then(res =>
     resolveBody(res)
   )
 }
