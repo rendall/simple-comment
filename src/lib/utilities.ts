@@ -357,6 +357,9 @@ export const getUpdateTopicInfo = (body: string): Topic =>
 export const isError = (res: Success | Error): res is Error =>
   res.statusCode >= 400
 
+export const isDiscussion = (c: Comment | Discussion): c is Discussion =>
+  (c as Comment).parentId === undefined
+
 export class HeaderList {
   private _headers: { [header: string]: string }
   constructor(headers?: { [header: string]: string }) {

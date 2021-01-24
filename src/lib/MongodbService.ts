@@ -240,8 +240,8 @@ export class MongodbService extends Service {
       )
 
       if (hasAdminOnlyProps && (!authUser || !authUser.isAdmin)) {
-        const adminOnlyProp = Object.keys(newUser).find((prop: keyof User) =>
-          adminOnlyModifiableUserProperties.includes(prop)
+        const adminOnlyProp = Object.keys(newUser).find(prop =>
+          adminOnlyModifiableUserProperties.includes(prop as keyof User)
         )
         // It's possible that revealing which props are admin-only is a security risk,
         // but on the other hand, the code is open-source so it probably makes no difference
@@ -598,22 +598,30 @@ export class MongodbService extends Service {
 
       comments
         .insertOne(insertComment)
-        .then((response: InsertOneWriteOpResult<WithId<Comment>>) => {
-          const insertedComment: Comment = response.ops.find(x => true)
+        .then(
+          (
+            response: InsertOneWriteOpResult<
+              WithId<Comment | Discussion | DeletedComment>
+            >
+          ) => {
+            const insertedComment: Comment = response.ops.find(
+              x => true
+            ) as Comment
 
-          if (insertComment.parentId !== parentId) {
-            reject({
-              statusCode: 500,
-              body: "Database insertion error"
+            if (insertComment.parentId !== parentId) {
+              reject({
+                statusCode: 500,
+                body: "Database insertion error"
+              })
+              return
+            }
+
+            resolve({
+              statusCode: 201,
+              body: { ...insertedComment, user: adminSafeUser }
             })
-            return
           }
-
-          resolve({
-            statusCode: 201,
-            body: { ...insertedComment, user: adminSafeUser }
-          })
-        })
+        )
         .catch(e => {
           console.error(e)
           authUser.isAdmin
@@ -898,7 +906,7 @@ export class MongodbService extends Service {
 
       comments
         .findOneAndUpdate({ id: foundComment.id }, { $set: returnComment })
-        .then((x: FindAndModifyWriteOpResultObject<Comment>) =>
+        .then((x: FindAndModifyWriteOpResultObject<Comment | Discussion>) =>
           resolve({
             ...success204CommentUpdated,
             body: returnComment
@@ -1335,17 +1343,12 @@ export class MongodbService extends Service {
    **/
   topicPUT = (
     topicId: TopicId,
-    topic: Pick<Topic, "id" | "title" | "isLocked">,
+    topic: Pick<Topic, "title" | "isLocked">,
     authUserId?: UserId
   ) =>
     new Promise<Success<Topic> | Error>(async (resolve, reject) => {
       if (!authUserId) {
         reject(error401UserNotAuthenticated)
-        return
-      }
-
-      if (!topic.hasOwnProperty("id")) {
-        reject(error400CommentIdMissing)
         return
       }
 
@@ -1357,7 +1360,7 @@ export class MongodbService extends Service {
         return
       }
 
-      const targetId = topic.id
+      const targetId = topicId
       const comments: Collection<Comment | Topic> = (
         await this.getDb()
       ).collection("comments")
@@ -1381,7 +1384,7 @@ export class MongodbService extends Service {
 
       comments
         .findOneAndUpdate({ id: foundTopic.id }, { $set: updateTopic })
-        .then((x: FindAndModifyWriteOpResultObject<Comment>) =>
+        .then((x: FindAndModifyWriteOpResultObject<Comment | Topic>) =>
           resolve({ ...success204CommentUpdated, body: updateTopic })
         )
         .catch(e =>

@@ -1,18 +1,19 @@
 import {
+  AdminSafeUser,
   AuthToken,
   Comment,
   CommentId,
+  DeletedComment,
   Discussion,
+  Email,
   Error,
-  TopicId,
+  NewUser,
+  PublicSafeUser,
   Success,
   Topic,
-  User,
-  AdminSafeUser,
-  Email,
-  DeletedComment,
-  NewUser,
-  UpdateUser
+  TopicId,
+  UpdateUser,
+  User
 } from "../src/lib/simple-comment"
 import { MongodbService } from "../src/lib/MongodbService"
 import { Db, MongoClient } from "mongodb"
@@ -35,6 +36,7 @@ import { policy } from "../src/policy"
 import {
   isComment,
   isDeletedComment,
+  isDiscussion,
   toAdminSafeUser
 } from "../src/lib/utilities"
 import * as fs from "fs"
@@ -442,7 +444,7 @@ describe("Full API service test", () => {
     const authAdminUser = getAuthUser(u => u.isAdmin)
     return service
       .userGET(targetUser.id, authAdminUser.id)
-      .then((res: Success<User>) => {
+      .then((res: Success<PublicSafeUser | AdminSafeUser> | Error) => {
         expect(res).toHaveProperty("statusCode", 200)
         expect(res).toHaveProperty("body")
         expect(res.body).toHaveProperty("id", targetUser.id)
@@ -453,27 +455,35 @@ describe("Full API service test", () => {
   })
   // get to /user should return list of users
   test("GET /user", () => {
-    return service.userListGET().then((res: Success<User[]>) => {
-      expect(res.statusCode).toBe(200)
-      expect(res.body.map(u => u.id)).toEqual(
-        expect.arrayContaining(testAllUsers.map(u => u.id))
-      )
-      const checkProp = (prop: string) => res.body.some(u => u[prop])
-      expect(checkProp("email")).toBe(false)
-      expect(checkProp("hash")).toBe(false)
-    })
+    return service
+      .userListGET()
+      .then((res: Success<AdminSafeUser[] | PublicSafeUser[]> | Error) => {
+        if (res instanceof Error) return // Type guard. This will never be an Error in practice, which would instead by passed to .catch
+
+        const resBody = res.body as { id: string }[]
+
+        expect(res.statusCode).toBe(200)
+        expect(resBody.map(u => u.id)).toEqual(
+          expect.arrayContaining(testAllUsers.map(u => u.id))
+        )
+        const checkProp = (prop: string) => resBody.some(u => u[prop])
+        expect(checkProp("email")).toBe(false)
+        expect(checkProp("hash")).toBe(false)
+      })
   })
   // get to /user with admin credentials can return list of users with email
   test("GET /user admin", () => {
     const adminUserTest = getAuthUser(u => u.isAdmin)
     return service
       .userListGET(adminUserTest.id)
-      .then((res: Success<User[]>) => {
+      .then((res: Success<AdminSafeUser[] | PublicSafeUser[]> | Error) => {
+        if (res instanceof Error) return // type guard only, res will never be Error here
+        const resbody = res.body as { id: string }[]
         expect(res.statusCode).toBe(200)
-        expect(res.body.map(u => u.id)).toEqual(
+        expect(resbody.map(u => u.id)).toEqual(
           expect.arrayContaining(testAllUsers.map(u => u.id))
         )
-        const checkProp = (prop: string) => res.body.some(u => u[prop])
+        const checkProp = (prop: string) => resbody.some(u => u[prop])
         expect(checkProp("email")).toBe(true)
         expect(checkProp("hash")).toBe(false)
       })
@@ -483,7 +493,7 @@ describe("Full API service test", () => {
     const adminUserTest = getAuthUser(u => u.isAdmin)
     return service
       .userGET(user.id, adminUserTest.id)
-      .then((res: Success<User>) => {
+      .then((res: Success<PublicSafeUser | AdminSafeUser> | Error) => {
         expect(res).toHaveProperty("statusCode", 200)
         expect(res.body).toHaveProperty("id", user.id)
         expect(res.body).toHaveProperty("name", user.name)
@@ -494,13 +504,15 @@ describe("Full API service test", () => {
 
   test("GET to /user/{userId} with public user", () => {
     const user = getAuthUser()
-    return service.userGET(user.id).then((res: Success<User>) => {
-      expect(res).toHaveProperty("statusCode", 200)
-      expect(res.body).toHaveProperty("id", user.id)
-      expect(res.body).toHaveProperty("name", user.name)
-      expect(res.body).not.toHaveProperty("hash")
-      expect(res.body).not.toHaveProperty("email")
-    })
+    return service
+      .userGET(user.id)
+      .then((res: Success<PublicSafeUser | AdminSafeUser> | Error) => {
+        expect(res).toHaveProperty("statusCode", 200)
+        expect(res.body).toHaveProperty("id", user.id)
+        expect(res.body).toHaveProperty("name", user.name)
+        expect(res.body).not.toHaveProperty("hash")
+        expect(res.body).not.toHaveProperty("email")
+      })
   })
   // User Update
   // put to /user/{userId} with no credentials should return 401
@@ -547,11 +559,14 @@ describe("Full API service test", () => {
     }
     return service
       .userPUT(updatedUser.id, updatedUser, targetUser.id)
-      .then((res: Success<AdminSafeUser>) => {
+      .then((res: Success<PublicSafeUser | AdminSafeUser> | Error) => {
+        if (res instanceof Error) return // type guard only, res will never be Error here
+        const resbody = res.body as { name: string }
+
         expect(res).toHaveProperty("statusCode", 204)
         expect(res).toHaveProperty("body")
-        expect(res.body.name).toBe(updatedUser.name)
-        expect(isAdminSafeUser(res.body)).toBe(true)
+        expect(resbody.name).toBe(updatedUser.name)
+        expect(isAdminSafeUser(resbody)).toBe(true)
       })
   })
   // put to /user/{userId} with very long password should not timeout
@@ -566,11 +581,13 @@ describe("Full API service test", () => {
     }
     return service
       .userPUT(updatedUser.id, updatedUser, targetUser.id)
-      .then((res: Success<AdminSafeUser>) => {
+      .then((res: Success<AdminSafeUser> | Error) => {
+        if (res instanceof Error) return
+        const resbody = res.body as Partial<User>
         expect(res).toHaveProperty("statusCode", 204)
         expect(res).toHaveProperty("body")
-        expect(res.body.name).toBe(updatedUser.name)
-        expect(isAdminSafeUser(res.body)).toBe(true)
+        expect(resbody.name).toBe(updatedUser.name)
+        expect(isAdminSafeUser(resbody)).toBe(true)
       })
   })
   // put to /user/{userId} with invalid name, email, password should fail
@@ -757,12 +774,13 @@ describe("Full API service test", () => {
         newCommentTest.text,
         newCommentTest.userId
       )
-      .then((res: Success<Comment>) => {
+      .then((res: Success<Comment> | Error) => {
+        const resbody = res.body as Comment
         expect(res).toHaveProperty("statusCode", 201)
         expect(res).toHaveProperty("body")
         expect(res.body).toHaveProperty("text", newCommentTest.text)
         expect(res.body).toHaveProperty("user")
-        expect(res.body.user.id).toBe(newCommentTest.userId)
+        expect(resbody.user.id).toBe(newCommentTest.userId)
       })
   })
   // post comment to /comment/{commentId} without credentials should fail
@@ -816,7 +834,9 @@ describe("Full API service test", () => {
     ) =>
       allComments
         .filter(c => isComment(c))
-        .filter((c: Comment) => c.parentId === commentId)
+        .filter((c: Comment | Discussion) =>
+          isDiscussion(c) ? false : c.parentId === commentId
+        )
     const targetChildren = getChildren(
       targetComment.id,
       commentTreeTest
@@ -892,11 +912,12 @@ describe("Full API service test", () => {
     const userId = targetComment.userId
     return service
       .commentPUT(updatedComment.id, updatedComment.text, userId)
-      .then((res: Success<Comment>) => {
+      .then((res: Success<Comment> | Error) => {
+        const resbody = res.body as { text: string }
         expect(res).toHaveProperty("statusCode", 204)
         expect(res).toHaveProperty("body")
         expect(res.body).toHaveProperty("text")
-        expect(res.body.text).toBe(updatedComment.text)
+        expect(resbody.text).toBe(updatedComment.text)
       })
   })
 
@@ -1000,8 +1021,9 @@ describe("Full API service test", () => {
   // Topic Read
   // GET to /topic should return a list of topics and 200 OK
   test("GET to /topic", () => {
-    return service.topicListGET().then((res: Success<Topic[]>) => {
-      expect(res.body.map(i => i.id)).toEqual(
+    return service.topicListGET().then((res: Success<Topic[]> | Error) => {
+      const resbody = res.body as Topic[]
+      expect(resbody.map(i => i.id)).toEqual(
         [...topicsTest, deleteTopicTest, newTopicTest].map(i => i.id)
       )
     })
@@ -1009,10 +1031,13 @@ describe("Full API service test", () => {
   // GET to /topic/{topicId} should return a topic and descendent comments
   test("GET to /topic/{topicId}", () => {
     const targetTopicId = chooseRandomElement(topicsTest).id
-    return service.topicGET(targetTopicId).then((res: Success<Discussion>) => {
-      expect(res.body.id).toBe(targetTopicId)
-      expect(res.body).toHaveProperty("replies")
-    })
+    return service
+      .topicGET(targetTopicId)
+      .then((res: Success<Discussion> | Error) => {
+        const resbody = res.body as { id: string }
+        expect(resbody.id).toBe(targetTopicId)
+        expect(res.body).toHaveProperty("replies")
+      })
   })
 
   // Discussion Update
@@ -1027,9 +1052,10 @@ describe("Full API service test", () => {
     const adminUserTest = getAuthUser(u => u.isAdmin)
     return service
       .topicPUT(putTopic.id, putTopic, adminUserTest.id)
-      .then((res: Success<Topic>) => {
+      .then((res: Success<Topic> | Error) => {
+        const resbody = res.body as Topic
         expect(res).toHaveProperty("statusCode", 204)
-        expect(res.body.dateCreated.toDateString()).toBe(
+        expect(resbody.dateCreated.toDateString()).toBe(
           topic.dateCreated.toDateString()
         )
       })
@@ -1077,7 +1103,7 @@ describe("Full API service test", () => {
     const adminUserTest = getAuthUser(u => u.isAdmin)
     return service
       .topicPUT(putTopic.id, putTopic, adminUserTest.id)
-      .then((res: Success) => {
+      .then((res: Success<Topic> | Error) => {
         expect(res).toHaveProperty("statusCode", 204)
         expect(res).toHaveProperty("body", putTopic)
       })
