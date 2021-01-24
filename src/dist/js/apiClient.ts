@@ -84,7 +84,7 @@ export const createUser = (newUserInfo: NewUser) =>
  * @returns {ResolvedResponse<User>}
  */
 export const updateUser = (userInfo: User) =>
-  fetch(`${getSimpleCommentURL()}/.netlify/functions/user/`, {
+  fetch(`${getSimpleCommentURL()}/.netlify/functions/user/${userInfo.id}`, {
     body: objToQuery(userInfo),
     method: "PUT",
     credentials: "include"
