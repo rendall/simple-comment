@@ -530,7 +530,7 @@ describe("Full API service test", () => {
     return service
       .userPUT(targetUser.id, targetUser, ordinaryUser.id)
       .then(res => expect(true).toBe(false))
-      .catch(e => expect(e).toBe(error403UserNotAuthorized))
+      .catch(e => expect(e.statusCode).toBe(403))
   })
   // put to /user/{userId} with public, own credentials cannot modify isAdmin
   test("PUT to /user/{userId} with public, own credentials cannot modify isAdmin", () => {
@@ -645,12 +645,14 @@ describe("Full API service test", () => {
 
     await service.userPOST(guestUser, id)
 
-    expect.assertions(2)
+    expect.assertions(3)
     return service
       .userPUT(updatedGuestUser.id, updatedGuestUser, adminAuthUser.id)
       .then((res: Success<AdminSafeUser> | Error) => {
+        const resbody = res.body as { name: string }
         expect(res).toHaveProperty("statusCode", 204)
         expect(res).toHaveProperty("body", toAdminSafeUser(updatedGuestUser))
+        expect(resbody.name).toBe(updatedGuestUser.name)
       })
   })
 

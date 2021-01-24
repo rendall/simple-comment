@@ -44,7 +44,6 @@ import {
 import { policy } from "../policy"
 import {
   error400BadRequest,
-  error400CommentIdMissing,
   error400NoUpdate,
   error400PasswordMissing,
   error400UserIdMissing,
@@ -406,7 +405,10 @@ export class MongodbService extends Service {
       const authUser = await users.findOne({ id: authUserId })
 
       if (targetId !== authUser.id && !authUser.isAdmin) {
-        reject(error403UserNotAuthorized)
+        reject({
+          ...error403UserNotAuthorized,
+          body: `id of user ${targetId} does not match id of credentials ${authUser.id} and credentialed user is not admin`
+        })
         return
       }
 
