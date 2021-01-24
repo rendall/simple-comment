@@ -48,7 +48,8 @@ import {
   createUser,
   deleteComment,
   formatDate,
-  isTopic
+  isTopic,
+  updateUser
 } from "./apiClient"
 
 let currUser: AdminSafeUser
@@ -105,7 +106,7 @@ const insertReplyInput = (commentId: CommentId) => {
   nameInput.setAttribute("placeholder", "What's your name?")
   userInfoGroup.appendChild(nameInput)
   nameInput.value = !!user ? user.name : ""
-  nameInput.toggleAttribute("disabled", !!user)
+  // nameInput.toggleAttribute("disabled", !!user)
 
   const emailLabel = document.createElement("label")
   emailLabel.setAttribute("for", "email-input")
@@ -116,7 +117,7 @@ const insertReplyInput = (commentId: CommentId) => {
   emailInput.setAttribute("id", "email-input")
   emailInput.setAttribute("placeholder", "What's your email?")
   emailInput.value = !!user ? user.email : ""
-  emailInput.toggleAttribute("disabled", !!user)
+  // emailInput.toggleAttribute("disabled", !!user)
   userInfoGroup.appendChild(emailInput)
 
   const replyTextarea = document.createElement("textarea")
@@ -599,6 +600,11 @@ const onCommentSubmit = (submitElems, targetId) => async e => {
     appendComment(comment, parentElement)
     clearReply()
   }
+
+  const isSameUserInfo = name === currUser.name && email === currUser.email
+
+  // update the user info if the name or email is changed
+  if (!isSameUserInfo) await updateUser({ id: currUser.id, name, email })
 
   postComment(targetId, text).then(onCommentResponse(li)).catch(setErrorStatus)
 }

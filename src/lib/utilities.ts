@@ -354,7 +354,8 @@ export const toTopic = (obj: GenericObj) =>
 export const getUpdateTopicInfo = (body: string): Topic =>
   narrowType<Topic>(parseBody(body), ["title", "isLocked"]) as Topic
 
-export const isError = (res: Success | Error): boolean => res.statusCode >= 400
+export const isError = (res: Success | Error): res is Error =>
+  res.statusCode >= 400
 
 export class HeaderList {
   private _headers: { [header: string]: string }
