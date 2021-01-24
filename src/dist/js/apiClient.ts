@@ -8,15 +8,20 @@ import type {
   TokenClaim,
   Topic,
   Comment,
-  UserId
+  UserId,
+  User
 } from "./../../lib/simple-comment"
 
 let SIMPLE_COMMENT_API_URL = "https://blog-rendall-dev-comments.netlify.app"
 
-export const setSimpleCommentApiUrl = (url:string) => SIMPLE_COMMENT_API_URL = url
+export const setSimpleCommentApiUrl = (url: string) =>
+  (SIMPLE_COMMENT_API_URL = url)
 
 const getSimpleCommentURL = () => {
-  if (SIMPLE_COMMENT_API_URL === undefined) throw new Error("Simple comment URL is not set. Call `setSimpleCommentApiUrl(<api url>)`");
+  if (SIMPLE_COMMENT_API_URL === undefined)
+    throw new Error(
+      "Simple comment URL is not set. Call `setSimpleCommentApiUrl(<api url>)`"
+    )
   else return SIMPLE_COMMENT_API_URL
 }
 
@@ -72,6 +77,18 @@ export const createUser = (newUserInfo: NewUser) =>
     credentials: "include"
   }).then(res => resolveBody<AdminSafeUser>(res))
 
+/** Update a user
+ * @async
+ * @function
+ * @param {NewUser} newUserInfo
+ * @returns {ResolvedResponse<User>}
+ */
+export const updateUser = (userInfo: User) =>
+  fetch(`${getSimpleCommentURL()}/.netlify/functions/user/`, {
+    body: objToQuery(userInfo),
+    method: "PUT",
+    credentials: "include"
+  }).then(res => resolveBody<AdminSafeUser>(res))
 /** Create a guest user
  * @async
  * @function
@@ -128,9 +145,10 @@ export const postAuth = (user: string, password: string) => {
     }
   }
 
-  return fetch(`${getSimpleCommentURL()}/.netlify/functions/auth`, authReqInfo).then(res =>
-    resolveBody<AuthToken>(res)
-  )
+  return fetch(
+    `${getSimpleCommentURL()}/.netlify/functions/auth`,
+    authReqInfo
+  ).then(res => resolveBody<AuthToken>(res))
 }
 
 // COMMENT
@@ -190,7 +208,7 @@ export const getAllTopics = () =>
  * @param {string} title - Any string. default: window.location.href
  * @returns {string} - a slug using only characters: `a-z`, `0-9` and `-`
  */
-export const getDefaultDiscussionId = (title:string = window.location.href) =>
+export const getDefaultDiscussionId = (title: string = window.location.href) =>
   title.toLowerCase().replace(/[^a-z0-9 ]/g, "-")
 
 /** Create a new Topic
@@ -209,9 +227,10 @@ export const createNewTopic = (id, title, isLocked = false) => {
     credentials
   }
 
-  return fetch(`${getSimpleCommentURL()}/.netlify/functions/topic`, authReqInfo).then(res =>
-    resolveBody(res)
-  )
+  return fetch(
+    `${getSimpleCommentURL()}/.netlify/functions/topic`,
+    authReqInfo
+  ).then(res => resolveBody(res))
 }
 
 // UTILITY
@@ -252,7 +271,7 @@ const resolveBody = async <T>(
   else return resolvedRes
 }
 
-/** Return true if 'discussion' or 'comment' is a Topic, false otherwise 
+/** Return true if 'discussion' or 'comment' is a Topic, false otherwise
  * @param discussion {Discussion | Comment}
  * @returns {boolean}
  */

@@ -10,7 +10,6 @@ import {
   success200OK
 } from "../lib/messages"
 import {
-  isError,
   getAllowOriginHeaders,
   getAllowedOrigins,
   addHeaders
@@ -81,9 +80,7 @@ const handleGauth = async (event: APIGatewayEvent) => {
 
   const gauthResponse = await service.gauthGET()
 
-  if (isError(gauthResponse)) {
-    return gauthResponse
-  }
+  if (gauthResponse instanceof Error) return gauthResponse
 
   const token = gauthResponse.body as AuthToken
 

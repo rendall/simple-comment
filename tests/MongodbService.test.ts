@@ -604,45 +604,58 @@ describe("Full API service test", () => {
     }
     return service
       .userPUT(updatedUser.id, updatedUser, adminAuthUser.id)
-      .then((res: Success<AdminSafeUser>) => {
+      .then((res: Success<AdminSafeUser> | Error) => {
         expect(res).toHaveProperty("statusCode", 204)
         expect(res).toHaveProperty("body", toAdminSafeUser(updatedUser))
         expect(res.body).toHaveProperty("isAdmin", true)
         expect(res.body).toHaveProperty("isVerified", true)
       })
   })
-  // put to /user/{userId} with userId as uuid should fail
-  test("PUT to /user/{userId} with userId as uuid should fail", () => {
-    const tUser = getTargetUser(u => !u.isAdmin && !u.isVerified)
-    const targetUser = { ...tUser, id: uuidv4() }
-    const adminAuthUser = getAuthUser(u => u.isAdmin)
-    const updatedUser: User = {
-      ...targetUser,
-      name: randomString(alphaUserInput, 25),
-      isAdmin: true,
-      isVerified: true
+  // put to /user/{userId} with userId as uuid should succeed
+  test("PUT to /user/{userId} with userId as uuid should succeed", async () => {
+    const id = uuidv4()
+    const guestUser = {
+      id,
+      name: randomString(alphaUserInput),
+      password: randomString(),
+      email: createRandomEmail()
     }
-    expect.assertions(1)
+    const adminAuthUser = getAuthUser(u => u.isAdmin)
+    const updatedGuestUser: User = {
+      ...guestUser,
+      name: randomString(alphaUserInput, 25)
+    }
+
+    await service.userPOST(guestUser, id)
+
+    expect.assertions(2)
     return service
-      .userPUT(updatedUser.id, updatedUser, adminAuthUser.id)
-      .catch(error => {
-        expect(error).toHaveProperty("statusCode", 403)
+      .userPUT(updatedGuestUser.id, updatedGuestUser, adminAuthUser.id)
+      .then((res: Success<AdminSafeUser> | Error) => {
+        expect(res).toHaveProperty("statusCode", 204)
+        expect(res).toHaveProperty("body", toAdminSafeUser(updatedGuestUser))
       })
   })
 
-  test("PUT to /user/{userId} with userId as uuid should fail", () => {
-    const tUser = getTargetUser(u => !u.isAdmin && !u.isVerified)
-    const targetUser = { ...tUser, id: uuidv4() }
+  test("PUT to /user/{userId} with guestUser  changing isAdmin should fail", async () => {
+    const id = uuidv4()
+    const guestUser = {
+      id,
+      name: randomString(alphaUserInput),
+      password: randomString(),
+      email: createRandomEmail()
+    }
     const adminAuthUser = getAuthUser(u => u.isAdmin)
-    const updatedUser: User = {
-      ...targetUser,
+    const updatedGuestUser: User = {
+      ...guestUser,
       name: randomString(alphaUserInput, 25),
-      isAdmin: true,
-      isVerified: true
+      isAdmin: true
     }
     expect.assertions(1)
+
+    await service.userPOST(guestUser, id)
     return service
-      .userPUT(updatedUser.id, updatedUser, adminAuthUser.id)
+      .userPUT(updatedGuestUser.id, updatedGuestUser, adminAuthUser.id)
       .catch(error => {
         expect(error).toHaveProperty("statusCode", 403)
       })

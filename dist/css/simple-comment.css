@@ -1,7 +1,7 @@
 #simple-comment-area input {
   height: 2rem;
   width: 100%;
-  font-size: 1.65rem;
+  font-size: 1.35rem;
   padding: 0.5rem;
   border-radius: 0.5rem;
   border: 1px solid;
@@ -14,7 +14,7 @@
   width: 100%;
   border-radius: 0.5rem;
   border: 1px solid;
-  font-size: 1.65rem;
+  font-size: 1.35rem;
   padding: 0.5rem;
   font-family: monospace;
 }
@@ -107,6 +107,11 @@
 #simple-comment-area .error {
   font-weight: bold;
   color: red;
+}
+
+#simple-comment-area .comment-display .reply-input-group {
+  margin-left: 1rem;
+  width: 30rem;
 }
 
 #simple-comment-area .is-reply > .comment-display .comment-button {

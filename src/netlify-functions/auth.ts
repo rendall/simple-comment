@@ -12,7 +12,6 @@ import {
   getUserIdPassword,
   hasBasicScheme,
   REALM,
-  isError,
   getAllowOriginHeaders,
   getAllowedOrigins,
   addHeaders
@@ -102,9 +101,7 @@ const handleAuth = async (event: APIGatewayEvent) => {
     const { user, password } = getUserIdPassword(event.headers)
     const authUser = await service.authGET(user, password)
 
-    if (isError(authUser)) {
-      return authUser
-    }
+    if (authUser instanceof Error) return authUser
 
     const token = authUser.body as AuthToken
 

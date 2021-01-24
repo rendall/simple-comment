@@ -386,11 +386,21 @@ export class MongodbService extends Service {
         })
       }
 
-      //TODO: Guests should be able to PUT in order to change their name or email
       if (isGuestId(targetId)) {
-        reject({ ...error403Forbidden, body: "Guest users cannot be edited" })
-        return
+        const hasAdminProps = (Object.keys(user) as (keyof User)[]).some(key =>
+          adminOnlyModifiableUserProperties.includes(key)
+        )
+
+        if (hasAdminProps) {
+          reject({
+            ...error403Forbidden,
+            body: "Attempt to modify guest user forbidden property"
+          })
+          return
+        }
       }
+      // Allow guest users to change their name and email
+      // but not admin traits
 
       const users: Collection<User> = (await this.getDb()).collection("users")
       const authUser = await users.findOne({ id: authUserId })
