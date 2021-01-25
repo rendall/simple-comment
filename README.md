@@ -17,11 +17,12 @@ Try it out! <https://simple-comment.netlify.app>
 [![StyleCI](https://github.styleci.io/repos/310091823/shield?branch=master)](https://github.styleci.io/repos/310091823?branch=master)
 [![Documentation Status](https://readthedocs.org/projects/simple-comment/badge/?version=latest)](https://simple-comment.readthedocs.io/en/latest/?badge=latest)
 
+
 Nearly there! Steps to minimum viable product (MVP):
 
 ### To be done
 
-- Minimal script to add Simple Comment functionality to any webpage
+- Update working example to work with new script
 
 ### Top priority after MVP
 
@@ -46,9 +47,8 @@ Nearly there! Steps to minimum viable product (MVP):
  <details>
   <summary><b>Completed!</b> (click to open)</summary>
 
-- [![Powered by Simple Comment](docs/simple-comment-badge.svg)](https://simple-comment.netlify.app)
-  - oh yeah!
-- Validation for server-side entries
+- Cross-origin capability
+- Script with frontend
 - All API endpoint respond as expected
   - `Access-Control-Allow-Origin` responds to `.env` variables
 - Authentication and Identification works as expected
@@ -58,11 +58,13 @@ Nearly there! Steps to minimum viable product (MVP):
   - Restrictions apply:
     - The `Referer` header and the `topicId` must map properly
     - The `Origin` must be on the `Access-Control-Allow-Origin` list
+- Server-side validation of user-posted data
 - Setup instructions
   - Are complicated but work when followed
 - Visitor can post anonymously
   - Comment includes guest user
-- Working example <https://simple-comment.netlify.app>
+- [![Powered by Simple Comment](docs/simple-comment-badge.svg)](https://simple-comment.netlify.app)
+  - oh yeah!
 
 </details>
 
