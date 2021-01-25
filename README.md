@@ -46,7 +46,7 @@ Nearly there! Steps to minimum viable product (MVP):
  <details>
   <summary><b>Completed!</b> (click to open)</summary>
 
-- [![Powered by Simple Comment](https://img.shields.io/badge/powered%20by-Simple%20Comment-%233287e6)](https://simple-comment.netlify.app)
+- [![Powered by Simple Comment](docs/simple-comment-badge.svg)](https://simple-comment.netlify.app)
   - oh yeah!
 - Validation for server-side entries
 - All API endpoint respond as expected
