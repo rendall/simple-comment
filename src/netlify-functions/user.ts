@@ -3,7 +3,7 @@ import type { APIGatewayEvent, APIGatewayEventRequestContext } from "aws-lambda"
 import {
   error404CommentNotFound,
   error405MethodNotAllowed,
-  success204NoContent
+  success200OK
 } from "../lib/messages"
 import { MongodbService } from "../lib/MongodbService"
 import {
@@ -14,6 +14,7 @@ import {
   Error
 } from "../lib/simple-comment"
 import {
+  addHeaders,
   getAllowedOrigins,
   getAllowOriginHeaders,
   getNewUserInfo,
@@ -30,7 +31,9 @@ const service: MongodbService = new MongodbService(
 
 const getAllowHeaders = (event: APIGatewayEvent) => {
   const allowedMethods = {
-    "Access-Control-Allow-Methods": "POST,GET,PUT,DELETE,OPTION"
+    "Access-Control-Allow-Methods": "POST,GET,PUT,DELETE,OPTIONS",
+    "Access-Control-Allow-Credentials": "true",
+    "Access-Control-Allow-Headers": "Cookie"
   }
   const allowedOriginHeaders = getAllowOriginHeaders(
     event.headers,
@@ -47,20 +50,15 @@ export const handler = async (
   const dirs = event.path.split("/")
   const isValidPath = dirs.length <= 5
   const headers = getAllowHeaders(event)
-  const convert = (res: { statusCode: number; body: any }) =>
-    res.statusCode === 204
-      ? { ...res, headers }
-      : {
-          ...res,
-          body: JSON.stringify(res.body),
-          headers
-        }
 
   if (!isValidPath)
-    return convert({
-      ...error404CommentNotFound,
-      body: `${event.path} is not valid`
-    })
+    return addHeaders(
+      {
+        ...error404CommentNotFound,
+        body: `${event.path} is not valid`
+      },
+      headers
+    )
 
   const authUserId = getUserId(event.headers)
   const targetId = getTargetId(event.path, "user") as UserId
@@ -88,9 +86,9 @@ export const handler = async (
         )
       case "DELETE":
         return service.userDELETE(targetId, authUserId)
-      case "OPTION":
+      case "OPTIONS":
         return new Promise<Success>(resolve =>
-          resolve({ ...success204NoContent, headers })
+          resolve({ ...success200OK, headers })
         )
       default:
         return new Promise<Error>(resolve => resolve(error405MethodNotAllowed))
@@ -99,8 +97,8 @@ export const handler = async (
 
   try {
     const response = await handleMethod(event.httpMethod)
-    return convert(response)
+    return addHeaders(response, headers)
   } catch (error) {
-    return error
+    return addHeaders(error, headers)
   }
 }

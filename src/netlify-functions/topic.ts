@@ -1,19 +1,7 @@
+import type { APIGatewayEvent, Context } from "aws-lambda"
 import * as dotenv from "dotenv"
-import type { APIGatewayEvent, Callback, Context } from "aws-lambda"
 import {
-  TopicId,
-  Success,
-  Error,
-  Topic,
-  Discussion
-} from "../lib/simple-comment"
-import { MongodbService } from "../lib/MongodbService"
-import {
-  error404TopicNotFound,
-  error405MethodNotAllowed,
-  success204NoContent
-} from "./../lib/messages"
-import {
+  addHeaders,
   getAllowedOrigins,
   getAllowOriginHeaders,
   getHeaderValue,
@@ -22,6 +10,20 @@ import {
   getUpdateTopicInfo,
   getUserId
 } from "../lib/utilities"
+import {
+  Discussion,
+  Error,
+  Success,
+  Topic,
+  TopicId
+} from "../lib/simple-comment"
+import {
+  error404TopicNotFound,
+  error405MethodNotAllowed,
+  success200OK
+} from "./../lib/messages"
+import { MongodbService } from "../lib/MongodbService"
+
 dotenv.config()
 
 const service: MongodbService = new MongodbService(
@@ -30,14 +32,16 @@ const service: MongodbService = new MongodbService(
 )
 
 const getAllowHeaders = (event: APIGatewayEvent) => {
-  const allowedMethods = {
-    "Access-Control-Allow-Methods": "POST,GET,PUT,DELETE,OPTION"
+  const allowHeaders = {
+    "Access-Control-Allow-Methods": "GET,OPTIONS",
+    "Access-Control-Allow-Credentials": "true",
+    "Access-Control-Allow-Headers": "Cookie,Referrer-Policy"
   }
   const allowedOriginHeaders = getAllowOriginHeaders(
     event.headers,
     getAllowedOrigins()
   )
-  const headers = { ...allowedMethods, ...allowedOriginHeaders }
+  const headers = { ...allowHeaders, ...allowedOriginHeaders }
   return headers
 }
 
@@ -45,20 +49,12 @@ export const handler = async (event: APIGatewayEvent, context: Context) => {
   const dirs = event.path.split("/")
   const isValidPath = dirs.length <= 5
   const headers = getAllowHeaders(event)
-  const convert = (res: { statusCode: number; body: any }) =>
-    res.statusCode === 204
-      ? { ...res, headers }
-      : {
-          ...res,
-          body: JSON.stringify(res.body),
-          headers
-        }
 
   if (!isValidPath)
-    return convert({
-      ...error404TopicNotFound,
-      body: `${event.path} is not valid`
-    })
+    return addHeaders(
+      { ...error404TopicNotFound, body: `${event.path} is not valid` },
+      headers
+    )
 
   const authUserId = getUserId(event.headers)
   const targetId = getTargetId(event.path, "topic") as TopicId
@@ -89,19 +85,21 @@ export const handler = async (event: APIGatewayEvent, context: Context) => {
         )
       case "DELETE":
         return service.topicDELETE(targetId, authUserId)
-      case "OPTION":
-        return new Promise<Success>(resolve =>
-          resolve({ ...success204NoContent, headers })
-        )
+      case "OPTIONS":
+        return new Promise<Success>(resolve => resolve(success200OK))
       default:
         return new Promise<Error>(resolve => resolve(error405MethodNotAllowed))
     }
   }
 
   try {
-    const response = await handleMethod(event.httpMethod)
-    return convert(response)
+    const ret = await handleMethod(event.httpMethod)
+    const response = addHeaders(ret, headers)
+    console.log("response", response)
+    return response
   } catch (error) {
-    return error
+    const retError = addHeaders(error, headers)
+    console.log("error response", retError)
+    return retError
   }
 }

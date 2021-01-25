@@ -1,6 +1,7 @@
 import { Handler, Context, APIGatewayEvent } from "aws-lambda"
 import * as dotenv from "dotenv"
 import {
+  addHeaders,
   getAllowedOrigins,
   getAllowOriginHeaders,
   getAuthCredentials,
@@ -14,7 +15,7 @@ import {
   error401UserNotAuthenticated,
   error404NotFound,
   error405MethodNotAllowed,
-  success204NoContent
+  success200OK
 } from "../lib/messages"
 import { MongodbService } from "../lib/MongodbService"
 
@@ -26,14 +27,15 @@ const service: MongodbService = new MongodbService(
 )
 
 const getAllowHeaders = (event: APIGatewayEvent) => {
-  const allowedMethods = {
-    "Access-Control-Allow-Methods": "GET,OPTION"
+  const allowedHeaders = {
+    "Access-Control-Allow-Methods": "GET,OPTIONS",
+    "Access-Control-Allow-Credentials": "true"
   }
   const allowedOriginHeaders = getAllowOriginHeaders(
     event.headers,
     getAllowedOrigins()
   )
-  const headers = { ...allowedMethods, ...allowedOriginHeaders }
+  const headers = { ...allowedHeaders, ...allowedOriginHeaders }
   return headers
 }
 
@@ -45,26 +47,23 @@ export const handler: Handler = async (
   const isValidPath = dirs.length <= 5
   const headers = getAllowHeaders(event)
 
-  const convert = (res: { statusCode: number; body: any }) =>
-    res.statusCode === 204
-      ? { ...res, headers }
-      : {
-          ...res,
-          body: JSON.stringify(res.body),
-          headers
-        }
-
   if (!isValidPath)
-    return convert({ ...error404NotFound, body: `${event.path} is not valid` })
+    return addHeaders(
+      { ...error404NotFound, body: `${event.path} is not valid` },
+      headers
+    )
 
   const isBearer = hasBearerScheme(event.headers)
   const hasCookie = hasTokenCookie(event.headers)
 
   if (!isBearer && !hasCookie) {
-    return convert({
-      ...error401UserNotAuthenticated,
-      body: "No Cookie header 'simple-comment-token' value"
-    })
+    return addHeaders(
+      {
+        ...error401UserNotAuthenticated,
+        body: "No Cookie header 'simple-comment-token' value"
+      },
+      headers
+    )
   }
 
   const handleMethod = (
@@ -78,10 +77,8 @@ export const handler: Handler = async (
     switch (method) {
       case "GET":
         return service.verifyGET(token)
-      case "OPTION":
-        return new Promise<Success>(resolve =>
-          resolve({ ...success204NoContent, headers })
-        )
+      case "OPTIONS":
+        return new Promise<Success>(resolve => resolve({ ...success200OK }))
       default:
         return new Promise<Error>(resolve => resolve(error405MethodNotAllowed))
     }
@@ -89,8 +86,8 @@ export const handler: Handler = async (
 
   try {
     const response = await handleMethod(event.httpMethod)
-    return convert(response)
+    return addHeaders(response, headers)
   } catch (error) {
-    return error
+    return addHeaders(error, headers)
   }
 }

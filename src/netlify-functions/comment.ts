@@ -5,9 +5,10 @@ import { MongodbService } from "../lib/MongodbService"
 import {
   error404CommentNotFound,
   error405MethodNotAllowed,
-  success204NoContent
+  success200OK
 } from "./../lib/messages"
 import {
+  addHeaders,
   getAllowedOrigins,
   getAllowOriginHeaders,
   getTargetId,
@@ -22,7 +23,8 @@ const service: MongodbService = new MongodbService(
 
 const getAllowHeaders = (event: APIGatewayEvent) => {
   const allowedMethods = {
-    "Access-Control-Allow-Methods": "POST,GET,OPTION,PUT,DELETE"
+    "Access-Control-Allow-Methods": "POST,GET,OPTIONS,PUT,DELETE",
+    "Access-Control-Allow-Credentials": "true"
   }
   const allowedOriginHeaders = getAllowOriginHeaders(
     event.headers,
@@ -38,11 +40,13 @@ export const handler = async (event: APIGatewayEvent, context: Context) => {
   const headers = getAllowHeaders(event)
 
   if (!isValidPath)
-    return {
-      ...error404CommentNotFound,
-      body: `${event.path} is not valid`,
+    return addHeaders(
+      {
+        ...error404CommentNotFound,
+        body: `${event.path} is not valid`
+      },
       headers
-    }
+    )
 
   const authUserId = getUserId(event.headers)
   const targetId = getTargetId(event.path, "comment") as CommentId
@@ -57,28 +61,19 @@ export const handler = async (event: APIGatewayEvent, context: Context) => {
         return service.commentPUT(targetId, event.body, authUserId)
       case "DELETE":
         return service.commentDELETE(targetId, authUserId)
-      case "OPTION":
+      case "OPTIONS":
         return new Promise<Success>(resolve =>
-          resolve({ ...success204NoContent, headers })
+          resolve({ ...success200OK, headers })
         )
       default:
         return new Promise<Error>(resolve => resolve(error405MethodNotAllowed))
     }
   }
 
-  const convert = (res: { statusCode: number; body: any }) =>
-    res.statusCode === 204
-      ? { ...res, headers }
-      : {
-          ...res,
-          body: JSON.stringify(res.body),
-          headers
-        }
-
   try {
     const response = await handleMethod(event.httpMethod)
-    return convert(response)
+    return addHeaders(response, headers)
   } catch (error) {
-    return error
+    return addHeaders(error, headers)
   }
 }

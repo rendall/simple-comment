@@ -688,7 +688,7 @@
             }
           },
           "403": {
-            "description": "Requestion user is not authorized",
+            "description": "Requesting user is not authorized",
             "content": {
               "application/json": {
                 "schema": {

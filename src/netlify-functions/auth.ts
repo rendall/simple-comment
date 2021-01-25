@@ -6,19 +6,19 @@ import {
   error401UserNotAuthenticated,
   error404CommentNotFound,
   error405MethodNotAllowed,
-  success200OK,
-  success204NoContent
+  success200OK
 } from "../lib/messages"
 import {
   getUserIdPassword,
   hasBasicScheme,
   REALM,
-  isError,
   getAllowOriginHeaders,
-  getAllowedOrigins
+  getAllowedOrigins,
+  addHeaders
 } from "../lib/utilities"
 dotenv.config()
 
+const YEAR_SECONDS = 60 * 60 * 24 * 365 // 60s * 1 hour * 24 hours * 365 days
 const isProduction = process.env.SIMPLE_COMMENT_MODE === "production"
 
 const service: MongodbService = new MongodbService(
@@ -28,7 +28,9 @@ const service: MongodbService = new MongodbService(
 
 const getAllowHeaders = (event: APIGatewayEvent) => {
   const allowedMethods = {
-    "Access-Control-Allow-Methods": "POST,GET,OPTION,DELETE"
+    "Access-Control-Allow-Methods": "POST,GET,OPTIONS,DELETE",
+    "Access-Control-Allow-Credentials": "true",
+    "Access-Control-Allow-Headers": "Cookie,Authorization"
   }
   const allowedOriginHeaders = getAllowOriginHeaders(
     event.headers,
@@ -46,27 +48,21 @@ export const handler = async (
   const isValidPath = dirs.length <= 5
   const headers = getAllowHeaders(event)
 
-  const convert = (res: { statusCode: number; body: any }) =>
-    res.statusCode === 204
-      ? { ...res, headers }
-      : {
-          ...res,
-          body: JSON.stringify(res.body),
-          headers
-        }
-
   if (!isValidPath)
-    return convert({
-      ...error404CommentNotFound,
-      body: `${event.path} is not valid`
-    })
+    return addHeaders(
+      {
+        ...error404CommentNotFound,
+        body: `${event.path} is not valid`
+      },
+      headers
+    )
 
   const handleMethod = (method): Promise<Success | Error> => {
     switch (method) {
       case "POST":
       case "GET":
         return handleAuth(event)
-      case "OPTION":
+      case "OPTIONS":
         return handleOption(event)
       case "DELETE":
         return service.authDELETE()
@@ -80,9 +76,9 @@ export const handler = async (
 
   try {
     const response = await handleMethod(event.httpMethod)
-    return convert(response)
+    return addHeaders(response, headers)
   } catch (error) {
-    return error
+    return addHeaders(error, headers)
   }
 }
 
@@ -105,16 +101,14 @@ const handleAuth = async (event: APIGatewayEvent) => {
     const { user, password } = getUserIdPassword(event.headers)
     const authUser = await service.authGET(user, password)
 
-    if (isError(authUser)) {
-      return authUser
-    }
+    if (authUser instanceof Error) return authUser
 
     const token = authUser.body as AuthToken
 
     const COOKIE_HEADER = {
       "Set-Cookie": `simple_comment_token=${token}; path=/; ${
         isProduction ? "Secure; " : ""
-      }HttpOnly; SameSite; Max-Age=${7 * 24 * 60 * 60 * 1000}`
+      }HttpOnly; SameSite=None; Max-Age=${YEAR_SECONDS}`
     }
 
     const headers = { ...allowHeaders, ...COOKIE_HEADER }
@@ -125,5 +119,5 @@ const handleAuth = async (event: APIGatewayEvent) => {
 
 const handleOption = async (event: APIGatewayEvent) => {
   const headers = getAllowHeaders(event)
-  return { ...success204NoContent, headers }
+  return { ...success200OK, headers }
 }

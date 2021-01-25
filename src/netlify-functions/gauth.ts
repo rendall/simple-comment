@@ -7,15 +7,16 @@ import { Success, Error, AuthToken } from "../lib/simple-comment"
 import {
   error404CommentNotFound,
   error405MethodNotAllowed,
-  success200OK,
-  success204NoContent
+  success200OK
 } from "../lib/messages"
 import {
-  isError,
   getAllowOriginHeaders,
-  getAllowedOrigins
+  getAllowedOrigins,
+  addHeaders
 } from "../lib/utilities"
 dotenv.config()
+
+const YEAR_SECONDS = 60 * 60 * 24 * 365 // 60s * 1 hour * 24 hours * 365 days
 
 const isProduction = process.env.SIMPLE_COMMENT_MODE === "production"
 
@@ -26,7 +27,9 @@ const service: MongodbService = new MongodbService(
 
 const getAllowHeaders = (event: APIGatewayEvent) => {
   const allowedMethods = {
-    "Access-Control-Allow-Methods": "GET,OPTION"
+    "Access-Control-Allow-Methods": "GET,OPTIONS",
+    "Access-Control-Allow-Credentials": "true",
+    "Access-Control-Allow-Headers": "Access-Control-Allow-Headers"
   }
   const allowedOriginHeaders = getAllowOriginHeaders(
     event.headers,
@@ -44,66 +47,59 @@ export const handler = async (
   const isValidPath = dirs.length <= 5
   const headers = getAllowHeaders(event)
 
-  const convert = (res: { statusCode: number; body: any }) =>
-    res.statusCode === 204
-      ? { ...res, headers }
-      : {
-          ...res,
-          body: JSON.stringify(res.body),
-          headers
-        }
-
   if (!isValidPath)
-    return convert({
-      ...error404CommentNotFound,
-      body: `${event.path} is not valid`
-    })
+    return addHeaders(
+      {
+        ...error404CommentNotFound,
+        body: `${event.path} is not valid`
+      },
+      headers
+    )
 
   const handleMethod = (method): Promise<Success | Error> => {
     switch (method) {
       case "GET":
-        return handleTauth(event)
-      case "OPTION":
+        return handleGauth(event)
+      case "OPTIONS":
         return handleOption(event)
       default:
-        const headers = getAllowHeaders(event)
-        return new Promise<Error>(resolve =>
-          resolve({ ...error405MethodNotAllowed, headers })
-        )
+        return new Promise<Error>(resolve => resolve(error405MethodNotAllowed))
     }
   }
 
   try {
     const response = await handleMethod(event.httpMethod)
-    return convert(response)
+    return addHeaders(response, headers)
   } catch (error) {
-    return error
+    return addHeaders(error, headers)
   }
 }
 
-const handleTauth = async (event: APIGatewayEvent) => {
+const handleGauth = async (event: APIGatewayEvent) => {
   const allowHeaders = getAllowHeaders(event)
 
   const gauthResponse = await service.gauthGET()
 
-  if (isError(gauthResponse)) {
-    return gauthResponse
-  }
+  if (gauthResponse instanceof Error) return gauthResponse
 
   const token = gauthResponse.body as AuthToken
 
   const COOKIE_HEADER = {
     "Set-Cookie": `simple_comment_token=${token}; path=/; ${
       isProduction ? "Secure; " : ""
-    }HttpOnly; SameSite; Max-Age=${52 * 7 * 24 * 60 * 60 * 1000}`
+    }HttpOnly; SameSite=None; Max-Age=${YEAR_SECONDS}`
   }
 
   const headers = { ...allowHeaders, ...COOKIE_HEADER }
 
-  return { ...success200OK, headers }
+  const allowToken = event.queryStringParameters.token
+
+  return allowToken
+    ? { ...success200OK, headers, body: token }
+    : { ...success200OK, headers }
 }
 
 const handleOption = async (event: APIGatewayEvent) => {
   const headers = getAllowHeaders(event)
-  return { ...success204NoContent, headers }
+  return { ...success200OK, headers }
 }

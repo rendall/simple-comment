@@ -102,6 +102,24 @@ export const getHeaderValue = (
   header: string
 ) => headers[getHeader(headers, header)]
 
+export const addHeaders = (
+  res: { statusCode: number; body: any; headers?: { [key: string]: string } },
+  headers
+) => {
+  const resHeaders = res.hasOwnProperty("headers") ? res.headers : {}
+
+  return res.hasOwnProperty("body")
+    ? {
+        ...res,
+        body: JSON.stringify(res.body),
+        headers: { ...resHeaders, ...headers }
+      }
+    : {
+        ...res,
+        headers: { ...resHeaders, ...headers }
+      }
+}
+
 const getOrigin = (headers: { [header: string]: string }) =>
   getHeaderValue(headers, "origin")
 
@@ -230,34 +248,40 @@ export const getTokenClaim = (headers: {
   const isBearer = hasBearerScheme(headers)
   const hasCookie = hasTokenCookie(headers)
 
+  console.log("hasCookie", hasCookie)
+
   if (!isBearer && !hasCookie) return null
 
   const token = hasCookie
     ? getCookieToken(headers)
     : getAuthCredentials(getAuthHeaderValue(headers))
 
-  //TODO: This will actually throw an error if the token has expired, and needs to be handled
-  // the error.name is "TokenExpiredError" q.v. https://github.com/auth0/node-jsonwebtoken#errors--codes
   const claim: TokenClaim = jwt.verify(token, process.env.JWT_SECRET) as {
     user: UserId
     exp: number
   }
 
-  //TODO: This isn't really a thing because jwt.verify will have thrown an error
-  const isExpired = claim.exp <= new Date().valueOf()
+  // claim.exp comes in seconds, Date().valueOf() comes in milliseconds
+  // so multiply claim.exp by 1000
+  const isExpired = claim.exp * 1000 <= new Date().valueOf()
 
-  // we probably need to return an Error type of some sort
-  if (isExpired) return null
-
-  return claim
+  if (isExpired)
+    throw new jwt.TokenExpiredError("jwt_expired", new Date(claim.exp * 1000))
+  else return claim
 }
 
 export const getUserId = (headers: {
   [key: string]: string
 }): UserId | null => {
-  const claim = getTokenClaim(headers)
-  if (claim) return claim.user
-  else return null
+  try {
+    const claim = getTokenClaim(headers)
+    console.log("claim", claim)
+    if (claim) return claim.user
+    else return null
+  } catch (error) {
+    console.error(error)
+    return null
+  }
 }
 
 /**
@@ -330,7 +354,11 @@ export const toTopic = (obj: GenericObj) =>
 export const getUpdateTopicInfo = (body: string): Topic =>
   narrowType<Topic>(parseBody(body), ["title", "isLocked"]) as Topic
 
-export const isError = (res: Success | Error): boolean => res.statusCode >= 400
+export const isError = (res: Success | Error): res is Error =>
+  res.statusCode >= 400
+
+export const isDiscussion = (c: Comment | Discussion): c is Discussion =>
+  (c as Comment).parentId === undefined
 
 export class HeaderList {
   private _headers: { [header: string]: string }
