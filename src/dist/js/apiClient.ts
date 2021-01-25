@@ -12,7 +12,7 @@ import type {
   User
 } from "./../../lib/simple-comment"
 
-let SIMPLE_COMMENT_API_URL = "https://blog-rendall-dev-comments.netlify.app"
+let SIMPLE_COMMENT_API_URL = ""
 
 export const setSimpleCommentApiUrl = (url: string) =>
   (SIMPLE_COMMENT_API_URL = url)

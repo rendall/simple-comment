@@ -177,6 +177,10 @@
         min-width: 9.1rem;
         fill: #3287e6;
       }
+
+      #user-display {
+        display: none;
+      }
     </style>
     <script type="module" src="./js/apiClient.js"></script>
   </head>
@@ -240,43 +244,8 @@
           what would you call it?
         </li>
       </ul>
-      <div id="simple-comment-area">
-        <div id="discussion"></div>
-      </div>
-      <div id="user-display">
-        <p id="login-pulser">Logging in... Please wait</p>
-        <input type="hidden" id="claim-user" />
-        <p id="user-name"></p>
-        <button id="log-out-button">Log out</button>
-        <div id="log-in-form">
-          <label for="userid">Username:</label>
-          <input id="userid" required />
-          <label for="password">Password:</label>
-          <input id="password" type="password" required />
-          <button id="log-in-button">Log in</button>
-        </div>
-        <div class="sign-up-form">
-          <p>Sign up for Simple Comment</p>
-          <p id="sign-up-status">&nbsp;</p>
-          <label for="sign-up-userid">Username:</label>
-          <input id="sign-up-userid" required />
-          <label for="sign-up-password">Password:</label>
-          <input id="sign-up-password" type="password" required />
-          <label for="sign-up-password-2">Same Password:</label>
-          <input id="sign-up-password-2" type="password" required />
-          <label for="sign-up-email">Email:</label>
-          <input id="sign-up-email" required />
-          <label for="sign-up-display-name">Display Name:</label>
-          <input
-            id="sign-up-display-name"
-            placeholder="How do you want to be known?"
-          />
-          <button id="sign-up-button">Sign up</button>
-        </div>
-      </div>
-      <p id="status-display"></p>
-      <ul id="topic-list"></ul>
+      <div id="simple-comment-area"></div>
     </main>
-    <script type="module" src="./js/index.js"></script>
+    <script type="module" src="./js/simple-comment.js"></script>
   </body>
 </html>
