@@ -14,7 +14,6 @@ Try it out! <https://simple-comment.netlify.app>
 [![Website](https://img.shields.io/website?url=https%3A%2F%2Fsimple-comment.netlify.app%2F)](https://simple-comment.netlify.app)
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/rendall/simple-comment.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/rendall/simple-comment/alerts/)
 [![Language grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/rendall/simple-comment.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/rendall/simple-comment/context:javascript)
-[![StyleCI](https://github.styleci.io/repos/310091823/shield?branch=master)](https://github.styleci.io/repos/310091823?branch=master)
 [![Documentation Status](https://readthedocs.org/projects/simple-comment/badge/?version=latest)](https://simple-comment.readthedocs.io/en/latest/?badge=latest)
 
 
