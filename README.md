@@ -104,7 +104,11 @@ The minimum functionality is [up and running](https://simple-comment.netlify.app
 
 ## Setup
 
-The assumption is that the API will run in a separate Netlify website and be accessed cross-origin. It is a _necessary_ requirement that the pages where you want Simple Comments to run _must_ be served via _https:_ If you already have a Netlify account and want to integrate Simple Comment with your site, open an issue and we'll create instructions.
+*Simple Comment* can be run on the same server as your website or on a separate, cross-domain server
+
+It is _necessary_ that *Simple Comment* is served via _https:_ 
+
+These instructions assume some devOps skill, but if anything is unclear, please [create a new issue](https://github.com/rendall/simple-comment/issues/new)
 
 1. Fork this repository to your own account
 1. `git clone https://github.com/<your-github-profile>/simple-comment` replacing
@@ -117,7 +121,7 @@ The assumption is that the API will run in a separate Netlify website and be acc
    1. SIMPLE_COMMENT_MODERATOR_ID
    1. SIMPLE_COMMENT_MODERATOR_PASSWORD
    1. JWT_SECRET
-   1. HASH_SECRET
+   1. SIMPLE_COMMENT_API_URL
 1. sign up for a free MongoDB Atlas account
    1. [Follow these instructions](docs/MONGODB_ATLAS.md)
    1. In `.env` add the proper `DB_CONNECION_STRING`
