@@ -2,9 +2,9 @@
 
 # Simple Comment
 
-_Simple Comment_ allows visitors to your web pages to leave and read comments. It is _truly free_ (as in no cost) and entirely controlled by you from end to end.
+_Simple Comment_ enables comments on your website. It is private and free.
 
-Try it out! <https://simple-comment.netlify.app>
+Check out the demo! <https://simple-comment.netlify.app>
 
 ## Status
 
@@ -17,14 +17,36 @@ Try it out! <https://simple-comment.netlify.app>
 [![Documentation Status](https://readthedocs.org/projects/simple-comment/badge/?version=latest)](https://simple-comment.readthedocs.io/en/latest/?badge=latest)
 
 
-Nearly there! Steps to minimum viable product (MVP):
+### MVP is complete!
 
-### To be done
+The minimum functionality is [up and running](https://simple-comment.netlify.app)!
 
-- Update working example to work with new script
+ <details>
+  <summary><b>Completed!</b> (click to open)</summary>
+
+- Cross-origin capability
+- Script with frontend
+- All API endpoint respond as expected
+  - `Access-Control-Allow-Origin` responds to `.env` variables
+- Authentication and Identification works as expected
+- Authenticated users and admins can interact with Simple Comment as expected
+- Anonymous user can *create topics*
+  - This is useful for sites with lots of pages
+  - For security reasons, restrictions apply:
+    - The `Referer` header and the `topicId` must map properly
+    - The `Origin` must be on the `Access-Control-Allow-Origin` list
+- Server-side validation of user-posted data
+- Setup instructions
+  - Are complicated but work when followed
+- Visitor can post anonymously
+  - Comment includes guest user
+- Designed a beautiful badge!
+  - [![Powered by Simple Comment](docs/simple-comment-badge.svg)](https://simple-comment.netlify.app)
+- Visitors can read and reply to comments
 
 ### Top priority after MVP
 
+- Optional user authentication and identification
 - Moderator holds posts for approval
 - Spam prevention measures
 - Integration with 3rd party authentication
@@ -42,42 +64,17 @@ Nearly there! Steps to minimum viable product (MVP):
 - User profiles
   - See comments
   - Avatar
-
- <details>
-  <summary><b>Completed!</b> (click to open)</summary>
-
-- Cross-origin capability
-- Script with frontend
-- All API endpoint respond as expected
-  - `Access-Control-Allow-Origin` responds to `.env` variables
-- Authentication and Identification works as expected
-- Authenticated users and admins can interact with Simple Comment as expected
-- Anonymous user can create topics
-  - This is useful for pages that do not have topics yet
-  - Restrictions apply:
-    - The `Referer` header and the `topicId` must map properly
-    - The `Origin` must be on the `Access-Control-Allow-Origin` list
-- Server-side validation of user-posted data
-- Setup instructions
-  - Are complicated but work when followed
-- Visitor can post anonymously
-  - Comment includes guest user
-- [![Powered by Simple Comment](docs/simple-comment-badge.svg)](https://simple-comment.netlify.app)
-  - oh yeah!
-
 </details>
 
 ## Features
 
-- Visitors can read and reply to comments
-- Optional user authentication and identification
 - Easy to use anywhere
 - Industry-standard security
 - Designed to be fully customizable
 - Scalable, from free-tier to enterprise!
 - Free (as in "free beer": no cost)
   - Takes advantage of free-tier offerings from DBaaS and website hosts
-- Free (as in "free speech": open source)
+- Free (as in "libre": open source)
   - The source code is available to be modified and used without restriction
   - Commercial use allowed! Start a business with it! Knock yourself out!
   - MIT licensing available
