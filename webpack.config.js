@@ -1,4 +1,9 @@
-var path = require("path");
+const path = require("path");
+const webpack = require("webpack")
+const dotenv = require('dotenv');
+dotenv.config( {
+  path: path.join(__dirname, '.env')
+} )
 
 module.exports = {
   mode: "production",
@@ -17,5 +22,6 @@ module.exports = {
       // all files with a `.ts` or `.tsx` extension will be handled by `ts-loader`
       { test: /\.tsx?$/, loader: "ts-loader" }
     ]
-  }
+  },
+  plugins: [new webpack.EnvironmentPlugin(['SIMPLE_COMMENT_API_URL'])]
 };
