@@ -248,8 +248,6 @@ export const getTokenClaim = (headers: {
   const isBearer = hasBearerScheme(headers)
   const hasCookie = hasTokenCookie(headers)
 
-  console.log("hasCookie", hasCookie)
-
   if (!isBearer && !hasCookie) return null
 
   const token = hasCookie
@@ -275,7 +273,6 @@ export const getUserId = (headers: {
 }): UserId | null => {
   try {
     const claim = getTokenClaim(headers)
-    console.log("claim", claim)
     if (claim) return claim.user
     else return null
   } catch (error) {

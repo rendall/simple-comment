@@ -95,11 +95,9 @@ export const handler = async (event: APIGatewayEvent, context: Context) => {
   try {
     const ret = await handleMethod(event.httpMethod)
     const response = addHeaders(ret, headers)
-    console.log("response", response)
     return response
   } catch (error) {
     const retError = addHeaders(error, headers)
-    console.log("error response", retError)
     return retError
   }
 }
