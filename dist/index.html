@@ -210,11 +210,65 @@
     </header>
     <main>
       <p>Welcome to Simple Comment</p>
+
       <p>
-        Simple Comment allows visitors to your webpage to add comments and reply
-        to other visitors. It is designed to be secure and customizable, so your
-        visitors' data and online activity is untracked, and entirely under your
-        (and their) control.
+        I wanted a commenting system for my statically generated blog, but I am
+        not interested in subjecting my visitors to the monetization and
+        tracking practices of free commenting systems like Disqus or the
+        Facebook Comments Plugin, nor did I want to pay for a cloud server, nor
+        to pay for a hosting service, nor to force my visitors to use a Free
+        Authentication Provider, nor use WordPress. All of the other commenting
+        systems require one or more of these.
+      </p>
+
+      <p>
+        <a href="https://www.netlify.com/">Netlify</a>, among others, has a
+        free-tier offering. If your traffic is low and your build process is not
+        onerous, they will host your website for free. They also will host your
+        lambda functions, which make excellent API endpoints.
+        <a href="https://www.mongodb.com/">MongoDB</a>, for its part, among
+        others, also has a free-tier offering. If your data needs are low, they
+        will host your data.
+      </p>
+
+      <p>
+        I decided to combine my knowledge of these two services into a truly
+        free, self-hosted commenting solution, and to open-source the result,
+        and call it Simple Comment
+      </p>
+
+      <p>
+        I also wanted others to be able to use it and make it their own. If a
+        non-technical person can follow step-by-step instructions, they can add
+        Simple Comment to their website. If a developer prefers to use
+        PostgreSQL instead of MongoDB, or Vercel instead of Netlify, or Auth0
+        instead of the Simple Comment homegrown auth, I want those to be easy to
+        swap in. With that in mind, I (mostly) paid close attention to
+        documentation, commenting and modularity as I coded Simple Comment.
+      </p>
+
+      <p>
+        For now, it's an MVP good enough for
+        <a href="https://blog.rendall.dev">my personal blog</a>, but I do have
+        ambitions that others will find it useful and helpful. So I will
+        continue to refine it and invite participants beyond my own personal
+        use-case.
+      </p>
+
+      <p>
+        As a very light aside, I would like Simple Comment and similarly-minded
+        projects to be part of a movement to diversify and "smallify" social
+        media and the web. I believe the promise of Social Media as the grand,
+        ubiquitous unifier of humanity will only be fulfilled when all of us
+        control our own online presences and curate our own feeds at minimal or
+        no cost. I hope Simple Comment can be a humble beachhead in that
+        endeavor.
+      </p>
+
+      <p>
+        If you have any thoughts, comments, feedback of any kind, including
+        negative feedback, I'm open to hearing it. Leave a comment here, or
+        <a href="https://www.rendall.dev/">contact me</a>
       </p>
       <p>
         Simple Comment's source code is available here:
@@ -222,27 +276,6 @@
           https://github.com/rendall/simple-comment
         </a>
       </p>
-      <p>
-        Want a public forum? Want a private space? Want to limit participation
-        to specific IP addresses? Want to exclude IPs? Simple Comment doesn't
-        judge!
-      </p>
-      <p>
-        Simple Comment is designed to be scaleable, from free-tier to
-        enterprise. It grows as your audience grows.
-      </p>
-      <p>
-        On this page you can give it a test drive. You can answer any these
-        question prompts, or all of them, or ask your own!
-      </p>
-      <ul>
-        <li>Do you have feedback for Simple Comment?</li>
-        <li>Do you have exciting plans in the upcoming year?</li>
-        <li>
-          If you combined your favorite color with your least favorite food,
-          what would you call it?
-        </li>
-      </ul>
       <div id="simple-comment-area"></div>
     </main>
     <script type="module" src="./js/simple-comment.js"></script>
