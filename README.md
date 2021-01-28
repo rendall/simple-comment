@@ -2,9 +2,9 @@
 
 # Simple Comment
 
-_Simple Comment_ enables comments on your website. It is private and free.
+_Simple Comment_ enables any website's visitors to leave comments and replies. It is private, free, and designed to feel unremarkably similar to the dozen or so other excellent solutions.
 
-Check out the demo! <https://simple-comment.netlify.app>
+See the demo: <https://simple-comment.netlify.app>
 
 ## Status
 
@@ -15,7 +15,6 @@ Check out the demo! <https://simple-comment.netlify.app>
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/rendall/simple-comment.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/rendall/simple-comment/alerts/)
 [![Language grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/rendall/simple-comment.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/rendall/simple-comment/context:javascript)
 [![Documentation Status](https://readthedocs.org/projects/simple-comment/badge/?version=latest)](https://simple-comment.readthedocs.io/en/latest/?badge=latest)
-
 
 ### MVP is complete!
 
@@ -30,7 +29,7 @@ The minimum functionality is [up and running](https://simple-comment.netlify.app
   - `Access-Control-Allow-Origin` responds to `.env` variables
 - Authentication and Identification works as expected
 - Authenticated users and admins can interact with Simple Comment as expected
-- Anonymous user can *create topics*
+- Anonymous user can _create topics_
   - This is useful for sites with lots of pages
   - For security reasons, restrictions apply:
     - The `Referer` header and the `topicId` must map properly
@@ -64,7 +63,7 @@ The minimum functionality is [up and running](https://simple-comment.netlify.app
 - User profiles
   - See comments
   - Avatar
-</details>
+  </details>
 
 ## Features
 
@@ -104,9 +103,9 @@ The minimum functionality is [up and running](https://simple-comment.netlify.app
 
 ## Setup
 
-*Simple Comment* can be run on the same server as your website or on a separate, cross-domain server
+_Simple Comment_ can be run on the same server as your website or on a separate, cross-domain server
 
-It is _necessary_ that *Simple Comment* is served via _https:_ 
+It is _necessary_ that _Simple Comment_ is served via _https:_
 
 These instructions assume some devOps skill, but if anything is unclear, please [create a new issue](https://github.com/rendall/simple-comment/issues/new)
 
