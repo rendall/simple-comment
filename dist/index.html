@@ -60,6 +60,24 @@
         margin-left: 1rem;
       }
 
+      details {
+        margin-bottom: 1rem;
+      }
+
+      summary:focus {
+        outline-color: #3287e6;
+        outline-style: solid;
+      }
+
+      summary h2 {
+        display: inline;
+        cursor: help;
+      }
+
+      *::-webkit-details-marker {
+        color: #3287e6;
+      }
+
       input {
         height: 2rem;
         width: 100%;
@@ -222,84 +240,123 @@
       <h1>Simple Comment</h1>
     </header>
     <main>
-      <p>Welcome to Simple Comment</p>
+      <p>Welcome to <i>Simple Comment</i></p>
 
-      <h2>Intro</h2>
-      <p>
-        I wanted a commenting system for my blog, but the available solutions
-        (and there are many) were not quite right. I wanted to care for my
-        visitors and their privacy, but many of the most popular solutions do
-        not value user privacy. Other solutions are easy to use, but require
-        ongoing payment. Others are free and open-source, but require
-        maintaining a server. I looked for a solution that was serverless, open
-        source, configurable, had a free tier across the entire tech stack, and
-        in which user data was sacrosanct. Not finding it, I decided to build
-        it. This is Simple Comment.
-      </p>
+      <details open>
+        <summary>
+          <h2>Intro</h2>
+        </summary>
+        <p>
+          I wanted a commenting system for my blog, but the available solutions
+          (and there are many) were not quite right. I wanted to care for my
+          visitors' data and privacy, but many of the most popular solutions do
+          not value user privacy and sell user data. Other solutions are easy to
+          use, but require ongoing payment. Others are free and open-source, but
+          require maintaining a server. I looked for a solution that was
+          serverless, open source, configurable, had a free tier across the
+          entire tech stack, and in which user data was sacrosanct. A tall
+          order. Not finding it, I decided to build it. This is
+          <i>Simple Comment</i>.
+        </p>
+      </details>
 
-      <h2>Tech stack</h2>
-      <p>
-        <a href="https://www.netlify.com/">Netlify</a>, among others, has a
-        free-tier offering. If your traffic is low and your build process is not
-        onerous, they will host your website for free. They also will host your
-        lambda functions, which make excellent API endpoints.
-        <a href="https://www.mongodb.com/">MongoDB</a>, for its part, among
-        others, also has a free-tier offering. If your data needs are under
-        500MB, they will host your data for free.
-      </p>
+      <details>
+        <summary>
+          <h2>Tech stack</h2>
+        </summary>
+        <p>
+          <a href="https://www.netlify.com/">Netlify</a>, among others, has a
+          free-tier offering. If your site is personal, traffic is low and your
+          build process is quick, they will host your website for free. They
+          also will host your lambda functions, which make excellent API
+          endpoints. If your site earns more traffic, Netlify will scale with
+          you.
+        </p>
+        <p>
+          <a href="https://www.mongodb.com/cloud/atlas">MongoDB Atlas</a> also
+          has a free-tier offering and its document-based indexing is great for
+          a commenting system. If your data needs are under 500MB, they will
+          host your data for free, and also will scale up as needed.
+        </p>
+        <p>
+          The free-tier offerings and my personal familiarity with these
+          services drove the initial tech stack, but <i>Simple Comment</i> is
+          designed from the ground up to be modular, not tightly coupled to
+          particulare services, so others (e.g. Vercel, PostgreSQL) can be
+          swapped in with relative ease
+        </p>
+      </details>
 
-      <h2>Open-source & usability</h2>
-      <p>
-        I also wanted others to be able to use it and make it their own. If a
-        non-technical person can follow step-by-step instructions, they can add
-        Simple Comment to their website. If a developer prefers to use
-        PostgreSQL instead of MongoDB, or Vercel instead of Netlify, or Auth0
-        instead of the Simple Comment homegrown auth, I want those to be easy to
-        swap in. The primary goal is clear documentation, intuitive API, a "just
-        works" setup, and a friendly developer community.
-      </p>
+      <details>
+        <summary>
+          <h2>Open-source & usability</h2>
+        </summary>
+        <p>
+          I also wanted others to be able to use it and make it their own. If a
+          non-technical person can follow step-by-step instructions, they can
+          add <i>Simple Comment</i> to their website. If a developer prefers to
+          use PostgreSQL instead of MongoDB, or Vercel instead of Netlify, or
+          Auth0 instead of the <i>Simple Comment</i> homegrown auth, I want
+          those to be easy to swap in. The primary goal is clear documentation,
+          intuitive API, a "just works" setup, and a friendly developer
+          community.
+        </p>
+        <p>
+          <i>Simple Comment</i>'s source code is available here:
+          <a href="https://github.com/rendall/simple-comment">
+            https://github.com/rendall/simple-comment
+          </a>
+        </p>
+      </details>
 
-      <h2>Philosophy and larger mission</h2>
-      <p>
-        As a very light aside, I would like Simple Comment and similarly-minded
-        projects to be part of a movement to distribute and diversify social
-        media and the web, to move social media out of walled gardens and
-        monetization business models. I believe the promise of Social Media as
-        the grand, ubiquitous unifier of humanity will only be fulfilled when
-        all of us control our own online presences and curate our own feeds at
-        minimal or no cost. I hope Simple Comment can be one humble beachhead in
-        that endeavor.
-      </p>
+      <details>
+        <summary>
+          <h2>Philosophy and larger mission</h2>
+        </summary>
+        <p>
+          As a very light aside, I would like <i>Simple Comment</i> and
+          similarly-minded projects to be part of a movement to distribute and
+          diversify social media and the web, to move social media out of walled
+          gardens and monetization business models. I believe the promise of
+          Social Media as the grand, ubiquitous unifier of humanity will only be
+          fulfilled when all of us control our own online presences and curate
+          our own feeds at minimal or no cost. I hope <i>Simple Comment</i> can
+          be one humble beachhead in that endeavor.
+        </p>
+      </details>
 
-      <h2>Status</h2>
-      <p>
-        For now, it's an
-        <a
-          href="https://en.wikipedia.org/wiki/Minimum_viable_product"
-          title="minimum viable product"
-          >MVP</a
-        >
-        good enough for <a href="https://blog.rendall.dev">my personal blog</a>,
-        and its quite rough compared to my ambitions for it. Now that the API
-        works as expected I need to extend the same care and love to the
-        frontend and user experience.
-      </p>
+      <details>
+        <summary>
+          <h2>Status</h2>
+        </summary>
+        <p>
+          For now, it's an
+          <a
+            href="https://en.wikipedia.org/wiki/Minimum_viable_product"
+            title="minimum viable product"
+            >MVP</a
+          >
+          good enough for
+          <a href="https://blog.rendall.dev">my personal blog</a>, and its quite
+          rough compared to my ambitions for it. Now that the API works as
+          expected I need to extend the same care and love to the frontend and
+          user experience.
+        </p>
+      </details>
 
-      <h2>Feedback</h2>
-      <p>
-        I would be grateful for your input. If you want it for your website, I
-        will work with you. Let's collaborate to make it happen! If you have any
-        thoughts, comments, feedback of any kind, including negative feedback,
-        I'm open to hearing it. Leave a comment here, or
-        <a href="https://www.rendall.dev/">contact me</a>.
-      </p>
+      <details open>
+        <summary>
+          <h2>Feedback</h2>
+        </summary>
+        <p>
+          I would be grateful for your input. If you want it for your website, I
+          will work with you. Let's collaborate to make it happen! If you have
+          any thoughts, comments, feedback of any kind, including negative
+          feedback, I'm open to hearing it. Leave a comment here, or
+          <a href="https://www.rendall.dev/">contact me</a>.
+        </p>
+      </details>
 
-      <p>
-        Simple Comment's source code is available here:
-        <a href="https://github.com/rendall/simple-comment">
-          https://github.com/rendall/simple-comment
-        </a>
-      </p>
       <div id="simple-comment-area"></div>
     </main>
     <script type="module" src="./js/simple-comment.js"></script>
