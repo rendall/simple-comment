@@ -21,7 +21,7 @@ See the demo: <https://simple-comment.netlify.app>
 The minimum functionality is [up and running](https://simple-comment.netlify.app)!
 
  <details>
-  <summary><b>Completed!</b> (click to open)</summary>
+  <summary><b>Completed tasks:</b> (click to open)</summary>
 
 - Cross-origin capability
 - Script with frontend

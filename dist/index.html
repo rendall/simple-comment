@@ -47,9 +47,13 @@
         margin: 0 auto;
       }
 
-      h1 {
+      h1,
+      h2 {
         color: #3287e6;
         font-family: "Comfortaa", sans-serif;
+      }
+
+      h1 {
         font-size: 3.4rem;
         font-weight: 500;
         line-height: 4rem;
@@ -104,6 +108,15 @@
       a {
         color: #3287e6;
         font-weight: 600;
+        text-decoration: none;
+      }
+
+      a[title] {
+        cursor: help;
+        color: unset;
+      }
+
+      a[title]:hover {
         text-decoration: none;
       }
 
@@ -211,65 +224,76 @@
     <main>
       <p>Welcome to Simple Comment</p>
 
+      <h2>Intro</h2>
       <p>
-        I wanted a commenting system for my statically generated blog, but I am
-        not interested in subjecting my visitors to the monetization and
-        tracking practices of free commenting systems like Disqus or the
-        Facebook Comments Plugin, nor did I want to pay for a cloud server, nor
-        to pay for a hosting service, nor to force my visitors to use a Free
-        Authentication Provider, nor use WordPress. All of the other commenting
-        systems require one or more of these.
+        I wanted a commenting system for my blog, but the available solutions
+        (and there are many) were not quite right. I wanted to care for my
+        visitors and their privacy, but many of the most popular solutions do
+        not value user privacy. Other solutions are easy to use, but require
+        ongoing payment. Others are free and open-source, but require
+        maintaining a server. I looked for a solution that was serverless, open
+        source, configurable, had a free tier across the entire tech stack, and
+        in which user data was sacrosanct. Not finding it, I decided to build
+        it. This is Simple Comment.
       </p>
 
+      <h2>Tech stack</h2>
       <p>
         <a href="https://www.netlify.com/">Netlify</a>, among others, has a
         free-tier offering. If your traffic is low and your build process is not
         onerous, they will host your website for free. They also will host your
         lambda functions, which make excellent API endpoints.
         <a href="https://www.mongodb.com/">MongoDB</a>, for its part, among
-        others, also has a free-tier offering. If your data needs are low, they
-        will host your data.
+        others, also has a free-tier offering. If your data needs are under
+        500MB, they will host your data for free.
       </p>
 
-      <p>
-        I decided to combine my knowledge of these two services into a truly
-        free, self-hosted commenting solution, and to open-source the result,
-        and call it Simple Comment
-      </p>
-
+      <h2>Open-source & usability</h2>
       <p>
         I also wanted others to be able to use it and make it their own. If a
         non-technical person can follow step-by-step instructions, they can add
         Simple Comment to their website. If a developer prefers to use
         PostgreSQL instead of MongoDB, or Vercel instead of Netlify, or Auth0
         instead of the Simple Comment homegrown auth, I want those to be easy to
-        swap in. With that in mind, I (mostly) paid close attention to
-        documentation, commenting and modularity as I coded Simple Comment.
+        swap in. The primary goal is clear documentation, intuitive API, a "just
+        works" setup, and a friendly developer community.
       </p>
 
-      <p>
-        For now, it's an MVP good enough for
-        <a href="https://blog.rendall.dev">my personal blog</a>, but I do have
-        ambitions that others will find it useful and helpful. So I will
-        continue to refine it and invite participants beyond my own personal
-        use-case.
-      </p>
-
+      <h2>Philosophy and larger mission</h2>
       <p>
         As a very light aside, I would like Simple Comment and similarly-minded
-        projects to be part of a movement to diversify and "smallify" social
-        media and the web. I believe the promise of Social Media as the grand,
-        ubiquitous unifier of humanity will only be fulfilled when all of us
-        control our own online presences and curate our own feeds at minimal or
-        no cost. I hope Simple Comment can be a humble beachhead in that
-        endeavor.
+        projects to be part of a movement to distribute and diversify social
+        media and the web, to move social media out of walled gardens and
+        monetization business models. I believe the promise of Social Media as
+        the grand, ubiquitous unifier of humanity will only be fulfilled when
+        all of us control our own online presences and curate our own feeds at
+        minimal or no cost. I hope Simple Comment can be one humble beachhead in
+        that endeavor.
       </p>
 
+      <h2>Status</h2>
       <p>
-        If you have any thoughts, comments, feedback of any kind, including
-        negative feedback, I'm open to hearing it. Leave a comment here, or
-        <a href="https://www.rendall.dev/">contact me</a>
+        For now, it's an
+        <a
+          href="https://en.wikipedia.org/wiki/Minimum_viable_product"
+          title="minimum viable product"
+          >MVP</a
+        >
+        good enough for <a href="https://blog.rendall.dev">my personal blog</a>,
+        and its quite rough compared to my ambitions for it. Now that the API
+        works as expected I need to extend the same care and love to the
+        frontend and user experience.
       </p>
+
+      <h2>Feedback</h2>
+      <p>
+        I would be grateful for your input. If you want it for your website, I
+        will work with you. Let's collaborate to make it happen! If you have any
+        thoughts, comments, feedback of any kind, including negative feedback,
+        I'm open to hearing it. Leave a comment here, or
+        <a href="https://www.rendall.dev/">contact me</a>.
+      </p>
+
       <p>
         Simple Comment's source code is available here:
         <a href="https://github.com/rendall/simple-comment">
