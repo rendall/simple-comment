@@ -2,7 +2,7 @@
 
 # Simple Comment
 
-_Simple Comment_ enables any website's visitors to leave comments and replies. It is private, free, and designed to feel unremarkably similar to the dozen or so other excellent solutions.
+_Simple Comment_ enables any website visitor to leave comments. It is serverless, open-source, self-hosted, free, scaleable, and designed to feel unremarkably similar to the dozen or so other excellent solutions.
 
 See the demo: <https://simple-comment.netlify.app>
 
@@ -195,15 +195,79 @@ Returns the logged-in user id or `401`
 
 ## Alternatives
 
+Nearly all of these are more mature than Simple Comment, and I would recommend considering one if you are not looking specifically for a serverless, open-source, self-hosted solution. Listed below each are pros and cons that distinguish it from Simple Comment. If _Trust is required_ is listed, it means that using the service requires trust in the company, because they will be serving closed-source code to your users that you do not control and cannot easily inspect. This list is based on public documentation, not experience. If anything is incorrect or missing, please let me know.
+
 - Commentics <https://www.commentics.org/>
+  - Open Source: GPL
+  - Free tier with logo
+  - Requires a server running PHP and MySQL
 - Commento <https://commento.io/>
+  - Easy setup
+  - Privacy focused
+  - Closed Source
+  - Data is held on 3rd party server
+  - No free tier
+  - Trust is required
 - Disqus <https://disqus.com/>
-- Facebook <https://developers.facebook.com/docs/plugins/comments/>
+  - Easy setup
+  - Free tier
+  - Fully featured
+  - Closed Source
+  - Data is held on 3rd party server
+  - Requires user login
+  - Sells user data
+  - Trust is required
+- Facebook Comments Plugin <https://developers.facebook.com/docs/plugins/comments/>
+  - Easy setup
+  - Free tier
+  - Fully featured
+  - Closed Source
+  - Data is held on 3rd party server
+  - Requires Facebook
+  - Requires user login
+  - Sells user data
+  - Trust is required
 - GraphComment <https://graphcomment.com/>
+  - Easy setup
+  - Fully featured
+  - Free tier
+  - Closed Source
+  - Data is held on 3rd party server
+    - Guarantees "full and complete ownership" of data
+    - Servers in Europe (France)
+  - Requires user login
+  - Trust is required
 - HTML Comment Box <https://www.htmlcommentbox.com/>
+  - Easy setup
+  - Free tier
+  - Closed Source
+  - Data is held on 3rd party server
+  - Trust is required
+  - Privacy policy? Unknown.
 - HashOver <https://www.barkdull.org/software/hashover>
+  - Open Source: AGPL
+  - Requires a server running PHP and MySQL
 - IntenseDebate <https://intensedebate.com/>
+  - Fully featured
+  - Closed Source
+  - Data is held on 3rd party server
+  - Requires user login
+  - Requires trust
 - Isso <https://posativ.org/isso/>
+  - Documentation is extensive
+  - Open source: MIT
+  - Requires a Linux server running Python and SQLite3
 - Remark42 <https://remark42.com/>
+  - Fully featured
+  - Open source: MIT
+  - Requires a server
+    - Runs a self-contained executable written in Go
 - Valine <https://valine.js.org/en/index.html>
+  - Open source: GPL
+  - Serverless
+  - Requires a leancloud account
+  - Servers are in China
+  - Data safety / privacy is unclear
 - schnack! <https://schnack.cool/>
+  - Open source: Lil License v1
+  - Requires a server running Node and SQLite3
