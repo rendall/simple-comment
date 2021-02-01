@@ -30,7 +30,7 @@ To enable code completion for Cypress test files, add this line to the top of th
 
 Cypress installs example tests in the `/cypress/integration/examples` folder by default. Simple Comment excludes these via `cypress.json` config file. Remove the value `**/examples/*.spec.js` from the array `"ignoreTestFiles":["**/examples/*.spec.js"]` to include these files.
 
-## Basic
+## SPEC FILES
 
-`basic.spec.js` contain tests that should pass if the 
-
+* `basic.spec.js` contain tests that should pass when the app begins with no interaction
+* `public-comment.spec.js`: tests basic public comment functionality
