@@ -5,14 +5,14 @@ describe('Simple Comment frontend', () => {
   })
 
   it('is a Simple Comment frontend', () => {
-    cy.get("#simple-comment-area")
+    cy.get("#simple-comment-display")
   })
 
-  it('has a comment field', () => {
-
+  it('has a comment reply field', () => {
+    cy.get("#reply-field")
   })
 
   it('has a comment button', () => {
-
+    cy.get("#reply-submit-button")
   })
 })
