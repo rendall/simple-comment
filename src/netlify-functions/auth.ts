@@ -19,7 +19,7 @@ import {
 dotenv.config()
 
 const YEAR_SECONDS = 60 * 60 * 24 * 365 // 60s * 1 hour * 24 hours * 365 days
-const isProduction = process.env.SIMPLE_COMMENT_MODE === "production"
+const isCrossSite = process.env.IS_CROSS_SITE === "true"
 
 const service: MongodbService = new MongodbService(
   process.env.DB_CONNECTION_STRING,
@@ -106,13 +106,12 @@ const handleAuth = async (event: APIGatewayEvent) => {
     const token = authUser.body as AuthToken
 
     const COOKIE_HEADER = {
-      "Set-Cookie": `simple_comment_token=${token}; path=/; ${
-        isProduction ? "Secure; " : ""
-      }HttpOnly; SameSite=None; Max-Age=${YEAR_SECONDS}`
+      "Set-Cookie": `simple_comment_token=${token}; path=/; SameSite=${
+        isCrossSite ? "None; Secure; " : "Strict; "
+      }HttpOnly; Max-Age=${YEAR_SECONDS}`
     }
 
     const headers = { ...allowHeaders, ...COOKIE_HEADER }
-
     return { ...success200OK, headers }
   }
 }

@@ -72,7 +72,7 @@ import {
 import { comparePassword, getAuthToken, hashPassword, uuidv4 } from "./crypt"
 import * as jwt from "jsonwebtoken"
 export class MongodbService extends Service {
-  private isProduction = process.env.SIMPLE_COMMENT_MODE === "production"
+  private isCrossSite = process.env.IS_CROSS_SITE === "true"
   private _client: MongoClient
   private _db: Db
   readonly _connectionString: string
@@ -1479,9 +1479,9 @@ export class MongodbService extends Service {
     new Promise<Success>((resolve, reject) => {
       const pastDate = new Date(0).toUTCString()
       const COOKIE_HEADER = {
-        "Set-Cookie": `simple_comment_token=logged-out; path=/; HttpOnly; Expires=${pastDate}; SameSite=None${
-          this.isProduction ? "; Secure" : ""
-        }`
+        "Set-Cookie": `simple_comment_token=logged-out; path=/; SameSite=${
+          this.isCrossSite ? "None; Secure; " : "Strict; "
+        }HttpOnly; Expires=${pastDate};`
       }
       resolve({ ...success202LoggedOut, headers: COOKIE_HEADER })
     })

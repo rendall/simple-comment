@@ -130,7 +130,7 @@ These instructions assume some devOps skill, but if anything is unclear, please 
    1. Under `Environmental Variables` click the button `Edit Variables`
    1. For each entry in `.env` add the key and corresponding value for _all_
       variables
-   1. For `SIMPLE_COMMENT_MODE` add the value `production`
+   1. For `IS_CROSS_SITE` add the value `production`
 1. Modify your website. These are simple instructions, but feel free to hack away
    1. In the HTML for each page on your website where you want Simple Comment to run, add these two tags:
       1. `<script src="[path-to]/simple-comment.js" defer></script>` (`src` must point to the `simple-comment.js` file)
