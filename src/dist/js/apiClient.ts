@@ -17,9 +17,7 @@ const SIMPLE_COMMENT_API_URL = process.env.SIMPLE_COMMENT_API_URL
 
 const getSimpleCommentURL = () => {
   if (SIMPLE_COMMENT_API_URL === undefined)
-    throw new Error(
-      "Simple comment URL is not set. "
-    )
+    throw new Error("Simple comment URL is not set. ")
   else return SIMPLE_COMMENT_API_URL
 }
 
@@ -143,10 +141,9 @@ export const postAuth = (user: string, password: string) => {
     }
   }
 
-  return fetch(
-    `${getSimpleCommentURL()}/auth`,
-    authReqInfo
-  ).then(res => resolveBody<AuthToken>(res))
+  return fetch(`${getSimpleCommentURL()}/auth`, authReqInfo).then(res =>
+    resolveBody<AuthToken>(res)
+  )
 }
 
 // COMMENT
@@ -225,10 +222,9 @@ export const createNewTopic = (id, title, isLocked = false) => {
     credentials
   }
 
-  return fetch(
-    `${getSimpleCommentURL()}/topic`,
-    authReqInfo
-  ).then(res => resolveBody(res))
+  return fetch(`${getSimpleCommentURL()}/topic`, authReqInfo).then(res =>
+    resolveBody(res)
+  )
 }
 
 // UTILITY
