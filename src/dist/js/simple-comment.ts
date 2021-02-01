@@ -97,57 +97,60 @@ const insertReplyInput = (commentId: CommentId) => {
   userInfoGroup.setAttribute("id", "user-info")
 
   const nameLabel = document.createElement("label")
-  nameLabel.setAttribute("for", "name-input")
+  nameLabel.setAttribute("for", "name-field")
   nameLabel.innerHTML = "Name:"
   userInfoGroup.appendChild(nameLabel)
 
-  const nameInput = document.createElement("input")
-  nameInput.setAttribute("id", "name-input")
-  nameInput.setAttribute("placeholder", "What's your name?")
-  userInfoGroup.appendChild(nameInput)
-  nameInput.value = !!user ? user.name : ""
-  // nameInput.toggleAttribute("disabled", !!user)
+  const nameField = document.createElement("input")
+  nameField.setAttribute("id", "name-field")
+  userInfoGroup.appendChild(nameField)
+  nameField.value = !!user ? user.name : ""
 
   const emailLabel = document.createElement("label")
-  emailLabel.setAttribute("for", "email-input")
+  emailLabel.setAttribute("for", "email-field")
   emailLabel.innerHTML = "Email:"
   userInfoGroup.appendChild(emailLabel)
 
-  const emailInput = document.createElement("input")
-  emailInput.setAttribute("id", "email-input")
-  emailInput.setAttribute("placeholder", "What's your email?")
-  emailInput.value = !!user ? user.email : ""
-  // emailInput.toggleAttribute("disabled", !!user)
-  userInfoGroup.appendChild(emailInput)
+  const emailField = document.createElement("input")
+  emailField.setAttribute("id", "email-field")
+  emailField.value = !!user ? user.email : ""
+  userInfoGroup.appendChild(emailField)
 
-  const replyTextarea = document.createElement("textarea")
-  replyTextarea.setAttribute("id", "reply-textarea")
-  replyTextarea.setAttribute("placeholder", "What's on your mind?")
+  const replyField = document.createElement("textarea")
+  replyField.setAttribute("id", "reply-field")
+  replyField.setAttribute("placeholder", "Your comment")
 
   const buttonGroup = document.createElement("div")
   buttonGroup.classList.add("button-group")
 
-  const submitReplyButton = document.createElement("button")
-  submitReplyButton.innerHTML = "submit"
-  submitReplyButton.setAttribute("id", "reply-submit-button")
-  submitReplyButton.addEventListener(
+  const replySubmitButton = document.createElement("button")
+  replySubmitButton.innerHTML = "submit"
+  replySubmitButton.setAttribute("id", "reply-submit-button")
+  replySubmitButton.addEventListener(
     "click",
-    onCommentSubmit({ replyTextarea, nameInput, emailInput }, commentId)
+    onCommentSubmit(
+      {
+        replyTextarea: replyField,
+        nameInput: nameField,
+        emailInput: emailField
+      },
+      commentId
+    )
   )
-  buttonGroup.appendChild(submitReplyButton)
+  buttonGroup.appendChild(replySubmitButton)
 
   target.classList.add("is-reply")
-  replyInputGroup.appendChild(replyTextarea)
+  replyInputGroup.appendChild(replyField)
   replyInputGroup.appendChild(userInfoGroup)
   replyInputGroup.appendChild(buttonGroup)
 
   clearReply = () => {
     target.classList.remove("is-reply")
-    replyTextarea.remove()
-    submitReplyButton.remove()
-    nameInput.remove()
+    replyField.remove()
+    replySubmitButton.remove()
+    nameField.remove()
     nameLabel.remove()
-    emailInput.remove()
+    emailField.remove()
     emailLabel.remove()
     buttonGroup.remove()
     replyInputGroup.remove()
@@ -696,17 +699,21 @@ const setup = async (
 ) => {
   console.info("Looking for Simple Comment area...")
 
-  const existingDiv = document.querySelector("#simple-comment-area")
+  const existingDiv = document.querySelector("#simple-comment-display")
+
+  if (!!existingDiv) console.info("`#simple-comment-display` found")
+  else console.info("`#simple-comment-display` not found. Creating.")
 
   const createdDiv = existingDiv ? null : document.createElement("div")
 
   if (createdDiv) {
-    // #simple-comment-area does not exist, so let us create it:
-    createdDiv.setAttribute("id", "simple-comment-area")
+    // #simple-comment-display does not exist, so let us create it:
+    createdDiv.setAttribute("id", "simple-comment-display")
 
     // append it to body:
     const body = document.querySelector("body")
     body.appendChild(createdDiv)
+    console.info("`div#simple-comment-display` created and appended to `body`.")
   }
 
   const simpleCommentArea = existingDiv || createdDiv

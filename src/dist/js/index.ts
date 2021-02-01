@@ -96,31 +96,31 @@ const insertReplyInput = (commentId: CommentId) => {
   userInfoGroup.setAttribute("id", "user-info")
 
   const nameLabel = document.createElement("label")
-  nameLabel.setAttribute("for", "name-input")
+  nameLabel.setAttribute("for", "name-field")
   nameLabel.innerHTML = "Name:"
   userInfoGroup.appendChild(nameLabel)
 
   const nameInput = document.createElement("input")
-  nameInput.setAttribute("id", "name-input")
+  nameInput.setAttribute("id", "name-field")
   nameInput.setAttribute("placeholder", "What's your name?")
   userInfoGroup.appendChild(nameInput)
   nameInput.value = !!user ? user.name : ""
   nameInput.toggleAttribute("disabled", !!user)
 
   const emailLabel = document.createElement("label")
-  emailLabel.setAttribute("for", "email-input")
+  emailLabel.setAttribute("for", "email-field")
   emailLabel.innerHTML = "Email:"
   userInfoGroup.appendChild(emailLabel)
 
   const emailInput = document.createElement("input")
-  emailInput.setAttribute("id", "email-input")
+  emailInput.setAttribute("id", "email-field")
   emailInput.setAttribute("placeholder", "What's your email?")
   emailInput.value = !!user ? user.email : ""
   emailInput.toggleAttribute("disabled", !!user)
   userInfoGroup.appendChild(emailInput)
 
   const replyTextarea = document.createElement("textarea")
-  replyTextarea.setAttribute("id", "reply-textarea")
+  replyTextarea.setAttribute("id", "reply-field")
   replyTextarea.setAttribute("placeholder", "What's on your mind?")
 
   const buttonGroup = document.createElement("div")
@@ -654,7 +654,7 @@ const setup = async (
   title = document.title
 ) => {
   console.info("Looking for Simple Comment area...")
-  const simpleCommentArea = document.querySelector("#simple-comment-area")
+  const simpleCommentArea = document.querySelector("#simple-comment-display")
 
   if (!simpleCommentArea) {
     console.error(

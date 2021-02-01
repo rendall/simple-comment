@@ -10,7 +10,7 @@ Writing tests is an entire discipline in itself, but this page has a good introd
 
 Simple Comment has a robust backend, and is designed to accommodate any client or framework. You might find that none of the current suite of clients suite your needs, and so want to write your own.
 
-Tests in `/cypress/integration/generic` are designed to test any frontend platform by including only basic functionality. It looks for elements with specific ids like `#simple-comment-display`, `#simple-comment-replyfield` and `#simple-comment-submitbutton`.  While the Simple Comment backend API will communicate successfully even without these specific elements, you could leverage these tests to ensure your new frontent client behaves as expected without writing new generic tests by using these ids with the elements that contain that functionality. You can also *ignore* these tests by adding `**/generic/*.spec.js` to the `ignoreTestFiles` array field in the `cypress.json` config file, if necessary.
+Tests in `/cypress/integration/generic` are designed to test any frontend platform by including only basic functionality. It looks for elements with specific ids like `#simple-comment-display`, `#reply-field` and `#reply-submit-button`.  While the Simple Comment backend API will communicate successfully even without these specific elements, you could leverage these tests to ensure your new frontent client behaves as expected without writing new generic tests by using these ids with the elements that contain that functionality. You can also *ignore* these tests by adding `**/generic/*.spec.js` to the `ignoreTestFiles` array field in the `cypress.json` config file, if necessary.
 
 ### Adding a new feature to the frontend
 
