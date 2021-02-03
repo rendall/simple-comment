@@ -1,0 +1,16 @@
+{
+  "include": ["./tests"],
+  "compilerOptions": {
+    "paths": { "*": ["types/*"] },
+    "target": "es6",
+    "module": "es6",
+    "lib": [
+      "es6",
+      "dom"
+    ],
+    "isolatedModules": false,
+    "moduleResolution": "node" ,
+    "types": ["jest"],                           
+    "esModuleInterop": true 
+  }
+}

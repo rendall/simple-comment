@@ -1,4 +1,4 @@
-import {
+import type {
   AdminSafeUser,
   AuthToken,
   Comment,
@@ -16,7 +16,7 @@ import {
   User
 } from "../src/lib/simple-comment"
 import { MongodbService } from "../src/lib/MongodbService"
-import { Db, MongoClient } from "mongodb"
+import type { Db, MongoClient } from "mongodb"
 import {
   error401BadCredentials,
   error401UserNotAuthenticated,

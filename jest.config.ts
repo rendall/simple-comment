@@ -13,6 +13,11 @@ export default {
   // Indicates which provider should be used to instrument code for coverage
   coverageProvider: "v8",
 
+  globals: {
+    'ts-jest': {
+      tsconfig: 'tsconfig.jest.json'
+    }
+  },
   // A preset that is used as a base for Jest's configuration
   preset: "./jest.preset.ts",
 
