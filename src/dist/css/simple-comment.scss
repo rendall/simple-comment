@@ -1,0 +1,134 @@
+#simple-comment-display input {
+  height: 2rem;
+  width: 100%;
+  font-size: 1.35rem;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid;
+  font-family: monospace;
+}
+
+#simple-comment-display textarea {
+  display: block;
+  height: 7rem;
+  width: 100%;
+  border-radius: 0.5rem;
+  border: 1px solid;
+  font-size: 1.35rem;
+  padding: 0.5rem;
+  font-family: monospace;
+}
+
+#simple-comment-display button:hover {
+  font-weight: bold;
+}
+
+#simple-comment-display button {
+  appearance: none;
+  border: none;
+  background: transparent;
+  background-color: transparent;
+  cursor: pointer;
+  font-size: inherit;
+  padding: 0.5rem 1rem;
+  width: 7rem;
+  text-align: center;
+  border: 1px solid;
+  border-radius: 0.65rem;
+  margin: 0.5rem 1rem 0.5rem 0;
+}
+
+#simple-comment-display a:hover {
+  color: #007b8c;
+  text-decoration: underline;
+}
+
+#simple-comment-display a {
+  color: #3287e6;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+#simple-comment-display textarea#reply-field {
+  display: block;
+  width: 100%;
+  height: 7rem;
+}
+
+#simple-comment-display header {
+  display: flex;
+  margin: 0 auto;
+  max-width: 59rem;
+  min-height: 10rem;
+  align-items: center;
+}
+
+#simple-comment-display #discussion-title {
+  display: none;
+}
+
+#simple-comment-display #login-pulser {
+  display: none;
+}
+
+#simple-comment-display .is-logging-in #login-pulser {
+  display: inline;
+}
+
+#simple-comment-display #user-display {
+  display: none;
+}
+
+#simple-comment-display #log-in-form {
+  display: none;
+}
+
+#simple-comment-display #log-out-button {
+  display: none;
+}
+
+#simple-comment-display .is-logged-in:not(.is-guest) #log-out-button {
+  display: unset;
+}
+
+#simple-comment-display .is-logged-in #log-in-form {
+  display: none;
+}
+
+#simple-comment-display .is-logged-in .user-info {
+  display: none;
+}
+
+#simple-comment-display .is-logged-in:not(.is-guest) .sign-up-form {
+  display: none;
+}
+
+#simple-comment-display .is-error,
+#simple-comment-display .error {
+  font-weight: bold;
+  color: red;
+}
+
+#simple-comment-display .comment-display .reply-input-group {
+  margin-left: 1rem;
+  width: 30rem;
+}
+
+#simple-comment-display .is-reply > .comment-display .comment-button {
+  display: none;
+}
+
+#simple-comment-display .is-deleted {
+  font-style: italic;
+  opacity: 0.5;
+}
+
+#simple-comment-display .is-deleted > .comment-button {
+  display: none;
+}
+
+#simple-comment-display .simple-comment-logo {
+  max-width: 9.1rem;
+  min-width: 9.1rem;
+  fill: #3287e6;
+}
