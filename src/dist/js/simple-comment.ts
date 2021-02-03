@@ -1,4 +1,4 @@
-import App from './App.svelte'
+import App from '../svelte/App.svelte'
 
 const documentTarget = () => {
   console.info("Looking for Simple Comment area...")
