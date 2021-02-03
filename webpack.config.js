@@ -1,9 +1,9 @@
 const path = require("path");
 const webpack = require("webpack")
 const dotenv = require('dotenv');
-dotenv.config( {
+dotenv.config({
   path: path.join(__dirname, '.env')
-} )
+})
 
 module.exports = {
   mode: "production",
@@ -14,14 +14,14 @@ module.exports = {
     filename: "simple-comment.js"
   },
   resolve: {
-    // Add `.ts` and `.tsx` as a resolvable extension.
     extensions: [".ts", ".tsx", ".js"]
   },
   module: {
     rules: [
-      // all files with a `.ts` or `.tsx` extension will be handled by `ts-loader`
       { test: /\.tsx?$/, loader: "ts-loader" }
     ]
   },
-  plugins: [new webpack.EnvironmentPlugin(['SIMPLE_COMMENT_API_URL'])]
+  plugins: [
+    new webpack.EnvironmentPlugin(['SIMPLE_COMMENT_API_URL'])
+  ]
 };
