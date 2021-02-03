@@ -1,9 +1,11 @@
 {
+  "extends": "@tsconfig/svelte/tsconfig.json",
   "include": ["./src"],
   "exclude": [
     "./src/netlify-functions/**/*.ts",
     "./src/lib/*.ts",
-    "./src/*.ts"
+    "./src/*.ts",
+    "./src/schema/**/*.ts"
   ],
   "compilerOptions": {
     "baseUrl": ".",
