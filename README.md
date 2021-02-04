@@ -2,6 +2,8 @@
 
 # Simple Comment
 
+_Simple Comment_ is a tech agnostic comment sharing platform focused on privacy and data ownership
+
 _Simple Comment_ enables any website visitor to leave comments. It is serverless, open-source, self-hosted, free, scaleable, and designed to feel unremarkably similar to the dozen or so other excellent solutions.
 
 See the demo: <https://simple-comment.netlify.app>
