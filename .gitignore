@@ -6,6 +6,7 @@
 /cypress/integration/examples
 /cypress/screenshots
 /cypress/support
+/cypress/videos
 /functions
 /lib
 /netlify-functions
