@@ -1,0 +1,1 @@
+<p id="status-display">No status message</p>

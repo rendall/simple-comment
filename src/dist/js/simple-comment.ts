@@ -1,4 +1,5 @@
-import App from '../svelte/App.svelte'
+import "./../css/simple-comment.scss"
+import App from "../svelte/App.svelte"
 
 const documentTarget = () => {
   console.info("Looking for Simple Comment area...")
@@ -24,19 +25,18 @@ const documentTarget = () => {
 
   if (!simpleCommentArea) {
     console.error(
-      "Simple Comment area not found. q.v. https://github.com/rendall/simple-comment "
+      "Simple Comment display element (div#simple-comment-display) not found. q.v. https://github.com/rendall/simple-comment "
     )
     return
   }
 
-	console.info("Simple Comment area found! - attempting to set up UI...")
-	
-	return simpleCommentArea
+  console.info("Simple Comment area found! - attempting to set up UI...")
 
+  return simpleCommentArea
 }
 
 const app = new App({
-	target: documentTarget()
-});
+  target: documentTarget()
+})
 
-export default app;
+export default app

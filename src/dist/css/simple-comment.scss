@@ -1,4 +1,63 @@
-#simple-comment-display input {
+@font-face {
+  font-family: "Comfortaa";
+  font-style: normal;
+  font-weight: 500;
+  font-display: block;
+  src: url(./font/simple-comment.woff2) format("woff2");
+}
+
+body {
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  background-color: #f8fcff;
+  color: #33475c;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial,
+    sans-serif;
+  font-size: 1.125rem;
+  line-height: 1.61111em;
+  margin-bottom: 1em;
+  margin-top: 1em;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+main {
+  max-width: 38rem;
+  margin: 0 auto;
+}
+
+h1,
+h2 {
+  color: #3287e6;
+  font-family: "Comfortaa", sans-serif;
+}
+
+h1 {
+  font-size: 3.4rem;
+  font-weight: 500;
+  line-height: 4rem;
+  margin-left: 1rem;
+}
+
+details {
+  margin-bottom: 1rem;
+}
+
+summary:focus {
+  outline-color: #3287e6;
+  outline-style: solid;
+}
+
+summary h2 {
+  display: inline;
+  cursor: help;
+}
+
+*::-webkit-details-marker {
+  color: #3287e6;
+}
+
+input {
   height: 2rem;
   width: 100%;
   font-size: 1.35rem;
@@ -8,7 +67,7 @@
   font-family: monospace;
 }
 
-#simple-comment-display textarea {
+textarea {
   display: block;
   height: 7rem;
   width: 100%;
@@ -19,11 +78,11 @@
   font-family: monospace;
 }
 
-#simple-comment-display button:hover {
+button:hover {
   font-weight: bold;
 }
 
-#simple-comment-display button {
+button {
   appearance: none;
   border: none;
   background: transparent;
@@ -38,24 +97,28 @@
   margin: 0.5rem 1rem 0.5rem 0;
 }
 
-#simple-comment-display a:hover {
+a:hover {
   color: #007b8c;
   text-decoration: underline;
 }
 
-#simple-comment-display a {
+a {
   color: #3287e6;
   font-weight: 600;
   text-decoration: none;
 }
 
-#simple-comment-display textarea#reply-field {
+a[title] {
+  color: unset;
+}
+
+textarea#reply-field {
   display: block;
   width: 100%;
   height: 7rem;
 }
 
-#simple-comment-display header {
+header {
   display: flex;
   margin: 0 auto;
   max-width: 59rem;
@@ -63,72 +126,70 @@
   align-items: center;
 }
 
-#simple-comment-display #discussion-title {
+#discussion-title {
   display: none;
 }
 
-#simple-comment-display #login-pulser {
+#login-pulser {
   display: none;
 }
 
-#simple-comment-display .is-logging-in #login-pulser {
+.is-logging-in #login-pulser {
   display: inline;
 }
 
-#simple-comment-display #user-display {
+#log-out-button {
   display: none;
 }
 
-#simple-comment-display #log-in-form {
-  display: none;
-}
-
-#simple-comment-display #log-out-button {
-  display: none;
-}
-
-#simple-comment-display .is-logged-in:not(.is-guest) #log-out-button {
+.is-logged-in:not(.is-guest) #log-out-button {
   display: unset;
 }
 
-#simple-comment-display .is-logged-in #log-in-form {
+.is-logged-in #log-in-form {
   display: none;
 }
 
-#simple-comment-display .is-logged-in .user-info {
+.is-logged-in .user-info {
   display: none;
 }
 
-#simple-comment-display .is-logged-in:not(.is-guest) .sign-up-form {
+.is-logged-in:not(.is-guest) .sign-up-form {
   display: none;
 }
 
-#simple-comment-display .is-error,
-#simple-comment-display .error {
+.is-error,
+.error {
   font-weight: bold;
   color: red;
 }
 
-#simple-comment-display .comment-display .reply-input-group {
-  margin-left: 1rem;
-  width: 30rem;
-}
-
-#simple-comment-display .is-reply > .comment-display .comment-button {
+.is-reply > .comment-display .comment-button {
   display: none;
 }
 
-#simple-comment-display .is-deleted {
+.is-deleted {
   font-style: italic;
   opacity: 0.5;
 }
 
-#simple-comment-display .is-deleted > .comment-button {
+.is-deleted > .comment-button {
   display: none;
 }
 
-#simple-comment-display .simple-comment-logo {
+.simple-comment-logo {
   max-width: 9.1rem;
   min-width: 9.1rem;
   fill: #3287e6;
+}
+
+#user-display {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  main {
+    margin: 0 1rem;
+    max-width: unset;
+  }
 }

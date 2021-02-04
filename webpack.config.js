@@ -85,9 +85,10 @@ module.exports = {
       },],
   },
   output: {
-    path: __dirname + "/dist",
-    filename: "[name].js",
     chunkFilename: "[name].[id].js",
+    filename: "[name].js",
+    path: __dirname + "/dist",
+    publicPath: '', 
   },
   plugins: [
     new webpack.EnvironmentPlugin(['SIMPLE_COMMENT_API_URL']),
