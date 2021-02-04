@@ -30,8 +30,8 @@
     "start:backend": "yarn run build:backend && netlify-lambda serve --timeout 60 --config ./webpack.netlify.functions.js ./netlify-functions",
     "serve": "http-server ./dist --proxy http://localhost:9000",
     "start:frontend": "yarn run build:frontend && webpack serve --open",
-    "test": "jest",
-    "watch:test": "jest --watch --noStackTrace",
+    "test": "jest && cypress run",
+    "watch:test": "concurrently \"jest --watch --noStackTrace --all\" \"cypress open\"",
     "watch:backend": "tsc -p tsconfig.netlify.functions.json --listEmittedFiles --watch",
     "watch:frontend": "tsc --listEmittedFiles --watch"
   },

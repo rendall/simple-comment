@@ -14,8 +14,8 @@ export default {
   coverageProvider: "v8",
 
   globals: {
-    'ts-jest': {
-      tsconfig: 'tsconfig.jest.json'
+    "ts-jest": {
+      tsconfig: "tsconfig.jest.json"
     }
   },
   // A preset that is used as a base for Jest's configuration
