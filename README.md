@@ -195,21 +195,28 @@ Returns the logged-in user id or `401`
 
 ## Alternatives
 
-Nearly all of these are more mature than Simple Comment, and I would recommend considering one if you are not looking specifically for a serverless, open-source, self-hosted solution. Listed below each are pros and cons that distinguish it from Simple Comment. If _Trust is required_ is listed, it means that using the service requires trust in the company, because they will be serving closed-source code to your users that you do not control and cannot easily inspect. This list is based on public documentation, not experience. If anything is incorrect or missing, please let me know.
+There are 34 solutions that are not Simple Comment listed here. Nearly all of these are more mature than Simple Comment, and I would recommend considering one if you are not looking specifically for a serverless, open-source, self-hosted solution. Listed below each are pros and cons that distinguish it from Simple Comment. If _Trust is required_ is listed, it means that using the service requires trust in the company, because they will be serving closed-source code to your users that you do not control and cannot easily inspect; as well, user data will be held on servers they control. This list is based on public documentation, not experience. If anything is incorrect or missing, please let me know.
 
+- Comment Box <https://commentbox.io/>
+  - Free tier
+  - Privacy focused
+  - Data is held on 3rd party server
+    - "No lock-in"
+  - Trust is required
 - Commentics <https://www.commentics.org/>
   - Open Source: GPL
   - Free tier with logo
   - Requires a server running PHP and MySQL
 - Commento <https://commento.io/>
-  - Easy setup
   - Privacy focused
-  - Closed Source
-  - Data is held on 3rd party server
+  - [Open Source](https://gitlab.com/commento/commento): MIT
+  - Self-host OR pay-to-host
+- Discourse <https://www.discourse.org/>
+  - Open source: GPL
+  - Fully featured
+  - Self-host OR paid version
   - No free tier
-  - Trust is required
-- Disqus <https://disqus.com/>
-  - Easy setup
+- Disqus <https://disqus.com/> - The 400 pound gorilla of e
   - Free tier
   - Fully featured
   - Closed Source
@@ -218,7 +225,6 @@ Nearly all of these are more mature than Simple Comment, and I would recommend c
   - Sells user data
   - Trust is required
 - Facebook Comments Plugin <https://developers.facebook.com/docs/plugins/comments/>
-  - Easy setup
   - Free tier
   - Fully featured
   - Closed Source
@@ -227,8 +233,14 @@ Nearly all of these are more mature than Simple Comment, and I would recommend c
   - Requires user login
   - Sells user data
   - Trust is required
+- FastComments <https://fastcomments.com/>
+  - Fully featured
+  - Privacy focused
+  - Real-time chatting
+  - HMAC authentication
+  - No free tier
+  - Trust is required
 - GraphComment <https://graphcomment.com/>
-  - Easy setup
   - Fully featured
   - Free tier
   - Closed Source
@@ -238,7 +250,6 @@ Nearly all of these are more mature than Simple Comment, and I would recommend c
   - Requires user login
   - Trust is required
 - HTML Comment Box <https://www.htmlcommentbox.com/>
-  - Easy setup
   - Free tier
   - Closed Source
   - Data is held on 3rd party server
@@ -247,21 +258,38 @@ Nearly all of these are more mature than Simple Comment, and I would recommend c
 - HashOver <https://www.barkdull.org/software/hashover>
   - Open Source: AGPL
   - Requires a server running PHP and MySQL
+- Hyvor Talk <https://talk.hyvor.com/>
+  - Privacy focused
+  - No free tier
+  - Requires user login
+  - Trust is required
 - IntenseDebate <https://intensedebate.com/>
   - Fully featured
   - Closed Source
   - Data is held on 3rd party server
   - Requires user login
-  - Requires trust
+  - Trust is required
 - Isso <https://posativ.org/isso/>
   - Documentation is extensive
   - Open source: MIT
   - Requires a Linux server running Python and SQLite3
+- Just Comments <https://just-comments.com/>
+  - Defunct <https://just-comments.com/blog/2020-03-06-just-comments-is-shutting-down.html>
+- Muut <https://muut.com>
+  - Developer-friendly <https://muut.io>
+  - Fully featured
+  - No free tier
+  - Trust is required
 - Remark42 <https://remark42.com/>
   - Fully featured
   - Open source: MIT
   - Requires a server
     - Runs a self-contained executable written in Go
+- Talkyard <https://www.talkyard.io/>
+  - [Open source](https://github.com/debiki/talkyard): AGPL
+  - Self-host OR paid hosting
+  - Almost free tier (€1.90/mo + optional add-ons)
+  - Discounts for non-profits and developing countries
 - Valine <https://valine.js.org/en/index.html>
   - Open source: GPL
   - Serverless
@@ -271,3 +299,21 @@ Nearly all of these are more mature than Simple Comment, and I would recommend c
 - schnack! <https://schnack.cool/>
   - Open source: Lil License v1
   - Requires a server running Node and SQLite3
+
+* More: a list of commenting systems that I have not evaluated
+  - Cactus comments <https://gitlab.com/cactus-comments>
+  - Commentator <https://github.com/mcorbin/commentator>
+  - Comntr <https://github.com/comntr>
+  - Coral Project <https://github.com/coralproject/talk>
+  - Github comments <http://donw.io/post/github-comments/>
+  - Glosa <https://github.com/glosa>
+  - Hypercomments <https://www.hypercomments.com/>
+  - Mastadon <https://carlschwan.eu/2020/12/29/adding-comments-to-your-static-blog-with-mastodon/>
+  - Netlify forms <https://bsdnerds.org/comments-static-site/>
+  - Remarkbox <https://www.remarkbox.com/>
+  - ReplyBox <https://getreplybox.com/>
+  - Social media <https://brid.gy/>
+  - Staticman <https://github.com/eduardoboucas/staticman>
+  - Webmention <https://webmention.io/>
+    - more detail <https://news.ycombinator.com/item?id=25571253>
+  - utterances <https://github.com/utterance/utterances>
