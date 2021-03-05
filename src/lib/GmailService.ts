@@ -1,0 +1,32 @@
+import { EmailService } from "./EmailService"
+import nodemailer from "nodemailer"
+import * as dotenv from "dotenv"
+import Mail from "nodemailer/lib/mailer"
+dotenv.config()
+// cribbed from here: https://blog.mailtrap.io/nodemailer-gmail/
+
+export class GmailService extends EmailService {
+  transporter: Mail
+
+  constructor() {
+    super()
+    this.transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USERNAME,
+        pass: process.env.EMAIL_PASSWORD
+      }
+    })
+  }
+
+  sendEmail = (to: string, subject: string, text: string) => {
+    const mailOptions = { from: process.env.EMAIL_USERNAME, to, subject, text }
+    this.transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        throw error
+      } else {
+        console.log("Email sent: " + info.response)
+      }
+    })
+  }
+}
