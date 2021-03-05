@@ -14,12 +14,18 @@ import {
   getTargetId,
   getUserId
 } from "../lib/utilities"
+import { EmailService } from "../lib/EmailService"
+import { GmailService } from "../lib/GmailService"
 dotenv.config()
 
+// TODO: This should probably be
+// const service: Service = new MongodbService
 const service: MongodbService = new MongodbService(
   process.env.DB_CONNECTION_STRING,
   process.env.DATABASE_NAME
 )
+
+const emailService: EmailService = new GmailService()
 
 const getAllowHeaders = (event: APIGatewayEvent) => {
   const allowedMethods = {
@@ -72,6 +78,23 @@ export const handler = async (event: APIGatewayEvent, context: Context) => {
 
   try {
     const response = await handleMethod(event.httpMethod)
+
+    const isSuccessfulPost =
+      event.httpMethod === "POST" && response.statusCode === 200
+
+    if (isSuccessfulPost) {
+      const comment = response.body as Comment
+      try {
+        emailService.sendEmail(
+          process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL,
+          `${comment.userId} commented on ${comment.id}`,
+          comment.text
+        )
+      } catch (error) {
+        console.error(error)
+      }
+    }
+
     return addHeaders(response, headers)
   } catch (error) {
     return addHeaders(error, headers)
