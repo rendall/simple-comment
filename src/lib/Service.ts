@@ -120,8 +120,8 @@ export abstract class Service {
    * returns Comment
    **/
   abstract commentGET = (targetId: TopicId | CommentId, authUserId?: UserId) =>
-    new Promise<Success<Comment | Discussion> | Error>(
-      async (resolve, reject) => reject("Error: not implemented")
+    new Promise<Success<Comment> | Error>(async (resolve, reject) =>
+      reject("Error: not implemented")
     )
 
   /**
@@ -147,11 +147,7 @@ export abstract class Service {
    * commentId byte[]
    * returns Success
    **/
-  abstract commentDELETE = (
-    topicId: TopicId,
-    commentId: CommentId,
-    authUser: UserId
-  ) =>
+  abstract commentDELETE = (targetId: CommentId, authUserId?: UserId) =>
     new Promise<Success | Error>((resolve, reject) =>
       reject("Error: not implemented")
     )

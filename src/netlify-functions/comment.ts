@@ -14,14 +14,19 @@ import {
   getTargetId,
   getUserId
 } from "../lib/utilities"
+import { EmailService } from "../lib/EmailService"
+import { GmailService } from "../lib/GmailService"
+import { Service } from "../lib/Service"
 dotenv.config()
 
-const service: MongodbService = new MongodbService(
+const dbService: Service = new MongodbService(
   process.env.DB_CONNECTION_STRING,
   process.env.DATABASE_NAME
 )
 
-const getAllowHeaders = (event: APIGatewayEvent) => {
+const notifyService: EmailService = new GmailService()
+
+const getAllowHeaders = (event: Pick<APIGatewayEvent, "headers">) => {
   const allowedMethods = {
     "Access-Control-Allow-Methods": "POST,GET,OPTIONS,PUT,DELETE",
     "Access-Control-Allow-Credentials": "true"
@@ -34,10 +39,29 @@ const getAllowHeaders = (event: APIGatewayEvent) => {
   return headers
 }
 
-export const handler = async (event: APIGatewayEvent, context: Context) => {
+export const handler = async (
+  event: Pick<APIGatewayEvent, "path" | "headers" | "body" | "httpMethod">,
+  context: Context,
+  testService?: Service,
+  testNotifyService?: EmailService
+) => {
   const dirs = event.path.split("/")
   const isValidPath = dirs.length <= 5
   const headers = getAllowHeaders(event)
+
+  // the arguments of the handler function are in unknown territory,
+  // so make sure that testService and testNotifyService are what is
+  // expected
+
+  const isDBService = (x: any): x is Service =>
+    x.hasOwnProperty("commentDELETE")
+  const isNotifyService = (x: any): x is EmailService =>
+    x.hasOwnProperty("sendEmail")
+
+  const service = isDBService(testService) ? testService : dbService
+  const notify = isNotifyService(testNotifyService)
+    ? testNotifyService
+    : notifyService
 
   if (!isValidPath)
     return addHeaders(
@@ -72,6 +96,23 @@ export const handler = async (event: APIGatewayEvent, context: Context) => {
 
   try {
     const response = await handleMethod(event.httpMethod)
+
+    const isSuccessfulPost =
+      event.httpMethod === "POST" && response.statusCode === 201
+
+    if (isSuccessfulPost) {
+      const comment = response.body as Comment
+      try {
+        notify.sendEmail(
+          process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL,
+          `${comment.userId} commented on ${comment.id}`,
+          comment.text
+        )
+      } catch (error) {
+        console.error(error)
+      }
+    }
+
     return addHeaders(response, headers)
   } catch (error) {
     return addHeaders(error, headers)
