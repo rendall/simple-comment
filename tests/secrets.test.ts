@@ -39,22 +39,22 @@ describe("Ensures secrets are secret", () => {
     .filter(l => !l.startsWith("#")) // eliminate comments
     .filter(l => l.length > 0) // eliminate blank lines
 
-  // Are there any entries at all in `example.env`?
   test("example.env has information", () => {
     expect(exampleEnvEntries.length).toBeGreaterThan(0)
   })
+  // `example.env` must have entries
 
-  // Each entry in example.env has a corresponding defined process.env variable
   exampleEnvEntries.forEach(line => {
     const [varName, varValue] = line.split("=")
     test(`${varName} is defined as an environmental variable`, () => {
       expect(process.env[varName]).toBeDefined()
     })
+    // Each entry in example.env must have a corresponding environmental variable
 
-    // The value of each SECRET or PASSWORD in 'example.env' is not the same as in process.env
     if (varName.indexOf("SECRET") >= 0 || varName.indexOf("PASSWORD") >= 0)
       test(`${varName} is not ${varValue}`, () => {
         expect(process.env[varName]).not.toBe(varValue)
       })
   })
+  // The value of each SECRET or PASSWORD in 'example.env' must not be the same as in process.env
 })
