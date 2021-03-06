@@ -5,13 +5,11 @@ import {
   CommentId,
   DeletedComment,
   Discussion,
-  Email,
   Error,
   NewUser,
   PublicSafeUser,
   Success,
   Topic,
-  TopicId,
   UpdateUser,
   User
 } from "../src/lib/simple-comment"
@@ -31,16 +29,29 @@ import {
   success202TopicDeleted,
   success202UserDeleted
 } from "../src/lib/messages"
-import { getAuthToken, hashPassword, uuidv4, isUuid } from "../src/lib/crypt"
+import { getAuthToken, hashPassword, uuidv4 } from "../src/lib/crypt"
 import { policy } from "../src/policy"
 import {
   isComment,
   isDeletedComment,
   isDiscussion,
+  isPublicSafeUser,
   toAdminSafeUser
 } from "../src/lib/utilities"
 import * as fs from "fs"
 import * as dotenv from "dotenv"
+import {
+  alphaUserInput,
+  chooseRandomElement,
+  createRandomCommentTree,
+  createRandomEmail,
+  createRandomGroupUsers,
+  createRandomListOfTopics,
+  createRandomTopic,
+  createRandomUser,
+  hasOnlyAdminSafeProperties,
+  randomString
+} from "./fake/fakes"
 dotenv.config()
 
 // const MONGO_DB = process.env.DATABASE_NAME
@@ -52,116 +63,6 @@ const MONGO_DB = global.__MONGO_DB_NAME__
 const doDropTestDatabase = true
 
 declare const global: any
-
-const alphaUserInput =
-  "ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÅ abcdefghijklmnopqrstuvwxyzäöå 1234567890 !@#$%^&*()_+-= "
-const alphaAscii =
-  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890_-"
-const emailAscii = "abcdefghijklmnopqrstuvwxyz01234567890"
-const randomNumber = (min: number, max: number): number =>
-  Math.floor(Math.random() * (max - min)) + min
-const randomString = (
-  alpha: string = alphaAscii,
-  len: number = randomNumber(10, 50),
-  str: string = ""
-): string =>
-  len === 0
-    ? str
-    : randomString(
-        alpha,
-        len - 1,
-        `${str}${alpha.charAt(Math.floor(Math.random() * alpha.length))}`
-      )
-const randomDate = () => new Date(randomNumber(0, new Date().valueOf()))
-// Returns a random email that will validate but does not create examples of all possible valid emails
-const createRandomEmail = (): Email =>
-  `${randomString(emailAscii)}@${randomString(emailAscii)}.${randomString(
-    "abcdefghijklmnopqrstuvwxyz",
-    3
-  )}`
-// Functions that generate fake data - these could be moved to a common file to help other Service tests
-const createRandomComment = (
-  parentId: TopicId | CommentId,
-  user: User
-): Comment => ({
-  id: uuidv4(),
-  parentId,
-  userId: user.id,
-  text: randomString(alphaUserInput, randomNumber(50, 500)),
-  dateCreated: new Date()
-})
-const createRandomCommentTree = (
-  replies: number,
-  users: User[],
-  chain: (Comment | Discussion)[]
-): (Comment | Discussion)[] =>
-  replies <= 0
-    ? chain
-    : createRandomCommentTree(replies - 1, users, [
-        ...chain,
-        createRandomComment(
-          chooseRandomElement(chain).id,
-          chooseRandomElement(users)
-        )
-      ])
-const chooseRandomElement = <T>(arr: T[]) =>
-  arr[Math.floor(Math.random() * arr.length)]
-const createRandomGroupUsers = (
-  population: number,
-  users: User[] = []
-): User[] =>
-  population <= 0
-    ? users
-    : createRandomGroupUsers(population - 1, [...users, createRandomUser()])
-
-const createRandomListOfTopics = (
-  num: number = randomNumber(2, 20),
-  topics: Topic[] = []
-): Topic[] =>
-  num <= 0
-    ? topics
-    : createRandomListOfTopics(num - 1, [...topics, createRandomTopic()])
-
-let topicCount = 0
-const getTopicId = prepend => `${prepend}topic-id-${topicCount++}`
-
-const createRandomTopic = (prepend = ""): Topic => ({
-  // id: randomString(alphaAscii, randomNumber(10, 40)),
-  id: getTopicId(prepend),
-  isLocked: false,
-  title: randomString(alphaUserInput, randomNumber(25, 100)),
-  dateCreated: randomDate()
-})
-
-let userCount = 0
-const createUserId = (prepend = "") => `${prepend}user-id-${userCount++}`
-const createRandomUser = (prepend = ""): User => ({
-  id: createUserId(prepend),
-  email: createRandomEmail(),
-  name: randomString(alphaUserInput),
-  isVerified: Math.random() > 0.5,
-  isAdmin: Math.random() > 0.5,
-  hash: randomString(alphaAscii, 32)
-})
-
-//@ts-expect-error
-const adminUnsafeUserProperties: (keyof User)[] = ["hash", "_id", "password"]
-const publicUnsafeUserProperties: (keyof User)[] = [
-  ...adminUnsafeUserProperties,
-  "email",
-  "isVerified"
-]
-
-// Verification functions
-const isPublicSafeUser = (u: Partial<User>) =>
-  (Object.keys(u) as (keyof User)[]).every(
-    key => !publicUnsafeUserProperties.includes(key)
-  )
-
-const isAdminSafeUser = (u: Partial<User>) =>
-  (Object.keys(u) as (keyof User)[]).every(
-    key => !adminUnsafeUserProperties.includes(key)
-  )
 
 // Fake data objects
 
@@ -231,8 +132,6 @@ describe("Full API service test", () => {
   beforeAll(async () => {
     const connectionString = MONGO_URI
     const databaseName = MONGO_DB
-
-    // open VeryLongPassword for use later
 
     service = new MongodbService(connectionString, databaseName)
     client = await service.getClient()
@@ -566,7 +465,7 @@ describe("Full API service test", () => {
         expect(res).toHaveProperty("statusCode", 204)
         expect(res).toHaveProperty("body")
         expect(resbody.name).toBe(updatedUser.name)
-        expect(isAdminSafeUser(resbody)).toBe(true)
+        expect(hasOnlyAdminSafeProperties(resbody)).toBe(true)
       })
   })
   // put to /user/{userId} with very long password should not timeout
@@ -587,7 +486,7 @@ describe("Full API service test", () => {
         expect(res).toHaveProperty("statusCode", 204)
         expect(res).toHaveProperty("body")
         expect(resbody.name).toBe(updatedUser.name)
-        expect(isAdminSafeUser(resbody)).toBe(true)
+        expect(hasOnlyAdminSafeProperties(resbody)).toBe(true)
       })
   })
   // put to /user/{userId} with invalid name, email, password should fail
