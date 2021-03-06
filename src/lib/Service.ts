@@ -93,7 +93,7 @@ export abstract class Service {
    *
    * topicId byte[]
    * commentId byte[]
-   * returns Comment
+   * returns Comment or Discussion
    **/
   abstract commentGET : (targetId: TopicId | CommentId, authUserId?: UserId) =>
     Promise<Success<Comment | Discussion> | Error>
