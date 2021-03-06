@@ -13,14 +13,19 @@ export class GmailService extends EmailService {
     this.transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: process.env.EMAIL_USERNAME,
-        pass: process.env.EMAIL_PASSWORD
+        user: process.env.NOTIFY_FROM_EMAIL,
+        pass: process.env.NOTIFY_FROM_EMAIL_PASSWORD
       }
     })
   }
 
   sendEmail = (to: string, subject: string, text: string) => {
-    const mailOptions = { from: process.env.EMAIL_USERNAME, to, subject, text }
+    const mailOptions = {
+      from: process.env.NOTIFY_FROM_EMAIL,
+      to,
+      subject,
+      text
+    }
     this.transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
         throw error
