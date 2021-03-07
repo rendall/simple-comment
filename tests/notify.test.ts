@@ -5,7 +5,7 @@ import { MongodbService } from "../src/lib/MongodbService"
 import { Db, MongoClient } from "mongodb"
 import { createRandomTopic, createRandomUser, randomString } from "./fake/fakes"
 import { Success, Topic, Comment, Error } from "../src/lib/simple-comment"
-import { EmailService } from "../src/lib/EmailService"
+import { NotifyService } from "../src/lib/NotifyService"
 import { handler as commentHandler } from "../src/netlify-functions/comment"
 import { APIGatewayEvent, APIGatewayProxyEvent } from "aws-lambda"
 import { getAuthToken } from "../src/lib/crypt"
@@ -121,14 +121,16 @@ describe("Ensure that comments send notices, according to policy", () => {
       userId: simpleUser.id
     }
 
-    const testNotifyService: EmailService = {
-      sendEmail: (to: string, subject: string, text: string) => {
+    // EmailService
+    const testNotifyService: NotifyService = {
+      sendNotice: (to: string, subject: string, text: string) => {
         expect(text).toEqual(newComment.text)
       }
     }
 
     const token = getAuthToken(newComment.userId)
 
+    // Create a fake request event, including auth: 
     const event: Pick<
       APIGatewayEvent,
       "path" | "headers" | "body" | "httpMethod"

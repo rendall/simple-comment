@@ -14,7 +14,7 @@ import {
   getTargetId,
   getUserId
 } from "../lib/utilities"
-import { EmailService } from "../lib/EmailService"
+import { NotifyService } from "../lib/NotifyService"
 import { GmailService } from "../lib/GmailService"
 import { Service } from "../lib/Service"
 dotenv.config()
@@ -24,7 +24,7 @@ const dbService: Service = new MongodbService(
   process.env.DATABASE_NAME
 )
 
-const notifyService: EmailService = new GmailService()
+const notifyService: NotifyService = new GmailService()
 
 const getAllowHeaders = (event: Pick<APIGatewayEvent, "headers">) => {
   const allowedMethods = {
@@ -43,7 +43,7 @@ export const handler = async (
   event: Pick<APIGatewayEvent, "path" | "headers" | "body" | "httpMethod">,
   context: Context,
   testService?: Service,
-  testNotifyService?: EmailService
+  testNotifyService?: NotifyService
 ) => {
   const dirs = event.path.split("/")
   const isValidPath = dirs.length <= 5
@@ -55,8 +55,8 @@ export const handler = async (
 
   const isDBService = (x: any): x is Service =>
     x.hasOwnProperty("commentDELETE")
-  const isNotifyService = (x: any): x is EmailService =>
-    x.hasOwnProperty("sendEmail")
+  const isNotifyService = (x: any): x is NotifyService =>
+    x.hasOwnProperty("sendNotice")
 
   const service = isDBService(testService) ? testService : dbService
   const notify = isNotifyService(testNotifyService)
@@ -103,7 +103,7 @@ export const handler = async (
     if (isSuccessfulPost) {
       const comment = response.body as Comment
       try {
-        notify.sendEmail(
+        notify.sendNotice(
           process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL,
           `${comment.userId} commented on ${comment.id}`,
           comment.text

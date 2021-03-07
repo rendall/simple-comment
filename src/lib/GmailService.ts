@@ -1,11 +1,11 @@
-import { EmailService } from "./EmailService"
+import { NotifyService } from "./NotifyService"
 import nodemailer from "nodemailer"
 import * as dotenv from "dotenv"
 import Mail from "nodemailer/lib/mailer"
 dotenv.config()
 // cribbed from here: https://blog.mailtrap.io/nodemailer-gmail/
 
-export class GmailService extends EmailService {
+export class GmailService extends NotifyService {
   transporter: Mail
 
   constructor() {
@@ -19,7 +19,7 @@ export class GmailService extends EmailService {
     })
   }
 
-  sendEmail = (to: string, subject: string, text: string) => {
+  sendNotice = (to: string, subject: string, text: string) => {
     const mailOptions = {
       from: process.env.NOTIFY_FROM_EMAIL,
       to,
