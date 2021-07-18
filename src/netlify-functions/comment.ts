@@ -53,10 +53,8 @@ export const handler = async (
   // so make sure that testService and testNotifyService are what is
   // expected
 
-  const isDBService = (x: any): x is Service =>
-    x.hasOwnProperty("commentDELETE")
-  const isNotifyService = (x: any): x is NotifyService =>
-    x.hasOwnProperty("sendNotice")
+  const isDBService = (x: any): x is Service => !!x && x.hasOwnProperty("commentDELETE")
+  const isNotifyService = (x: any): x is NotifyService => !!x && x.hasOwnProperty("sendNotice")
 
   const service = isDBService(testService) ? testService : dbService
   const notify = isNotifyService(testNotifyService)
