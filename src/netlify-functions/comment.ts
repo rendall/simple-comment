@@ -14,8 +14,8 @@ import {
   getTargetId,
   getUserId
 } from "../lib/utilities"
-import { NotifyService } from "../lib/NotifyService"
-import { GmailService } from "../lib/GmailService"
+import type { NotifyService } from "../lib/NotifyService"
+import { SendGridService } from "../lib/SendGridService"
 import { Service } from "../lib/Service"
 dotenv.config()
 
@@ -24,7 +24,7 @@ const dbService: Service = new MongodbService(
   process.env.DATABASE_NAME
 )
 
-const notifyService: NotifyService = new GmailService()
+const notifyService: NotifyService = new SendGridService()
 
 const getAllowHeaders = (event: Pick<APIGatewayEvent, "headers">) => {
   const allowedMethods = {

@@ -93,7 +93,6 @@ describe("Ensure that comments send notices, according to policy", () => {
         expect(info.response).toEqual(expect.stringContaining("250 Accepted"))
       })
   })
-  // The network is down or transport code is munged somehow
 
   test("Posting comment should succeed", () => {
     const newComment = {

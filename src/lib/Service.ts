@@ -96,7 +96,7 @@ export abstract class Service {
    * returns Comment or Discussion
    **/
   abstract commentGET : (targetId: TopicId | CommentId, authUserId?: UserId) =>
-    Promise<Success<Comment | Discussion> | Error>
+    Promise<Success<Comment> | Error>
 
   /**
    * Update a specific comment
@@ -115,14 +115,12 @@ export abstract class Service {
   /**
    * Delete a specific comment
    *
-   * topicId byte[]
    * commentId byte[]
    * returns Success
    **/
   abstract commentDELETE : (
-    topicId: TopicId,
     commentId: CommentId,
-    authUser: UserId
+    authUserId: UserId
   ) =>
     Promise<Success | Error>
 
