@@ -49,7 +49,7 @@ import {
   deleteComment,
   formatDate,
   isTopic
-} from "./apiClient.js"
+} from "./apiClient"
 
 let currUser: AdminSafeUser
 let clearReply = () => {}
