@@ -17,26 +17,34 @@ import type {
 } from "./simple-comment"
 
 export abstract class Service {
+  /**
+   * Accept a user name and password, return authentication token
+   *
+   * returns AuthToken
+   **/
+  abstract authPOST: (
+    username: string,
+    password: string
+  ) => Promise<AuthToken | Error>
 
   /**
    * Accept a user name and password, return authentication token
    *
    * returns AuthToken
    **/
-  abstract authPOST : (username: string, password: string) => Promise<AuthToken | Error>
-
-  /**
-   * Accept a user name and password, return authentication token
-   *
-   * returns AuthToken
-   **/
-  abstract authGET : (username: string, password: string) => Promise<AuthToken | Error>
+  abstract authGET: (
+    username: string,
+    password: string
+  ) => Promise<AuthToken | Error>
 
   /**
    * Create user
    * returns Success | Error
    **/
-  abstract userPOST : (newUser: NewUser, authUserId?: UserId) => Promise<Success<User> | Error>
+  abstract userPOST: (
+    newUser: NewUser,
+    authUserId?: UserId
+  ) => Promise<Success<User> | Error>
 
   /**
    * Read user
@@ -44,14 +52,18 @@ export abstract class Service {
    * userId byte[]
    * returns User
    **/
-  abstract userGET : (userId?: UserId, authUserId?: UserId) => Promise<Success<Partial<User>> | Error>
+  abstract userGET: (
+    userId?: UserId,
+    authUserId?: UserId
+  ) => Promise<Success<Partial<User>> | Error>
   /**
    * Read all users
    *
    * returns List
    **/
-  abstract userListGET : (authUserId?: UserId) =>
-    Promise<Success<AdminSafeUser[] | PublicSafeUser[]> | Error>
+  abstract userListGET: (
+    authUserId?: UserId
+  ) => Promise<Success<AdminSafeUser[] | PublicSafeUser[]> | Error>
 
   /**
    * Update user
@@ -59,12 +71,11 @@ export abstract class Service {
    * userId byte[]
    * returns Success
    **/
-  abstract userPUT : (
+  abstract userPUT: (
     targetId: UserId,
     user: UpdateUser,
     authUserId?: UserId
-  ) =>
-    Promise<Success<User> | Error>
+  ) => Promise<Success<User> | Error>
 
   /**
    * Delete user
@@ -72,8 +83,10 @@ export abstract class Service {
    * userId byte[]
    * returns Success
    **/
-  abstract userDELETE : (userId: UserId, authUser: UserId) =>
-    Promise<Success | Error>
+  abstract userDELETE: (
+    userId: UserId,
+    authUser: UserId
+  ) => Promise<Success | Error>
 
   /**
    * Create a comment
@@ -81,12 +94,11 @@ export abstract class Service {
    * topicId byte[] or commentId byte[]
    * returns Comment
    **/
-  abstract commentPOST : (
+  abstract commentPOST: (
     parentId: TopicId | CommentId,
     text: string,
     authUser?: UserId
-  ) =>
-    Promise<Success<Comment> | Error>
+  ) => Promise<Success<Comment> | Error>
 
   /**
    * Read a comment
@@ -95,8 +107,10 @@ export abstract class Service {
    * commentId byte[]
    * returns Comment
    **/
-  abstract commentGET : (targetId: TopicId | CommentId, authUserId?: UserId) =>
-    Promise<Success<Comment | Discussion> | Error>
+  abstract commentGET: (
+    targetId: TopicId | CommentId,
+    authUserId?: UserId
+  ) => Promise<Success<Comment | Discussion> | Error>
 
   /**
    * Update a specific comment
@@ -105,12 +119,11 @@ export abstract class Service {
    * commentId byte[]
    * returns Comment
    **/
-  abstract commentPUT : (
+  abstract commentPUT: (
     targetId: CommentId,
     text: string,
     authUser?: UserId
-  ) =>
-    Promise<Success<Comment> | Error>
+  ) => Promise<Success<Comment> | Error>
 
   /**
    * Delete a specific comment
@@ -119,18 +132,16 @@ export abstract class Service {
    * commentId byte[]
    * returns Success
    **/
-  abstract commentDELETE : (
+  abstract commentDELETE: (
     topicId: TopicId,
     commentId: CommentId,
     authUser: UserId
-  ) =>
-    Promise<Success | Error>
+  ) => Promise<Success | Error>
 
   /**
    * returns an authenticated guest token
    **/
-  abstract gauthGET : () =>
-    Promise<AuthToken | Error>
+  abstract gauthGET: () => Promise<AuthToken | Error>
 
   /**
    * Create a discussion
@@ -139,8 +150,10 @@ export abstract class Service {
    * authUserId
    * returns Success 201
    **/
-  abstract topicPOST : (topic: Topic, authUserId?: UserId) =>
-    Promise<Success<Discussion> | Error>
+  abstract topicPOST: (
+    topic: Topic,
+    authUserId?: UserId
+  ) => Promise<Success<Discussion> | Error>
 
   /**
    * Read specific discussion
@@ -148,8 +161,10 @@ export abstract class Service {
    * topicId byte[]
    * returns Discussion
    **/
-  abstract topicGET : (topicId: TopicId, authUser?: UserId) =>
-    Promise<Success<Discussion> | Error>
+  abstract topicGET: (
+    topicId: TopicId,
+    authUser?: UserId
+  ) => Promise<Success<Discussion> | Error>
 
   /**
    * Read a list of all discussions
@@ -157,15 +172,15 @@ export abstract class Service {
    *
    * returns List
    **/
-  abstract topicListGET : (authUser?: UserId) =>
-    Promise<Success<Discussion[]> | Error>
+  abstract topicListGET: (
+    authUser?: UserId
+  ) => Promise<Success<Discussion[]> | Error>
 
-  abstract topicPUT : (
+  abstract topicPUT: (
     topicId: TopicId,
     topic: Pick<Topic, "title" | "isLocked">,
     authUserId?: UserId
-  ) =>
-    Promise<Success<Topic> | Error>
+  ) => Promise<Success<Topic> | Error>
 
   /**
    * Delete a discussion
@@ -173,17 +188,19 @@ export abstract class Service {
    * topicId byte[]
    * returns Success
    **/
-  abstract topicDELETE : (topicId: TopicId, authUser?: UserId) =>
-    Promise<Success | Error>
+  abstract topicDELETE: (
+    topicId: TopicId,
+    authUser?: UserId
+  ) => Promise<Success | Error>
 
-  abstract authDELETE : () =>
-    Promise<Success | Error>
+  abstract authDELETE: () => Promise<Success | Error>
 
-  abstract verifyGET : (authToken: AuthToken) =>
-    Promise<Success<TokenClaim> | Error>
+  abstract verifyGET: (
+    authToken: AuthToken
+  ) => Promise<Success<TokenClaim> | Error>
 
   /**
    * Close connections, cleanup
    **/
-  abstract close : () => Promise<void>
+  abstract close: () => Promise<void>
 }
