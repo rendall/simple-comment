@@ -13,7 +13,7 @@
     "http-server": "^0.12.3",
     "jest": "^26.6.3",
     "jest-environment-node": "^24.7.1",
-    "merge": "^1.2.1",
+    "merge": "^2.1.1",
     "mongodb-memory-server": "^6.9.2",
     "prettier": "2.1.2",
     "ts-jest": "^26.4.3"
