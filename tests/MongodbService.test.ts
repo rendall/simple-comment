@@ -1011,7 +1011,7 @@ describe("Full API service test", () => {
       .topicPOST(newTopicTest, adminUserTest.id)
       .then(async value => {
         const insertedTopic: Discussion = await db
-          .collection<Comment | Discussion>("comments")
+          .collection<Discussion>("comments")
           .findOne({ id: newTopicTest.id })
         expect(insertedTopic.id).toBe(newTopicTest.id)
         expect(insertedTopic.title).toBe(newTopicTest.title)
