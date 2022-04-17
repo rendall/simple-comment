@@ -126,11 +126,12 @@ These instructions assume some devOps skill, but if anything is unclear, please 
    1. In `.env` add the proper `DB_CONNECION_STRING`
 1. Sign up for a Netlify account, begin a new website, and link your repository
    to the new website
+   1. Review [Netlify's Build environment variables](https://docs.netlify.com/configure-builds/environment-variables/#environment-variables-in-the-build-environment) page
    1. Navigate to 'Build & Deploy => Environment`
    1. Under `Environmental Variables` click the button `Edit Variables`
    1. For each entry in `.env` add the key and corresponding value for _all_
       variables
-   1. For `IS_CROSS_SITE` add the value `production`
+   1. For `IS_CROSS_SITE` add the value `true` if the comment system is hosted in its own domain and `false` if it is the same domain.
 1. Modify your website. These are simple instructions, but feel free to hack away
    1. In the HTML for each page on your website where you want Simple Comment to run, add these two tags:
       1. `<script src="[path-to]/simple-comment.js" defer></script>` (`src` must point to the `simple-comment.js` file)
