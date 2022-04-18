@@ -53,5 +53,11 @@
     "uuid": "8.3.2",
     "webpack": "^5.4.0",
     "webpack-cli": "^4.2.0"
+  },
+  "resolutions": {
+    "glob-parent": "^5.1.2",
+    "follow-redirects":"^1.14.8",
+    "moment": "^2.29.2",
+    "minimist": "^1.2.6"
   }
 }
