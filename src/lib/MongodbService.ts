@@ -19,11 +19,8 @@ import type {
 } from "./simple-comment"
 import {
   Collection,
-  Cursor,
   Db,
-  FindAndModifyWriteOpResultObject,
-  FindOneOptions,
-  InsertOneWriteOpResult,
+  InsertOneResult,
   MongoClient,
   WithId
 } from "mongodb"
@@ -59,7 +56,7 @@ import {
   error409DuplicateTopic,
   error409UserExists,
   error413CommentTooLong,
-  error500ServerError,
+  error500UpdateError,
   success200OK,
   success201UserCreated,
   success202CommentDeleted,
@@ -79,16 +76,16 @@ export class MongodbService extends Service {
   readonly _dbName: string
 
   getClient = async () => {
-    if (this._client && this._client.isConnected()) return this._client
-    this._client = await MongoClient.connect(this._connectionString, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    })
+    if (this._client) {
+      this._client.connect() // if already connected, this is a no-op
+      return this._client
+    }
+    this._client = await MongoClient.connect(this._connectionString)
     return this._client
   }
 
   getDb = async () => {
-    if (this._db && this._client.isConnected()) return this._db
+    if (this._db) return this._db
     const client = await this.getClient()
     this._db = await client.db(this._dbName)
     return this._db
@@ -110,7 +107,7 @@ export class MongodbService extends Service {
       this.getDb()
         .then(db => db.collection("users"))
         .then(users => users.findOne({ id: userid }))
-        .then(async (user: User) => {
+        .then(async (user) => {
           if (user === null) {
             // User is unknown. Reject them unless they claim to be Big Moderator
             if (userid !== process.env.SIMPLE_COMMENT_MODERATOR_ID) {
@@ -272,7 +269,11 @@ export class MongodbService extends Service {
 
       users
         .insertOne(user)
-        .then((result: InsertOneWriteOpResult<WithId<User>>) => {
+        .then((result) => {
+          if (!result.acknowledged) {
+            reject(error500UpdateError)
+            return
+          }
           const body = toAdminSafeUser(user)
           resolve({ ...success201UserCreated, body })
         })
@@ -461,11 +462,13 @@ export class MongodbService extends Service {
        * authUser is always an admin or the user themself */
       users
         .findOneAndUpdate({ id: updatedUser.id }, { $set: updatedUser })
-        .then((x: FindAndModifyWriteOpResultObject<User>) => {
-          const safeUser = toAdminSafeUser(updatedUser)
-          resolve({ ...success204UserUpdated, body: safeUser })
+        .then((modifyResult) => {
+          if (modifyResult.ok) {
+            const safeUser = toAdminSafeUser(updatedUser)
+            resolve({ ...success204UserUpdated, body: safeUser })
+          } else reject(error500UpdateError)
         })
-        .catch(e => reject(error500ServerError))
+        .catch(e => reject(error500UpdateError))
     })
 
   /**
@@ -517,8 +520,8 @@ export class MongodbService extends Service {
         .then(x => resolve(success202UserDeleted))
         .catch(e =>
           authUser.isAdmin
-            ? reject({ ...error500ServerError, body: e })
-            : reject(error500ServerError)
+            ? reject({ ...error500UpdateError, body: e })
+            : reject(error500UpdateError)
         )
     })
 
@@ -568,16 +571,10 @@ export class MongodbService extends Service {
       }
 
       // Prevent duplicate comments
-      const findOptions: FindOneOptions<Comment> = {
-        sort: { dateCreated: -1 }
-      }
 
       // We don't want to search for the exact comment {userId, text, parentId}
       // because we only want to prevent accidental duplications
-      const lastComment = (await comments.findOne(
-        { "userId": authUserId },
-        findOptions
-      )) as Comment
+      const lastComment = (await comments.findOne({ "userId": authUserId }, { sort: { dateCreated: -1 } })) as Comment
 
       if (
         lastComment &&
@@ -600,35 +597,25 @@ export class MongodbService extends Service {
 
       comments
         .insertOne(insertComment)
-        .then(
-          (
-            response: InsertOneWriteOpResult<
-              WithId<Comment | Discussion | DeletedComment>
-            >
-          ) => {
-            const insertedComment: Comment = response.ops.find(
-              x => true
-            ) as Comment
-
-            if (insertComment.parentId !== parentId) {
-              reject({
-                statusCode: 500,
-                body: "Database insertion error"
-              })
-              return
-            }
-
-            resolve({
-              statusCode: 201,
-              body: { ...insertedComment, user: adminSafeUser }
+        .then((result) => {
+          if (!result.acknowledged) {
+            reject({
+              statusCode: 500,
+              body: "Database insertion error"
             })
+            return
           }
+          resolve({
+            statusCode: 201,
+            body: { ...insertComment, user: adminSafeUser }
+          })
+        }
         )
         .catch(e => {
           console.error(e)
           authUser.isAdmin
-            ? reject({ ...error500ServerError, body: e })
-            : reject(error500ServerError)
+            ? reject({ ...error500UpdateError, body: e })
+            : reject(error500UpdateError)
         })
     })
 
@@ -674,7 +661,7 @@ export class MongodbService extends Service {
       const comments: Collection<Comment | DeletedComment | Discussion> = (
         await this.getDb()
       ).collection("comments")
-      const cursor = await comments.find({ id: targetId }).limit(1) //find({ id: targetId }, {id: 1}).limit(1)
+      const cursor = await comments.find({ id: targetId }).limit(1)
 
       // just check to see if comment exists, without retrieving everything
       if (!cursor) {
@@ -908,16 +895,18 @@ export class MongodbService extends Service {
 
       comments
         .findOneAndUpdate({ id: foundComment.id }, { $set: returnComment })
-        .then((x: FindAndModifyWriteOpResultObject<Comment | Discussion>) =>
-          resolve({
+        .then((modifyResult) => {
+          if (modifyResult.ok) resolve({
             ...success204CommentUpdated,
             body: returnComment
           })
+          else reject(error500UpdateError)
+        }
         )
         .catch(e =>
           authUser.isAdmin
-            ? reject({ ...error500ServerError, body: e })
-            : reject(error500ServerError)
+            ? reject({ ...error500UpdateError, body: e })
+            : reject(error500UpdateError)
         )
     })
 
@@ -985,8 +974,8 @@ export class MongodbService extends Service {
           .then(x => resolve({ ...success202CommentDeleted }))
           .catch(e =>
             authUser.isAdmin
-              ? reject({ ...error500ServerError, body: e })
-              : reject(error500ServerError)
+              ? reject({ ...error500UpdateError, body: e })
+              : reject(error500UpdateError)
           )
       } else {
         // entire comment can be deleted without trouble
@@ -997,8 +986,8 @@ export class MongodbService extends Service {
           .then(x => resolve(success202CommentDeleted))
           .catch(e =>
             authUser.isAdmin
-              ? reject({ ...error500ServerError, body: e })
-              : reject(error500ServerError)
+              ? reject({ ...error500UpdateError, body: e })
+              : reject(error500UpdateError)
           )
       }
     })
@@ -1098,19 +1087,17 @@ export class MongodbService extends Service {
 
       discussions
         .insertOne(topic)
-        .then((response: InsertOneWriteOpResult<WithId<Discussion>>) => {
-          const insertedDiscussion: Discussion = response.ops.find(x => true)
-
-          if (insertedDiscussion.id !== topic.id)
-            reject({
-              statusCode: 500,
-              body: "Database insertion error"
-            })
-          else
+        .then((response) => {
+          if (response.acknowledged)
             resolve({
               statusCode: 201,
               body: `Topic ${topic.id}:'${topic.title}' created`
             })
+          else reject({
+            statusCode: 500,
+            body: "Database insertion error"
+          })
+
         })
         .catch(e => {
           console.error(e)
@@ -1328,9 +1315,7 @@ export class MongodbService extends Service {
 
       const comments = db.collection("comments")
 
-      const topicsCursor: Cursor<Topic> = await comments.find({
-        parentId: null
-      })
+      const topicsCursor = await comments.find<WithId<Topic>>({ parentId: null })
 
       const topics = await topicsCursor.toArray()
 
@@ -1386,13 +1371,15 @@ export class MongodbService extends Service {
 
       comments
         .findOneAndUpdate({ id: foundTopic.id }, { $set: updateTopic })
-        .then((x: FindAndModifyWriteOpResultObject<Comment | Topic>) =>
-          resolve({ ...success204CommentUpdated, body: updateTopic })
+        .then((modifyResult) => {
+          if (modifyResult.ok) resolve({ ...success204CommentUpdated, body: updateTopic })
+          else reject({ statusCode: 500, body: authUser.isAdmin ? modifyResult.lastErrorObject : error500UpdateError.body })
+        }
         )
         .catch(e =>
           authUser.isAdmin
-            ? reject({ ...error500ServerError, body: e })
-            : reject(error500ServerError)
+            ? reject({ ...error500UpdateError, body: e })
+            : reject(error500UpdateError)
         )
     })
 
@@ -1470,8 +1457,8 @@ export class MongodbService extends Service {
         .then(x => resolve(success202TopicDeleted))
         .catch(e =>
           authUser.isAdmin
-            ? reject({ ...error500ServerError, body: e })
-            : reject(error500ServerError)
+            ? reject({ ...error500UpdateError, body: e })
+            : reject(error500UpdateError)
         )
     })
 
@@ -1479,9 +1466,8 @@ export class MongodbService extends Service {
     new Promise<Success>((resolve, reject) => {
       const pastDate = new Date(0).toUTCString()
       const COOKIE_HEADER = {
-        "Set-Cookie": `simple_comment_token=logged-out; path=/; SameSite=${
-          this.isCrossSite ? "None; Secure; " : "Strict; "
-        }HttpOnly; Expires=${pastDate};`
+        "Set-Cookie": `simple_comment_token=logged-out; path=/; SameSite=${this.isCrossSite ? "None; Secure; " : "Strict; "
+          }HttpOnly; Expires=${pastDate};`
       }
       resolve({ ...success202LoggedOut, headers: COOKIE_HEADER })
     })

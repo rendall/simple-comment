@@ -31,7 +31,7 @@ import {
   success202TopicDeleted,
   success202UserDeleted
 } from "../src/lib/messages"
-import { getAuthToken, hashPassword, uuidv4, isUuid } from "../src/lib/crypt"
+import { getAuthToken, hashPassword, uuidv4 } from "../src/lib/crypt"
 import { policy } from "../src/policy"
 import {
   isComment,
@@ -43,8 +43,6 @@ import * as fs from "fs"
 import * as dotenv from "dotenv"
 dotenv.config()
 
-// const MONGO_DB = process.env.DATABASE_NAME
-// const MONGO_URI = "mongodb://localhost:27017/?readPreference=primary&ssl=false"
 const MONGO_URI = global.__MONGO_URI__
 const MONGO_DB = global.__MONGO_DB_NAME__
 
