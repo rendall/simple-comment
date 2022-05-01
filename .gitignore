@@ -1,14 +1,15 @@
 *.js
 .env
 /.git
+/.netlify
 /RAW
 /cypress/fixtures
 /cypress/integration/examples
 /cypress/screenshots
 /cypress/support
+/cypress/videos/
 /functions
 /lib
-/netlify-functions
 /node_modules
 debug.log
 globalConfig.json
@@ -16,3 +17,7 @@ yarn-error.log
 !/cypress/**/*.js
 !/docs/**/*.js
 !webpack.config.js
+!webpack.netlify.functions.js
+
+# Local Netlify folder
+.netlify

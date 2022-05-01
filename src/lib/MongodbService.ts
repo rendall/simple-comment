@@ -20,7 +20,6 @@ import type {
 import {
   Collection,
   Db,
-  InsertOneResult,
   MongoClient,
   WithId
 } from "mongodb"
