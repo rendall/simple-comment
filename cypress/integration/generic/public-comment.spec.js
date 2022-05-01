@@ -13,7 +13,7 @@ context("Essential actions", () => {
 
   it("Submit a comment as a public / unknown user", () => {
     // https://on.cypress.io/type
-    cy.intercept('POST', '.netlify/functions/comment/').as('postComment')
+    cy.intercept('POST', '.netlify/functions/comment/*').as('postComment')
     cy.wait(2500)
     cy.get("#email-field").type("fake@email.com")
     cy.get("#name-field").type("Elli Reko Rautio")
@@ -25,7 +25,7 @@ context("Essential actions", () => {
   })
 
   it("Delete a comment as a public / unknown user", () => {
-    cy.intercept('DELETE', '.netlify/functions/comment/').as('deleteComment')
+    cy.intercept('DELETE', '.netlify/functions/comment/*').as('deleteComment')
     cy.get(".comment-button.delete-button").click()
     cy.wait("@deleteComment").its('response.statusCode').should('eq', 202) // 202 Accepted
     cy.get("#status-display").should("contain", "Comment deleted")
