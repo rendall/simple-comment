@@ -1,4 +1,4 @@
-name: Build and Test Netlify Functions
+name: Simple Comment
 
 on:
   pull_request:
@@ -16,11 +16,13 @@ jobs:
       with:
         node-version: '16'
 
-    - name: Build Netlify Functions
+    - name: Build Netlify functions
       run: |
         npm install yarn@^1 --no-package-lock -g
-        yarn --frozen-lockfile --production=false --ignore-optional --verbose
+        yarn --frozen-lockfile --production=false --ignore-optional
         yarn run build:netlify
 
-    - name: Test
-      run: yarn test
+    - name: Test Netlify functions
+      run: |
+        node ./scripts/createTestEnv.mjs 
+        yarn test
