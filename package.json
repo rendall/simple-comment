@@ -6,15 +6,19 @@
     "@types/jsonwebtoken": "^8.5.0",
     "@types/uuid": "^8.3.0",
     "babel-jest": "^27.5.1",
-    "cypress": "^9.6.0",
+    "concurrently": "^7.1.0",
     "eslint": "^8.14.0",
     "http-server": "^14.1.0",
-    "jest": "^28.0.3",
+    "jest": "27",
     "jest-environment-node": "^27.5.1",
     "merge": "^2.1.1",
     "mongodb-memory-server": "^8.5.1",
     "prettier": "2.6.2",
     "ts-jest": "^27.1.4"
+  },
+  "optionalDependencies": {
+    "cypress": "^9.6.0",
+    "netlify-cli": "^10.0.0"
   },
   "scripts": {
     "build": "yarn run build:backend && yarn run build:frontend",
@@ -23,10 +27,9 @@
     "build:netlify": "webpack --config ./webpack.netlify.functions.js",
     "posttest": "rimraf ./globalConfig.json",
     "prebuild": "rimraf ./functions",
-    "start": "yarn run build && concurrently \"yarn run watch:backend\" \"yarn run start:backend\" \"yarn run watch:frontend\" \"yarn run start:frontend\" --kill-others",
-    "start:backend": "",
-    "start:frontend": "yarn run build:frontend && http-server ./dist --proxy http://localhost:9000 -a localhost",
-    "test": "jest",
+    "start": "yarn netlify dev --port 8080",
+    "test": "jest --verbose",
+    "test:e2e": "concurrently  \"netlify dev --port 8080\" \"cypress run\" --kill-others",
     "watch:test": "jest --watch --noStackTrace",
     "watch:backend": "tsc -p tsconfig.netlify.functions.json --listEmittedFiles --watch",
     "watch:frontend": "tsc --listEmittedFiles --watch"
@@ -36,21 +39,20 @@
     "@babel/preset-env": "^7.12.1",
     "@babel/preset-typescript": "^7.12.7",
     "@netlify/functions": "^1.0.0",
-    "@types/aws-lambda": "^8.10.64",
+    "@types/aws-lambda": "^8.10.95",
     "@types/node": "^17.0.25",
     "bcryptjs": "^2.4.3",
-    "concurrently": "^7.1.0",
     "dotenv": "^16.0.0",
     "jsonwebtoken": "^8.5.1",
     "mongodb": "^4.5.0",
-    "netlify-cli": "^10.0.0",
     "rimraf": "^3.0.2",
     "ts-loader": "^9.3.0",
     "ts-node": "^10.1.0",
     "typescript": "^4.6.4",
     "uuid": "8.3.2",
     "webpack": "^5.4.0",
-    "webpack-cli": "^4.9.2"
+    "webpack-cli": "^4.9.2",
+    "yarn": "^1.22.18"
   },
   "resolutions": {
     "glob-parent": "^6.0.2"
