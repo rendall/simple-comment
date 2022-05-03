@@ -12,6 +12,15 @@ import type {
   User
 } from "./../../lib/simple-comment"
 
+const trimDash = (slug: string) => slug.replace(/-+$/, "").replace(/^-+/, "")
+const cleanSlug = (slug: string) =>
+  slug.match(/--/) ? cleanSlug(slug.replace(/--/g, "-")) : trimDash(slug)
+
+/** Returns a slugified version of the given string */
+export const toSlug = (x: string) => {
+  const slug = x.toLowerCase().replace(/[^a-z0-9]+/g, "-")
+  return cleanSlug(slug)
+}
 // Set SIMPLE_COMMENT_API_URL variable in the .env file, following example.env
 const SIMPLE_COMMENT_API_URL = process.env.SIMPLE_COMMENT_API_URL
 
@@ -204,7 +213,7 @@ export const getAllTopics = () =>
  * @returns {string} - a slug using only characters: `a-z`, `0-9` and `-`
  */
 export const getDefaultDiscussionId = (title: string = window.location.href) =>
-  title.toLowerCase().replace(/[^a-z0-9 ]/g, "-")
+  toSlug(title)
 
 /** Create a new Topic
  * @async
