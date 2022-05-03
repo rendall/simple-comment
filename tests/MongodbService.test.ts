@@ -1,17 +1,15 @@
-import {
+import type {
   AdminSafeUser,
   AuthToken,
   Comment,
   CommentId,
   DeletedComment,
   Discussion,
-  Email,
   Error,
   NewUser,
   PublicSafeUser,
   Success,
   Topic,
-  TopicId,
   UpdateUser,
   User
 } from "../src/lib/simple-comment"
@@ -40,8 +38,18 @@ import {
   toAdminSafeUser
 } from "../src/lib/utilities"
 import * as fs from "fs"
-import * as dotenv from "dotenv"
-dotenv.config()
+import {
+  alphaUserInput,
+  chooseRandomElement,
+  createRandomCommentTree,
+  createRandomEmail,
+  createRandomGroupUsers,
+  createRandomListOfTopics,
+  createRandomTopic,
+  createRandomUser,
+  randomPassword,
+  randomString
+} from "./mockData"
 
 const MONGO_URI = global.__MONGO_URI__
 const MONGO_DB = global.__MONGO_DB_NAME__
@@ -50,97 +58,6 @@ const MONGO_DB = global.__MONGO_DB_NAME__
 const doDropTestDatabase = true
 
 declare const global: any
-
-const alphaUserInput =
-  "ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÅ abcdefghijklmnopqrstuvwxyzäöå 1234567890 !@#$%^&*()_+-= "
-const alphaAscii =
-  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890_-"
-const emailAscii = "abcdefghijklmnopqrstuvwxyz01234567890"
-const randomNumber = (min: number, max: number): number =>
-  Math.floor(Math.random() * (max - min)) + min
-const randomString = (
-  alpha: string = alphaAscii,
-  len: number = randomNumber(10, 50),
-  str: string = ""
-): string =>
-  len === 0
-    ? str
-    : randomString(
-        alpha,
-        len - 1,
-        `${str}${alpha.charAt(Math.floor(Math.random() * alpha.length))}`
-      )
-const randomDate = () => new Date(randomNumber(0, new Date().valueOf()))
-// Returns a random email that will validate but does not create examples of all possible valid emails
-const createRandomEmail = (): Email =>
-  `${randomString(emailAscii)}@${randomString(emailAscii)}.${randomString(
-    "abcdefghijklmnopqrstuvwxyz",
-    3
-  )}`
-// Functions that generate fake data - these could be moved to a common file to help other Service tests
-const createRandomComment = (
-  parentId: TopicId | CommentId,
-  user: User
-): Comment => ({
-  id: uuidv4(),
-  parentId,
-  userId: user.id,
-  text: randomString(alphaUserInput, randomNumber(50, 500)),
-  dateCreated: new Date()
-})
-const createRandomCommentTree = (
-  replies: number,
-  users: User[],
-  chain: (Comment | Discussion)[]
-): (Comment | Discussion)[] =>
-  replies <= 0
-    ? chain
-    : createRandomCommentTree(replies - 1, users, [
-        ...chain,
-        createRandomComment(
-          chooseRandomElement(chain).id,
-          chooseRandomElement(users)
-        )
-      ])
-const chooseRandomElement = <T>(arr: T[]) =>
-  arr[Math.floor(Math.random() * arr.length)]
-const createRandomGroupUsers = (
-  population: number,
-  users: User[] = []
-): User[] =>
-  population <= 0
-    ? users
-    : createRandomGroupUsers(population - 1, [...users, createRandomUser()])
-
-const createRandomListOfTopics = (
-  num: number = randomNumber(2, 20),
-  topics: Topic[] = []
-): Topic[] =>
-  num <= 0
-    ? topics
-    : createRandomListOfTopics(num - 1, [...topics, createRandomTopic()])
-
-let topicCount = 0
-const getTopicId = prepend => `${prepend}topic-id-${topicCount++}`
-
-const createRandomTopic = (prepend = ""): Topic => ({
-  // id: randomString(alphaAscii, randomNumber(10, 40)),
-  id: getTopicId(prepend),
-  isLocked: false,
-  title: randomString(alphaUserInput, randomNumber(25, 100)),
-  dateCreated: randomDate()
-})
-
-let userCount = 0
-const createUserId = (prepend = "") => `${prepend}user-id-${userCount++}`
-const createRandomUser = (prepend = ""): User => ({
-  id: createUserId(prepend),
-  email: createRandomEmail(),
-  name: randomString(alphaUserInput),
-  isVerified: Math.random() > 0.5,
-  isAdmin: Math.random() > 0.5,
-  hash: randomString(alphaAscii, 32)
-})
 
 //@ts-expect-error
 const adminUnsafeUserProperties: (keyof User)[] = ["hash", "_id", "password"]
@@ -151,12 +68,12 @@ const publicUnsafeUserProperties: (keyof User)[] = [
 ]
 
 // Verification functions
-const isPublicSafeUser = (u: Partial<User>) =>
+const isPublicSafeUser = (u: Partial<User>): u is PublicSafeUser =>
   (Object.keys(u) as (keyof User)[]).every(
     key => !publicUnsafeUserProperties.includes(key)
   )
 
-const isAdminSafeUser = (u: Partial<User>) =>
+const isAdminSafeUser = (u: Partial<User>): u is AdminSafeUser =>
   (Object.keys(u) as (keyof User)[]).every(
     key => !adminUnsafeUserProperties.includes(key)
   )
@@ -164,13 +81,12 @@ const isAdminSafeUser = (u: Partial<User>) =>
 // Fake data objects
 
 const groupUsersTest = createRandomGroupUsers(100)
-let usedUsersTest: User[] = []
 
 const newTopicTest = createRandomTopic("new-")
 const newUserTest: NewUser = {
   ...createRandomUser("new-"),
   isAdmin: false,
-  password: randomString(),
+  password: randomPassword(),
   email: createRandomEmail()
 }
 
@@ -187,13 +103,14 @@ const commentTreeTest = createRandomCommentTree(500, groupUsersTest, topicsTest)
 const authUserTest = {
   ...createRandomUser("auth-"),
   isAdmin: true,
-  password: randomString(),
+  password: randomPassword(),
   email: createRandomEmail()
 }
 
 // Testing randomly from testGroupUsers causes test fails if the user has been
 // deleted or otherwise altered. Using this function ensures that users are not
 // used again
+let usedUsersTest: User[] = []
 const getTargetUser = (p: (u: User) => boolean = (u: User) => true) => {
   const user = chooseRandomElement(
     groupUsersTest
@@ -220,17 +137,15 @@ const newCommentTest: Pick<Comment, "text" | "userId" | "parentId"> = {
   userId: getAuthUser().id
 }
 
-let testAllUsers = []
-let service: MongodbService
-let client: MongoClient
-let db: Db
-
 describe("Full API service test", () => {
+  let testAllUsers = []
+  let service: MongodbService
+  let client: MongoClient
+  let db: Db
+
   beforeAll(async () => {
     const connectionString = MONGO_URI
     const databaseName = MONGO_DB
-
-    // open VeryLongPassword for use later
 
     service = new MongodbService(connectionString, databaseName)
     client = await service.getClient()
@@ -257,8 +172,10 @@ describe("Full API service test", () => {
   // post to auth with unknown credentials should return error 404
   test("POST to auth with unknown user", () => {
     expect.assertions(1)
+    const unknownUserId = randomString();
+    const unknownPassword = randomString(alphaUserInput);
     return service
-      .authPOST(randomString(), randomString(alphaUserInput))
+      .authPOST(unknownUserId, unknownPassword)
       .catch(e => expect(e).toEqual(error404UserUnknown))
   })
   // post to auth with incorrect credentials should return error 401
@@ -316,7 +233,7 @@ describe("Full API service test", () => {
     const guestUser = {
       id,
       name: randomString(alphaUserInput),
-      password: randomString(),
+      password: randomPassword(),
       email: createRandomEmail()
     }
     return service
@@ -329,7 +246,7 @@ describe("Full API service test", () => {
       const newUser = {
         id: randomString(),
         name: randomString(alphaUserInput),
-        password: randomString(),
+        password: randomPassword(),
         email: createRandomEmail()
       }
       return service
@@ -340,7 +257,7 @@ describe("Full API service test", () => {
     test("POST to /user with admin-only properties without credentials should error 403", () => {
       const newUser = {
         ...createRandomUser(),
-        password: randomString(),
+        password: randomPassword(),
         email: createRandomEmail(),
         isAdmin: true
       }
@@ -353,7 +270,7 @@ describe("Full API service test", () => {
     test("POST to /user with admin-only properties without admin credentials should error 403", () => {
       const newUser = {
         ...createRandomUser(),
-        password: randomString(),
+        password: randomPassword(),
         email: createRandomEmail(),
         isAdmin: true
       }
@@ -368,7 +285,7 @@ describe("Full API service test", () => {
     test("POST to /user without admin credentials should fail", () => {
       const newUser = {
         ...createRandomUser(),
-        password: randomString(),
+        password: randomPassword(),
         email: createRandomEmail(),
         isAdmin: false,
         isVerified: false
@@ -381,7 +298,7 @@ describe("Full API service test", () => {
     test("POST to /user without admin credentials should fail", () => {
       const newUser = {
         ...createRandomUser(),
-        password: randomString(),
+        password: randomPassword(),
         email: createRandomEmail(),
         isAdmin: false,
         isVerified: false
@@ -397,7 +314,7 @@ describe("Full API service test", () => {
     const newUser = {
       ...createRandomUser(),
       id: uuidv4(),
-      password: randomString(),
+      password: randomPassword(),
       email: createRandomEmail(),
       isAdmin: false,
       isVerified: false
@@ -632,7 +549,7 @@ describe("Full API service test", () => {
     const guestUser = {
       id,
       name: randomString(alphaUserInput),
-      password: randomString(),
+      password: randomPassword(),
       email: createRandomEmail()
     }
     const adminAuthUser = getAuthUser(u => u.isAdmin)
@@ -659,7 +576,7 @@ describe("Full API service test", () => {
     const guestUser = {
       id,
       name: randomString(alphaUserInput),
-      password: randomString(),
+      password: randomPassword(),
       email: createRandomEmail()
     }
     const adminAuthUser = getAuthUser(u => u.isAdmin)
