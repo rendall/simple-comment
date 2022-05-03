@@ -55,6 +55,7 @@
     "yarn": "^1.22.18"
   },
   "resolutions": {
+    "async": "^2.6.4 || >2",
     "glob-parent": "^6.0.2"
   }
 }

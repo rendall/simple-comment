@@ -14,13 +14,13 @@ export type Headers = { [key: string]: string }
  **/
 export type TokenClaim = { user: UserId; exp: number }
 
-export interface Success<T = string> {
+export type Success<T = string> = {
   statusCode: number
   body: T
   headers?: Headers
 }
 
-export interface Error {
+export type Error = {
   statusCode: number
   body: string
   headers?: Headers
@@ -36,7 +36,7 @@ export type ResolvedResponse<T = string> = {
   body: T
 }
 
-export interface Discussion {
+export type Discussion = {
   _id?: ObjectId
   id: TopicId
   title: string
@@ -54,7 +54,7 @@ export type NewTopic = Pick<
   "id" | "title" | "isLocked" | "dateCreated"
 > & { referer?: string }
 
-export interface Comment {
+export type Comment = {
   _id?: ObjectId
   id: CommentId
   userId: UserId
@@ -66,7 +66,7 @@ export interface Comment {
   dateDeleted?: Date
 }
 
-export interface DeletedComment {
+export type DeletedComment = {
   _id?: ObjectId
   id: CommentId
   userId: null
@@ -77,7 +77,7 @@ export interface DeletedComment {
   dateDeleted: Date
 }
 
-export interface User {
+export type User = {
   _id?: ObjectId
   id: UserId
   name: string
