@@ -38,7 +38,6 @@ describe("Ensures secrets are secret", () => {
     .filter(l => !l.startsWith("#")) // eliminate comments
     .filter(l => l.length > 0) // eliminate blank lines
 
-
   // Are there any entries at all in `example.env`?
   test("example.env has information", () => {
     expect(exampleEnvEntries.length).toBeGreaterThan(0)

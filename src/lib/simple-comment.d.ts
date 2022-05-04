@@ -43,6 +43,7 @@ export type Discussion = {
   isLocked: boolean
   replies?: Comment[]
   dateCreated: Date
+  dateDeleted?: Date
 }
 
 export type Topic = Pick<

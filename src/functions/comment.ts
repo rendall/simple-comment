@@ -1,5 +1,5 @@
 import * as dotenv from "dotenv"
-import type { APIGatewayEvent, Callback, Context } from "aws-lambda"
+import type { APIGatewayEvent } from "aws-lambda"
 import { CommentId, Success, Error, Comment } from "../lib/simple-comment"
 import { MongodbService } from "../lib/MongodbService"
 import {
@@ -34,7 +34,7 @@ const getAllowHeaders = (event: APIGatewayEvent) => {
   return headers
 }
 
-export const handler = async (event: APIGatewayEvent, context: Context) => {
+export const handler = async (event: APIGatewayEvent) => {
   const dirs = event.path.split("/")
   const isValidPath = dirs.length <= 5
   const headers = getAllowHeaders(event)

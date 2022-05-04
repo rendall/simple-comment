@@ -126,6 +126,7 @@ export const postAuth = (user: string, password: string) => {
   const credentials: RequestCredentials = "include"
   const encode = `${user}:${password}`
 
+  // eslint-disable-next-line no-control-regex
   const nonAsciiChars = encode.match(/[^\x00-\x7F]/g)
 
   //TODO: Allow UTF-8 chars
@@ -243,7 +244,7 @@ export const createNewTopic = (id, title, isLocked = false) => {
  * @param obj {object}
  * @returns {string}
  */
-export const objToQuery = (obj: {}) =>
+export const objToQuery = <T>(obj: T) =>
   Object.entries(obj)
     .map(entry => `${entry[0]}=${entry[1]}`)
     .join("&")

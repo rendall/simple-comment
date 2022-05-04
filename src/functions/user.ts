@@ -1,5 +1,5 @@
 import * as dotenv from "dotenv"
-import type { APIGatewayEvent, APIGatewayEventRequestContext } from "aws-lambda"
+import type { APIGatewayEvent } from "aws-lambda"
 import {
   error404CommentNotFound,
   error405MethodNotAllowed,
@@ -44,8 +44,7 @@ const getAllowHeaders = (event: APIGatewayEvent) => {
 }
 
 export const handler = async (
-  event: APIGatewayEvent,
-  context: APIGatewayEventRequestContext
+  event: APIGatewayEvent
 ) => {
   const dirs = event.path.split("/")
   const isValidPath = dirs.length <= 5

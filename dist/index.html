@@ -1,351 +1,373 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-  <title>Simple Comment</title>
-  <meta name="viewport" content="width=device-width">
-  <meta name="description" content="Simple Comment is a free, self-hosted, open-source commenting system">
-  <meta name="twitter:card" content="summary" />
-  <meta name="twitter:url" content="http://simple-comment.netlify.app" />
-  <meta name="twitter:title" content="Simple Comment" />
-  <meta name="twitter:description" content="Simple Comment is a free, self-hosted, open-source commenting system" />
-  <meta name="twitter:image" content="https://simple-comment.netlify.app/img/twitter-card-logo.png" />
-  <meta name="twitter:image:alt" content="Simple Comment logo: thought bubble with a slight smile" />
-  <meta name="twitter:site" content="@rendall" />
-  <style>
-    @font-face {
-      font-family: "Comfortaa";
-      font-style: normal;
-      font-weight: 500;
-      font-display: block;
-      src: url(./font/simple-comment.woff2) format("woff2");
-    }
-
-    body {
-      -moz-osx-font-smoothing: grayscale;
-      -webkit-font-smoothing: antialiased;
-      background-color: #f8fcff;
-      color: #33475c;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica,
-        Arial, sans-serif;
-      font-size: 1.125rem;
-      line-height: 1.61111em;
-      margin-bottom: 1em;
-      margin-top: 1em;
-      margin: 0 auto;
-      padding: 0 1rem;
-    }
-
-    main {
-      max-width: 38rem;
-      margin: 0 auto;
-    }
-
-    h1,
-    h2 {
-      color: #3287e6;
-    }
-
-    h1 {
-      font-family: "Comfortaa", sans-serif;
-      font-size: 3.4rem;
-      font-weight: 500;
-      line-height: 4rem;
-      margin-left: 1rem;
-    }
-
-    details {
-      margin-bottom: 1rem;
-    }
-
-    summary:focus {
-      outline-color: #3287e6;
-      outline-style: solid;
-    }
-
-    summary h2 {
-      cursor: help;
-      display: inline;
-      font-weight: normal;
-    }
-
-    summary::marker,
-    summary::-webkit-details-marker {
-      color: #3287e6;
-    }
-
-    input {
-      height: 2rem;
-      width: 100%;
-      font-size: 1.35rem;
-      padding: 0.5rem;
-      border-radius: 0.5rem;
-      border: 1px solid;
-      font-family: monospace;
-    }
-
-    textarea {
-      display: block;
-      height: 7rem;
-      width: 100%;
-      border-radius: 0.5rem;
-      border: 1px solid;
-      font-size: 1.35rem;
-      padding: 0.5rem;
-      font-family: monospace;
-    }
-
-    button:hover {
-      font-weight: bold;
-    }
-
-    button {
-      appearance: none;
-      border: none;
-      background: transparent;
-      background-color: transparent;
-      cursor: pointer;
-      font-size: inherit;
-      padding: 0.5rem 1rem;
-      width: 7rem;
-      text-align: center;
-      border: 1px solid;
-      border-radius: 0.65rem;
-      margin: 0.5rem 1rem 0.5rem 0;
-    }
-
-    a:hover {
-      color: #007b8c;
-      text-decoration: underline;
-    }
-
-    a {
-      color: #3287e6;
-      font-weight: 600;
-      text-decoration: none;
-    }
-
-    a[title] {
-      color: unset;
-    }
-
-    textarea#reply-field {
-      display: block;
-      width: 100%;
-      height: 7rem;
-    }
-
-    header {
-      display: flex;
-      margin: 0 auto;
-      max-width: 59rem;
-      min-height: 10rem;
-      align-items: center;
-    }
-
-    #discussion-title {
-      display: none;
-    }
-
-    #login-pulser {
-      display: none;
-    }
-
-    .is-logging-in #login-pulser {
-      display: inline;
-    }
-
-    #log-out-button {
-      display: none;
-    }
-
-    .is-logged-in:not(.is-guest) #log-out-button {
-      display: unset;
-    }
-
-    .is-logged-in #log-in-form {
-      display: none;
-    }
-
-    .is-logged-in .user-info {
-      display: none;
-    }
-
-    .is-logged-in:not(.is-guest) .sign-up-form {
-      display: none;
-    }
-
-    .is-error,
-    .error {
-      font-weight: bold;
-      color: red;
-    }
-
-    .is-reply>.comment-display .comment-button {
-      display: none;
-    }
-
-    .is-deleted {
-      font-style: italic;
-      opacity: 0.5;
-    }
-
-    .is-deleted>.comment-button {
-      display: none;
-    }
-
-    .simple-comment-logo {
-      max-width: 9.1rem;
-      min-width: 9.1rem;
-      fill: #3287e6;
-    }
-
-    #user-display {
-      display: none;
-    }
-
-    @media (max-width: 1024px) {
-      main {
-        margin: 0 1rem;
-        max-width: unset;
+  <head>
+    <title>Simple Comment</title>
+    <meta name="viewport" content="width=device-width" />
+    <meta
+      name="description"
+      content="Simple Comment is a free, self-hosted, open-source commenting system"
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:url" content="http://simple-comment.netlify.app" />
+    <meta name="twitter:title" content="Simple Comment" />
+    <meta
+      name="twitter:description"
+      content="Simple Comment is a free, self-hosted, open-source commenting system"
+    />
+    <meta
+      name="twitter:image"
+      content="https://simple-comment.netlify.app/img/twitter-card-logo.png"
+    />
+    <meta
+      name="twitter:image:alt"
+      content="Simple Comment logo: thought bubble with a slight smile"
+    />
+    <meta name="twitter:site" content="@rendall" />
+    <style>
+      @font-face {
+        font-family: "Comfortaa";
+        font-style: normal;
+        font-weight: 500;
+        font-display: block;
+        src: url(./font/simple-comment.woff2) format("woff2");
       }
-    }
-  </style>
-</head>
 
-<body>
-  <header>
-    <svg class="simple-comment-logo" version="1.1" viewBox="0 0 100 100" alt="thought bubble with a slight smile"
-      xmlns="http://www.w3.org/2000/svg">
-      <g>
-        <path
-          d="m46 85c21.5 0 39-17.5 39-39s-17.5-39-39-39-39 17.5-39 39 17.5 39 39 39zm0-72c18.2 0 33 14.8 33 33s-14.8 33-33 33-33-14.8-33-33 14.8-33 33-33z" />
-        <path
-          d="m85 70c-6.1 0-11 4.9-11 11s4.9 11 11 11 11-4.9 11-11-4.9-11-11-11zm0 16c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5z" />
-        <path
-          d="m56.556 64.256c0.35703 0.5068 0.52028 1.2218 0.45101 1.9172-0.06927 0.6954-0.37105 1.3712-0.7996 1.7998-0.54481 0.54481-0.64263 0.58032-1.7353 1.024-0.68257 0.27717-1.403 0.49272-1.9625 0.65426-3.5641 1.0291-7.8801 1.2642-12.291 0.17319-3.2701-0.80885-6.2699-2.0519-9.071-4.2971-0.31699-0.25408-1.013-0.78589-1.6664-1.4256-0.86735-0.84913-1.2642-1.3872-1.4109-2.0727-0.24261-1.1338 0.06065-2.3418 1.0548-3.139 0.78048-0.62586 1.8562-0.89826 2.8498-0.55506 1.4285 0.49345 1.6014 1.456 3.6314 2.8214 2.7645 1.8595 5.852 2.8247 8.2841 3.0799 3.3325 0.34962 5.9132-0.05166 8.3445-0.99169 0.94158-0.36405 1.3842-0.59561 2.4605-0.3451 0.88913 0.20696 1.4417 0.76162 1.8607 1.3564z" />
-      </g>
-    </svg>
+      body {
+        -moz-osx-font-smoothing: grayscale;
+        -webkit-font-smoothing: antialiased;
+        background-color: #f8fcff;
+        color: #33475c;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica,
+          Arial, sans-serif;
+        font-size: 1.125rem;
+        line-height: 1.61111em;
+        margin-bottom: 1em;
+        margin-top: 1em;
+        margin: 0 auto;
+        padding: 0 1rem;
+      }
 
-    <h1>Simple Comment</h1>
-  </header>
-  <main>
-    <p>Welcome to <i>Simple Comment</i></p>
+      main {
+        max-width: 38rem;
+        margin: 0 auto;
+      }
 
-    <details open>
-      <summary>
-        <h2>Intro</h2>
-      </summary>
-      <p>
-        I wanted a commenting system for my blog, but the available solutions
-        (and there are many) were not quite right. I wanted to care for my
-        visitors' data and privacy, but many of the most popular solutions do
-        not value user privacy and sell user data. Other solutions are easy to
-        use, but require ongoing payment. Others are free and open-source, but
-        require maintaining a server. I looked for a solution that was
-        serverless, open source, configurable, had a free tier across the
-        entire tech stack, and in which user data was sacrosanct. A tall
-        order. Not finding it, I decided to build it. This became
-        <i>Simple Comment</i>.
-      </p>
-    </details>
+      h1,
+      h2 {
+        color: #3287e6;
+      }
 
-    <details>
-      <summary>
-        <h2>Tech stack</h2>
-      </summary>
-      <p>
-        <a href="https://www.netlify.com/">Netlify</a>, among others, has a
-        free-tier offering. If your site is personal, traffic is low and your
-        build process is quick, they will host your website for free. They
-        also will host your lambda functions, which make excellent API
-        endpoints. If your site earns more traffic, Netlify will scale with
-        you.
-      </p>
-      <p>
-        <a href="https://www.mongodb.com/cloud/atlas">MongoDB Atlas</a> also
-        has a free-tier offering and its document-based indexing is great for
-        a commenting system. If your data needs are under 500MB, they will
-        host your data for free, and also will scale up as needed.
-      </p>
-      <p>
-        The free-tier offerings and my personal familiarity with these
-        services drove the initial tech stack, but <i>Simple Comment</i> is
-        designed from the ground up to be modular, not tightly coupled to
-        particulare services, so others (e.g. Vercel, PostgreSQL) can be
-        swapped in with relative ease
-      </p>
-    </details>
+      h1 {
+        font-family: "Comfortaa", sans-serif;
+        font-size: 3.4rem;
+        font-weight: 500;
+        line-height: 4rem;
+        margin-left: 1rem;
+      }
 
-    <details>
-      <summary>
-        <h2>Open-source & usability</h2>
-      </summary>
-      <p>
-        I also wanted others to be able to use it and make it their own. If a
-        non-technical person can follow step-by-step instructions, they can
-        add <i>Simple Comment</i> to their website. If a developer prefers to
-        use PostgreSQL instead of MongoDB, or Vercel instead of Netlify, or
-        Auth0 instead of the <i>Simple Comment</i> homegrown auth, I want
-        those to be easy to swap in. The primary goal is clear documentation,
-        intuitive API, a "just works" setup, and a friendly developer
-        community.
-      </p>
-      <p>
-        <i>Simple Comment</i>'s source code is available here:
-        <a href="https://github.com/rendall/simple-comment">
-          https://github.com/rendall/simple-comment
-        </a>
-      </p>
-    </details>
+      details {
+        margin-bottom: 1rem;
+      }
 
-    <details>
-      <summary>
-        <h2>Philosophy and larger mission</h2>
-      </summary>
-      <p>
-        As a very light aside, I would like <i>Simple Comment</i> and
-        similarly-minded projects to be part of a movement to distribute and
-        diversify social media and the web, to move social media out of walled
-        gardens and monetization business models. I believe the promise of
-        social media as the grand, ubiquitous unifier of humanity will only be
-        fulfilled when all of us control our own online presences and curate
-        our own feeds at minimal or no cost. I hope <em>Simple Comment</em> can
-        be one humble beachhead in that endeavor.
-      </p>
-    </details>
+      summary:focus {
+        outline-color: #3287e6;
+        outline-style: solid;
+      }
 
-    <details>
-      <summary>
-        <h2>Status</h2>
-      </summary>
-      <p>
-        For now, it's an
-        <a href="https://en.wikipedia.org/wiki/Minimum_viable_product" title="minimum viable product">MVP</a>
-        good enough for
-        <a href="https://blog.rendall.dev">my personal blog</a>, and its quite
-        rough compared to my ambitions for it. Now that the API works as
-        expected the next priority is to extend the same care and love to the
-        frontend and user experience.
-      </p>
-    </details>
+      summary h2 {
+        cursor: help;
+        display: inline;
+        font-weight: normal;
+      }
 
-    <details open>
-      <summary>
-        <h2>Feedback</h2>
-      </summary>
-      <p>
-        I would be grateful for your input. If you want it for your website, I
-        will work with you. Let's collaborate to make it happen! If you have
-        any thoughts, comments, feedback of any kind, including negative
-        feedback, I'm open to hearing it. Leave a comment here, or
-        <a href="https://www.rendall.dev/">contact me</a>.
-      </p>
-    </details>
+      summary::marker,
+      summary::-webkit-details-marker {
+        color: #3287e6;
+      }
 
-    <div id="simple-comment-display"></div>
-  </main>
-  <script type="module" src="./js/simple-comment.js" defer></script>
-</body>
+      input {
+        height: 2rem;
+        width: 100%;
+        font-size: 1.35rem;
+        padding: 0.5rem;
+        border-radius: 0.5rem;
+        border: 1px solid;
+        font-family: monospace;
+      }
 
+      textarea {
+        display: block;
+        height: 7rem;
+        width: 100%;
+        border-radius: 0.5rem;
+        border: 1px solid;
+        font-size: 1.35rem;
+        padding: 0.5rem;
+        font-family: monospace;
+      }
+
+      button:hover {
+        font-weight: bold;
+      }
+
+      button {
+        appearance: none;
+        border: none;
+        background: transparent;
+        background-color: transparent;
+        cursor: pointer;
+        font-size: inherit;
+        padding: 0.5rem 1rem;
+        width: 7rem;
+        text-align: center;
+        border: 1px solid;
+        border-radius: 0.65rem;
+        margin: 0.5rem 1rem 0.5rem 0;
+      }
+
+      a:hover {
+        color: #007b8c;
+        text-decoration: underline;
+      }
+
+      a {
+        color: #3287e6;
+        font-weight: 600;
+        text-decoration: none;
+      }
+
+      a[title] {
+        color: unset;
+      }
+
+      textarea#reply-field {
+        display: block;
+        width: 100%;
+        height: 7rem;
+      }
+
+      header {
+        display: flex;
+        margin: 0 auto;
+        max-width: 59rem;
+        min-height: 10rem;
+        align-items: center;
+      }
+
+      #discussion-title {
+        display: none;
+      }
+
+      #login-pulser {
+        display: none;
+      }
+
+      .is-logging-in #login-pulser {
+        display: inline;
+      }
+
+      #log-out-button {
+        display: none;
+      }
+
+      .is-logged-in:not(.is-guest) #log-out-button {
+        display: unset;
+      }
+
+      .is-logged-in #log-in-form {
+        display: none;
+      }
+
+      .is-logged-in .user-info {
+        display: none;
+      }
+
+      .is-logged-in:not(.is-guest) .sign-up-form {
+        display: none;
+      }
+
+      .is-error,
+      .error {
+        font-weight: bold;
+        color: red;
+      }
+
+      .is-reply > .comment-display .comment-button {
+        display: none;
+      }
+
+      .is-deleted {
+        font-style: italic;
+        opacity: 0.5;
+      }
+
+      .is-deleted > .comment-button {
+        display: none;
+      }
+
+      .simple-comment-logo {
+        max-width: 9.1rem;
+        min-width: 9.1rem;
+        fill: #3287e6;
+      }
+
+      #user-display {
+        display: none;
+      }
+
+      @media (max-width: 1024px) {
+        main {
+          margin: 0 1rem;
+          max-width: unset;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <header>
+      <svg
+        class="simple-comment-logo"
+        version="1.1"
+        viewBox="0 0 100 100"
+        alt="thought bubble with a slight smile"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <g>
+          <path
+            d="m46 85c21.5 0 39-17.5 39-39s-17.5-39-39-39-39 17.5-39 39 17.5 39 39 39zm0-72c18.2 0 33 14.8 33 33s-14.8 33-33 33-33-14.8-33-33 14.8-33 33-33z"
+          />
+          <path
+            d="m85 70c-6.1 0-11 4.9-11 11s4.9 11 11 11 11-4.9 11-11-4.9-11-11-11zm0 16c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5z"
+          />
+          <path
+            d="m56.556 64.256c0.35703 0.5068 0.52028 1.2218 0.45101 1.9172-0.06927 0.6954-0.37105 1.3712-0.7996 1.7998-0.54481 0.54481-0.64263 0.58032-1.7353 1.024-0.68257 0.27717-1.403 0.49272-1.9625 0.65426-3.5641 1.0291-7.8801 1.2642-12.291 0.17319-3.2701-0.80885-6.2699-2.0519-9.071-4.2971-0.31699-0.25408-1.013-0.78589-1.6664-1.4256-0.86735-0.84913-1.2642-1.3872-1.4109-2.0727-0.24261-1.1338 0.06065-2.3418 1.0548-3.139 0.78048-0.62586 1.8562-0.89826 2.8498-0.55506 1.4285 0.49345 1.6014 1.456 3.6314 2.8214 2.7645 1.8595 5.852 2.8247 8.2841 3.0799 3.3325 0.34962 5.9132-0.05166 8.3445-0.99169 0.94158-0.36405 1.3842-0.59561 2.4605-0.3451 0.88913 0.20696 1.4417 0.76162 1.8607 1.3564z"
+          />
+        </g>
+      </svg>
+
+      <h1>Simple Comment</h1>
+    </header>
+    <main>
+      <p>Welcome to <i>Simple Comment</i></p>
+
+      <details open>
+        <summary>
+          <h2>Intro</h2>
+        </summary>
+        <p>
+          I wanted a commenting system for my blog, but the available solutions
+          (and there are many) were not quite right. I wanted to care for my
+          visitors' data and privacy, but many of the most popular solutions do
+          not value user privacy and sell user data. Other solutions are easy to
+          use, but require ongoing payment. Others are free and open-source, but
+          require maintaining a server. I looked for a solution that was
+          serverless, open source, configurable, had a free tier across the
+          entire tech stack, and in which user data was sacrosanct. A tall
+          order. Not finding it, I decided to build it. This became
+          <i>Simple Comment</i>.
+        </p>
+      </details>
+
+      <details>
+        <summary>
+          <h2>Tech stack</h2>
+        </summary>
+        <p>
+          <a href="https://www.netlify.com/">Netlify</a>, among others, has a
+          free-tier offering. If your site is personal, traffic is low and your
+          build process is quick, they will host your website for free. They
+          also will host your lambda functions, which make excellent API
+          endpoints. If your site earns more traffic, Netlify will scale with
+          you.
+        </p>
+        <p>
+          <a href="https://www.mongodb.com/cloud/atlas">MongoDB Atlas</a> also
+          has a free-tier offering and its document-based indexing is great for
+          a commenting system. If your data needs are under 500MB, they will
+          host your data for free, and also will scale up as needed.
+        </p>
+        <p>
+          The free-tier offerings and my personal familiarity with these
+          services drove the initial tech stack, but <i>Simple Comment</i> is
+          designed from the ground up to be modular, not tightly coupled to
+          particulare services, so others (e.g. Vercel, PostgreSQL) can be
+          swapped in with relative ease
+        </p>
+      </details>
+
+      <details>
+        <summary>
+          <h2>Open-source & usability</h2>
+        </summary>
+        <p>
+          I also wanted others to be able to use it and make it their own. If a
+          non-technical person can follow step-by-step instructions, they can
+          add <i>Simple Comment</i> to their website. If a developer prefers to
+          use PostgreSQL instead of MongoDB, or Vercel instead of Netlify, or
+          Auth0 instead of the <i>Simple Comment</i> homegrown auth, I want
+          those to be easy to swap in. The primary goal is clear documentation,
+          intuitive API, a "just works" setup, and a friendly developer
+          community.
+        </p>
+        <p>
+          <i>Simple Comment</i>'s source code is available here:
+          <a href="https://github.com/rendall/simple-comment">
+            https://github.com/rendall/simple-comment
+          </a>
+        </p>
+      </details>
+
+      <details>
+        <summary>
+          <h2>Philosophy and larger mission</h2>
+        </summary>
+        <p>
+          As a very light aside, I would like <i>Simple Comment</i> and
+          similarly-minded projects to be part of a movement to distribute and
+          diversify social media and the web, to move social media out of walled
+          gardens and monetization business models. I believe the promise of
+          social media as the grand, ubiquitous unifier of humanity will only be
+          fulfilled when all of us control our own online presences and curate
+          our own feeds at minimal or no cost. I hope
+          <em>Simple Comment</em> can be one humble beachhead in that endeavor.
+        </p>
+      </details>
+
+      <details>
+        <summary>
+          <h2>Status</h2>
+        </summary>
+        <p>
+          For now, it's an
+          <a
+            href="https://en.wikipedia.org/wiki/Minimum_viable_product"
+            title="minimum viable product"
+            >MVP</a
+          >
+          good enough for
+          <a href="https://blog.rendall.dev">my personal blog</a>, and its quite
+          rough compared to my ambitions for it. Now that the API works as
+          expected the next priority is to extend the same care and love to the
+          frontend and user experience.
+        </p>
+      </details>
+
+      <details open>
+        <summary>
+          <h2>Feedback</h2>
+        </summary>
+        <p>
+          I would be grateful for your input. If you want it for your website, I
+          will work with you. Let's collaborate to make it happen! If you have
+          any thoughts, comments, feedback of any kind, including negative
+          feedback, I'm open to hearing it. Leave a comment here, or
+          <a href="https://www.rendall.dev/">contact me</a>.
+        </p>
+      </details>
+
+      <div id="simple-comment-display"></div>
+    </main>
+    <script type="module" src="./js/simple-comment.js" defer></script>
+  </body>
 </html>
