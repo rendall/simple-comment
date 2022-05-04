@@ -12,16 +12,21 @@ import type {
   User
 } from "./../../lib/simple-comment"
 
-let SIMPLE_COMMENT_API_URL = "https://blog-rendall-dev-comments.netlify.app"
+const trimDash = (slug: string) => slug.replace(/-+$/, "").replace(/^-+/, "")
+const cleanSlug = (slug: string) =>
+  slug.match(/--/) ? cleanSlug(slug.replace(/--/g, "-")) : trimDash(slug)
 
-export const setSimpleCommentApiUrl = (url: string) =>
-  (SIMPLE_COMMENT_API_URL = url)
+/** Returns a slugified version of the given string */
+export const toSlug = (x: string) => {
+  const slug = x.toLowerCase().replace(/[^a-z0-9]+/g, "-")
+  return cleanSlug(slug)
+}
+// Set SIMPLE_COMMENT_API_URL variable in the .env file, following example.env
+const SIMPLE_COMMENT_API_URL = process.env.SIMPLE_COMMENT_API_URL
 
 const getSimpleCommentURL = () => {
   if (SIMPLE_COMMENT_API_URL === undefined)
-    throw new Error(
-      "Simple comment URL is not set. Call `setSimpleCommentApiUrl(<api url>)`"
-    )
+    throw new Error("Simple comment URL is not set. ")
   else return SIMPLE_COMMENT_API_URL
 }
 
@@ -29,7 +34,7 @@ const getSimpleCommentURL = () => {
  * @returns {ResolvedResponse<AuthToken>}
  */
 export const getGuestToken = () =>
-  fetch(`${getSimpleCommentURL()}/.netlify/functions/gauth`, {
+  fetch(`${getSimpleCommentURL()}/gauth`, {
     credentials: "include"
   }).then(res => resolveBody<AuthToken>(res))
 
@@ -39,7 +44,7 @@ export const getGuestToken = () =>
  * @returns {ResolvedResponse<TokenClaim>}
  */
 export const verifyUser = () =>
-  fetch(`${getSimpleCommentURL()}/.netlify/functions/verify`, {
+  fetch(`${getSimpleCommentURL()}/verify`, {
     credentials: "include"
   }).then(res => resolveBody<TokenClaim>(res))
 
@@ -49,7 +54,7 @@ export const verifyUser = () =>
  * @returns {ResolvedResponse<User[]>}
  */
 export const getAllUsers = () =>
-  fetch(`${getSimpleCommentURL()}/.netlify/functions/user`, {
+  fetch(`${getSimpleCommentURL()}/user`, {
     credentials: "include"
   }).then(res => resolveBody<AdminSafeUser[] | PublicSafeUser[]>(res))
 
@@ -60,7 +65,7 @@ export const getAllUsers = () =>
  * @returns {ResolvedResponse<User>}
  */
 export const getOneUser = (userId: UserId) =>
-  fetch(`${getSimpleCommentURL()}/.netlify/functions/user/${userId}`, {
+  fetch(`${getSimpleCommentURL()}/user/${userId}`, {
     credentials: "include"
   }).then(res => resolveBody<AdminSafeUser | PublicSafeUser>(res))
 
@@ -71,7 +76,7 @@ export const getOneUser = (userId: UserId) =>
  * @returns {ResolvedResponse<User>}
  */
 export const createUser = (newUserInfo: NewUser) =>
-  fetch(`${getSimpleCommentURL()}/.netlify/functions/user/`, {
+  fetch(`${getSimpleCommentURL()}/user/`, {
     body: objToQuery(newUserInfo),
     method: "POST",
     credentials: "include"
@@ -84,7 +89,7 @@ export const createUser = (newUserInfo: NewUser) =>
  * @returns {ResolvedResponse<User>}
  */
 export const updateUser = (userInfo: User) =>
-  fetch(`${getSimpleCommentURL()}/.netlify/functions/user/${userInfo.id}`, {
+  fetch(`${getSimpleCommentURL()}/user/${userInfo.id}`, {
     body: objToQuery(userInfo),
     method: "PUT",
     credentials: "include"
@@ -107,7 +112,7 @@ export const createGuestUser = (userInfo: {
  * @returns {ResolvedResponse}
  */
 export const deleteAuth = () =>
-  fetch(`${getSimpleCommentURL()}/.netlify/functions/auth`, {
+  fetch(`${getSimpleCommentURL()}/auth`, {
     method: "DELETE",
     credentials: "include"
   }).then(res => resolveBody(res))
@@ -121,6 +126,7 @@ export const postAuth = (user: string, password: string) => {
   const credentials: RequestCredentials = "include"
   const encode = `${user}:${password}`
 
+  // eslint-disable-next-line no-control-regex
   const nonAsciiChars = encode.match(/[^\x00-\x7F]/g)
 
   //TODO: Allow UTF-8 chars
@@ -145,10 +151,9 @@ export const postAuth = (user: string, password: string) => {
     }
   }
 
-  return fetch(
-    `${getSimpleCommentURL()}/.netlify/functions/auth`,
-    authReqInfo
-  ).then(res => resolveBody<AuthToken>(res))
+  return fetch(`${getSimpleCommentURL()}/auth`, authReqInfo).then(res =>
+    resolveBody<AuthToken>(res)
+  )
 }
 
 // COMMENT
@@ -161,7 +166,7 @@ export const postAuth = (user: string, password: string) => {
  * @returns {ResolvedResponse}
  */
 export const postComment = (targetId, text) =>
-  fetch(`${getSimpleCommentURL()}/.netlify/functions/comment/${targetId}`, {
+  fetch(`${getSimpleCommentURL()}/comment/${targetId}`, {
     body: text,
     method: "POST",
     credentials: "include"
@@ -174,7 +179,7 @@ export const postComment = (targetId, text) =>
  * @return {ResolvedResponse}
  */
 export const deleteComment = commentId =>
-  fetch(`${getSimpleCommentURL()}/.netlify/functions/comment/${commentId}`, {
+  fetch(`${getSimpleCommentURL()}/comment/${commentId}`, {
     method: "DELETE",
     credentials: "include"
   }).then(res => resolveBody(res))
@@ -189,7 +194,7 @@ export const deleteComment = commentId =>
  * @returns {Discussion}
  */
 export const getOneDiscussion = topicId =>
-  fetch(`${getSimpleCommentURL()}/.netlify/functions/topic/${topicId}`, {
+  fetch(`${getSimpleCommentURL()}/topic/${topicId}`, {
     credentials: "include"
   }).then(res => resolveBody<Discussion>(res))
 
@@ -199,7 +204,7 @@ export const getOneDiscussion = topicId =>
  * @returns {Topic[]}
  */
 export const getAllTopics = () =>
-  fetch(`${getSimpleCommentURL()}/.netlify/functions/topic`, {
+  fetch(`${getSimpleCommentURL()}/topic`, {
     credentials: "include"
   }).then(res => resolveBody<Topic[]>(res))
 
@@ -209,7 +214,7 @@ export const getAllTopics = () =>
  * @returns {string} - a slug using only characters: `a-z`, `0-9` and `-`
  */
 export const getDefaultDiscussionId = (title: string = window.location.href) =>
-  title.toLowerCase().replace(/[^a-z0-9 ]/g, "-")
+  toSlug(title)
 
 /** Create a new Topic
  * @async
@@ -227,10 +232,9 @@ export const createNewTopic = (id, title, isLocked = false) => {
     credentials
   }
 
-  return fetch(
-    `${getSimpleCommentURL()}/.netlify/functions/topic`,
-    authReqInfo
-  ).then(res => resolveBody(res))
+  return fetch(`${getSimpleCommentURL()}/topic`, authReqInfo).then(res =>
+    resolveBody(res)
+  )
 }
 
 // UTILITY
@@ -240,7 +244,7 @@ export const createNewTopic = (id, title, isLocked = false) => {
  * @param obj {object}
  * @returns {string}
  */
-export const objToQuery = (obj: {}) =>
+export const objToQuery = <T>(obj: T) =>
   Object.entries(obj)
     .map(entry => `${entry[0]}=${entry[1]}`)
     .join("&")
@@ -298,3 +302,4 @@ export const getHttpCookie = (elem: HTMLElement, url: string) =>
       reject(error)
     }
   })
+

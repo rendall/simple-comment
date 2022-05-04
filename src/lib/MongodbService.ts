@@ -17,16 +17,7 @@ import type {
   TokenClaim,
   NewTopic
 } from "./simple-comment"
-import {
-  Collection,
-  Cursor,
-  Db,
-  FindAndModifyWriteOpResultObject,
-  FindOneOptions,
-  InsertOneWriteOpResult,
-  MongoClient,
-  WithId
-} from "mongodb"
+import { Collection, Db, MongoClient, WithId } from "mongodb"
 import { Service } from "./Service"
 import {
   adminOnlyModifiableUserProperties,
@@ -59,7 +50,7 @@ import {
   error409DuplicateTopic,
   error409UserExists,
   error413CommentTooLong,
-  error500ServerError,
+  error500UpdateError,
   success200OK,
   success201UserCreated,
   success202CommentDeleted,
@@ -72,23 +63,23 @@ import {
 import { comparePassword, getAuthToken, hashPassword, uuidv4 } from "./crypt"
 import * as jwt from "jsonwebtoken"
 export class MongodbService extends Service {
-  private isProduction = process.env.SIMPLE_COMMENT_MODE === "production"
+  private isCrossSite = process.env.IS_CROSS_SITE === "true"
   private _client: MongoClient
   private _db: Db
   readonly _connectionString: string
   readonly _dbName: string
 
   getClient = async () => {
-    if (this._client && this._client.isConnected()) return this._client
-    this._client = await MongoClient.connect(this._connectionString, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    })
+    if (this._client) {
+      this._client.connect() // if already connected, this is a no-op
+      return this._client
+    }
+    this._client = await MongoClient.connect(this._connectionString)
     return this._client
   }
 
   getDb = async () => {
-    if (this._db && this._client.isConnected()) return this._db
+    if (this._db) return this._db
     const client = await this.getClient()
     this._db = await client.db(this._dbName)
     return this._db
@@ -110,7 +101,7 @@ export class MongodbService extends Service {
       this.getDb()
         .then(db => db.collection("users"))
         .then(users => users.findOne({ id: userid }))
-        .then(async (user: User) => {
+        .then(async user => {
           if (user === null) {
             // User is unknown. Reject them unless they claim to be Big Moderator
             if (userid !== process.env.SIMPLE_COMMENT_MODERATOR_ID) {
@@ -160,8 +151,7 @@ export class MongodbService extends Service {
       if (!authUserId && !policy.canPublicCreateUser) {
         reject({
           ...error401UserNotAuthenticated,
-          body:
-            "Policy violation: no authentication and canPublicCreateUser is false"
+          body: "Policy violation: no authentication and canPublicCreateUser is false"
         })
         return
       }
@@ -173,8 +163,7 @@ export class MongodbService extends Service {
       ) {
         reject({
           ...error401UserNotAuthenticated,
-          body:
-            "Policy violation: guest authentication and both canGuestCreateUsercan and PublicCreateUser is false"
+          body: "Policy violation: guest authentication and both canGuestCreateUsercan and PublicCreateUser is false"
         })
         return
       }
@@ -234,9 +223,7 @@ export class MongodbService extends Service {
         return
       }
 
-      const hasAdminOnlyProps = adminOnlyModifiableUserProperties.some(prop =>
-        newUser.hasOwnProperty(prop)
-      )
+      const hasAdminOnlyProps = adminOnlyModifiableUserProperties.some(prop => prop in newUser)
 
       if (hasAdminOnlyProps && (!authUser || !authUser.isAdmin)) {
         const adminOnlyProp = Object.keys(newUser).find(prop =>
@@ -270,12 +257,14 @@ export class MongodbService extends Service {
         ? adminSafeUser
         : ({ ...adminSafeUser, hash } as User)
 
-      users
-        .insertOne(user)
-        .then((result: InsertOneWriteOpResult<WithId<User>>) => {
-          const body = toAdminSafeUser(user)
-          resolve({ ...success201UserCreated, body })
-        })
+      users.insertOne(user).then(result => {
+        if (!result.acknowledged) {
+          reject(error500UpdateError)
+          return
+        }
+        const body = toAdminSafeUser(user)
+        resolve({ ...success201UserCreated, body })
+      })
     })
 
   /**
@@ -349,7 +338,7 @@ export class MongodbService extends Service {
    **/
   userListGET = (authUserId?: UserId) =>
     new Promise<Success<AdminSafeUser[] | PublicSafeUser[]> | Error>(
-      async (resolve, reject) => {
+      async (resolve) => {
         const usersCollection: Collection<User> = (
           await this.getDb()
         ).collection("users")
@@ -429,9 +418,9 @@ export class MongodbService extends Service {
           "isAdmin",
           "email"
         ]
-        const isForbidden = (Object.keys(
-          user
-        ) as (keyof UpdateUser)[]).some(key => cannotModify.includes(key))
+        const isForbidden = (Object.keys(user) as (keyof UpdateUser)[]).some(
+          key => cannotModify.includes(key)
+        )
         if (isForbidden) {
           reject({
             ...error403ForbiddenToModify,
@@ -461,11 +450,13 @@ export class MongodbService extends Service {
        * authUser is always an admin or the user themself */
       users
         .findOneAndUpdate({ id: updatedUser.id }, { $set: updatedUser })
-        .then((x: FindAndModifyWriteOpResultObject<User>) => {
-          const safeUser = toAdminSafeUser(updatedUser)
-          resolve({ ...success204UserUpdated, body: safeUser })
+        .then(modifyResult => {
+          if (modifyResult.ok) {
+            const safeUser = toAdminSafeUser(updatedUser)
+            resolve({ ...success204UserUpdated, body: safeUser })
+          } else reject(error500UpdateError)
         })
-        .catch(e => reject(error500ServerError))
+        .catch(() => reject(error500UpdateError))
     })
 
   /**
@@ -514,11 +505,11 @@ export class MongodbService extends Service {
       //TODO: delete all of the user's comments, too!
       users
         .deleteOne({ id: userId })
-        .then(x => resolve(success202UserDeleted))
+        .then(() => resolve(success202UserDeleted))
         .catch(e =>
           authUser.isAdmin
-            ? reject({ ...error500ServerError, body: e })
-            : reject(error500ServerError)
+            ? reject({ ...error500UpdateError, body: e })
+            : reject(error500UpdateError)
         )
     })
 
@@ -568,15 +559,12 @@ export class MongodbService extends Service {
       }
 
       // Prevent duplicate comments
-      const findOptions: FindOneOptions<Comment> = {
-        sort: { dateCreated: -1 }
-      }
 
       // We don't want to search for the exact comment {userId, text, parentId}
       // because we only want to prevent accidental duplications
       const lastComment = (await comments.findOne(
         { "userId": authUserId },
-        findOptions
+        { sort: { dateCreated: -1 } }
       )) as Comment
 
       if (
@@ -600,35 +588,23 @@ export class MongodbService extends Service {
 
       comments
         .insertOne(insertComment)
-        .then(
-          (
-            response: InsertOneWriteOpResult<
-              WithId<Comment | Discussion | DeletedComment>
-            >
-          ) => {
-            const insertedComment: Comment = response.ops.find(
-              x => true
-            ) as Comment
-
-            if (insertComment.parentId !== parentId) {
-              reject({
-                statusCode: 500,
-                body: "Database insertion error"
-              })
-              return
-            }
-
-            resolve({
-              statusCode: 201,
-              body: { ...insertedComment, user: adminSafeUser }
+        .then(result => {
+          if (!result.acknowledged) {
+            reject({
+              statusCode: 500,
+              body: "Database insertion error"
             })
           }
-        )
+          resolve({
+            statusCode: 201,
+            body: { ...insertComment, user: adminSafeUser }
+          })
+        })
         .catch(e => {
           console.error(e)
           authUser.isAdmin
-            ? reject({ ...error500ServerError, body: e })
-            : reject(error500ServerError)
+            ? reject({ ...error500UpdateError, body: e })
+            : reject(error500UpdateError)
         })
     })
 
@@ -674,7 +650,7 @@ export class MongodbService extends Service {
       const comments: Collection<Comment | DeletedComment | Discussion> = (
         await this.getDb()
       ).collection("comments")
-      const cursor = await comments.find({ id: targetId }).limit(1) //find({ id: targetId }, {id: 1}).limit(1)
+      const cursor = await comments.find({ id: targetId }).limit(1)
 
       // just check to see if comment exists, without retrieving everything
       if (!cursor) {
@@ -908,16 +884,18 @@ export class MongodbService extends Service {
 
       comments
         .findOneAndUpdate({ id: foundComment.id }, { $set: returnComment })
-        .then((x: FindAndModifyWriteOpResultObject<Comment | Discussion>) =>
-          resolve({
-            ...success204CommentUpdated,
-            body: returnComment
-          })
-        )
+        .then(modifyResult => {
+          if (modifyResult.ok)
+            resolve({
+              ...success204CommentUpdated,
+              body: returnComment
+            })
+          else reject(error500UpdateError)
+        })
         .catch(e =>
           authUser.isAdmin
-            ? reject({ ...error500ServerError, body: e })
-            : reject(error500ServerError)
+            ? reject({ ...error500UpdateError, body: e })
+            : reject(error500UpdateError)
         )
     })
 
@@ -982,11 +960,11 @@ export class MongodbService extends Service {
 
         comments
           .updateOne({ id: foundComment.id }, { $set: deletedComment })
-          .then(x => resolve({ ...success202CommentDeleted }))
+          .then(() => resolve({ ...success202CommentDeleted }))
           .catch(e =>
             authUser.isAdmin
-              ? reject({ ...error500ServerError, body: e })
-              : reject(error500ServerError)
+              ? reject({ ...error500UpdateError, body: e })
+              : reject(error500UpdateError)
           )
       } else {
         // entire comment can be deleted without trouble
@@ -994,11 +972,11 @@ export class MongodbService extends Service {
         // using findOneAndDelete
         comments
           .findOneAndDelete({ id: foundComment.id })
-          .then(x => resolve(success202CommentDeleted))
+          .then(() => resolve(success202CommentDeleted))
           .catch(e =>
             authUser.isAdmin
-              ? reject({ ...error500ServerError, body: e })
-              : reject(error500ServerError)
+              ? reject({ ...error500UpdateError, body: e })
+              : reject(error500UpdateError)
           )
       }
     })
@@ -1073,7 +1051,7 @@ export class MongodbService extends Service {
         }
       }
 
-      const hasInvalidCharacters = newTopic.id.match(/[^a-z0-9\-]/)
+      const hasInvalidCharacters = newTopic.id.match(/[^a-z0-9-]/)
       if (hasInvalidCharacters) {
         const invalidChar = hasInvalidCharacters ? hasInvalidCharacters[0] : ""
         reject({
@@ -1098,18 +1076,16 @@ export class MongodbService extends Service {
 
       discussions
         .insertOne(topic)
-        .then((response: InsertOneWriteOpResult<WithId<Discussion>>) => {
-          const insertedDiscussion: Discussion = response.ops.find(x => true)
-
-          if (insertedDiscussion.id !== topic.id)
-            reject({
-              statusCode: 500,
-              body: "Database insertion error"
-            })
-          else
+        .then(response => {
+          if (response.acknowledged)
             resolve({
               statusCode: 201,
               body: `Topic ${topic.id}:'${topic.title}' created`
+            })
+          else
+            reject({
+              statusCode: 500,
+              body: "Database insertion error"
             })
         })
         .catch(e => {
@@ -1328,7 +1304,7 @@ export class MongodbService extends Service {
 
       const comments = db.collection("comments")
 
-      const topicsCursor: Cursor<Topic> = await comments.find({
+      const topicsCursor = await comments.find<WithId<Topic>>({
         parentId: null
       })
 
@@ -1386,13 +1362,21 @@ export class MongodbService extends Service {
 
       comments
         .findOneAndUpdate({ id: foundTopic.id }, { $set: updateTopic })
-        .then((x: FindAndModifyWriteOpResultObject<Comment | Topic>) =>
-          resolve({ ...success204CommentUpdated, body: updateTopic })
-        )
+        .then(modifyResult => {
+          if (modifyResult.ok)
+            resolve({ ...success204CommentUpdated, body: updateTopic })
+          else
+            reject({
+              statusCode: 500,
+              body: authUser.isAdmin
+                ? modifyResult.lastErrorObject
+                : error500UpdateError.body
+            })
+        })
         .catch(e =>
           authUser.isAdmin
-            ? reject({ ...error500ServerError, body: e })
-            : reject(error500ServerError)
+            ? reject({ ...error500UpdateError, body: e })
+            : reject(error500UpdateError)
         )
     })
 
@@ -1467,27 +1451,27 @@ export class MongodbService extends Service {
       // but we don't want anyone to reply in the meantime, so lock it:
       discussions
         .findOneAndDelete({ id: topicId })
-        .then(x => resolve(success202TopicDeleted))
+        .then(() => resolve(success202TopicDeleted))
         .catch(e =>
           authUser.isAdmin
-            ? reject({ ...error500ServerError, body: e })
-            : reject(error500ServerError)
+            ? reject({ ...error500UpdateError, body: e })
+            : reject(error500UpdateError)
         )
     })
 
   authDELETE = () =>
-    new Promise<Success>((resolve, reject) => {
+    new Promise<Success>((resolve) => {
       const pastDate = new Date(0).toUTCString()
       const COOKIE_HEADER = {
-        "Set-Cookie": `simple_comment_token=logged-out; path=/; HttpOnly; Expires=${pastDate}; SameSite=None${
-          this.isProduction ? "; Secure" : ""
-        }`
+        "Set-Cookie": `simple_comment_token=logged-out; path=/; SameSite=${
+          this.isCrossSite ? "None; Secure; " : "Strict; "
+        }HttpOnly; Expires=${pastDate};`
       }
       resolve({ ...success202LoggedOut, headers: COOKIE_HEADER })
     })
 
   verifyGET = (token?: AuthToken) =>
-    new Promise<Success<TokenClaim> | Error>((resolve, reject) => {
+    new Promise<Success<TokenClaim> | Error>((resolve) => {
       try {
         const claim: TokenClaim = jwt.verify(token, process.env.JWT_SECRET, {
           ignoreExpiration: false

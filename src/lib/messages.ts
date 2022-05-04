@@ -73,7 +73,7 @@ export const error413CommentTooLong: Error = {
   statusCode: 413,
   body: "Comment too long"
 }
-export const error500ServerError: Error = {
+export const error500UpdateError: Error = {
   statusCode: 500,
   body: "Update error"
 }

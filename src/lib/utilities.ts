@@ -24,6 +24,7 @@ const AUTHORIZATION_HEADER = "Authorization"
 const BEARER_SCHEME = "Bearer"
 const BASIC_SCHEME = "Basic"
 
+const isDefined = <T>(x: T | undefined | null): x is T => x !== undefined && x !== null
 /**
  * Returns true if userId is a guest id
  */
@@ -69,16 +70,11 @@ export const toAdminSafeUser = (user: User) =>
       ])
     : user
 
-export const isComment = (target: Comment | Discussion): target is Comment =>
-  target && target.hasOwnProperty("parentId")
+export const isComment = (target: Comment | Discussion): target is Comment => isDefined(target) && "parentId" in target
 
-export const isDeleted = (target: Comment | Discussion) =>
-  target.hasOwnProperty("dateDeleted")
+export const isDeleted = (target: Comment | Discussion) => isDefined(target) && "dateDeleted" in target
 
-export const isDeletedComment = (
-  target: Comment | Discussion
-): target is DeletedComment =>
-  isComment(target) && target.hasOwnProperty("dateDeleted")
+export const isDeletedComment = (target: Comment | Discussion): target is DeletedComment => isComment(target) && isDeleted(target)
 
 export const isAdminSafeUser = (user: Partial<User>): user is AdminSafeUser =>
   (Object.keys(user) as (keyof User)[]).every(
@@ -103,13 +99,16 @@ export const getHeaderValue = (
 ) => headers[getHeader(headers, header)]
 
 export const addHeaders = (
-  res: { statusCode: number; body: any; headers?: { [key: string]: string } },
+  res: {
+    statusCode: number
+    body: unknown
+    headers?: Record<string, string>
+  },
   headers
 ) => {
-  const resHeaders = res.hasOwnProperty("headers") ? res.headers : {}
+  const resHeaders = res?.headers ?? {}
 
-  return res.hasOwnProperty("body")
-    ? {
+  return res?.body ? {
         ...res,
         body: JSON.stringify(res.body),
         headers: { ...resHeaders, ...headers }
@@ -138,7 +137,7 @@ export const getAllowedOrigins = () => process.env.ALLOW_ORIGIN.split(",")
 export const getAllowOriginHeaders = (
   headers: { [header: string]: string },
   allowedOrigins: string[] = []
-): {} | { "Access-Control-Allow-Origin": string; Vary?: "Origin" } =>
+): Record<string, never> | { "Access-Control-Allow-Origin": string; Vary?: "Origin" } =>
   // This function is so clunky from the need to return two headers if there
   // is an exact match and *no* headers if there is not!
   allowedOrigins.includes("*")
@@ -275,7 +274,6 @@ export const getUserId = (headers: {
 }): UserId | null => {
   try {
     const claim = getTokenClaim(headers)
-    console.log("claim", claim)
     if (claim) return claim.user
     else return null
   } catch (error) {
@@ -373,7 +371,7 @@ export class HeaderList {
   }
 }
 
-export interface ValidResult {
+export type ValidResult = {
   isValid: boolean
   result?: RegExpMatchArray
   reason?: string
@@ -433,7 +431,7 @@ export const validatePassword = (password: string): ValidResult => {
 }
 
 export const validateUser = (user: UpdateUser & User): ValidResult => {
-  if (user.hasOwnProperty("id")) {
+  if (user.id) {
     const idCheck = validateUserId(user.id)
     if (!idCheck.isValid) {
       const badChars = idCheck.result!.join(", ")
@@ -443,18 +441,18 @@ export const validateUser = (user: UpdateUser & User): ValidResult => {
       }
     }
   }
-  if (user.hasOwnProperty("email")) {
+  if (user.email) {
     const checkEmail = validateEmail(user.email)
     if (!checkEmail.isValid)
       return { ...checkEmail, reason: "Email is not valid" }
   }
-  if (user.hasOwnProperty("name")) {
+  if (user.name) {
     const checkName = validateDisplayName(user.name)
     if (!checkName.isValid) return checkName
   }
 
   // do not validate guest user passwords
-  if (!isGuestId(user.id) && user.hasOwnProperty("password")) {
+  if (!isGuestId(user.id) && user.password) {
     const passwordCheck = validatePassword(user.password)
     if (!passwordCheck.isValid) return passwordCheck
   }

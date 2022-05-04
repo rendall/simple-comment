@@ -2,29 +2,49 @@
 
 # Simple Comment
 
-_Simple Comment_ allows visitors to your web pages to leave and read comments. It is _truly free_ (as in no cost) and entirely controlled by you from end to end.
+_Simple Comment_ enables any website visitor to leave comments. It is serverless, open-source, self-hosted, free, scaleable, and designed to feel unremarkably similar to the dozen or so other excellent solutions.
 
-Try it out! <https://simple-comment.netlify.app>
+See the demo: <https://simple-comment.netlify.app>
 
 ## Status
 
 [![Netlify Status](https://api.netlify.com/api/v1/badges/fb816766-6f5b-4dff-9c27-3f5948ac9705/deploy-status)](https://app.netlify.com/sites/simple-comment/deploys)
-[![David](https://img.shields.io/david/rendall/simple-comment)](https://david-dm.org/rendall/simple-comment)
 [![Open API 3.0 Validator](https://img.shields.io/swagger/valid/3.0?label=Open%20API%203.0%20spec&specUrl=https%3A%2F%2Fraw.githubusercontent.com%2Frendall%2Fsimple-comment%2Fmaster%2Fsrc%2Fschema%2Fsimple-comment-api.json)](https://app.swaggerhub.com/apis/rendall-dev/simple-comment_api/1.0.0)
 [![Website](https://img.shields.io/website?url=https%3A%2F%2Fsimple-comment.netlify.app%2F)](https://simple-comment.netlify.app)
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/rendall/simple-comment.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/rendall/simple-comment/alerts/)
 [![Language grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/rendall/simple-comment.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/rendall/simple-comment/context:javascript)
-[![StyleCI](https://github.styleci.io/repos/310091823/shield?branch=master)](https://github.styleci.io/repos/310091823?branch=master)
 [![Documentation Status](https://readthedocs.org/projects/simple-comment/badge/?version=latest)](https://simple-comment.readthedocs.io/en/latest/?badge=latest)
 
-Nearly there! Steps to minimum viable product (MVP):
+### MVP is complete!
 
-### To be done
+The minimum functionality is [up and running](https://simple-comment.netlify.app)!
 
-- Minimal script to add Simple Comment functionality to any webpage
+ <details>
+  <summary><b>Completed tasks:</b> (click to open)</summary>
+
+- Cross-origin capability
+- Script with frontend
+- All API endpoint respond as expected
+  - `Access-Control-Allow-Origin` responds to `.env` variables
+- Authentication and Identification works as expected
+- Authenticated users and admins can interact with Simple Comment as expected
+- Anonymous user can _create topics_
+  - This is useful for sites with lots of pages
+  - For security reasons, restrictions apply:
+    - The `Referer` header and the `topicId` must map properly
+    - The `Origin` must be on the `Access-Control-Allow-Origin` list
+- Server-side validation of user-posted data
+- Setup instructions
+  - Are complicated but work when followed
+- Visitor can post anonymously
+  - Comment includes guest user
+- Designed a beautiful badge!
+  - [![Powered by Simple Comment](docs/simple-comment-badge.svg)](https://simple-comment.netlify.app)
+- Visitors can read and reply to comments
 
 ### Top priority after MVP
 
+- Optional user authentication and identification
 - Moderator holds posts for approval
 - Spam prevention measures
 - Integration with 3rd party authentication
@@ -42,41 +62,17 @@ Nearly there! Steps to minimum viable product (MVP):
 - User profiles
   - See comments
   - Avatar
-
- <details>
-  <summary><b>Completed!</b> (click to open)</summary>
-
-- [![Powered by Simple Comment](https://img.shields.io/badge/powered%20by-Simple%20Comment-%233287e6)](https://simple-comment.netlify.app)
-  - oh yeah!
-- Validation for server-side entries
-- All API endpoint respond as expected
-  - `Access-Control-Allow-Origin` responds to `.env` variables
-- Authentication and Identification works as expected
-- Authenticated users and admins can interact with Simple Comment as expected
-- Anonymous user can create topics
-  - This is useful for pages that do not have topics yet
-  - Restrictions apply:
-    - The `Referer` header and the `topicId` must map properly
-    - The `Origin` must be on the `Access-Control-Allow-Origin` list
-- Setup instructions
-  - Are complicated but work when followed
-- Visitor can post anonymously
-  - Comment includes guest user
-- Working example <https://simple-comment.netlify.app>
-
-</details>
+  </details>
 
 ## Features
 
-- Visitors can read and reply to comments
-- Optional user authentication and identification
 - Easy to use anywhere
 - Industry-standard security
 - Designed to be fully customizable
 - Scalable, from free-tier to enterprise!
 - Free (as in "free beer": no cost)
   - Takes advantage of free-tier offerings from DBaaS and website hosts
-- Free (as in "free speech": open source)
+- Free (as in "libre": open source)
   - The source code is available to be modified and used without restriction
   - Commercial use allowed! Start a business with it! Knock yourself out!
   - MIT licensing available
@@ -106,7 +102,11 @@ Nearly there! Steps to minimum viable product (MVP):
 
 ## Setup
 
-The assumption is that the API will run in a separate Netlify website and be accessed cross-origin. It is a _necessary_ requirement that the pages where you want Simple Comments to run _must_ be served via _https:_ If you already have a Netlify account and want to integrate Simple Comment with your site, open an issue and we'll create instructions.
+_Simple Comment_ can be run on the same server as your website or on a separate, cross-domain server
+
+It is _necessary_ that _Simple Comment_ is served via _https:_
+
+These instructions assume some devOps skill, but if anything is unclear, please [create a new issue](https://github.com/rendall/simple-comment/issues/new)
 
 1. Fork this repository to your own account
 1. `git clone https://github.com/<your-github-profile>/simple-comment` replacing
@@ -119,21 +119,22 @@ The assumption is that the API will run in a separate Netlify website and be acc
    1. SIMPLE_COMMENT_MODERATOR_ID
    1. SIMPLE_COMMENT_MODERATOR_PASSWORD
    1. JWT_SECRET
-   1. HASH_SECRET
+   1. SIMPLE_COMMENT_API_URL
 1. sign up for a free MongoDB Atlas account
    1. [Follow these instructions](docs/MONGODB_ATLAS.md)
    1. In `.env` add the proper `DB_CONNECION_STRING`
 1. Sign up for a Netlify account, begin a new website, and link your repository
    to the new website
+   1. Review [Netlify's Build environment variables](https://docs.netlify.com/configure-builds/environment-variables/#environment-variables-in-the-build-environment) page
    1. Navigate to 'Build & Deploy => Environment`
    1. Under `Environmental Variables` click the button `Edit Variables`
    1. For each entry in `.env` add the key and corresponding value for _all_
       variables
-   1. For `SIMPLE_COMMENT_MODE` add the value `production`
+   1. For `IS_CROSS_SITE` add the value `true` if the comment system is hosted in its own domain and `false` if it is the same domain.
 1. Modify your website. These are simple instructions, but feel free to hack away
    1. In the HTML for each page on your website where you want Simple Comment to run, add these two tags:
       1. `<script src="[path-to]/simple-comment.js" defer></script>` (`src` must point to the `simple-comment.js` file)
-      1. `<div id="simple-comment-area"></div>`
+      1. `<div id="simple-comment-display"></div>`
    1. Upload the `simple-comment.js` file to your website's script folder
    1. Upload the `login.html` page on the root of your website (or somewhere accessible)
 1. It should now be possible to leave and read comments on your website
@@ -194,15 +195,126 @@ Returns the logged-in user id or `401`
 
 ## Alternatives
 
+There are 34 solutions that are not Simple Comment listed here. Nearly all of these are more mature than Simple Comment, and I would recommend considering one if you are not looking specifically for a serverless, open-source, self-hosted solution. Listed below each are pros and cons that distinguish it from Simple Comment. If _Trust is required_ is listed, it means that using the service requires trust in the company, because they will be serving closed-source code to your users that you do not control and cannot easily inspect; as well, user data will be held on servers they control. This list is based on public documentation, not experience. If anything is incorrect or missing, please let me know.
+
+- Comment Box <https://commentbox.io/>
+  - Free tier
+  - Privacy focused
+  - Data is held on 3rd party server
+    - "No lock-in"
+  - Trust is required
 - Commentics <https://www.commentics.org/>
+  - Open Source: GPL
+  - Free tier with logo
+  - Requires a server running PHP and MySQL
 - Commento <https://commento.io/>
-- Disqus <https://disqus.com/>
-- Facebook <https://developers.facebook.com/docs/plugins/comments/>
+  - Privacy focused
+  - [Open Source](https://gitlab.com/commento/commento): MIT
+  - Self-host OR pay-to-host
+- Discourse <https://www.discourse.org/>
+  - Open source: GPL
+  - Fully featured
+  - Self-host OR paid version
+  - No free tier
+- Disqus <https://disqus.com/> - The 400 pound gorilla of e
+  - Free tier
+  - Fully featured
+  - Closed Source
+  - Data is held on 3rd party server
+  - Requires user login
+  - Sells user data
+  - Trust is required
+- Facebook Comments Plugin <https://developers.facebook.com/docs/plugins/comments/>
+  - Free tier
+  - Fully featured
+  - Closed Source
+  - Data is held on 3rd party server
+  - Requires Facebook
+  - Requires user login
+  - Sells user data
+  - Trust is required
+- FastComments <https://fastcomments.com/>
+  - Fully featured
+  - Privacy focused
+  - Real-time chatting
+  - HMAC authentication
+  - No free tier
+  - Trust is required
 - GraphComment <https://graphcomment.com/>
+  - Fully featured
+  - Free tier
+  - Closed Source
+  - Data is held on 3rd party server
+    - Guarantees "full and complete ownership" of data
+    - Servers in Europe (France)
+  - Requires user login
+  - Trust is required
 - HTML Comment Box <https://www.htmlcommentbox.com/>
+  - Free tier
+  - Closed Source
+  - Data is held on 3rd party server
+  - Trust is required
+  - Privacy policy? Unknown.
 - HashOver <https://www.barkdull.org/software/hashover>
+  - Open Source: AGPL
+  - Requires a server running PHP and MySQL
+- Hyvor Talk <https://talk.hyvor.com/>
+  - Privacy focused
+  - No free tier
+  - Requires user login
+  - Trust is required
 - IntenseDebate <https://intensedebate.com/>
+  - Fully featured
+  - Closed Source
+  - Data is held on 3rd party server
+  - Requires user login
+  - Trust is required
 - Isso <https://posativ.org/isso/>
+  - Documentation is extensive
+  - Open source: MIT
+  - Requires a Linux server running Python and SQLite3
+- Just Comments <https://just-comments.com/>
+  - Defunct <https://just-comments.com/blog/2020-03-06-just-comments-is-shutting-down.html>
+- Muut <https://muut.com>
+  - Developer-friendly <https://muut.io>
+  - Fully featured
+  - No free tier
+  - Trust is required
 - Remark42 <https://remark42.com/>
+  - Fully featured
+  - Open source: MIT
+  - Requires a server
+    - Runs a self-contained executable written in Go
+- Talkyard <https://www.talkyard.io/>
+  - [Open source](https://github.com/debiki/talkyard): AGPL
+  - Self-host OR paid hosting
+  - Almost free tier (€1.90/mo + optional add-ons)
+  - Discounts for non-profits and developing countries
 - Valine <https://valine.js.org/en/index.html>
+  - Open source: GPL
+  - Serverless
+  - Requires a leancloud account
+  - Servers are in China
+  - Data safety / privacy is unclear
 - schnack! <https://schnack.cool/>
+  - Open source: Lil License v1
+  - Requires a server running Node and SQLite3
+
+* More: a list of commenting systems that I have not evaluated
+  - Cactus comments <https://gitlab.com/cactus-comments>
+  - Commentator <https://github.com/mcorbin/commentator>
+  - Comntr <https://github.com/comntr>
+  - Coral Project <https://github.com/coralproject/talk>
+  - Github comments <http://donw.io/post/github-comments/>
+  - Glosa <https://github.com/glosa>
+  - Hypercomments <https://www.hypercomments.com/>
+  - Mastadon <https://carlschwan.eu/2020/12/29/adding-comments-to-your-static-blog-with-mastodon/>
+  - Netlify forms <https://bsdnerds.org/comments-static-site/>
+  - Remarkbox <https://www.remarkbox.com/>
+  - ReplyBox <https://getreplybox.com/>
+  - Social media <https://brid.gy/>
+  - Staticman <https://github.com/eduardoboucas/staticman>
+  - Webmention <https://webmention.io/>
+    - more detail <https://news.ycombinator.com/item?id=25571253>
+  - utterances <https://github.com/utterance/utterances>
+

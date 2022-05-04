@@ -57,7 +57,7 @@ let clearReply = () => {}
 let updateReply = () => {}
 
 // string type guard
-const isString = (x: any): x is string => typeof x === "string"
+const isString = (x: unknown): x is string => typeof x === "string"
 // Response type guard
 const isResponse = (
   res: string | ResolvedResponse | Response
@@ -97,57 +97,60 @@ const insertReplyInput = (commentId: CommentId) => {
   userInfoGroup.setAttribute("id", "user-info")
 
   const nameLabel = document.createElement("label")
-  nameLabel.setAttribute("for", "name-input")
+  nameLabel.setAttribute("for", "name-field")
   nameLabel.innerHTML = "Name:"
   userInfoGroup.appendChild(nameLabel)
 
-  const nameInput = document.createElement("input")
-  nameInput.setAttribute("id", "name-input")
-  nameInput.setAttribute("placeholder", "What's your name?")
-  userInfoGroup.appendChild(nameInput)
-  nameInput.value = !!user ? user.name : ""
-  // nameInput.toggleAttribute("disabled", !!user)
+  const nameField = document.createElement("input")
+  nameField.setAttribute("id", "name-field")
+  userInfoGroup.appendChild(nameField)
+  nameField.value = user?.name ?? ""
 
   const emailLabel = document.createElement("label")
-  emailLabel.setAttribute("for", "email-input")
+  emailLabel.setAttribute("for", "email-field")
   emailLabel.innerHTML = "Email:"
   userInfoGroup.appendChild(emailLabel)
 
-  const emailInput = document.createElement("input")
-  emailInput.setAttribute("id", "email-input")
-  emailInput.setAttribute("placeholder", "What's your email?")
-  emailInput.value = !!user ? user.email : ""
-  // emailInput.toggleAttribute("disabled", !!user)
-  userInfoGroup.appendChild(emailInput)
+  const emailField = document.createElement("input")
+  emailField.setAttribute("id", "email-field")
+  emailField.value = user?.email ?? ""
+  userInfoGroup.appendChild(emailField)
 
-  const replyTextarea = document.createElement("textarea")
-  replyTextarea.setAttribute("id", "reply-textarea")
-  replyTextarea.setAttribute("placeholder", "What's on your mind?")
+  const replyField = document.createElement("textarea")
+  replyField.setAttribute("id", "reply-field")
+  replyField.setAttribute("placeholder", "Your comment")
 
   const buttonGroup = document.createElement("div")
   buttonGroup.classList.add("button-group")
 
-  const submitReplyButton = document.createElement("button")
-  submitReplyButton.innerHTML = "submit"
-  submitReplyButton.setAttribute("id", "reply-submit-button")
-  submitReplyButton.addEventListener(
+  const replySubmitButton = document.createElement("button")
+  replySubmitButton.innerHTML = "submit"
+  replySubmitButton.setAttribute("id", "reply-submit-button")
+  replySubmitButton.addEventListener(
     "click",
-    onCommentSubmit({ replyTextarea, nameInput, emailInput }, commentId)
+    onCommentSubmit(
+      {
+        replyTextarea: replyField,
+        nameInput: nameField,
+        emailInput: emailField
+      },
+      commentId
+    )
   )
-  buttonGroup.appendChild(submitReplyButton)
+  buttonGroup.appendChild(replySubmitButton)
 
   target.classList.add("is-reply")
-  replyInputGroup.appendChild(replyTextarea)
+  replyInputGroup.appendChild(replyField)
   replyInputGroup.appendChild(userInfoGroup)
   replyInputGroup.appendChild(buttonGroup)
 
   clearReply = () => {
     target.classList.remove("is-reply")
-    replyTextarea.remove()
-    submitReplyButton.remove()
-    nameInput.remove()
+    replyField.remove()
+    replySubmitButton.remove()
+    nameField.remove()
     nameLabel.remove()
-    emailInput.remove()
+    emailField.remove()
     emailLabel.remove()
     buttonGroup.remove()
     replyInputGroup.remove()
@@ -526,7 +529,7 @@ const onReceiveDiscussion = (
  * ---------------------------------- */
 /* onCommentSubmit
  * The user has pressed the submit button and expects something to happen. This function handles those possiblities */
-const onCommentSubmit = (submitElems, targetId) => async e => {
+const onCommentSubmit = (submitElems, targetId) => async () => {
   const { replyTextarea, nameInput, emailInput } = submitElems
   const text: string = replyTextarea.value
 
@@ -592,14 +595,13 @@ const onCommentSubmit = (submitElems, targetId) => async e => {
   if (ul.firstChild) ul.insertBefore(li, ul.firstChild)
   else ul.appendChild(li)
 
-  const onCommentResponse = parentElement => (
-    response: ResolvedResponse<Comment>
-  ) => {
-    setStatus("Successfully posted comment")
-    const comment = response.body
-    appendComment(comment, parentElement)
-    clearReply()
-  }
+  const onCommentResponse =
+    parentElement => (response: ResolvedResponse<Comment>) => {
+      setStatus("Successfully posted comment")
+      const comment = response.body
+      appendComment(comment, parentElement)
+      clearReply()
+    }
 
   const isSameUserInfo = name === currUser.name && email === currUser.email
 
@@ -611,7 +613,7 @@ const onCommentSubmit = (submitElems, targetId) => async e => {
 /* onReplyToComment
  * The user has pushed the 'reply' button adjacent to a comment. This
  * method responds by coordinating building the UI */
-const onReplyToComment = (comment: Comment | Discussion) => e => {
+const onReplyToComment = (comment: Comment | Discussion) => () => {
   clearReply()
   insertReplyInput(comment.id)
 }
@@ -637,7 +639,7 @@ const onReplyToTopic = onReplyToComment
  * The user has pressed the logout button. This method coordinates
  * the response of deleting authentication and updating the user
  * display */
-const onLogoutClick = e => {
+const onLogoutClick = () => {
   deleteAuth()
     .then(() => updateLoginStatus())
     .catch(setErrorStatus)
@@ -647,12 +649,12 @@ const onLogoutClick = e => {
  * The user has pressed the login button. This method coordinates
  * validating the input and sending the authentication request to the
  * server. */
-const onLoginClick = e => {
+const onLoginClick = () => {
   const usernamevalue = (document.querySelector("#userid") as HTMLInputElement)
     .value
-  const passwordvalue = (document.querySelector(
-    "#password"
-  ) as HTMLInputElement).value
+  const passwordvalue = (
+    document.querySelector("#password") as HTMLInputElement
+  ).value
 
   const username = usernamevalue ? usernamevalue.trim() : usernamevalue
   const password = passwordvalue ? passwordvalue.trim() : passwordvalue
@@ -696,17 +698,21 @@ const setup = async (
 ) => {
   console.info("Looking for Simple Comment area...")
 
-  const existingDiv = document.querySelector("#simple-comment-area")
+  const existingDiv = document.querySelector("#simple-comment-display")
+
+  if (existingDiv) console.info("`#simple-comment-display` found")
+  else console.info("`#simple-comment-display` not found. Creating.")
 
   const createdDiv = existingDiv ? null : document.createElement("div")
 
   if (createdDiv) {
-    // #simple-comment-area does not exist, so let us create it:
-    createdDiv.setAttribute("id", "simple-comment-area")
+    // #simple-comment-display does not exist, so let us create it:
+    createdDiv.setAttribute("id", "simple-comment-display")
 
     // append it to body:
     const body = document.querySelector("body")
     body.appendChild(createdDiv)
+    console.info("`div#simple-comment-display` created and appended to `body`.")
   }
 
   const simpleCommentArea = existingDiv || createdDiv
@@ -786,3 +792,4 @@ const setup = async (
 
 // setup("some-topic-id") will link this page to "some-topic-id"
 setup()
+

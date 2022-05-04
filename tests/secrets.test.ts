@@ -33,7 +33,6 @@ describe("Ensures secrets are secret", () => {
   // These are all the entries in `example.env`
   exampleEnvEntries = exampleEnv
     .replace(/\r/g, "\n")
-    .replace(/\n{2}/g, "/n")
     .split("\n")
     .map(l => l.trim())
     .filter(l => !l.startsWith("#")) // eliminate comments

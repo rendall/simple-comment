@@ -1,4 +1,4 @@
-import { Handler, Context, APIGatewayEvent } from "aws-lambda"
+import { Handler, APIGatewayEvent } from "aws-lambda"
 import * as dotenv from "dotenv"
 import {
   addHeaders,
@@ -40,8 +40,7 @@ const getAllowHeaders = (event: APIGatewayEvent) => {
 }
 
 export const handler: Handler = async (
-  event: APIGatewayEvent,
-  context: Context
+  event: APIGatewayEvent
 ) => {
   const dirs = event.path.split("/")
   const isValidPath = dirs.length <= 5

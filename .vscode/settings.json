@@ -4,5 +4,6 @@
       "fileMatch": ["simple-comment-api.json"],
       "url": "./src/schema/openapi.schema.json"
     }
-  ]
+  ],
+  "files.eol": "\n"
 }

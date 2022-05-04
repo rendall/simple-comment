@@ -1,5 +1,5 @@
 import * as dotenv from "dotenv"
-import type { APIGatewayEvent, APIGatewayEventRequestContext } from "aws-lambda"
+import type { APIGatewayEvent } from "aws-lambda"
 import { MongodbService } from "../lib/MongodbService"
 import { Success, Error, AuthToken } from "../lib/simple-comment"
 import {
@@ -19,7 +19,7 @@ import {
 dotenv.config()
 
 const YEAR_SECONDS = 60 * 60 * 24 * 365 // 60s * 1 hour * 24 hours * 365 days
-const isProduction = process.env.SIMPLE_COMMENT_MODE === "production"
+const isCrossSite = process.env.IS_CROSS_SITE === "true"
 
 const service: MongodbService = new MongodbService(
   process.env.DB_CONNECTION_STRING,
@@ -42,7 +42,6 @@ const getAllowHeaders = (event: APIGatewayEvent) => {
 
 export const handler = async (
   event: APIGatewayEvent,
-  context: APIGatewayEventRequestContext
 ) => {
   const dirs = event.path.split("/")
   const isValidPath = dirs.length <= 5
@@ -66,11 +65,12 @@ export const handler = async (
         return handleOption(event)
       case "DELETE":
         return service.authDELETE()
-      default:
+      default: {
         const headers = getAllowHeaders(event)
         return new Promise<Error>(resolve =>
           resolve({ ...error405MethodNotAllowed, headers })
         )
+      }
     }
   }
 
@@ -106,13 +106,12 @@ const handleAuth = async (event: APIGatewayEvent) => {
     const token = authUser.body as AuthToken
 
     const COOKIE_HEADER = {
-      "Set-Cookie": `simple_comment_token=${token}; path=/; ${
-        isProduction ? "Secure; " : ""
-      }HttpOnly; SameSite=None; Max-Age=${YEAR_SECONDS}`
+      "Set-Cookie": `simple_comment_token=${token}; path=/; SameSite=${
+        isCrossSite ? "None; Secure; " : "Strict; "
+      }HttpOnly; Max-Age=${YEAR_SECONDS}`
     }
 
     const headers = { ...allowHeaders, ...COOKIE_HEADER }
-
     return { ...success200OK, headers }
   }
 }

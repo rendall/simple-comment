@@ -1,23 +1,15 @@
 import { Db, MongoClient } from "mongodb"
-// import * as dotenv from "dotenv"
-
-// dotenv.config()
 
 declare const global: any
 const MONGO_URI = global.__MONGO_URI__
 const MONGO_DB = global.__MONGO_DB_NAME__
-// const MONGO_URI = process.env.DB_CONNECTION_STRING
-// const MONGO_DB = process.env.DATABASE_NAME
 
 describe("insert", () => {
   let connection
   let db: Db
 
   beforeAll(async () => {
-    connection = await MongoClient.connect(MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    })
+    connection = await MongoClient.connect(MONGO_URI)
     db = await connection.db(MONGO_DB)
   })
 

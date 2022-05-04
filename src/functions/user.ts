@@ -1,17 +1,25 @@
 import * as dotenv from "dotenv"
-import type { APIGatewayEvent, Callback, Context } from "aws-lambda"
-import { CommentId, Success, Error, Comment } from "../lib/simple-comment"
-import { MongodbService } from "../lib/MongodbService"
+import type { APIGatewayEvent } from "aws-lambda"
 import {
   error404CommentNotFound,
   error405MethodNotAllowed,
   success200OK
-} from "./../lib/messages"
+} from "../lib/messages"
+import { MongodbService } from "../lib/MongodbService"
+import {
+  AdminSafeUser,
+  PublicSafeUser,
+  Success,
+  UserId,
+  Error
+} from "../lib/simple-comment"
 import {
   addHeaders,
   getAllowedOrigins,
   getAllowOriginHeaders,
+  getNewUserInfo,
   getTargetId,
+  getUpdatedUserInfo,
   getUserId
 } from "../lib/utilities"
 dotenv.config()
@@ -23,8 +31,9 @@ const service: MongodbService = new MongodbService(
 
 const getAllowHeaders = (event: APIGatewayEvent) => {
   const allowedMethods = {
-    "Access-Control-Allow-Methods": "POST,GET,OPTIONS,PUT,DELETE",
-    "Access-Control-Allow-Credentials": "true"
+    "Access-Control-Allow-Methods": "POST,GET,PUT,DELETE,OPTIONS",
+    "Access-Control-Allow-Credentials": "true",
+    "Access-Control-Allow-Headers": "Cookie"
   }
   const allowedOriginHeaders = getAllowOriginHeaders(
     event.headers,
@@ -34,7 +43,9 @@ const getAllowHeaders = (event: APIGatewayEvent) => {
   return headers
 }
 
-export const handler = async (event: APIGatewayEvent, context: Context) => {
+export const handler = async (
+  event: APIGatewayEvent
+) => {
   const dirs = event.path.split("/")
   const isValidPath = dirs.length <= 5
   const headers = getAllowHeaders(event)
@@ -49,18 +60,31 @@ export const handler = async (event: APIGatewayEvent, context: Context) => {
     )
 
   const authUserId = getUserId(event.headers)
-  const targetId = getTargetId(event.path, "comment") as CommentId
+  const targetId = getTargetId(event.path, "user") as UserId
 
-  const handleMethod = (method): Promise<Success<Comment> | Error> => {
+  const handleMethod = (
+    method
+  ): Promise<
+    | Success<
+        (PublicSafeUser | AdminSafeUser) | (AdminSafeUser[] | PublicSafeUser[])
+      >
+    | Error
+  > => {
     switch (method) {
-      case "GET":
-        return service.commentGET(targetId, authUserId)
+      case "GET": {
+        if (targetId) return service.userGET(targetId, authUserId)
+        else return service.userListGET(authUserId)
+      }
       case "POST":
-        return service.commentPOST(targetId, event.body, authUserId)
+        return service.userPOST(getNewUserInfo(event.body), authUserId)
       case "PUT":
-        return service.commentPUT(targetId, event.body, authUserId)
+        return service.userPUT(
+          targetId,
+          getUpdatedUserInfo(event.body),
+          authUserId
+        )
       case "DELETE":
-        return service.commentDELETE(targetId, authUserId)
+        return service.userDELETE(targetId, authUserId)
       case "OPTIONS":
         return new Promise<Success>(resolve =>
           resolve({ ...success200OK, headers })

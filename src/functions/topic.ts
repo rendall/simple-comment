@@ -1,4 +1,4 @@
-import type { APIGatewayEvent, Context } from "aws-lambda"
+import type { APIGatewayEvent } from "aws-lambda"
 import * as dotenv from "dotenv"
 import {
   addHeaders,
@@ -45,7 +45,7 @@ const getAllowHeaders = (event: APIGatewayEvent) => {
   return headers
 }
 
-export const handler = async (event: APIGatewayEvent, context: Context) => {
+export const handler = async (event: APIGatewayEvent) => {
   const dirs = event.path.split("/")
   const isValidPath = dirs.length <= 5
   const headers = getAllowHeaders(event)
@@ -66,7 +66,7 @@ export const handler = async (event: APIGatewayEvent, context: Context) => {
       case "GET":
         if (targetId) return service.topicGET(targetId, authUserId)
         else return service.topicListGET(authUserId)
-      case "POST":
+      case "POST": {
         if (targetId)
           return new Promise<Error>(resolve =>
             resolve({
@@ -77,6 +77,7 @@ export const handler = async (event: APIGatewayEvent, context: Context) => {
         const referer = getHeaderValue(event.headers, "Referer")
         const newTopic = { ...getNewTopicInfo(event.body), referer }
         return service.topicPOST(newTopic, authUserId)
+      }
       case "PUT":
         return service.topicPUT(
           targetId,
@@ -95,11 +96,9 @@ export const handler = async (event: APIGatewayEvent, context: Context) => {
   try {
     const ret = await handleMethod(event.httpMethod)
     const response = addHeaders(ret, headers)
-    console.log("response", response)
     return response
   } catch (error) {
     const retError = addHeaders(error, headers)
-    console.log("error response", retError)
     return retError
   }
 }

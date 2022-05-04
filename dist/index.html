@@ -1,7 +1,12 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <title>Simple Comment demo</title>
+    <title>Simple Comment</title>
+    <meta name="viewport" content="width=device-width" />
+    <meta
+      name="description"
+      content="Simple Comment is a free, self-hosted, open-source commenting system"
+    />
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:url" content="http://simple-comment.netlify.app" />
     <meta name="twitter:title" content="Simple Comment" />
@@ -11,7 +16,7 @@
     />
     <meta
       name="twitter:image"
-      content="https://simple-comment.netlify.app/img/simple-comment-logo.svg"
+      content="https://simple-comment.netlify.app/img/twitter-card-logo.png"
     />
     <meta
       name="twitter:image:alt"
@@ -47,8 +52,12 @@
         margin: 0 auto;
       }
 
-      h1 {
+      h1,
+      h2 {
         color: #3287e6;
+      }
+
+      h1 {
         font-family: "Comfortaa", sans-serif;
         font-size: 3.4rem;
         font-weight: 500;
@@ -56,10 +65,30 @@
         margin-left: 1rem;
       }
 
+      details {
+        margin-bottom: 1rem;
+      }
+
+      summary:focus {
+        outline-color: #3287e6;
+        outline-style: solid;
+      }
+
+      summary h2 {
+        cursor: help;
+        display: inline;
+        font-weight: normal;
+      }
+
+      summary::marker,
+      summary::-webkit-details-marker {
+        color: #3287e6;
+      }
+
       input {
         height: 2rem;
         width: 100%;
-        font-size: 1.65rem;
+        font-size: 1.35rem;
         padding: 0.5rem;
         border-radius: 0.5rem;
         border: 1px solid;
@@ -72,7 +101,7 @@
         width: 100%;
         border-radius: 0.5rem;
         border: 1px solid;
-        font-size: 1.65rem;
+        font-size: 1.35rem;
         padding: 0.5rem;
         font-family: monospace;
       }
@@ -107,7 +136,11 @@
         text-decoration: none;
       }
 
-      textarea#reply-textarea {
+      a[title] {
+        color: unset;
+      }
+
+      textarea#reply-field {
         display: block;
         width: 100%;
         height: 7rem;
@@ -177,8 +210,18 @@
         min-width: 9.1rem;
         fill: #3287e6;
       }
+
+      #user-display {
+        display: none;
+      }
+
+      @media (max-width: 1024px) {
+        main {
+          margin: 0 1rem;
+          max-width: unset;
+        }
+      }
     </style>
-    <script type="module" src="./js/apiClient.js"></script>
   </head>
 
   <body>
@@ -206,77 +249,125 @@
       <h1>Simple Comment</h1>
     </header>
     <main>
-      <p>Welcome to Simple Comment</p>
-      <p>
-        Simple Comment allows visitors to your webpage to add comments and reply
-        to other visitors. It is designed to be secure and customizable, so your
-        visitors' data and online activity is untracked, and entirely under your
-        (and their) control.
-      </p>
-      <p>
-        Simple Comment's source code is available here:
-        <a href="https://github.com/rendall/simple-comment">
-          https://github.com/rendall/simple-comment
-        </a>
-      </p>
-      <p>
-        Want a public forum? Want a private space? Want to limit participation
-        to specific IP addresses? Want to exclude IPs? Simple Comment doesn't
-        judge!
-      </p>
-      <p>
-        Simple Comment is designed to be scaleable, from free-tier to
-        enterprise. It grows as your audience grows.
-      </p>
-      <p>
-        On this page you can give it a test drive. You can answer any these
-        question prompts, or all of them, or ask your own!
-      </p>
-      <ul>
-        <li>Do you have feedback for Simple Comment?</li>
-        <li>Do you have exciting plans in the upcoming year?</li>
-        <li>
-          If you combined your favorite color with your least favorite food,
-          what would you call it?
-        </li>
-      </ul>
-      <div id="simple-comment-area">
-        <div id="discussion"></div>
-      </div>
-      <div id="user-display">
-        <p id="login-pulser">Logging in... Please wait</p>
-        <input type="hidden" id="claim-user" />
-        <p id="user-name"></p>
-        <button id="log-out-button">Log out</button>
-        <div id="log-in-form">
-          <label for="userid">Username:</label>
-          <input id="userid" required />
-          <label for="password">Password:</label>
-          <input id="password" type="password" required />
-          <button id="log-in-button">Log in</button>
-        </div>
-        <div class="sign-up-form">
-          <p>Sign up for Simple Comment</p>
-          <p id="sign-up-status">&nbsp;</p>
-          <label for="sign-up-userid">Username:</label>
-          <input id="sign-up-userid" required />
-          <label for="sign-up-password">Password:</label>
-          <input id="sign-up-password" type="password" required />
-          <label for="sign-up-password-2">Same Password:</label>
-          <input id="sign-up-password-2" type="password" required />
-          <label for="sign-up-email">Email:</label>
-          <input id="sign-up-email" required />
-          <label for="sign-up-display-name">Display Name:</label>
-          <input
-            id="sign-up-display-name"
-            placeholder="How do you want to be known?"
-          />
-          <button id="sign-up-button">Sign up</button>
-        </div>
-      </div>
-      <p id="status-display"></p>
-      <ul id="topic-list"></ul>
+      <p>Welcome to <i>Simple Comment</i></p>
+
+      <details open>
+        <summary>
+          <h2>Intro</h2>
+        </summary>
+        <p>
+          I wanted a commenting system for my blog, but the available solutions
+          (and there are many) were not quite right. I wanted to care for my
+          visitors' data and privacy, but many of the most popular solutions do
+          not value user privacy and sell user data. Other solutions are easy to
+          use, but require ongoing payment. Others are free and open-source, but
+          require maintaining a server. I looked for a solution that was
+          serverless, open source, configurable, had a free tier across the
+          entire tech stack, and in which user data was sacrosanct. A tall
+          order. Not finding it, I decided to build it. This became
+          <i>Simple Comment</i>.
+        </p>
+      </details>
+
+      <details>
+        <summary>
+          <h2>Tech stack</h2>
+        </summary>
+        <p>
+          <a href="https://www.netlify.com/">Netlify</a>, among others, has a
+          free-tier offering. If your site is personal, traffic is low and your
+          build process is quick, they will host your website for free. They
+          also will host your lambda functions, which make excellent API
+          endpoints. If your site earns more traffic, Netlify will scale with
+          you.
+        </p>
+        <p>
+          <a href="https://www.mongodb.com/cloud/atlas">MongoDB Atlas</a> also
+          has a free-tier offering and its document-based indexing is great for
+          a commenting system. If your data needs are under 500MB, they will
+          host your data for free, and also will scale up as needed.
+        </p>
+        <p>
+          The free-tier offerings and my personal familiarity with these
+          services drove the initial tech stack, but <i>Simple Comment</i> is
+          designed from the ground up to be modular, not tightly coupled to
+          particulare services, so others (e.g. Vercel, PostgreSQL) can be
+          swapped in with relative ease
+        </p>
+      </details>
+
+      <details>
+        <summary>
+          <h2>Open-source & usability</h2>
+        </summary>
+        <p>
+          I also wanted others to be able to use it and make it their own. If a
+          non-technical person can follow step-by-step instructions, they can
+          add <i>Simple Comment</i> to their website. If a developer prefers to
+          use PostgreSQL instead of MongoDB, or Vercel instead of Netlify, or
+          Auth0 instead of the <i>Simple Comment</i> homegrown auth, I want
+          those to be easy to swap in. The primary goal is clear documentation,
+          intuitive API, a "just works" setup, and a friendly developer
+          community.
+        </p>
+        <p>
+          <i>Simple Comment</i>'s source code is available here:
+          <a href="https://github.com/rendall/simple-comment">
+            https://github.com/rendall/simple-comment
+          </a>
+        </p>
+      </details>
+
+      <details>
+        <summary>
+          <h2>Philosophy and larger mission</h2>
+        </summary>
+        <p>
+          As a very light aside, I would like <i>Simple Comment</i> and
+          similarly-minded projects to be part of a movement to distribute and
+          diversify social media and the web, to move social media out of walled
+          gardens and monetization business models. I believe the promise of
+          social media as the grand, ubiquitous unifier of humanity will only be
+          fulfilled when all of us control our own online presences and curate
+          our own feeds at minimal or no cost. I hope
+          <em>Simple Comment</em> can be one humble beachhead in that endeavor.
+        </p>
+      </details>
+
+      <details>
+        <summary>
+          <h2>Status</h2>
+        </summary>
+        <p>
+          For now, it's an
+          <a
+            href="https://en.wikipedia.org/wiki/Minimum_viable_product"
+            title="minimum viable product"
+            >MVP</a
+          >
+          good enough for
+          <a href="https://blog.rendall.dev">my personal blog</a>, and its quite
+          rough compared to my ambitions for it. Now that the API works as
+          expected the next priority is to extend the same care and love to the
+          frontend and user experience.
+        </p>
+      </details>
+
+      <details open>
+        <summary>
+          <h2>Feedback</h2>
+        </summary>
+        <p>
+          I would be grateful for your input. If you want it for your website, I
+          will work with you. Let's collaborate to make it happen! If you have
+          any thoughts, comments, feedback of any kind, including negative
+          feedback, I'm open to hearing it. Leave a comment here, or
+          <a href="https://www.rendall.dev/">contact me</a>.
+        </p>
+      </details>
+
+      <div id="simple-comment-display"></div>
     </main>
-    <script type="module" src="./js/index.js"></script>
+    <script type="module" src="./js/simple-comment.js" defer></script>
   </body>
 </html>
