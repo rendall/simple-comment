@@ -56,7 +56,7 @@ let clearReply = () => {}
 let updateReply = () => {}
 
 // string type guard
-const isString = (x: any): x is string => typeof x === "string"
+const isString = (x: unknown): x is string => typeof x === "string"
 // Response type guard
 const isResponse = (
   res: string | ResolvedResponse | Response
@@ -104,7 +104,7 @@ const insertReplyInput = (commentId: CommentId) => {
   nameInput.setAttribute("id", "name-field")
   nameInput.setAttribute("placeholder", "What's your name?")
   userInfoGroup.appendChild(nameInput)
-  nameInput.value = !!user ? user.name : ""
+  nameInput.value = user?.name ?? ""
   nameInput.toggleAttribute("disabled", !!user)
 
   const emailLabel = document.createElement("label")
@@ -115,7 +115,7 @@ const insertReplyInput = (commentId: CommentId) => {
   const emailInput = document.createElement("input")
   emailInput.setAttribute("id", "email-field")
   emailInput.setAttribute("placeholder", "What's your email?")
-  emailInput.value = !!user ? user.email : ""
+  emailInput.value = user?.email ?? ""
   emailInput.toggleAttribute("disabled", !!user)
   userInfoGroup.appendChild(emailInput)
 
@@ -519,7 +519,7 @@ const onReceiveDiscussion = (
  * ---------------------------------- */
 /* onCommentSubmit
  * The user has pressed the submit button and expects something to happen. This function handles those possiblities */
-const onCommentSubmit = (submitElems, targetId) => async e => {
+const onCommentSubmit = (submitElems, targetId) => async () => {
   const { replyTextarea, nameInput, emailInput } = submitElems
   const text = replyTextarea.value
   const name = nameInput.value
@@ -573,7 +573,7 @@ const onCommentSubmit = (submitElems, targetId) => async e => {
 /* onReplyToComment
  * The user has pushed the 'reply' button adjacent to a comment. This
  * method responds by coordinating building the UI */
-const onReplyToComment = (comment: Comment | Discussion) => e => {
+const onReplyToComment = (comment: Comment | Discussion) => () => {
   clearReply()
   insertReplyInput(comment.id)
 }
@@ -599,7 +599,7 @@ const onReplyToTopic = onReplyToComment
  * The user has pressed the logout button. This method coordinates
  * the response of deleting authentication and updating the user
  * display */
-const onLogoutClick = e => {
+const onLogoutClick = () => {
   deleteAuth().then(updateLoginStatus).catch(setErrorStatus)
 }
 
@@ -607,7 +607,7 @@ const onLogoutClick = e => {
  * The user has pressed the login button. This method coordinates
  * validating the input and sending the authentication request to the
  * server. */
-const onLoginClick = e => {
+const onLoginClick = () => {
   const usernamevalue = (document.querySelector("#userid") as HTMLInputElement)
     .value
   const passwordvalue = (

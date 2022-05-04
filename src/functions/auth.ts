@@ -1,5 +1,5 @@
 import * as dotenv from "dotenv"
-import type { APIGatewayEvent, APIGatewayEventRequestContext } from "aws-lambda"
+import type { APIGatewayEvent } from "aws-lambda"
 import { MongodbService } from "../lib/MongodbService"
 import { Success, Error, AuthToken } from "../lib/simple-comment"
 import {
@@ -42,7 +42,6 @@ const getAllowHeaders = (event: APIGatewayEvent) => {
 
 export const handler = async (
   event: APIGatewayEvent,
-  context: APIGatewayEventRequestContext
 ) => {
   const dirs = event.path.split("/")
   const isValidPath = dirs.length <= 5
@@ -66,11 +65,12 @@ export const handler = async (
         return handleOption(event)
       case "DELETE":
         return service.authDELETE()
-      default:
+      default: {
         const headers = getAllowHeaders(event)
         return new Promise<Error>(resolve =>
           resolve({ ...error405MethodNotAllowed, headers })
         )
+      }
     }
   }
 

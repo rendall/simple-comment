@@ -223,9 +223,7 @@ export class MongodbService extends Service {
         return
       }
 
-      const hasAdminOnlyProps = adminOnlyModifiableUserProperties.some(prop =>
-        newUser.hasOwnProperty(prop)
-      )
+      const hasAdminOnlyProps = adminOnlyModifiableUserProperties.some(prop => prop in newUser)
 
       if (hasAdminOnlyProps && (!authUser || !authUser.isAdmin)) {
         const adminOnlyProp = Object.keys(newUser).find(prop =>
@@ -340,7 +338,7 @@ export class MongodbService extends Service {
    **/
   userListGET = (authUserId?: UserId) =>
     new Promise<Success<AdminSafeUser[] | PublicSafeUser[]> | Error>(
-      async (resolve, reject) => {
+      async (resolve) => {
         const usersCollection: Collection<User> = (
           await this.getDb()
         ).collection("users")
@@ -458,7 +456,7 @@ export class MongodbService extends Service {
             resolve({ ...success204UserUpdated, body: safeUser })
           } else reject(error500UpdateError)
         })
-        .catch(e => reject(error500UpdateError))
+        .catch(() => reject(error500UpdateError))
     })
 
   /**
@@ -507,7 +505,7 @@ export class MongodbService extends Service {
       //TODO: delete all of the user's comments, too!
       users
         .deleteOne({ id: userId })
-        .then(x => resolve(success202UserDeleted))
+        .then(() => resolve(success202UserDeleted))
         .catch(e =>
           authUser.isAdmin
             ? reject({ ...error500UpdateError, body: e })
@@ -963,7 +961,7 @@ export class MongodbService extends Service {
 
         comments
           .updateOne({ id: foundComment.id }, { $set: deletedComment })
-          .then(x => resolve({ ...success202CommentDeleted }))
+          .then(() => resolve({ ...success202CommentDeleted }))
           .catch(e =>
             authUser.isAdmin
               ? reject({ ...error500UpdateError, body: e })
@@ -975,7 +973,7 @@ export class MongodbService extends Service {
         // using findOneAndDelete
         comments
           .findOneAndDelete({ id: foundComment.id })
-          .then(x => resolve(success202CommentDeleted))
+          .then(() => resolve(success202CommentDeleted))
           .catch(e =>
             authUser.isAdmin
               ? reject({ ...error500UpdateError, body: e })
@@ -1054,7 +1052,7 @@ export class MongodbService extends Service {
         }
       }
 
-      const hasInvalidCharacters = newTopic.id.match(/[^a-z0-9\-]/)
+      const hasInvalidCharacters = newTopic.id.match(/[^a-z0-9-]/)
       if (hasInvalidCharacters) {
         const invalidChar = hasInvalidCharacters ? hasInvalidCharacters[0] : ""
         reject({
@@ -1454,7 +1452,7 @@ export class MongodbService extends Service {
       // but we don't want anyone to reply in the meantime, so lock it:
       discussions
         .findOneAndDelete({ id: topicId })
-        .then(x => resolve(success202TopicDeleted))
+        .then(() => resolve(success202TopicDeleted))
         .catch(e =>
           authUser.isAdmin
             ? reject({ ...error500UpdateError, body: e })
@@ -1463,7 +1461,7 @@ export class MongodbService extends Service {
     })
 
   authDELETE = () =>
-    new Promise<Success>((resolve, reject) => {
+    new Promise<Success>((resolve) => {
       const pastDate = new Date(0).toUTCString()
       const COOKIE_HEADER = {
         "Set-Cookie": `simple_comment_token=logged-out; path=/; SameSite=${
@@ -1474,7 +1472,7 @@ export class MongodbService extends Service {
     })
 
   verifyGET = (token?: AuthToken) =>
-    new Promise<Success<TokenClaim> | Error>((resolve, reject) => {
+    new Promise<Success<TokenClaim> | Error>((resolve) => {
       try {
         const claim: TokenClaim = jwt.verify(token, process.env.JWT_SECRET, {
           ignoreExpiration: false

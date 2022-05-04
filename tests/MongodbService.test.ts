@@ -722,13 +722,16 @@ describe("Full API service test", () => {
 
   // Comment Read
   // get comment to /comment/{commentId} where commentId does not exist should return 404
-  test("GET comment to /comment/{commentId} where comment does not exist", () => {
+  test("GET comment to /comment/{commentId} where comment does not exist", async () => {
     const parentCommentId = uuidv4()
     const user = getAuthUser()
     expect.assertions(1)
-    return service
-      .commentGET(parentCommentId, user.id)
-      .catch(e => expect(e).toHaveProperty("statusCode", 404))
+
+    try {
+      await service.commentGET(parentCommentId, user.id)
+    } catch (error) {
+      expect(error).toHaveProperty("statusCode", 404)
+    }
   })
   // get comment to /comment/{commentId} should return the comment with 200 OK
   test("GET comment to /comment/{commentId}", () => {

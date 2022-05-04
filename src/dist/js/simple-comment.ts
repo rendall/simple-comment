@@ -57,7 +57,7 @@ let clearReply = () => {}
 let updateReply = () => {}
 
 // string type guard
-const isString = (x: any): x is string => typeof x === "string"
+const isString = (x: unknown): x is string => typeof x === "string"
 // Response type guard
 const isResponse = (
   res: string | ResolvedResponse | Response
@@ -104,7 +104,7 @@ const insertReplyInput = (commentId: CommentId) => {
   const nameField = document.createElement("input")
   nameField.setAttribute("id", "name-field")
   userInfoGroup.appendChild(nameField)
-  nameField.value = !!user ? user.name : ""
+  nameField.value = user?.name ?? ""
 
   const emailLabel = document.createElement("label")
   emailLabel.setAttribute("for", "email-field")
@@ -113,7 +113,7 @@ const insertReplyInput = (commentId: CommentId) => {
 
   const emailField = document.createElement("input")
   emailField.setAttribute("id", "email-field")
-  emailField.value = !!user ? user.email : ""
+  emailField.value = user?.email ?? ""
   userInfoGroup.appendChild(emailField)
 
   const replyField = document.createElement("textarea")
@@ -529,7 +529,7 @@ const onReceiveDiscussion = (
  * ---------------------------------- */
 /* onCommentSubmit
  * The user has pressed the submit button and expects something to happen. This function handles those possiblities */
-const onCommentSubmit = (submitElems, targetId) => async e => {
+const onCommentSubmit = (submitElems, targetId) => async () => {
   const { replyTextarea, nameInput, emailInput } = submitElems
   const text: string = replyTextarea.value
 
@@ -613,7 +613,7 @@ const onCommentSubmit = (submitElems, targetId) => async e => {
 /* onReplyToComment
  * The user has pushed the 'reply' button adjacent to a comment. This
  * method responds by coordinating building the UI */
-const onReplyToComment = (comment: Comment | Discussion) => e => {
+const onReplyToComment = (comment: Comment | Discussion) => () => {
   clearReply()
   insertReplyInput(comment.id)
 }
@@ -639,7 +639,7 @@ const onReplyToTopic = onReplyToComment
  * The user has pressed the logout button. This method coordinates
  * the response of deleting authentication and updating the user
  * display */
-const onLogoutClick = e => {
+const onLogoutClick = () => {
   deleteAuth()
     .then(() => updateLoginStatus())
     .catch(setErrorStatus)
@@ -649,7 +649,7 @@ const onLogoutClick = e => {
  * The user has pressed the login button. This method coordinates
  * validating the input and sending the authentication request to the
  * server. */
-const onLoginClick = e => {
+const onLoginClick = () => {
   const usernamevalue = (document.querySelector("#userid") as HTMLInputElement)
     .value
   const passwordvalue = (
@@ -700,7 +700,7 @@ const setup = async (
 
   const existingDiv = document.querySelector("#simple-comment-display")
 
-  if (!!existingDiv) console.info("`#simple-comment-display` found")
+  if (existingDiv) console.info("`#simple-comment-display` found")
   else console.info("`#simple-comment-display` not found. Creating.")
 
   const createdDiv = existingDiv ? null : document.createElement("div")
