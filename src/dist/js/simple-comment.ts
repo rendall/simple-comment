@@ -595,14 +595,13 @@ const onCommentSubmit = (submitElems, targetId) => async e => {
   if (ul.firstChild) ul.insertBefore(li, ul.firstChild)
   else ul.appendChild(li)
 
-  const onCommentResponse = parentElement => (
-    response: ResolvedResponse<Comment>
-  ) => {
-    setStatus("Successfully posted comment")
-    const comment = response.body
-    appendComment(comment, parentElement)
-    clearReply()
-  }
+  const onCommentResponse =
+    parentElement => (response: ResolvedResponse<Comment>) => {
+      setStatus("Successfully posted comment")
+      const comment = response.body
+      appendComment(comment, parentElement)
+      clearReply()
+    }
 
   const isSameUserInfo = name === currUser.name && email === currUser.email
 
@@ -653,9 +652,9 @@ const onLogoutClick = e => {
 const onLoginClick = e => {
   const usernamevalue = (document.querySelector("#userid") as HTMLInputElement)
     .value
-  const passwordvalue = (document.querySelector(
-    "#password"
-  ) as HTMLInputElement).value
+  const passwordvalue = (
+    document.querySelector("#password") as HTMLInputElement
+  ).value
 
   const username = usernamevalue ? usernamevalue.trim() : usernamevalue
   const password = passwordvalue ? passwordvalue.trim() : passwordvalue
