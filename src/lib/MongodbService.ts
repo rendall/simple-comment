@@ -225,7 +225,9 @@ export class MongodbService extends Service {
         return
       }
 
-      const hasAdminOnlyProps = adminOnlyModifiableUserProperties.some(prop => prop in newUser)
+      const hasAdminOnlyProps = adminOnlyModifiableUserProperties.some(
+        prop => prop in newUser
+      )
 
       if (hasAdminOnlyProps && (!authUser || !authUser.isAdmin)) {
         const adminOnlyProp = Object.keys(newUser).find(prop =>
@@ -340,7 +342,7 @@ export class MongodbService extends Service {
    **/
   userListGET = (authUserId?: UserId) =>
     new Promise<Success<AdminSafeUser[] | PublicSafeUser[]> | Error>(
-      async (resolve) => {
+      async resolve => {
         const usersCollection: Collection<User> = (
           await this.getDb()
         ).collection("users")
@@ -1460,7 +1462,7 @@ export class MongodbService extends Service {
     })
 
   authDELETE = () =>
-    new Promise<Success>((resolve) => {
+    new Promise<Success>(resolve => {
       const pastDate = new Date(0).toUTCString()
       const COOKIE_HEADER = {
         "Set-Cookie": `simple_comment_token=logged-out; path=/; SameSite=${
@@ -1471,7 +1473,7 @@ export class MongodbService extends Service {
     })
 
   verifyGET = (token?: AuthToken) =>
-    new Promise<Success<TokenClaim> | Error>((resolve) => {
+    new Promise<Success<TokenClaim> | Error>(resolve => {
       try {
         const claim: TokenClaim = jwt.verify(token, process.env.JWT_SECRET, {
           ignoreExpiration: false

@@ -1,4 +1,4 @@
-import { uuidv4 } from "../src/lib/crypt"
+import { uuidv4 } from "../../src/lib/crypt"
 import type {
   Comment,
   CommentId,
@@ -7,7 +7,7 @@ import type {
   Topic,
   TopicId,
   User
-} from "../src/lib/simple-comment"
+} from "../../src/lib/simple-comment"
 
 export const alphaUserInput =
   "ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÅ abcdefghijklmnopqrstuvwxyzäöå 1234567890 !@#$%^&*()_+-= "

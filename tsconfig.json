@@ -1,10 +1,6 @@
 {
   "include": ["./src"],
-  "exclude": [
-    "./src/netlify-functions/**/*.ts",
-    "./src/lib/*.ts",
-    "./src/*.ts"
-  ],
+  "exclude": ["./src/*.ts", "./src/lib/*.ts", "./src/tests/*.test.ts"],
   "compilerOptions": {
     "baseUrl": ".",
     "paths": { "*": ["types/*"] },

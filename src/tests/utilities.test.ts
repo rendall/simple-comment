@@ -3,9 +3,9 @@ import {
   isGuestId,
   validateEmail,
   validateUserId
-} from "../src/lib/utilities"
+} from "../../src/lib/utilities"
 import { v4 as uuidv4 } from "uuid"
-import { Email } from "../src/lib/simple-comment"
+import { Email } from "../../src/lib/simple-comment"
 
 describe("test the `getAllowOriginHeaders` function", () => {
   it("should return {headers} if there is a header match", () => {
