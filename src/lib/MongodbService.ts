@@ -30,7 +30,9 @@ import {
   toSafeUser,
   toTopic,
   toUpdatedUser,
-  validateUser
+  validateUser,
+  isAllowedOrigin,
+  normalizeUrl
 } from "./utilities"
 import { policy } from "../policy"
 import {
@@ -1038,10 +1040,7 @@ export class MongodbService extends Service {
           return
         }
 
-        const allowedId = newTopic.referer
-          .toLowerCase()
-          .replace(/[^a-z0-9]/g, "-")
-        const isAllowed = allowedId === newTopic.id
+        const isAllowed = isAllowedOrigin(normalizeUrl(newTopic.referer))
 
         if (!isAllowed) {
           reject({

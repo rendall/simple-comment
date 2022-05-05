@@ -124,6 +124,8 @@ const getOrigin = (headers: { [header: string]: string }) =>
 
 export const getAllowedOrigins = () => process.env.ALLOW_ORIGIN.split(",")
 
+export const isAllowedOrigin = (origin: string) => getAllowedOrigins().includes(origin)
+
 /** Returns the proper headers for Access-Control-Allow-Origin
  * as set in .env and as determined by the Request Origin header
  *
@@ -656,3 +658,9 @@ const commonPasswords = [
   "zing",
   "zxcvbnm"
 ]
+
+export const normalizeUrl = (url: string) => {
+  if (url.endsWith("/")) return normalizeUrl ( url.substring(0, url.length - 1) )
+  return url
+}
+
