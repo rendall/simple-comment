@@ -56,14 +56,10 @@ const veryLongString = fs.readFileSync(longFile, "utf8")
 const MONGO_URI = global.__MONGO_URI__
 const MONGO_DB = global.__MONGO_DB_NAME__
 
-// This is set to false in order to inspect data directly in the database
-const doDropTestDatabase = true
-
 declare const global: any
 
-//@ts-expect-error
-const adminUnsafeUserProperties: (keyof User)[] = ["hash", "_id", "password"]
-const publicUnsafeUserProperties: (keyof User)[] = [
+const adminUnsafeUserProperties: (keyof User | "password")[] = ["hash", "_id", "password"]
+const publicUnsafeUserProperties: (keyof User | "password")[] = [
   ...adminUnsafeUserProperties,
   "email",
   "isVerified"
@@ -161,17 +157,18 @@ describe("Full API service test", () => {
     const comments = db.collection<Comment | DeletedComment | Discussion>(
       "comments"
     )
+
+    console.log({users: testAllUsers, comments:[...testComments, ...testDeleteTopicComments]})
     // This insert includes both topics and comments
     await comments.insertMany([...testComments, ...testDeleteTopicComments])
   }, 120000)
 
   afterAll(async () => {
-    if (doDropTestDatabase) await db.dropDatabase()
+    await db.dropDatabase()
     await service.close()
   }, 120000)
 
-  // post to auth with unknown credentials should return error 404
-  test("POST to auth with unknown user should 404", () => {
+  test("POST to auth with unknown credentials should return error 404", () => {
     expect.assertions(1)
     const unknownUserId = randomString()
     const unknownPassword = randomString(alphaUserInput)
@@ -179,7 +176,6 @@ describe("Full API service test", () => {
       .authPOST(unknownUserId, unknownPassword)
       .catch(e => expect(e).toEqual(error404UserUnknown))
   })
-  // post to auth with incorrect credentials should return error 401
   test("POST to auth with incorrect password should 401", () => {
     expect.assertions(1)
     const testAdmin = getAuthUser(u => u.isAdmin)
@@ -188,7 +184,6 @@ describe("Full API service test", () => {
       .authPOST(testAdmin.id, badPassword)
       .catch(e => expect(e).toEqual(error401BadCredentials))
   })
-  // post to auth with correct credentials should return authtoken
   test("POST to auth with correct credentials should return auth token", () => {
     const authToken = getAuthToken(authUserTest.id)
     // The difference in timing between the line above and the authToken returned from the service
@@ -211,8 +206,7 @@ describe("Full API service test", () => {
       )
   })
   // User Create
-  // post to /user should return user and 201 User created
-  test("POST to /user", () => {
+  test("POST to /user should return user and 201 User created", () => {
     const adminUser = getAuthUser(u => u.isAdmin)
     return service.userPOST(testNewUser, adminUser.id).then(value => {
       expect(value).toHaveProperty("statusCode", 201)
@@ -220,8 +214,7 @@ describe("Full API service test", () => {
       expect(value.body).toHaveProperty("email", testNewUser.email)
     })
   })
-  // POST to /user with id uuid with admin credentials should fail
-  test("POST to /user with id uuid with admin credentials", () => {
+  test("POST to /user with id uuid with admin credentials should fail", () => {
     const guestUser = { ...testNewUser, id: uuidv4() }
     const authUser = getAuthUser(u => u.isAdmin)
     expect.assertions(1)
@@ -229,8 +222,7 @@ describe("Full API service test", () => {
       .userPOST(guestUser, authUser.id)
       .catch(error => expect(error).toHaveProperty("statusCode", 403))
   })
-  // POST to /user with id uuid with same credentials should succeed
-  test("POST to /user with id uuid with same credentials", () => {
+  test("POST to /user with id uuid with same credentials should succeed", () => {
     const id = uuidv4()
     const guestUser = {
       id,
@@ -242,7 +234,6 @@ describe("Full API service test", () => {
       .userPOST(guestUser, id)
       .then(value => expect(value).toHaveProperty("statusCode", 201))
   })
-  // post to /user without credentials should return according to policy
   if (policy.canPublicCreateUser === true) {
     test("POST to /user without credentials should create user", () => {
       const newUser = {
@@ -255,7 +246,6 @@ describe("Full API service test", () => {
         .userPOST(newUser)
         .then(value => expect(value).toHaveProperty("statusCode", 201))
     })
-    // post to /user changing admin-only properties without credentials should error 403
     test("POST to /user with admin-only properties without credentials should error 403", () => {
       const newUser = {
         ...mockUser(),
@@ -268,7 +258,6 @@ describe("Full API service test", () => {
         .userPOST(newUser)
         .catch(error => expect(error).toHaveProperty("statusCode", 403))
     })
-    // post to /user changing admin-only properties without credentials should error 403
     test("POST to /user with admin-only properties without admin credentials should error 403", () => {
       const newUser = {
         ...mockUser(),
@@ -328,16 +317,14 @@ describe("Full API service test", () => {
       .userPOST(newUser, adminUser.id)
       .catch(value => expect(value).toHaveProperty("statusCode", 403))
   })
-  // post to /user with existing username should return 409 user exists
-  test("POST to /user with identical credentials", () => {
+  test("POST to /user with existing username should return 409 user exists", () => {
     const authUser = getAuthUser(u => u.isAdmin)
     expect.assertions(1)
     return service
       .userPOST(testNewUser, authUser.id)
       .catch(value => expect(value).toBe(error409UserExists))
   })
-  // get to /auth with newly created user should return authtoken
-  test("GET to /auth with newly created user", () => {
+  test("GET to /auth with newly created user should return authtoken", () => {
     const authToken = getAuthToken(testNewUser.id)
     return service
       .authPOST(testNewUser.id, testNewUser.password)
@@ -347,16 +334,14 @@ describe("Full API service test", () => {
   })
 
   // User Read
-  // get to /user/{userId} where userId does not exist should return 404
-  test("GET to /user/{userId} where userId does not exist", () => {
+  test("GET to /user/{userId} where userId does not exist should return 404", () => {
     const adminUserTest = getAuthUser(u => u.isAdmin)
     expect.assertions(1)
     return service
       .userGET(randomString(), adminUserTest.id)
       .catch(e => expect(e).toEqual(error404UserUnknown))
   })
-  // get to /user/{userId} should return User and 200
-  test("GET to /user/{userId} should", () => {
+  test("GET to /user/{userId} should return User and 200", () => {
     const targetUser = getTargetUser()
     const authAdminUser = getAuthUser(u => u.isAdmin)
     return service
@@ -370,8 +355,7 @@ describe("Full API service test", () => {
         expect(res.body).toHaveProperty("email")
       })
   })
-  // get to /user should return list of users
-  test("GET /user", () => {
+  test("GET to /user should return list of users", () => {
     return service
       .userListGET()
       .then((res: Success<AdminSafeUser[] | PublicSafeUser[]> | Error) => {
@@ -388,8 +372,7 @@ describe("Full API service test", () => {
         expect(checkProp("hash")).toBe(false)
       })
   })
-  // get to /user with admin credentials can return list of users with email
-  test("GET /user admin", () => {
+  test("GET to /user with admin credentials can return list of users with email", () => {
     const adminUserTest = getAuthUser(u => u.isAdmin)
     return service
       .userListGET(adminUserTest.id)
@@ -405,7 +388,7 @@ describe("Full API service test", () => {
         expect(checkProp("hash")).toBe(false)
       })
   }) // get to /user/{userId} should return user
-  test("GET to /user/{userId} with admin", () => {
+  test("GET get to /user/{userId} should return user", () => {
     const user = getAuthUser()
     const adminUserTest = getAuthUser(u => u.isAdmin)
     return service
@@ -432,16 +415,14 @@ describe("Full API service test", () => {
       })
   })
   // User Update
-  // put to /user/{userId} with no credentials should return 401
-  test("PUT to /user/{userId} with no credentials", () => {
+  test("PUT to /user/{userId} with no credentials should return 401", () => {
     const targetUser = getTargetUser()
     return service
       .userPUT(targetUser.id, targetUser)
       .then(res => expect(true).toBe(false))
       .catch(e => expect(e).toBe(error401UserNotAuthenticated))
   })
-  // put to /user/{userId} with improper credentials should return 403
-  test("PUT to /user/{userId} with improper credentials", () => {
+  test("PUT to /user/{userId} with improper credentials should return 403", () => {
     const targetUser = getTargetUser()
     const ordinaryUser = getAuthUser(u => !u.isAdmin)
     return service
@@ -449,7 +430,6 @@ describe("Full API service test", () => {
       .then(res => expect(true).toBe(false))
       .catch(e => expect(e.statusCode).toBe(403))
   })
-  // put to /user/{userId} with public, own credentials cannot modify isAdmin
   test("PUT to /user/{userId} with public, own credentials cannot modify isAdmin", () => {
     const ordinaryUser = getTargetUser(u => !u.isAdmin)
     const updatedUser = { ...ordinaryUser, isAdmin: true }
@@ -458,7 +438,6 @@ describe("Full API service test", () => {
       .userPUT(updatedUser.id, updatedUser, ordinaryUser.id)
       .catch(error => expect(error).toBe(error403ForbiddenToModify))
   })
-  // put to /user/{userId} with public, own credentials cannot modify isVerified
   test("PUT to /user/{userId} with public, own credentials cannot modify isVerified", () => {
     const ordinaryUser = getTargetUser(u => !u.isAdmin)
     const updatedUser = { ...ordinaryUser, isVerified: true }
@@ -467,8 +446,7 @@ describe("Full API service test", () => {
       .userPUT(updatedUser.id, updatedUser, ordinaryUser.id)
       .catch(error => expect(error).toBe(error403ForbiddenToModify))
   })
-  // put to /user/{userId} with own credentials should alter user return 204 User updated
-  test("PUT to /user/{userId} with own credentials", () => {
+  test("PUT to /user/{userId} with own credentials should alter user return 204 User updated", () => {
     const targetUser = getTargetUser()
     const updatedUser = {
       id: targetUser.id,
@@ -486,7 +464,6 @@ describe("Full API service test", () => {
         expect(isAdminSafeUser(resbody)).toBe(true)
       })
   })
-  // put to /user/{userId} with very long password should not timeout
   test("PUT to /user/{userId} with very long password should not timeout", () => {
     const targetUser = getTargetUser()
     const updatedUser = {
@@ -505,7 +482,6 @@ describe("Full API service test", () => {
         expect(isAdminSafeUser(resbody)).toBe(true)
       })
   })
-  // put to /user/{userId} with invalid name, email, password should fail
   test("PUT to /user/{userId} with invalid name, email, password should fail", () => {
     const targetUser = getTargetUser(u => !u.isAdmin && !u.isVerified)
     const adminAuthUser = getAuthUser(u => u.isAdmin)
@@ -524,8 +500,7 @@ describe("Full API service test", () => {
         expect(err).toHaveProperty("statusCode", 400)
       })
   })
-  // put to /user/{userId} with admin credentials should alter user return 204 User updated
-  test("PUT to /user/{userId} with admin credentials", () => {
+  test("PUT to /user/{userId} with admin credentials should alter user return 204 User updated", () => {
     const targetUser = getTargetUser(u => !u.isAdmin && !u.isVerified)
     const adminAuthUser = getAuthUser(u => u.isAdmin)
     const updatedUser: User = {
@@ -543,7 +518,6 @@ describe("Full API service test", () => {
         expect(res.body).toHaveProperty("isVerified", true)
       })
   })
-  // put to /user/{userId} with userId as uuid should succeed
   test("PUT to /user/{userId} with userId as uuid should succeed", async () => {
     const id = uuidv4()
     const guestUser = {
@@ -594,9 +568,7 @@ describe("Full API service test", () => {
         expect(error).toHaveProperty("statusCode", 403)
       })
   })
-
-  // put to /user/{userId} where userId does not exist (and admin credentials) should return 404
-  test("PUT to /user/{userId} where userId does not exist and admin credentials", () => {
+  test("PUT to /user/{userId} where userId does not exist (and admin credentials) should return 404", () => {
     const targetUser = mockUser()
     const adminAuthUser = getAuthUser(u => u.isAdmin)
     expect.assertions(1)
@@ -606,16 +578,14 @@ describe("Full API service test", () => {
   })
 
   // User Delete
-  // delete to /user/{userId} with no credentials should return 401
-  test("DELETE to /user/{userId} with no credentials", () => {
+  test("DELETE to /user/{userId} with no credentials should return 401", () => {
     const user = getTargetUser()
     expect.assertions(1)
     return service
       .userDELETE(user.id)
       .catch(e => expect(e).toBe(error401UserNotAuthenticated))
   })
-  // delete to /user/{userId} with improper credentials should return 403
-  test("DELETE to /user/{userId} with improper credentials", () => {
+  test("DELETE to /user/{userId} with improper credentials should return 403", () => {
     const userToDelete = getTargetUser()
     const improperAuthUser = getAuthUser(
       u => !u.isAdmin && u.id !== userToDelete.id
@@ -625,8 +595,7 @@ describe("Full API service test", () => {
       .userDELETE(userToDelete.id, improperAuthUser.id)
       .catch(e => expect(e).toBe(error403UserNotAuthorized))
   })
-  // delete to /user/{userId} where userId does not exist and admin credentials should return 404
-  test("DELETE to /user/{userId} where userId does not exist and admin credentials", () => {
+  test("DELETE to /user/{userId} where userId does not exist and admin credentials should return 404", () => {
     const nonExistentUser = mockUser()
     const adminAuthUser = getAuthUser(u => u.isAdmin)
     expect.assertions(1)
@@ -634,8 +603,7 @@ describe("Full API service test", () => {
       .userDELETE(nonExistentUser.id, adminAuthUser.id)
       .catch(e => expect(e).toBe(error404UserUnknown))
   })
-  // delete to /user/{userId} with hardcoded admin userId should return 403
-  test("DELETE to /user/{userId} targeting hardcoded admin userId", () => {
+  test("DELETE to /user/{userId} with hardcoded admin userId should return 403", () => {
     const adminAuthUser = getAuthUser(u => u.isAdmin)
     const simpleCommentModeratorId = process.env.SIMPLE_COMMENT_MODERATOR_ID
     expect.assertions(1)
@@ -643,8 +611,7 @@ describe("Full API service test", () => {
       .userDELETE(simpleCommentModeratorId, adminAuthUser.id)
       .catch(e => expect(e).toBe(error403Forbidden))
   })
-  // delete to /user/{userId} should delete user and return 202 User deleted
-  test("DELETE to /user/{userId} by admin", () => {
+  test("DELETE to /user/{userId} should delete user and return 202 User deleted", () => {
     const userToDelete = getTargetUser()
     const adminAuthUser = getAuthUser(u => u.isAdmin)
     expect.assertions(2)
@@ -672,8 +639,7 @@ describe("Full API service test", () => {
       })
   })
   // Comment Create
-  // post comment to comment to /discussion/{discussionId} with too long comment should return 413 Comment too long
-  test("POST comment to /comment/{commentId} with too long comment", async () => {
+  test("POST comment to comment to /discussion/{discussionId} with too long comment should return 413 Comment too long", async () => {
     const parentComment = chooseRandomElement(testComments)
     const user = getAuthUser()
 
@@ -683,8 +649,7 @@ describe("Full API service test", () => {
       expect(error).toBe(error413CommentTooLong)
     }
   })
-  // post comment to /comment/{commentId} should return comment and 201 Comment created
-  test("POST to /comment/{commentId}", async () => {
+  test("POST comment to /comment/{commentId} should return comment and 201 Comment created", async () => {
     const postResponse = await service.commentPOST(
       newCommentTest.parentId,
       newCommentTest.text,
@@ -698,8 +663,7 @@ describe("Full API service test", () => {
     expect(resbody).toHaveProperty("user")
     expect(resbody.user.id).toBe(newCommentTest.userId)
   })
-  // post comment to /comment/{commentId} without credentials should fail
-  test("POST to /comment/{commentId} without credentials", () => {
+  test("POST comment to /comment/{commentId} without credentials should fail", () => {
     const parentComment = chooseRandomElement(testComments)
     const text = randomString(alphaUserInput, 400)
     expect.assertions(1)
@@ -708,8 +672,7 @@ describe("Full API service test", () => {
     })
   })
 
-  // post comment to /comment/{commentId} with identical information within a short length of time should return 425 Possible duplicate comment
-  test("POST comment to /comment/{commentId} with identical information", () => {
+  test("POST comment to /comment/{commentId} with identical information within a short length of time should return 425 Possible duplicate comment", () => {
     expect.assertions(1)
     return service
       .commentPOST(
@@ -721,8 +684,7 @@ describe("Full API service test", () => {
   })
 
   // Comment Read
-  // get comment to /comment/{commentId} where commentId does not exist should return 404
-  test("GET comment to /comment/{commentId} where comment does not exist", async () => {
+  test("GET comment to /comment/{commentId} where commentId does not exist should return 404", async () => {
     const parentCommentId = uuidv4()
     const user = getAuthUser()
     expect.assertions(1)
@@ -733,8 +695,7 @@ describe("Full API service test", () => {
       expect(error).toHaveProperty("statusCode", 404)
     }
   })
-  // get comment to /comment/{commentId} should return the comment with 200 OK
-  test("GET comment to /comment/{commentId}", () => {
+  test("GET comment to /comment/{commentId} should return the comment with 200 OK", () => {
     const commentsWithChildren = testComments
       .filter(isComment)
       .reduce(
@@ -786,8 +747,7 @@ describe("Full API service test", () => {
   })
 
   // Comment Update
-  // put comment to /comment/{commentId} with no credentials should return 401
-  test("PUT comment to /comment/{commentId} with no credentials", () => {
+  test("PUT comment to /comment/{commentId} with no credentials should return 401", () => {
     const randomComment = chooseRandomElement(testComments.filter(isComment))
     const updateText = randomString(alphaUserInput)
     expect.assertions(1)
@@ -795,8 +755,7 @@ describe("Full API service test", () => {
       .commentPUT(randomComment.id, updateText)
       .catch(e => expect(e).toBe(error401UserNotAuthenticated))
   })
-  // put comment to /comment/{commentId} with improper credentials should return 403
-  test("PUT comment to /comment/{commentId} with improper credentials", () => {
+  test("PUT comment to /comment/{commentId} with improper credentials should return 403", () => {
     const randomComment = chooseRandomElement(
       testComments.filter(c => !c.hasOwnProperty("isLocked"))
     ) as Comment
@@ -809,8 +768,7 @@ describe("Full API service test", () => {
       .commentPUT(randomComment.id, updateText, improperAuthUser.id)
       .catch(e => expect(e).toBe(error403UserNotAuthorized))
   })
-  // put comment to /comment/{commentId} where Id does not exist should return 404
-  test("PUT comment to /comment/{commentId} where Id does not exist", () => {
+  test("PUT comment to /comment/{commentId} where Id does not exist should return 404", () => {
     const unknownComment = { text: randomString(), id: uuidv4() }
     const adminUserTest = authUserTest
     expect.assertions(1)
@@ -818,8 +776,7 @@ describe("Full API service test", () => {
       .commentPUT(unknownComment.id, unknownComment.text, adminUserTest.id)
       .catch(e => expect(e).toHaveProperty("statusCode", 404))
   })
-  // put comment to /comment/{commentId} should return the edited comment with 202 Comment updated
-  test("PUT comment to /comment/{commentId}", () => {
+  test("PUT comment to /comment/{commentId} should return the edited comment with 202 Comment updated", () => {
     const targetComment = chooseRandomElement(
       testComments.filter(isComment)
     ) as Comment
@@ -840,16 +797,14 @@ describe("Full API service test", () => {
   })
 
   // Comment Delete
-  // delete comment to /comment/{commentId} with no credentials should return 401
-  test("DELETE comment to /comment/{commentId} with no credentials", () => {
+  test("DELETE comment to /comment/{commentId} with no credentials should return 401", () => {
     const targetComment = chooseRandomElement(testComments.filter(isComment))
     expect.assertions(1)
     return service
       .commentDELETE(targetComment.id)
       .catch(e => expect(e).toBe(error401UserNotAuthenticated))
   })
-  // delete comment to /comment/{commentId} with improper credentials should return 403
-  test("DELETE comment to /comment/{commentId} with improper credentials", () => {
+  test("DELETE comment to /comment/{commentId} with improper credentials should return 403", () => {
     const targetComment = chooseRandomElement(testComments.filter(isComment))
     // improper user is neither an admin nor the comment poster
     const improperUser = getAuthUser(
@@ -860,8 +815,7 @@ describe("Full API service test", () => {
       .commentDELETE(targetComment.id, improperUser.id)
       .catch(e => expect(e).toBe(error403UserNotAuthorized))
   })
-  // delete comment to /comment/{commentId} where Id does not exist should return 404
-  test("DELETE comment to /comment/{commentId} where Id does not exist", () => {
+  test("DELETE comment to /comment/{commentId} where Id does not exist should return 404", () => {
     const commentId = randomString()
     const adminUser = getAuthUser(u => u.isAdmin)
     expect.assertions(1)
@@ -869,8 +823,7 @@ describe("Full API service test", () => {
       .commentDELETE(commentId, adminUser.id)
       .catch(e => expect(e).toHaveProperty("statusCode", 404))
   })
-  // delete comment to /comment/{commentId} by an admin should delete the comment and return 202 Comment deleted
-  test("DELETE comment to /comment/{commentId} by admin", () => {
+  test("DELETE comment to /comment/{commentId} by an admin should delete the comment and return 202 Comment deleted", () => {
     const targetComment = chooseRandomElement(testComments.filter(isComment))
     const adminUser = getAuthUser(u => u.isAdmin)
     return service
@@ -879,8 +832,7 @@ describe("Full API service test", () => {
         expect(value).toEqual(expect.objectContaining(success202CommentDeleted))
       )
   })
-  // delete comment to /comment/{commentId} by the user should delete the comment and return 202 Comment deleted
-  test("DELETE comment to /comment/{commentId} by self user", () => {
+  test("DELETE comment to /comment/{commentId} by the user should delete the comment and return 202 Comment deleted", () => {
     const selfUser = getAuthUser(u => !u.isAdmin)
     const targetComment = chooseRandomElement(
       testComments
@@ -894,7 +846,6 @@ describe("Full API service test", () => {
   })
 
   // Topic Create
-  // post to /topic with no credentials should return 401
   if (!policy.canFirstVisitCreateTopic)
     test("POST to /topic with no credentials and policy.canPublicCreateTopic===false", () => {
       expect.assertions(2)
@@ -907,8 +858,7 @@ describe("Full API service test", () => {
         expect(value).toHaveProperty("statusCode", 401)
       })
     })
-  // post to /topic with improper credentials should return 403
-  test("POST to /topic with improper credentials", () => {
+  test("POST to /topic with improper credentials should return 403", () => {
     const newTopic = mockTopic()
     const ordinaryUser = getAuthUser(u => !u.isAdmin)
     expect.assertions(2)
@@ -920,8 +870,7 @@ describe("Full API service test", () => {
       expect(value).toHaveProperty("statusCode", 403)
     })
   })
-  // post to /topic should return Discussion object and 201 Discussion created
-  test("POST to /topic", () => {
+  test("POST to /topic should return Discussion object and 201 Discussion created", () => {
     const adminUserTest = getAuthUser(u => u.isAdmin)
     return service
       .topicPOST(testNewTopic, adminUserTest.id)
@@ -937,8 +886,7 @@ describe("Full API service test", () => {
   })
 
   // Topic Read
-  // GET to /topic should return a list of topics and 200 OK
-  test("GET to /topic", () => {
+  test("GET to /topic should return a list of topics and 200 OK", () => {
     return service.topicListGET().then((res: Success<Topic[]> | Error) => {
       const resbody = res.body as Topic[]
       expect(resbody.map(i => i.id)).toEqual(
@@ -946,8 +894,7 @@ describe("Full API service test", () => {
       )
     })
   })
-  // GET to /topic/{topicId} should return a topic and descendent comments
-  test("GET to /topic/{topicId}", () => {
+  test("GET to /topic/{topicId} should return a topic and descendent comments", () => {
     const targetTopicId = chooseRandomElement(testTopics).id
     return service
       .topicGET(targetTopicId)
@@ -959,8 +906,7 @@ describe("Full API service test", () => {
   })
 
   // Discussion Update
-  // put topic  to /topic/{topicId} editing anything except title or isLocked should be ignored
-  test("PUT to /topic/{topicId}", () => {
+  test("PUT topic  to /topic/{topicId} editing anything except title or isLocked should be ignored", () => {
     const topic = chooseRandomElement(testTopics)
     const putTopic = {
       ...topic,
@@ -978,8 +924,7 @@ describe("Full API service test", () => {
         )
       })
   })
-  // put topic to /topic/{topicId} with no credentials should return 401
-  test("PUT topic to /topic/{topicId} with no credentials", () => {
+  test("PUT topic to /topic/{topicId} with no credentials should return 401", () => {
     const topic = chooseRandomElement(testTopics)
     const putTopic = {
       ...topic,
@@ -991,8 +936,7 @@ describe("Full API service test", () => {
       .topicPUT(putTopic.id, putTopic)
       .catch(e => expect(e).toBe(error401UserNotAuthenticated))
   })
-  // put topic to /topic/{topicId} with improper credentials should return 403
-  test("PUT to /topic/{topicId} with improper credentials", () => {
+  test("PUT topic to /topic/{topicId} with improper credentials should return 403", () => {
     const topic = chooseRandomElement(testTopics)
     const putTopic = {
       ...topic,
@@ -1004,8 +948,7 @@ describe("Full API service test", () => {
       .topicPUT(putTopic.id, putTopic, testNewUser.id)
       .catch(e => expect(e).toBe(error403UserNotAuthorized))
   })
-  // put to /topic/{topicId} where Id does not exist should return 404
-  test("PUT topic to /topic/{topicId} where Id does not exist", () => {
+  test("PUT to /topic/{topicId} where Id does not exist should return 404", () => {
     const topic = chooseRandomElement(testTopics)
     const putTopic = { ...topic, id: randomString() }
     const adminUserTest = getAuthUser(u => u.isAdmin)
@@ -1014,8 +957,7 @@ describe("Full API service test", () => {
       .topicPUT(putTopic.id, putTopic, adminUserTest.id)
       .catch(e => expect(e).toHaveProperty("statusCode", 404))
   })
-  // put topic with {topicId} to /topic/{topicId} should return topic and 204 Discussion updated
-  test("PUT topic to /topic/{topicId}", () => {
+  test("PUT topic with {topicId} to /topic/{topicId} should return topic and 204 Discussion updated", () => {
     const topic = chooseRandomElement(testTopics)
     const putTopic = { ...topic, title: randomString() }
     const adminUserTest = getAuthUser(u => u.isAdmin)
@@ -1028,36 +970,31 @@ describe("Full API service test", () => {
   })
 
   // Discussion Delete
-  // delete topic to /topic/{topicId} with no credentials should return 401
-  test("DELETE topic to /topic/{topicId} with no credentials", () => {
+  test("DELETE topic to /topic/{topicId} with no credentials should return 401", () => {
     const topic = chooseRandomElement(testTopics)
     return service
       .topicDELETE(topic.id)
       .catch(e => expect(e).toBe(error401UserNotAuthenticated))
   })
-  // delete topic to /topic/{topicId} with improper credentials should return 403
-  test("DELETE to /topic/{topicId} with improper credentials", () => {
+  test("DELETE topic to /topic/{topicId} with improper credentials should return 403", () => {
     const topic = chooseRandomElement(testTopics)
     return service
       .topicDELETE(topic.id, testNewUser.id)
       .catch(e => expect(e).toBe(error403UserNotAuthorized))
   })
-  // delete to /topic/{topicId} where Id does not exist should return 404
-  test("DELETE topic to /topic/{topicId} where Id does not exist", () => {
+  test("DELETE to /topic/{topicId} where Id does not exist should return 404", () => {
     const deleteTopicId = uuidv4()
     const adminUserTest = getAuthUser(u => u.isAdmin)
     return service
       .topicDELETE(deleteTopicId, adminUserTest.id)
       .catch(e => expect(e).toHaveProperty("statusCode", 404))
   })
-  // delete to /topic/{topicId} should delete the topic and return 202 Discussion deleted
-  test("DELETE topic to /topic/{topicId} should delete the topic", () => {
+  test("DELETE to /topic/{topicId} should delete the topic and return 202 Discussion deleted", () => {
     const adminUserTest = getAuthUser(u => u.isAdmin)
     return service
       .topicDELETE(testDeleteTopic.id, adminUserTest.id)
       .then((res: Success) => expect(res).toBe(success202TopicDeleted))
   })
-  // delete to /topic/{topicId} should delete all descended comments
   test("DELETE topic to /topic/{topicId} should delete descended comments", async () => {
     // none of these replies should be in the database
     const replies = testDeleteTopicComments
