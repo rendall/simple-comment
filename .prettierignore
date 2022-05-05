@@ -1,10 +1,10 @@
 *.js
 .env
 /.git
+/.netlify
 /docs
 /functions
 /lib
-/netlify-functions
 /node_modules
 RAW
 globalConfig.json

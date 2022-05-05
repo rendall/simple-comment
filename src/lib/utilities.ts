@@ -24,7 +24,8 @@ const AUTHORIZATION_HEADER = "Authorization"
 const BEARER_SCHEME = "Bearer"
 const BASIC_SCHEME = "Basic"
 
-const isDefined = <T>(x: T | undefined | null): x is T => x !== undefined && x !== null
+const isDefined = <T>(x: T | undefined | null): x is T =>
+  x !== undefined && x !== null
 /**
  * Returns true if userId is a guest id
  */
@@ -70,11 +71,15 @@ export const toAdminSafeUser = (user: User) =>
       ])
     : user
 
-export const isComment = (target: Comment | Discussion): target is Comment => isDefined(target) && "parentId" in target
+export const isComment = (target: Comment | Discussion): target is Comment =>
+  isDefined(target) && "parentId" in target
 
-export const isDeleted = (target: Comment | Discussion) => isDefined(target) && "dateDeleted" in target
+export const isDeleted = (target: Comment | Discussion) =>
+  isDefined(target) && "dateDeleted" in target
 
-export const isDeletedComment = (target: Comment | Discussion): target is DeletedComment => isComment(target) && isDeleted(target)
+export const isDeletedComment = (
+  target: Comment | Discussion
+): target is DeletedComment => isComment(target) && isDeleted(target)
 
 export const isAdminSafeUser = (user: Partial<User>): user is AdminSafeUser =>
   (Object.keys(user) as (keyof User)[]).every(
@@ -108,7 +113,8 @@ export const addHeaders = (
 ) => {
   const resHeaders = res?.headers ?? {}
 
-  return res?.body ? {
+  return res?.body
+    ? {
         ...res,
         body: JSON.stringify(res.body),
         headers: { ...resHeaders, ...headers }
@@ -124,7 +130,8 @@ const getOrigin = (headers: { [header: string]: string }) =>
 
 export const getAllowedOrigins = () => process.env.ALLOW_ORIGIN.split(",")
 
-export const isAllowedOrigin = (origin: string) => getAllowedOrigins().includes(origin)
+export const isAllowedOrigin = (origin: string) =>
+  getAllowedOrigins().includes(origin)
 
 /** Returns the proper headers for Access-Control-Allow-Origin
  * as set in .env and as determined by the Request Origin header
@@ -139,7 +146,9 @@ export const isAllowedOrigin = (origin: string) => getAllowedOrigins().includes(
 export const getAllowOriginHeaders = (
   headers: { [header: string]: string },
   allowedOrigins: string[] = []
-): Record<string, never> | { "Access-Control-Allow-Origin": string; Vary?: "Origin" } =>
+):
+  | Record<string, never>
+  | { "Access-Control-Allow-Origin": string; Vary?: "Origin" } =>
   // This function is so clunky from the need to return two headers if there
   // is an exact match and *no* headers if there is not!
   allowedOrigins.includes("*")
@@ -660,7 +669,6 @@ const commonPasswords = [
 ]
 
 export const normalizeUrl = (url: string) => {
-  if (url.endsWith("/")) return normalizeUrl ( url.substring(0, url.length - 1) )
+  if (url.endsWith("/")) return normalizeUrl(url.substring(0, url.length - 1))
   return url
 }
-
