@@ -12,8 +12,8 @@ import type {
   Topic,
   UpdateUser,
   User
-} from "../src/lib/simple-comment"
-import { MongodbService } from "../src/lib/MongodbService"
+} from "../../src/lib/simple-comment"
+import { MongodbService } from "../../src/lib/MongodbService"
 import { Db, MongoClient } from "mongodb"
 import {
   error401BadCredentials,
@@ -28,15 +28,15 @@ import {
   success202CommentDeleted,
   success202TopicDeleted,
   success202UserDeleted
-} from "../src/lib/messages"
-import { getAuthToken, hashPassword, uuidv4 } from "../src/lib/crypt"
-import { policy } from "../src/policy"
+} from "../../src/lib/messages"
+import { getAuthToken, hashPassword, uuidv4 } from "../../src/lib/crypt"
+import { policy } from "../../src/policy"
 import {
   isComment,
   isDeletedComment,
   isDiscussion,
   toAdminSafeUser
-} from "../src/lib/utilities"
+} from "../../src/lib/utilities"
 import * as fs from "fs"
 import {
   alphaUserInput,
@@ -51,14 +51,18 @@ import {
   randomString
 } from "./mockData"
 
-const longFile = `${process.cwd()}/tests/veryLongRandomTestString`
+declare const global: { __MONGO_URI__: string; __MONGO_DB_NAME__: string }
+
+const longFile = `${process.cwd()}/src/tests/veryLongRandomTestString`
 const veryLongString = fs.readFileSync(longFile, "utf8")
 const MONGO_URI = global.__MONGO_URI__
 const MONGO_DB = global.__MONGO_DB_NAME__
 
-declare const global: any
-
-const adminUnsafeUserProperties: (keyof User | "password")[] = ["hash", "_id", "password"]
+const adminUnsafeUserProperties: (keyof User | "password")[] = [
+  "hash",
+  "_id",
+  "password"
+]
 const publicUnsafeUserProperties: (keyof User | "password")[] = [
   ...adminUnsafeUserProperties,
   "email",
@@ -108,11 +112,11 @@ const authUserTest = {
 // Testing randomly from testGroupUsers causes test fails if the user has been
 // deleted or otherwise altered. Using this function ensures that users are not
 // used again
-let usedUsersTest: User[] = []
+const usedUsersTest: User[] = []
 /** Return user from the mock pool, filtered optionally by a predicate
  * and then add the user to used pool
  */
-const getTargetUser = (p: (u: User) => boolean = (u: User) => true) => {
+const getTargetUser = (p: (u: User) => boolean = () => true) => {
   const user = getAuthUser(p)
   usedUsersTest.push(user)
   return user
@@ -158,7 +162,6 @@ describe("Full API service test", () => {
       "comments"
     )
 
-    console.log({users: testAllUsers, comments:[...testComments, ...testDeleteTopicComments]})
     // This insert includes both topics and comments
     await comments.insertMany([...testComments, ...testDeleteTopicComments])
   }, 120000)
@@ -757,7 +760,7 @@ describe("Full API service test", () => {
   })
   test("PUT comment to /comment/{commentId} with improper credentials should return 403", () => {
     const randomComment = chooseRandomElement(
-      testComments.filter(c => !c.hasOwnProperty("isLocked"))
+      testComments.filter(c => !("isLocked" in c))
     ) as Comment
     const updateText = randomString(alphaUserInput)
     const improperAuthUser = getAuthUser(

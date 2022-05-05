@@ -15,8 +15,8 @@ import type {
   UpdateUser,
   User,
   UserId
-} from "../src/lib/simple-comment"
-import { Service } from "./../src/lib/Service"
+} from "../../src/lib/simple-comment"
+import { Service } from "../../src/lib/Service"
 
 type Method = "get" | "post" | "delete" | "put"
 
@@ -42,7 +42,7 @@ describe("Ensures API specs match controller service", () => {
   const apiSpecJSON: {
     paths: {
       [route: string]: {
-        [key in Method]: {}
+        [key in Method]: Record<string, unknown>
       }
     }
   } = JSON.parse(apiSpecText)
@@ -50,7 +50,7 @@ describe("Ensures API specs match controller service", () => {
   // Get the `dir` part of `/dir/{id}`
   const normalizeRoute = (route: string) => route.split("/")[1]
 
-  type RouteTuple = [string, { [key in Method]: {} }]
+  type RouteTuple = [string, { [key in Method]: Record<string, unknown> }]
   // serviceMethods is an array of strings like `userGET` or `topicPOST`
   // all of these methods should exist on testService
   const serviceMethods = Object.keys(apiSpecJSON.paths)
