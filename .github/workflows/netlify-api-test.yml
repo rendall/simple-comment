@@ -16,11 +16,19 @@ jobs:
         with:
           node-version: "16"
 
-      - name: Build Netlify functions
+      - name: Install
         run: |
           npm install yarn@^1 --no-package-lock -g
           yarn --frozen-lockfile --production=false --ignore-optional
-          yarn run build:netlify
+
+      - name: Lint
+        run: yarn run lint
+
+      - name: Format
+        run: yarn run prettier --list-different .
+
+      - name: Build Netlify functions
+        run: yarn run build:netlify
 
       - name: Test Netlify functions
         run: |
