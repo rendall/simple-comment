@@ -2,7 +2,7 @@
 
 # Simple Comment
 
-_Simple Comment_ enables any website visitor to leave comments. It is serverless, open-source, self-hosted, free, scaleable, and designed to feel unremarkably similar to the dozen or so other excellent solutions.
+_Simple Comment_ is a commenting platform for any website. Free, flexible, open-source, private, and scalable.
 
 See the demo: <https://simple-comment.netlify.app>
 
