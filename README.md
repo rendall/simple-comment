@@ -104,20 +104,16 @@ _Simple Comment_ can be run on the same server as your website or on a separate,
 
 It is _necessary_ that _Simple Comment_ is served via _https:_
 
-These instructions assume some devOps skill, but if anything is unclear, please [create a new issue](https://github.com/rendall/simple-comment/issues/new)
+Follow these instructions. If anything is unclear, please [create a new issue](https://github.com/rendall/simple-comment/issues/new)
 
-1. Fork this repository to your own account
-1. `git clone https://github.com/<your-github-profile>/simple-comment` replacing
-   `<your-github-profile>`
-1. `cd simple-comment`
-1. `yarn install` (or `npm install`)
-1. Copy and rename `example.env` as `.env`
-1. In `.env`, enter your own, secret values, replacing everything to the right
-   of the `=` in every case:
-   1. SIMPLE_COMMENT_MODERATOR_ID
-   1. SIMPLE_COMMENT_MODERATOR_PASSWORD
-   1. JWT_SECRET
-   1. SIMPLE_COMMENT_API_URL
+1. [Fork this repository](https://docs.github.com/en/get-started/quickstart/fork-a-repo) to your own account
+1. [Clone your fork](https://docs.github.com/en/get-started/quickstart/fork-a-repo#cloning-your-forked-repository)
+1. Rename [`example.env`](example.env) as `.env`
+1. In `.env`, enter your own (made up or randomly generated), secret values for these entries (i.e. replace everything to the right of `=` in each line).
+   * SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL
+   * SIMPLE_COMMENT_MODERATOR_ID
+   * SIMPLE_COMMENT_MODERATOR_PASSWORD
+   * JWT_SECRET
 1. sign up for a free MongoDB Atlas account
    1. [Follow these instructions](docs/MONGODB_ATLAS.md)
    1. In `.env` add the proper `DB_CONNECION_STRING`
@@ -156,6 +152,29 @@ These instructions assume some devOps skill, but if anything is unclear, please 
 The default stack uses Netlify + _MongoDB_ for the backend, and a minimal `fetch` based client for the frontend, but it can be readily adapted to use any technology stack, as long as the tests pass and the API conforms to the Open API 3 schema file
 
 You can get your own free-tier MongoDB-in-the-cloud by [following these instructions](./docs/MONGODB_ATLAS.md)
+
+## Local development
+
+Assumes a unix-like environment, like Ubuntu.
+
+### Installation
+
+1. Install [nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+1. `nvm install`
+1. `npm install -g yarn`
+1. `yarn install`
+1. `yarn run build`
+1. Install and run [MongoDB Community Edition](https://www.mongodb.com/docs/manual/administration/install-community/)
+
+### Test
+
+1. `yarn run test`
+1. `yarn run test:e2e`
+
+### Usage
+
+1. `yarn run start`
+1. open http://localhost:8080/
 
 ## API
 
