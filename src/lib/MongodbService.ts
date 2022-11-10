@@ -1030,8 +1030,7 @@ export class MongodbService extends Service {
       }
 
       if (
-        (!authUserId || !authUser || !authUser.isAdmin) &&
-        policy.refererRestrictions
+        (!authUserId || !authUser || !authUser.isAdmin)
       ) {
         // User is anonymous, public can create topics, and referrer restrictions are true
         // Let's validate the topic. We do that by comparing the proposed topicId with the `referer` header
