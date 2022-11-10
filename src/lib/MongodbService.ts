@@ -31,8 +31,8 @@ import {
   toTopic,
   toUpdatedUser,
   validateUser,
-  isAllowedOrigin,
-  normalizeUrl
+  isAllowedReferer,
+  getAllowedOrigins
 } from "./utilities"
 import { policy } from "../policy"
 import {
@@ -1029,9 +1029,7 @@ export class MongodbService extends Service {
         return
       }
 
-      if (
-        (!authUserId || !authUser || !authUser.isAdmin)
-      ) {
+      if (!authUserId || !authUser || !authUser.isAdmin) {
         // User is anonymous, public can create topics, and referrer restrictions are true
         // Let's validate the topic. We do that by comparing the proposed topicId with the `referer` header
         // They should be the same. If not, reject it
@@ -1041,7 +1039,10 @@ export class MongodbService extends Service {
           return
         }
 
-        const isAllowed = isAllowedOrigin(normalizeUrl(newTopic.referer))
+        const isAllowed = isAllowedReferer(
+          newTopic.referer,
+          getAllowedOrigins()
+        )
 
         if (!isAllowed) {
           reject({

@@ -1,6 +1,7 @@
 import { validate as isUuid } from "uuid"
 import * as jwt from "jsonwebtoken"
 import * as dotenv from "dotenv"
+import * as picomatch from "picomatch"
 import {
   NewUser,
   Success,
@@ -130,8 +131,9 @@ const getOrigin = (headers: { [header: string]: string }) =>
 
 export const getAllowedOrigins = () => process.env.ALLOW_ORIGIN.split(",")
 
-export const isAllowedOrigin = (origin: string) =>
-  getAllowedOrigins().includes(origin)
+/** Return true if `url` is in the list of allowed referers listed in ALLOW_ORIGIN in .env */
+export const isAllowedReferer = (url: string, allowedPatterns: string[] = getAllowedOrigins()) =>
+  picomatch.isMatch(url, allowedPatterns)
 
 /** Returns the proper headers for Access-Control-Allow-Origin
  * as set in .env and as determined by the Request Origin header
@@ -668,7 +670,3 @@ const commonPasswords = [
   "zxcvbnm"
 ]
 
-export const normalizeUrl = (url: string) => {
-  if (url.endsWith("/")) return normalizeUrl(url.substring(0, url.length - 1))
-  return url
-}
