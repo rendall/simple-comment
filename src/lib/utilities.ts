@@ -132,8 +132,10 @@ const getOrigin = (headers: { [header: string]: string }) =>
 export const getAllowedOrigins = () => process.env.ALLOW_ORIGIN.split(",")
 
 /** Return true if `url` is in the list of allowed referers listed in ALLOW_ORIGIN in .env */
-export const isAllowedReferer = (url: string, allowedPatterns: string[] = getAllowedOrigins()) =>
-  picomatch.isMatch(url, allowedPatterns)
+export const isAllowedReferer = (
+  url: string,
+  allowedPatterns: string[] = getAllowedOrigins()
+) => picomatch.isMatch(url, allowedPatterns)
 
 /** Returns the proper headers for Access-Control-Allow-Origin
  * as set in .env and as determined by the Request Origin header
@@ -669,4 +671,3 @@ const commonPasswords = [
   "zing",
   "zxcvbnm"
 ]
-

@@ -31,7 +31,7 @@
     "fix": "eslint . --fix && prettier . --write",
     "lint": "eslint .",
     "posttest": "rimraf ./globalConfig.json",
-    "prebuild": "rimraf ./functions",
+    "prebuild": "rimraf ./functions && rimraf ./dist/js && mkdir ./dist/js",
     "start": "netlify dev --port 8080",
     "test": "jest --verbose",
     "test:e2e": "concurrently  \"netlify dev --port 8080\" \"cypress run\" --kill-others",

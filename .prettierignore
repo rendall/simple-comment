@@ -6,6 +6,10 @@
 /functions
 /lib
 /node_modules
+LICENSE
 RAW
+example.env
 globalConfig.json
+netlify.toml
 yarn-error.log
+yarn.lock
