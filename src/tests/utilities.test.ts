@@ -1,5 +1,6 @@
 import {
   getAllowOriginHeaders,
+  isAllowedReferer,
   isGuestId,
   validateEmail,
   validateUserId
@@ -119,6 +120,41 @@ describe("Test validations", () => {
   test("good email should pass", () => {
     expect(goodEmailValidation).toMatchObject({ isValid: true })
   })
+})
+
+describe("isAllowedReferer()", () => {
+  test.each(["https://example.com/blog", "https://example.com/blog/yes.html"])(
+    "%s should match https://example.com/**/*",
+    (url: string) => {
+      expect(isAllowedReferer(url, ["https://example.com/**/*"])).toBe(true)
+    }
+  )
+
+  test.each(["https://example.com", "https://other-example.com"])(
+    "%s should match https://**",
+    (url: string) => {
+      expect(isAllowedReferer(url, ["https://**"])).toBe(true)
+    }
+  )
+
+  test.each([
+    "https://example.com",
+    "https://example.com/about/no.html",
+    "https://example.com/blog",
+    "https://example.com/blog/yes.html",
+    "https://other-example.com"
+  ])("https://example.com/blog/no.html should not match %s", (url: string) => {
+    expect(
+      isAllowedReferer("https://example.com/blog/no.html", [url])
+    ).not.toBe(true)
+  })
+
+  test.each(["https://example.com", "http://example.com"])(
+    "%s should match http*(s)://example.com",
+    (url: string) => {
+      expect(isAllowedReferer(url, ["http*(s)://example.com"])).toBe(true)
+    }
+  )
 })
 
 // Tests to do:

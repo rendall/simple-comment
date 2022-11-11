@@ -26,7 +26,7 @@ const SIMPLE_COMMENT_API_URL = process.env.SIMPLE_COMMENT_API_URL
 
 const getSimpleCommentURL = () => {
   if (SIMPLE_COMMENT_API_URL === undefined)
-    throw new Error("Simple comment URL is not set. ")
+    throw new Error("Simple comment URL is not set in .env file")
   else return SIMPLE_COMMENT_API_URL
 }
 

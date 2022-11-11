@@ -8,7 +8,6 @@ class Policy {
   canUserDeleteSelf = true // can a user delete their own profile?
   canFirstVisitCreateTopic = true // if a discussion does not exist for a page, shall it be created when visited for the first time, or does admin create all topics?
   maxCommentLengthChars = 5000 // Attempting to post a comment longer than this number of characters will be rejected by the API
-  refererRestrictions = true // restrict API access to those domains set in .env ALLOW_ORIGIN (recommended)
 }
 
 export const policy = new Policy()

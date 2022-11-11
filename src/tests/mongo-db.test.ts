@@ -1,6 +1,6 @@
 import { Db, MongoClient } from "mongodb"
 
-declare const global: any
+declare const global: { __MONGO_URI__: string; __MONGO_DB_NAME__: string }
 const MONGO_URI = global.__MONGO_URI__
 const MONGO_DB = global.__MONGO_DB_NAME__
 

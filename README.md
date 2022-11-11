@@ -108,12 +108,12 @@ Follow these instructions. If anything is unclear, please [create a new issue](h
 
 1. [Fork this repository](https://docs.github.com/en/get-started/quickstart/fork-a-repo) to your own account
 1. [Clone your fork](https://docs.github.com/en/get-started/quickstart/fork-a-repo#cloning-your-forked-repository)
-1. Rename [`example.env`](example.env) as `.env`
+1. Copy [`example.env`](example.env) into the same, project root directory and rename it to be `.env`
 1. In `.env`, enter your own (made up or randomly generated), secret values for these entries (i.e. replace everything to the right of `=` in each line).
-   * SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL
-   * SIMPLE_COMMENT_MODERATOR_ID
-   * SIMPLE_COMMENT_MODERATOR_PASSWORD
-   * JWT_SECRET
+   - SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL
+   - SIMPLE_COMMENT_MODERATOR_ID
+   - SIMPLE_COMMENT_MODERATOR_PASSWORD
+   - JWT_SECRET
 1. sign up for a free MongoDB Atlas account
    1. [Follow these instructions](docs/MONGODB_ATLAS.md)
    1. In `.env` add the proper `DB_CONNECION_STRING`
