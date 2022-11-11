@@ -70,8 +70,6 @@ const threadReplies = (
         new Date(b.dateCreated).valueOf() - new Date(a.dateCreated).valueOf()
     )
 
-    console.log({parentId, replies})
-
   if (replies.length) {
     const ul = document.createElement("ul")
     ul.dataset.comment = parentId

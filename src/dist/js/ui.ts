@@ -317,8 +317,6 @@ const updateDiscussionDisplay = (
   const discussion: Discussion = discussionResponse.body as Discussion
   const discussionDiv = document.querySelector("#discussion") as HTMLDivElement
 
-  console.log({discussion});
-
   while (discussionDiv.hasChildNodes()) {
     discussionDiv.removeChild(discussionDiv.lastChild)
   }

@@ -447,7 +447,7 @@ export const validateUser = (user: UpdateUser & User): ValidResult => {
   if (user.id) {
     const idCheck = validateUserId(user.id)
     if (!idCheck.isValid) {
-      const badChars = idCheck.result!.join(", ")
+      const badChars = idCheck.result?.join(", ")
       return {
         ...idCheck,
         reason: `UserId '${user.id}' contains invalid characters '${badChars}'. Only lowercase letters, numbers, '-' and '_' are valid.`
