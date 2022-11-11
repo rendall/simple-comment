@@ -7,10 +7,10 @@ dotenv.config({
 
 module.exports = {
   mode: "production",
-  entry: [path.resolve(__dirname, "src/dist/js/simple-comment.ts")],
+  entry: { "simple-comment": path.resolve(__dirname, "src/dist/js/simple-comment.ts"), "all-comments": path.resolve(__dirname, "src/dist/js/all-comments.ts") },
   devtool: "inline-source-map",
   output: {
-    filename: "simple-comment.js",
+    filename: '[name].js',
     path: path.resolve(__dirname, "dist/js")
   },
   resolve: {
