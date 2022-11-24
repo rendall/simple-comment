@@ -214,6 +214,7 @@ const appendComment = (comment: Comment, li: HTMLLIElement) => {
 
   const userDisplay = document.createElement("P")
   if (hasUser) {
+    userDisplay.classList.add("user-display")
     userDisplay.setAttribute("id", comment.user.id)
     userDisplay.innerText = comment.user.name
   } else {
@@ -225,6 +226,7 @@ const appendComment = (comment: Comment, li: HTMLLIElement) => {
 
   const commentText = document.createElement("p")
   commentText.setAttribute("id", comment.id)
+  commentText.classList.add("comment-text")
   commentDisplay.appendChild(commentText)
 
   if (isDeleted) {
@@ -269,6 +271,7 @@ const appendComment = (comment: Comment, li: HTMLLIElement) => {
     }
   }
   const ul = document.createElement("ul")
+  ul.classList.add("comment-replies")
   ul.dataset.comment = comment.id
   li.appendChild(ul)
 }
@@ -296,13 +299,14 @@ export const threadReplies = (
         new Date(b.dateCreated).valueOf() - new Date(a.dateCreated).valueOf()
     )
 
-  const replyList = listItem.querySelector(
-    `ul[data-comment='${parentId}']`
-  ) as HTMLUListElement
-
   if (replies.length) {
+    const replyList = listItem.querySelector(
+      `ul[data-comment='${parentId}']`
+    ) as HTMLUListElement
+
     replies.forEach(reply => {
       const li = document.createElement("li")
+      li.classList.add("comment-item")
       replyList.appendChild(li)
       threadReplies(reply, li, comments)
     })
