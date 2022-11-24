@@ -155,6 +155,21 @@ describe("isAllowedReferer()", () => {
       expect(isAllowedReferer(url, ["http*(s)://example.com"])).toBe(true)
     }
   )
+
+  it("should return true for wildcard in allowed origin", () => {
+    const allowedOrigin = ["https://*--simple-comment.netlify.app"]
+    expect(
+      isAllowedReferer(
+        "https://637df4a33fea0315b6c82933--simple-comment.netlify.app",
+        allowedOrigin
+      )
+    ).toBe(true)
+  })
+
+  it("should evaluate referer with trailing / as true", () => {
+    const allowedOrigin = ["https://example.com"]
+    expect(isAllowedReferer("https://example.com/", allowedOrigin)).toBe(true)
+  })
 })
 
 // Tests to do:
