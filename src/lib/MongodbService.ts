@@ -1047,7 +1047,7 @@ export class MongodbService extends Service {
         if (!isAllowed) {
           reject({
             ...error403Forbidden,
-            body: `Unknown referer ${newTopic.referer}`
+            body: `Unknown referer ${newTopic.referer}. Allowed: ${getAllowedOrigins().join(", ")}`
           })
           return
         }
