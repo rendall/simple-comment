@@ -131,11 +131,24 @@ const getOrigin = (headers: { [header: string]: string }) =>
 
 export const getAllowedOrigins = () => process.env.ALLOW_ORIGIN.split(",")
 
-/** Return true if `url` is in the list of allowed referers listed in ALLOW_ORIGIN in .env */
+/**
+ * Return true if `url` matches any of the patterns in `allowedPatterns`
+ * Strips any trailing '/' from the referring url
+ *
+ * Matches using the picomatch library
+ * @see https://github.com/micromatch/picomatch#ismatch
+ *
+ * @param {string} url
+ * @param {string[]} allowedPatterns
+ * @returns {boolean}
+ */
 export const isAllowedReferer = (
   url: string,
   allowedPatterns: string[] = getAllowedOrigins()
-) => picomatch.isMatch(url, allowedPatterns)
+) =>
+  url.slice(-1) === "/"
+    ? isAllowedReferer(url.slice(0, url.length - 1), allowedPatterns)
+    : picomatch.isMatch(url, allowedPatterns)
 
 /** Returns the proper headers for Access-Control-Allow-Origin
  * as set in .env and as determined by the Request Origin header
@@ -146,14 +159,17 @@ export const isAllowedReferer = (
  *
  * If no match will return {}
  *
- **/
+ * @param headers
+ * @param allowedOrigins
+ * @returns
+ */
 export const getAllowOriginHeaders = (
   headers: { [header: string]: string },
   allowedOrigins: string[] = []
 ):
   | Record<string, never>
   | { "Access-Control-Allow-Origin": string; Vary?: "Origin" } =>
-  // This function is so clunky from the need to return two headers if there
+  // This function needs to return two headers if there
   // is an exact match and *no* headers if there is not!
   allowedOrigins.includes("*")
     ? { "Access-Control-Allow-Origin": "*" }
