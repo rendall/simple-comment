@@ -1,4 +1,3 @@
-*.js
 .env
 /.git
 /.netlify
