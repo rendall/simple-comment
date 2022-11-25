@@ -1,14 +1,12 @@
-const MiniCssExtractPlugin = require("mini-css-extract-plugin")
 const path = require("path")
 const webpack = require("webpack")
 const dotenv = require("dotenv")
-const sveltePreprocess = require("svelte-preprocess")
 dotenv.config({
   path: path.join(__dirname, ".env")
 })
-const mode = process.env.NODE_ENV || "development"
+
 module.exports = {
-  mode,
+  mode: "production",
   entry: {
     "simple-comment": path.resolve(__dirname, "src/dist/js/simple-comment.ts"),
     "hello": path.resolve(__dirname, "src/dist/hello.svelte"),
@@ -32,7 +30,6 @@ module.exports = {
       {
         test: /\.css$/,
         use: [
-          MiniCssExtractPlugin.loader,
           {
             loader: "css-loader",
             options: {
@@ -53,8 +50,5 @@ module.exports = {
       }
     ]
   },
-  plugins: [
-    new webpack.EnvironmentPlugin(["SIMPLE_COMMENT_API_URL"]),
-    new MiniCssExtractPlugin({ filename: "[name].css" })
-  ]
+  plugins: [new webpack.EnvironmentPlugin(["SIMPLE_COMMENT_API_URL"])]
 }
