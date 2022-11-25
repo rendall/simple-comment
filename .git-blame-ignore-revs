@@ -1,0 +1,5 @@
+# Ignore formatting commits from git blame
+# q.v. https://docs.github.com/en/repositories/working-with-files/using-files/viewing-a-file#ignore-commits-in-the-blame-view
+
+# Format js test files
+31925a872975b32ef220ad3e193819d96f0f7507
