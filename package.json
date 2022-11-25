@@ -21,7 +21,7 @@
   },
   "optionalDependencies": {
     "cypress": "^9.6.0",
-    "netlify-cli": "^10.0.0"
+    "netlify-cli": "^11"
   },
   "scripts": {
     "build": "yarn run build:backend && yarn run build:frontend",
