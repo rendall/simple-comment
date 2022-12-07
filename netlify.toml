@@ -2,3 +2,6 @@
   command = "yarn run build"
   functions = "functions"
   publish = "dist"
+
+[dev]
+framework="#static" 
