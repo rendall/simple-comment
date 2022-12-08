@@ -10,7 +10,7 @@ module.exports = {
   mode,
   entry: {
     "simple-comment": path.resolve(__dirname, "src/dist/js/simple-comment.ts"),
-    "hello": path.resolve(__dirname, "src/dist/hello.svelte"),
+    "simple-comment-svelte": path.resolve(__dirname, "src/dist/js/simple-comment-svelte.js"),
     "all-comments": path.resolve(__dirname, "src/dist/js/all-comments.ts")
   },
   devtool: "inline-source-map",
