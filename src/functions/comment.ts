@@ -1,6 +1,6 @@
 import * as dotenv from "dotenv"
 import type { APIGatewayEvent } from "aws-lambda"
-import { CommentId, Success, Error, Comment } from "../lib/simple-comment"
+import type { CommentId, Success, Error, Comment } from "../lib/simple-comment"
 import { MongodbService } from "../lib/MongodbService"
 import {
   error404CommentNotFound,

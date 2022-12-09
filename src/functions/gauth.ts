@@ -2,8 +2,8 @@
  * 'temporary auth' to authenticate visitors */
 import * as dotenv from "dotenv"
 import type { APIGatewayEvent } from "aws-lambda"
+import type { Success, Error, AuthToken } from "../lib/simple-comment"
 import { MongodbService } from "../lib/MongodbService"
-import { Success, Error, AuthToken } from "../lib/simple-comment"
 import {
   error404CommentNotFound,
   error405MethodNotAllowed,

@@ -1,18 +1,18 @@
 import * as dotenv from "dotenv"
 import type { APIGatewayEvent } from "aws-lambda"
-import {
-  error404CommentNotFound,
-  error405MethodNotAllowed,
-  success200OK
-} from "../lib/messages"
-import { MongodbService } from "../lib/MongodbService"
-import {
+import type {
   AdminSafeUser,
   PublicSafeUser,
   Success,
   UserId,
   Error
 } from "../lib/simple-comment"
+import {
+  error404CommentNotFound,
+  error405MethodNotAllowed,
+  success200OK
+} from "../lib/messages"
+import { MongodbService } from "../lib/MongodbService"
 import {
   addHeaders,
   getAllowedOrigins,

@@ -1,4 +1,4 @@
-import { Success, Error } from "./simple-comment"
+import type { Success, Error } from "./simple-comment"
 export const error400BadRequest: Error = {
   statusCode: 400,
   body: "Bad Request"

@@ -17,7 +17,8 @@ import type {
   TokenClaim,
   NewTopic
 } from "./simple-comment"
-import { Collection, Db, MongoClient, WithId } from "mongodb"
+import type { Collection, Db,  WithId } from "mongodb"
+import { MongoClient } from "mongodb"
 import { Service } from "./Service"
 import {
   adminOnlyModifiableUserProperties,

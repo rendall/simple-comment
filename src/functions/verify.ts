@@ -1,4 +1,5 @@
-import { Handler, APIGatewayEvent } from "aws-lambda"
+import type { Success, TokenClaim, Error } from "../lib/simple-comment"
+import type { Handler, APIGatewayEvent } from "aws-lambda"
 import * as dotenv from "dotenv"
 import {
   addHeaders,
@@ -10,7 +11,6 @@ import {
   hasBearerScheme,
   hasTokenCookie
 } from "../lib/utilities"
-import { Success, TokenClaim, Error } from "../lib/simple-comment"
 import {
   error401UserNotAuthenticated,
   error404NotFound,

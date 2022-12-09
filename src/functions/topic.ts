@@ -1,5 +1,12 @@
 import type { APIGatewayEvent } from "aws-lambda"
 import * as dotenv from "dotenv"
+import type {
+  Discussion,
+  Error,
+  Success,
+  Topic,
+  TopicId
+} from "../lib/simple-comment"
 import {
   addHeaders,
   getAllowedOrigins,
@@ -10,13 +17,6 @@ import {
   getUpdateTopicInfo,
   getUserId
 } from "../lib/utilities"
-import {
-  Discussion,
-  Error,
-  Success,
-  Topic,
-  TopicId
-} from "../lib/simple-comment"
 import {
   error404TopicNotFound,
   error405MethodNotAllowed,
