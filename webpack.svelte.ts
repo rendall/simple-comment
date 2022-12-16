@@ -1,17 +1,19 @@
+import * as dotenv from "dotenv"
 const path = require("path")
-const webpack = require("webpack")
-const dotenv = require("dotenv")
 const miniCssExtractPlugin = require("mini-css-extract-plugin")
+const sveltePreprocess = require( 'svelte-preprocess' );
+const webpack = require("webpack")
+
 dotenv.config({
   path: path.join(__dirname, ".env")
 })
+
 const mode = process.env.NODE_ENV || "development"
+
 module.exports = {
   mode,
   entry: {
-    "simple-comment": path.resolve(__dirname, "src/dist/js/simple-comment.ts"),
-    "simple-comment-svelte": path.resolve(__dirname, "src/dist/js/simple-comment-svelte.js"),
-    "all-comments": path.resolve(__dirname, "src/dist/js/all-comments.ts")
+    "simple-comment-svelte": path.resolve(__dirname, "src/dist/js/simple-comment-svelte.ts"),
   },
   devtool: "inline-source-map",
   output: {
@@ -27,7 +29,12 @@ module.exports = {
   },
   module: {
     rules: [
-      { test: /\.ts$/, use: ["ts-loader"] },
+      {
+        test: /\.ts$/,
+        loader: "ts-loader",
+        // options: { configFile: "tsconfig.json" },
+        exclude: /node_modules/
+      },
       {
         test: /\.css$/,
         use: [
@@ -42,7 +49,15 @@ module.exports = {
       },
       {
         test: /\.(html|svelte)$/,
-        use: "svelte-loader"
+        exclude: [],
+        use: {
+          loader: 'svelte-loader',
+          options: {
+            preprocess: sveltePreprocess({
+              /* options */
+          })
+          },
+        },
       },
       {
         // required to prevent errors from Svelte on Webpack 5+

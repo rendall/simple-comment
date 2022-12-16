@@ -24,6 +24,7 @@ const config = {
       {
         test: /\.ts$/,
         loader: "ts-loader",
+        options: { configFile: "tsconfig.netlify.functions.json" },
         exclude: /node_modules/
       }
     ]
