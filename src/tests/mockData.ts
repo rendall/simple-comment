@@ -96,3 +96,46 @@ export const mockUser = (prepend = ""): User => ({
   isAdmin: Math.random() > 0.5,
   hash: randomString(alphaAscii, 32)
 })
+
+export const mockMinimalDiscussion = {
+  id: "top",
+  replies: [
+    { id: "1", parentId: "top" },
+    { id: "1-1", parentId: "1" },
+    { id: "1-2", parentId: "1" },
+    { id: "1-3", parentId: "1" },
+    { id: "1-3-1", parentId: "1-3" },
+    { id: "2", parentId: "top" },
+    { id: "2-1", parentId: "2" },
+    { id: "2-2", parentId: "2" },
+    { id: "2-3", parentId: "2" }
+  ]
+}
+
+export const mockThreadedDiscussion = {
+  id: "top",
+  replies: [
+    {
+      id: "1",
+      parentId: "top",
+      replies: [
+        { id: "1-1", parentId: "1" },
+        { id: "1-2", parentId: "1" },
+        {
+          id: "1-3",
+          parentId: "1",
+          replies: [{ id: "1-3-1", parentId: "1-3" }]
+        }
+      ]
+    },
+    {
+      id: "2",
+      parentId: "top",
+      replies: [
+        { id: "2-1", parentId: "2" },
+        { id: "2-2", parentId: "2" },
+        { id: "2-3", parentId: "2" }
+      ]
+    }
+  ]
+}

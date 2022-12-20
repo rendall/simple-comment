@@ -1,15 +1,15 @@
 import type {
   AdminSafeUser,
   AuthToken,
+  Comment,
   Discussion,
   NewUser,
   PublicSafeUser,
   ResolvedResponse,
   TokenClaim,
   Topic,
-  Comment,
-  UserId,
-  User
+  User,
+  UserId
 } from "./../../lib/simple-comment"
 
 const trimDash = (slug: string) => slug.replace(/-+$/, "").replace(/^-+/, "")
@@ -29,6 +29,29 @@ const getSimpleCommentURL = () => {
     throw new Error("Simple comment URL is not set in .env file")
   else return SIMPLE_COMMENT_API_URL
 }
+
+type Reply = { id: string; parentId: string; replies?: Reply[] }
+const threadDiscussion = <T extends { id: string; replies?: Reply[] }>(
+  discussion: T,
+  allReplies: Reply[]
+): T => {
+  const getImmediateReplies = (commentId: string): Reply[] =>
+    allReplies.filter(comment => comment.parentId === commentId)
+  const threadReplies = (commentId: string): Reply[] =>
+    getImmediateReplies(commentId).map(comment =>
+      threadDiscussion(comment, allReplies)
+    ) as Reply[]
+  const replies = threadReplies(discussion.id)
+  if (replies.length) return { ...discussion, replies }
+  else return discussion
+}
+
+/** Discussion replies arrive in a flat array. This function returns the replies threaded, as a hierarchical tree. */
+export const threadDiscussionReplies = <
+  T extends { id: string; replies?: Reply[] }
+>(
+  discussion: T
+): T => threadDiscussion(discussion, discussion.replies) as T
 
 /** Fetch a guest token for guest posts, if allowed
  * @returns {ResolvedResponse<AuthToken>}
