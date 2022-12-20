@@ -1,9 +1,6 @@
 {
   "extends": "@tsconfig/svelte/tsconfig.json",
-  "include": [
-    "./src/**/*",
-    "webpack.svelte.ts"
-  ],
+  "include": ["./src/**/*", "webpack.svelte.ts"],
   "exclude": [
     "./src/lib/*.ts",
     "./src/tests/*.test.ts",
@@ -22,11 +19,10 @@
     "strict": false,
     "baseUrl": ".",
     "paths": {
-      "src/*": [
-        "src/*"
-      ]
+      "src/*": ["src/*"]
     },
     "types": [
+      "jest",
       "svelte",
       "svelte/store",
       "svelte/motion",
@@ -43,3 +39,5 @@
     }
   }
 }
+
+//TODO: Break tsconfig.json into tsconfig.svelte.json
