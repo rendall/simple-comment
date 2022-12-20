@@ -1,7 +1,7 @@
 import * as dotenv from "dotenv"
 const path = require("path")
 const miniCssExtractPlugin = require("mini-css-extract-plugin")
-const sveltePreprocess = require( 'svelte-preprocess' );
+const sveltePreprocess = require("svelte-preprocess")
 const webpack = require("webpack")
 
 dotenv.config({
@@ -13,7 +13,10 @@ const mode = process.env.NODE_ENV || "development"
 module.exports = {
   mode,
   entry: {
-    "simple-comment-svelte": path.resolve(__dirname, "src/dist/js/simple-comment-svelte.ts"),
+    "simple-comment-svelte": path.resolve(
+      __dirname,
+      "src/dist/js/simple-comment-svelte.ts"
+    )
   },
   devtool: "inline-source-map",
   output: {
@@ -51,13 +54,13 @@ module.exports = {
         test: /\.(html|svelte)$/,
         exclude: [],
         use: {
-          loader: 'svelte-loader',
+          loader: "svelte-loader",
           options: {
             preprocess: sveltePreprocess({
               /* options */
-          })
-          },
-        },
+            })
+          }
+        }
       },
       {
         // required to prevent errors from Svelte on Webpack 5+

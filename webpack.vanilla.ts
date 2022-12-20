@@ -8,7 +8,7 @@ dotenv.config({
 module.exports = {
   mode: "production",
   entry: {
-    "simple-comment": path.resolve(__dirname, "src/dist/js/simple-comment.ts"),
+    "simple-comment": path.resolve(__dirname, "src/dist/js/simple-comment.ts")
   },
   devtool: "inline-source-map",
   output: {
@@ -19,12 +19,14 @@ module.exports = {
     extensions: [".ts", ".tsx", ".js"]
   },
   module: {
-    rules: [{
-      test: /\.ts$/,
-      loader: "ts-loader",
-      options: { configFile: "tsconfig.vanilla.json" },
-      exclude: /node_modules/
-    }]
+    rules: [
+      {
+        test: /\.ts$/,
+        loader: "ts-loader",
+        options: { configFile: "tsconfig.vanilla.json" },
+        exclude: /node_modules/
+      }
+    ]
   },
   plugins: [new webpack.EnvironmentPlugin(["SIMPLE_COMMENT_API_URL"])]
 }

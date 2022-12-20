@@ -1,7 +1,7 @@
-import SimpleComment from '../svelte/SimpleComment.svelte';
+import SimpleComment from "../svelte/SimpleComment.svelte"
 
 const simpleComment = new SimpleComment({
-	target: document.body,
-});
+  target: document.body
+})
 
-export default simpleComment;
+export default simpleComment

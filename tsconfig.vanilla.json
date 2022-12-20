@@ -1,8 +1,6 @@
 {
   "include": ["./src/dist/js/simple-comment.ts"],
-  "exclude": [
-    "node_modules"
-  ],
+  "exclude": ["node_modules"],
   "compilerOptions": {
     "baseUrl": ".",
     "paths": { "*": ["types/*"] },
