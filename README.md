@@ -165,7 +165,7 @@ Assumes a unix-like environment, like Ubuntu.
 1. `yarn install`
 1. `yarn run build`
 1. Install and run [MongoDB Community Edition](https://www.mongodb.com/docs/manual/administration/install-community/)
-    * `sudo systemctl start mongod` (q.v. [Linux](https://www.mongodb.com/docs/manual/tutorial/install-mongodb-on-ubuntu/#run-mongodb-community-edition))
+   - `sudo systemctl start mongod` (q.v. [Linux](https://www.mongodb.com/docs/manual/tutorial/install-mongodb-on-ubuntu/#run-mongodb-community-edition))
 
 ### Test
 
