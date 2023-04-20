@@ -1,6 +1,8 @@
 const path = require("path")
 const webpack = require("webpack")
 const dotenv = require("dotenv")
+const CopyWebpackPlugin = require("copy-webpack-plugin");
+
 dotenv.config({
   path: path.join(__dirname, ".env")
 })
@@ -13,8 +15,8 @@ module.exports = {
   },
   devtool: "inline-source-map",
   output: {
-    filename: "[name].js",
-    path: path.resolve(__dirname, "dist/js")
+    filename: "js/[name].js",
+    path: path.resolve(__dirname, "dist")
   },
   resolve: {
     extensions: [".ts", ".tsx", ".js"]
@@ -22,5 +24,14 @@ module.exports = {
   module: {
     rules: [{ test: /\.tsx?$/, loader: "ts-loader" }]
   },
-  plugins: [new webpack.EnvironmentPlugin(["SIMPLE_COMMENT_API_URL"])]
+  plugins: [new webpack.EnvironmentPlugin(["SIMPLE_COMMENT_API_URL"]),
+  new CopyWebpackPlugin({
+    patterns: [
+      {
+        from: "src/static",
+        to: "."
+      }
+    ]
+  })
+  ]
 }

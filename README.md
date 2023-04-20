@@ -70,12 +70,7 @@ The minimum functionality is [up and running](https://simple-comment.netlify.app
 - Industry-standard security
 - Designed to be fully customizable
 - Scalable, from free-tier to enterprise!
-- Free (as in "free beer": no cost)
-  - Takes advantage of free-tier offerings from DBaaS and website hosts
-- Free (as in "libre": open source)
-  - The source code is available to be modified and used without restriction
-  - Commercial use allowed! Start a business with it! Knock yourself out!
-  - MIT licensing available
+- Takes advantage of free-tier offerings from DBaaS and website hosts
 - Fully documented API
   - Open API 3
 - Ethical, no-track, visitor control over data
