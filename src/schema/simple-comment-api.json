@@ -8,8 +8,8 @@
       "url": "https://github.com/rendall/simple-comment/issues"
     },
     "license": {
-      "name": "MIT",
-      "url": "https://opensource.org/licenses/MIT"
+      "name": "AGPL-3.0-only",
+      "url": "https://opensource.org/license/agpl-v3/"
     },
     "version": "1.0.0"
   },
@@ -909,7 +909,7 @@
     },
     "/auth": {
       "get": {
-        "summary": "Accept a user name and password, return authentication token",
+        "summary": "Accept a user name and password and optional API key, return authentication token",
         "description": "The authentication token is set via the Set-Cookie header with a 'simple_comment_token' key or as an Authentication header with Bearer scheme, depending on Simple Comment configuration. If the authId is a temporary user, link the temporary user to the authenticated user",
         "responses": {
           "200": {

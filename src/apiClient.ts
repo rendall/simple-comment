@@ -10,7 +10,7 @@ import type {
   Comment,
   UserId,
   User
-} from "./../../lib/simple-comment"
+} from "./lib/simple-comment"
 
 const trimDash = (slug: string) => slug.replace(/-+$/, "").replace(/^-+/, "")
 const cleanSlug = (slug: string) =>

@@ -1,4 +1,4 @@
-import type { Comment, Discussion, Topic } from "../../lib/simple-comment"
+import type { Comment, Discussion, Topic } from "./lib/simple-comment"
 import { formatDate, getAllTopics, getOneDiscussion } from "./apiClient"
 import { getCommentDisplayDiv } from "./ui"
 
@@ -25,6 +25,7 @@ const getDiscussionDisplayList = (): HTMLUListElement => {
 
 const appendComment = (comment: Comment, li: HTMLLIElement) => {
   if (!li) throw new Error("parameter 'elem' is undefined in appendComment")
+  if (!comment) throw new Error("comment is undefined in appendComment")
   const commentDisplay = document.createElement("div")
   commentDisplay.classList.add("comment-display")
   li.appendChild(commentDisplay)
