@@ -1,7 +1,7 @@
 const path = require("path")
 const webpack = require("webpack")
 const dotenv = require("dotenv")
-const CopyWebpackPlugin = require("copy-webpack-plugin");
+const CopyWebpackPlugin = require("copy-webpack-plugin")
 
 dotenv.config({
   path: path.join(__dirname, ".env")
@@ -24,14 +24,15 @@ module.exports = {
   module: {
     rules: [{ test: /\.tsx?$/, loader: "ts-loader" }]
   },
-  plugins: [new webpack.EnvironmentPlugin(["SIMPLE_COMMENT_API_URL"]),
-  new CopyWebpackPlugin({
-    patterns: [
-      {
-        from: "src/static",
-        to: "."
-      }
-    ]
-  })
+  plugins: [
+    new webpack.EnvironmentPlugin(["SIMPLE_COMMENT_API_URL"]),
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: "src/static",
+          to: "."
+        }
+      ]
+    })
   ]
 }

@@ -5,7 +5,7 @@ Thank you for your interest in contributing to Simple Comment ("Project"), a pro
 If you agree to be bound by this Agreement, please read and sign below.
 
 1. Definitions
-"Content" means any and all information or material contributed by you to the Project, including but not limited to source code, documentation, and any modifications or derivative works.  "Project" means the open source software project owned by the Company that you are contributing Content to.
+   "Content" means any and all information or material contributed by you to the Project, including but not limited to source code, documentation, and any modifications or derivative works. "Project" means the open source software project owned by the Company that you are contributing Content to.
 
 2. Grant of License
 
@@ -14,15 +14,15 @@ You hereby grant the Company a perpetual, worldwide, non-exclusive, irrevocable,
 3. Representations and Warranties
 
 You represent and warrant that:
-    The Content is original to you and you have the right to contribute it to the Project.
-    You are not aware of any third-party intellectual property rights that would be infringed by the inclusion of the Content in the Project.
+The Content is original to you and you have the right to contribute it to the Project.
+You are not aware of any third-party intellectual property rights that would be infringed by the inclusion of the Content in the Project.
 
 4. Acknowledgment
 
 You acknowledge that:
-    The Company is under no obligation to incorporate the Content into the Project.
-    You will not receive any compensation or consideration from the Company for the Content.
-    This Agreement does not create an employment, agency, partnership, or joint venture relationship between you and the Company.
+The Company is under no obligation to incorporate the Content into the Project.
+You will not receive any compensation or consideration from the Company for the Content.
+This Agreement does not create an employment, agency, partnership, or joint venture relationship between you and the Company.
 
 5. Future Changes
 
@@ -36,8 +36,8 @@ This Agreement shall be governed by and construed in accordance with the laws of
 
 By signing below, you agree to the terms and conditions of this Agreement.
 
-Signature: ____________________________
+Signature: \***\*\*\*\*\*\*\***\_\_\_\_\***\*\*\*\*\*\*\***
 
-Printed Name: ____________________________
+Printed Name: \***\*\*\*\*\*\*\***\_\_\_\_\***\*\*\*\*\*\*\***
 
-Date: ____________________________
+Date: \***\*\*\*\*\*\*\***\_\_\_\_\***\*\*\*\*\*\*\***

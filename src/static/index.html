@@ -1,317 +1,345 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-  <title>Simple Comment</title>
-  <meta name="viewport" content="width=device-width" />
-  <meta name="description"
-    content="Simple Comment is a commenting platform for any website. Free, flexible, open-source, private, and scalable." />
-  <meta name="twitter:card" content="summary" />
-  <meta name="twitter:url" content="http://simple-comment.netlify.app" />
-  <meta name="twitter:title" content="Simple Comment" />
-  <meta name="twitter:description" content="Simple Comment is a free, self-hosted, open-source commenting system" />
-  <meta name="twitter:image" content="https://simple-comment.netlify.app/img/twitter-card-logo.png" />
-  <meta name="twitter:image:alt" content="Simple Comment logo: thought bubble with a slight smile" />
-  <meta name="twitter:site" content="@rendall" />
-  <style>
-    @font-face {
-      font-family: "Comfortaa";
-      font-style: normal;
-      font-weight: 500;
-      font-display: block;
-      src: url(./font/simple-comment.woff2) format("woff2");
-    }
-
-    body {
-      -moz-osx-font-smoothing: grayscale;
-      -webkit-font-smoothing: antialiased;
-      background-color: #f8fcff;
-      color: #33475c;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica,
-        Arial, sans-serif;
-      font-size: 1.125rem;
-      line-height: 1.61111em;
-      margin-bottom: 1em;
-      margin-top: 1em;
-      margin: 0 auto;
-      padding: 0 1rem;
-    }
-
-    main {
-      max-width: 38rem;
-      margin: 0 auto;
-    }
-
-    section {
-      margin-bottom: 3em;
-    }
-
-    section.comment-display {
-      padding-right: 1rem;
-    }
-
-    section.comment-display textarea,
-    section.comment-display input {
-      width: calc(100% - 2rem);
-    }
-
-    h1,
-    h2 {
-      color: #3287e6;
-    }
-
-    h1 {
-      font-family: "Comfortaa", sans-serif;
-      font-size: 3.4rem;
-      font-weight: 500;
-      line-height: 4rem;
-      margin-left: 1rem;
-    }
-
-    input {
-      height: 2rem;
-      width: 100%;
-      font-size: 1.35rem;
-      padding: 0.5rem;
-      border-radius: 0.5rem;
-      border: 1px solid;
-      font-family: monospace;
-    }
-
-    textarea {
-      display: block;
-      height: 7rem;
-      width: 100%;
-      border-radius: 0.5rem;
-      border: 1px solid;
-      font-size: 1.35rem;
-      padding: 0.5rem;
-      font-family: monospace;
-    }
-
-    button:hover {
-      font-weight: bold;
-    }
-
-    button {
-      appearance: none;
-      border: none;
-      background: transparent;
-      background-color: transparent;
-      cursor: pointer;
-      font-size: inherit;
-      padding: 0.5rem 1rem;
-      width: 7rem;
-      text-align: center;
-      border: 1px solid;
-      border-radius: 0.65rem;
-      margin: 0.5rem 1rem 0.5rem 0;
-    }
-
-    p {
-      margin-top: 0;
-    }
-
-    p>span {
-      color: #3287e6;
-      font-size: 1.2rem;
-      font-weight: bold;
-    }
-
-    a:hover {
-      color: #007b8c;
-      text-decoration: underline;
-    }
-
-    a {
-      color: #3287e6;
-      font-weight: 600;
-      text-decoration: none;
-    }
-
-    a[title] {
-      color: unset;
-    }
-
-    textarea#reply-field {
-      min-height: 7rem;
-    }
-
-    header {
-      display: flex;
-      margin: 0 auto;
-      max-width: 59rem;
-      min-height: 10rem;
-      align-items: center;
-    }
-
-    li.comment-item:first-child {
-      margin-top: 3rem;
-    }
-
-    li.comment-item {
-      border-left: 1px solid gray;
-      margin-bottom: 3rem;
-      padding-left: 1rem;
-      position: relative;
-      list-style: none;
-    }
-
-    p.user-display {
-      font-size: 1.1rem;
-      font-weight: bold;
-      left: -1rem;
-      padding: 0.25rem;
-      position: absolute;
-      top: -2rem;
-    }
-
-    ul.comment-replies {
-      padding-left: 1rem;
-    }
-
-    p.comment-text {
-      margin: 0;
-    }
-
-    #discussion-title {
-      display: none;
-    }
-
-    #login-pulser {
-      display: none;
-    }
-
-    .is-logging-in #login-pulser {
-      display: inline;
-    }
-
-    #log-out-button {
-      display: none;
-    }
-
-    .is-logged-in:not(.is-guest) #log-out-button {
-      display: unset;
-    }
-
-    .is-logged-in #log-in-form {
-      display: none;
-    }
-
-    .is-logged-in .user-info {
-      display: none;
-    }
-
-    .is-logged-in:not(.is-guest) .sign-up-form {
-      display: none;
-    }
-
-    .is-error,
-    .error {
-      font-weight: bold;
-      color: red;
-    }
-
-    .is-reply>.comment-display .comment-button {
-      display: none;
-    }
-
-    .is-deleted {
-      font-style: italic;
-      opacity: 0.5;
-    }
-
-    .is-deleted>.comment-button {
-      display: none;
-    }
-
-    .simple-comment-logo {
-      max-width: 9.1rem;
-      min-width: 9.1rem;
-      fill: #3287e6;
-    }
-
-    #user-display {
-      display: none;
-    }
-
-    @media (max-width: 1024px) {
-      main {
-        margin: 0 1rem;
-        max-width: unset;
+  <head>
+    <title>Simple Comment</title>
+    <meta name="viewport" content="width=device-width" />
+    <meta
+      name="description"
+      content="Simple Comment is a commenting platform for any website. Free, flexible, open-source, private, and scalable."
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:url" content="http://simple-comment.netlify.app" />
+    <meta name="twitter:title" content="Simple Comment" />
+    <meta
+      name="twitter:description"
+      content="Simple Comment is a free, self-hosted, open-source commenting system"
+    />
+    <meta
+      name="twitter:image"
+      content="https://simple-comment.netlify.app/img/twitter-card-logo.png"
+    />
+    <meta
+      name="twitter:image:alt"
+      content="Simple Comment logo: thought bubble with a slight smile"
+    />
+    <meta name="twitter:site" content="@rendall" />
+    <style>
+      @font-face {
+        font-family: "Comfortaa";
+        font-style: normal;
+        font-weight: 500;
+        font-display: block;
+        src: url(./font/simple-comment.woff2) format("woff2");
       }
-    }
-  </style>
-</head>
 
-<body>
-  <header>
-    <svg class="simple-comment-logo" version="1.1" viewBox="0 0 100 100" alt="thought bubble with a slight smile"
-      xmlns="http://www.w3.org/2000/svg">
-      <g>
-        <path
-          d="m46 85c21.5 0 39-17.5 39-39s-17.5-39-39-39-39 17.5-39 39 17.5 39 39 39zm0-72c18.2 0 33 14.8 33 33s-14.8 33-33 33-33-14.8-33-33 14.8-33 33-33z" />
-        <path
-          d="m85 70c-6.1 0-11 4.9-11 11s4.9 11 11 11 11-4.9 11-11-4.9-11-11-11zm0 16c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5z" />
-        <path
-          d="m56.556 64.256c0.35703 0.5068 0.52028 1.2218 0.45101 1.9172-0.06927 0.6954-0.37105 1.3712-0.7996 1.7998-0.54481 0.54481-0.64263 0.58032-1.7353 1.024-0.68257 0.27717-1.403 0.49272-1.9625 0.65426-3.5641 1.0291-7.8801 1.2642-12.291 0.17319-3.2701-0.80885-6.2699-2.0519-9.071-4.2971-0.31699-0.25408-1.013-0.78589-1.6664-1.4256-0.86735-0.84913-1.2642-1.3872-1.4109-2.0727-0.24261-1.1338 0.06065-2.3418 1.0548-3.139 0.78048-0.62586 1.8562-0.89826 2.8498-0.55506 1.4285 0.49345 1.6014 1.456 3.6314 2.8214 2.7645 1.8595 5.852 2.8247 8.2841 3.0799 3.3325 0.34962 5.9132-0.05166 8.3445-0.99169 0.94158-0.36405 1.3842-0.59561 2.4605-0.3451 0.88913 0.20696 1.4417 0.76162 1.8607 1.3564z" />
-      </g>
-    </svg>
+      body {
+        -moz-osx-font-smoothing: grayscale;
+        -webkit-font-smoothing: antialiased;
+        background-color: #f8fcff;
+        color: #33475c;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica,
+          Arial, sans-serif;
+        font-size: 1.125rem;
+        line-height: 1.61111em;
+        margin-bottom: 1em;
+        margin-top: 1em;
+        margin: 0 auto;
+        padding: 0 1rem;
+      }
 
-    <h1>Simple Comment</h1>
-  </header>
-  <main>
-    <section>
-      <p>
-        <i>Simple Comment</i> is a commenting platform for any website. Free,
-        flexible, open-source, private, and scalable.
-      </p>
-      <p>
-        <span>Free:</span>
-        <i>Simple Comment</i> takes advantage of free-tier offerings from
-        cloud service providers such as Netlify and MongoDB Atlas to remain
-        no-cost indefinitely.
-      </p>
-      <ul>
-        <li>
-          <a href="https://www.netlify.com/pricing/">Netlify Starter</a>:
-          125,000 API calls/month with 100GB Bandwidth
-        </li>
-        <li>
-          <a href="https://www.mongodb.com/docs/atlas/reference/free-shared-limitations/">MongoDB shared M0 Cluster</a>:
-          "Free forever" with 512 MB of data
-        </li>
-      </ul>
-      <p>
-        <span>Flexible:</span> <i>Simple Comment</i> is designed to easily
-        swap in other services or vendors as needed.
-      </p>
-      <p>
-        <span>Open Source:</span> The backend source code can be freely used
-        and modified under the
-        <a href="https://github.com/rendall/simple-comment/blob/master/LICENSE">GNU AGPLv3 open source license</a>. The
-        running API can be accessed with any client under any license.
-      </p>
-      <p>
-        <span>Private:</span> <i>Simple Comment</i> tracks no one and hoards
-        no data.
-      </p>
-      <p>
-        <span>Scalable:</span> Each service provider offers upgrades of their
-        free tiers.
-      </p>
-      <p><span>Affordable Pricing:</span> Choose from our range of pricing tiers, including Free, Basic, Pro, and
-        Enterprise options, to find the perfect plan for your needs. Whether you're looking for a no-cost solution or a
-        customized package, Simple Comment has you covered.</p>
-      <p>
-        <span>Getting Started:</span> Try the demo below, <a href="./pricing.html">explore our pricing options</a> and <a href="https://github.com/rendall/simple-comment#readme">read the documentation</a>.
-      </p>
-    </section>
-    <section class="comment-display">
-      <div id="simple-comment-display"></div>
-    </section>
-  </main>
-  <script type="module" src="./js/simple-comment.js" defer></script>
-</body>
+      main {
+        max-width: 38rem;
+        margin: 0 auto;
+      }
 
+      section {
+        margin-bottom: 3em;
+      }
+
+      section.comment-display {
+        padding-right: 1rem;
+      }
+
+      section.comment-display textarea,
+      section.comment-display input {
+        width: calc(100% - 2rem);
+      }
+
+      h1,
+      h2 {
+        color: #3287e6;
+      }
+
+      h1 {
+        font-family: "Comfortaa", sans-serif;
+        font-size: 3.4rem;
+        font-weight: 500;
+        line-height: 4rem;
+        margin-left: 1rem;
+      }
+
+      input {
+        height: 2rem;
+        width: 100%;
+        font-size: 1.35rem;
+        padding: 0.5rem;
+        border-radius: 0.5rem;
+        border: 1px solid;
+        font-family: monospace;
+      }
+
+      textarea {
+        display: block;
+        height: 7rem;
+        width: 100%;
+        border-radius: 0.5rem;
+        border: 1px solid;
+        font-size: 1.35rem;
+        padding: 0.5rem;
+        font-family: monospace;
+      }
+
+      button:hover {
+        font-weight: bold;
+      }
+
+      button {
+        appearance: none;
+        border: none;
+        background: transparent;
+        background-color: transparent;
+        cursor: pointer;
+        font-size: inherit;
+        padding: 0.5rem 1rem;
+        width: 7rem;
+        text-align: center;
+        border: 1px solid;
+        border-radius: 0.65rem;
+        margin: 0.5rem 1rem 0.5rem 0;
+      }
+
+      p {
+        margin-top: 0;
+      }
+
+      p > span {
+        color: #3287e6;
+        font-size: 1.2rem;
+        font-weight: bold;
+      }
+
+      a:hover {
+        color: #007b8c;
+        text-decoration: underline;
+      }
+
+      a {
+        color: #3287e6;
+        font-weight: 600;
+        text-decoration: none;
+      }
+
+      a[title] {
+        color: unset;
+      }
+
+      textarea#reply-field {
+        min-height: 7rem;
+      }
+
+      header {
+        display: flex;
+        margin: 0 auto;
+        max-width: 59rem;
+        min-height: 10rem;
+        align-items: center;
+      }
+
+      li.comment-item:first-child {
+        margin-top: 3rem;
+      }
+
+      li.comment-item {
+        border-left: 1px solid gray;
+        margin-bottom: 3rem;
+        padding-left: 1rem;
+        position: relative;
+        list-style: none;
+      }
+
+      p.user-display {
+        font-size: 1.1rem;
+        font-weight: bold;
+        left: -1rem;
+        padding: 0.25rem;
+        position: absolute;
+        top: -2rem;
+      }
+
+      ul.comment-replies {
+        padding-left: 1rem;
+      }
+
+      p.comment-text {
+        margin: 0;
+      }
+
+      #discussion-title {
+        display: none;
+      }
+
+      #login-pulser {
+        display: none;
+      }
+
+      .is-logging-in #login-pulser {
+        display: inline;
+      }
+
+      #log-out-button {
+        display: none;
+      }
+
+      .is-logged-in:not(.is-guest) #log-out-button {
+        display: unset;
+      }
+
+      .is-logged-in #log-in-form {
+        display: none;
+      }
+
+      .is-logged-in .user-info {
+        display: none;
+      }
+
+      .is-logged-in:not(.is-guest) .sign-up-form {
+        display: none;
+      }
+
+      .is-error,
+      .error {
+        font-weight: bold;
+        color: red;
+      }
+
+      .is-reply > .comment-display .comment-button {
+        display: none;
+      }
+
+      .is-deleted {
+        font-style: italic;
+        opacity: 0.5;
+      }
+
+      .is-deleted > .comment-button {
+        display: none;
+      }
+
+      .simple-comment-logo {
+        max-width: 9.1rem;
+        min-width: 9.1rem;
+        fill: #3287e6;
+      }
+
+      #user-display {
+        display: none;
+      }
+
+      @media (max-width: 1024px) {
+        main {
+          margin: 0 1rem;
+          max-width: unset;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <header>
+      <svg
+        class="simple-comment-logo"
+        version="1.1"
+        viewBox="0 0 100 100"
+        alt="thought bubble with a slight smile"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <g>
+          <path
+            d="m46 85c21.5 0 39-17.5 39-39s-17.5-39-39-39-39 17.5-39 39 17.5 39 39 39zm0-72c18.2 0 33 14.8 33 33s-14.8 33-33 33-33-14.8-33-33 14.8-33 33-33z"
+          />
+          <path
+            d="m85 70c-6.1 0-11 4.9-11 11s4.9 11 11 11 11-4.9 11-11-4.9-11-11-11zm0 16c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5z"
+          />
+          <path
+            d="m56.556 64.256c0.35703 0.5068 0.52028 1.2218 0.45101 1.9172-0.06927 0.6954-0.37105 1.3712-0.7996 1.7998-0.54481 0.54481-0.64263 0.58032-1.7353 1.024-0.68257 0.27717-1.403 0.49272-1.9625 0.65426-3.5641 1.0291-7.8801 1.2642-12.291 0.17319-3.2701-0.80885-6.2699-2.0519-9.071-4.2971-0.31699-0.25408-1.013-0.78589-1.6664-1.4256-0.86735-0.84913-1.2642-1.3872-1.4109-2.0727-0.24261-1.1338 0.06065-2.3418 1.0548-3.139 0.78048-0.62586 1.8562-0.89826 2.8498-0.55506 1.4285 0.49345 1.6014 1.456 3.6314 2.8214 2.7645 1.8595 5.852 2.8247 8.2841 3.0799 3.3325 0.34962 5.9132-0.05166 8.3445-0.99169 0.94158-0.36405 1.3842-0.59561 2.4605-0.3451 0.88913 0.20696 1.4417 0.76162 1.8607 1.3564z"
+          />
+        </g>
+      </svg>
+
+      <h1>Simple Comment</h1>
+    </header>
+    <main>
+      <section>
+        <p>
+          <i>Simple Comment</i> is a commenting platform for any website. Free,
+          flexible, open-source, private, and scalable.
+        </p>
+        <p>
+          <span>Free:</span>
+          <i>Simple Comment</i> takes advantage of free-tier offerings from
+          cloud service providers such as Netlify and MongoDB Atlas to remain
+          no-cost indefinitely.
+        </p>
+        <ul>
+          <li>
+            <a href="https://www.netlify.com/pricing/">Netlify Starter</a>:
+            125,000 API calls/month with 100GB Bandwidth
+          </li>
+          <li>
+            <a
+              href="https://www.mongodb.com/docs/atlas/reference/free-shared-limitations/"
+              >MongoDB shared M0 Cluster</a
+            >: "Free forever" with 512 MB of data
+          </li>
+        </ul>
+        <p>
+          <span>Flexible:</span> <i>Simple Comment</i> is designed to easily
+          swap in other services or vendors as needed.
+        </p>
+        <p>
+          <span>Open Source:</span> The backend source code can be freely used
+          and modified under the
+          <a
+            href="https://github.com/rendall/simple-comment/blob/master/LICENSE"
+            >GNU AGPLv3 open source license</a
+          >. The running API can be accessed with any client under any license.
+        </p>
+        <p>
+          <span>Private:</span> <i>Simple Comment</i> tracks no one and hoards
+          no data.
+        </p>
+        <p>
+          <span>Scalable:</span> Each service provider offers upgrades of their
+          free tiers.
+        </p>
+        <p>
+          <span>Affordable Pricing:</span> Choose from our range of pricing
+          tiers, including Free, Basic, Pro, and Enterprise options, to find the
+          perfect plan for your needs. Whether you're looking for a no-cost
+          solution or a customized package, Simple Comment has you covered.
+        </p>
+        <p>
+          <span>Getting Started:</span> Try the demo below,
+          <a href="./pricing.html">explore our pricing options</a> and
+          <a href="https://github.com/rendall/simple-comment#readme"
+            >read the documentation</a
+          >.
+        </p>
+      </section>
+      <section class="comment-display">
+        <div id="simple-comment-display"></div>
+      </section>
+    </main>
+    <script type="module" src="./js/simple-comment.js" defer></script>
+  </body>
 </html>
