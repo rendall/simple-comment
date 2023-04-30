@@ -193,7 +193,7 @@
             }
           },
           "404": {
-            "description": "{commentId} is not found",
+            "description": "{topicId} is not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -1029,11 +1029,11 @@
     },
     "/gauth": {
       "get": {
-        "summary": "Receive tempororary or non-authenticated credentials",
-        "description": "The authentication token is set via Authentication header with Bearer scheme, expected to be set as a cookie in the user's browser and used until an authenticated user is created. The activity of the temporary user should be linked to the authenticated user if possible",
+        "summary": "Receive temporary or non-authenticated credentials",
+        "description": "The authentication token is set via the Authentication header with the Bearer scheme and is expected to be set as a cookie in the user's browser and used until an authenticated user is created. The activity of the temporary user should be linked to the authenticated user if possible.",
         "responses": {
           "200": {
-            "description": "User authenticated",
+            "description": "Temporary or non-authenticated credential received",
             "content": {
               "application/json": {
                 "schema": {
@@ -1058,6 +1058,20 @@
     "/verify": {
       "get": {
         "summary": "Return a representation of a claim in the Cookie header 'simple-comment-token' value",
+        "parameters": [
+          {
+            "name": "Cookie",
+            "in": "header",
+            "description": "The HTTP cookie containing the 'simple-comment-token' value.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "simple-comment-token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+              "pattern": "^simple-comment-token=.*$",
+              "description": "The value of the 'simple-comment-token' cookie in the format 'simple-comment-token=<token-value>'. The token value is a JSON Web Token (JWT) signed with a secret key."
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "User authenticated",
