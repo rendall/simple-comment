@@ -30,7 +30,7 @@ import {
   success202UserDeleted
 } from "../../src/lib/messages"
 import { getAuthToken, hashPassword, uuidv4 } from "../../src/lib/crypt"
-import { policy } from "../../src/policy"
+import policy from "../policy.json"
 import {
   isComment,
   isDeletedComment,
@@ -139,7 +139,7 @@ const newCommentTest: Pick<Comment, "text" | "userId" | "parentId"> = {
 }
 
 describe("Full API service test", () => {
-  let testAllUsers = []
+  let testAllUsers:User[] = []
   let service: MongodbService
   let client: MongoClient
   let db: Db
@@ -181,7 +181,7 @@ describe("Full API service test", () => {
   })
   test("POST to auth with incorrect password should 401", () => {
     expect.assertions(1)
-    const testAdmin = getAuthUser(u => u.isAdmin)
+    const testAdmin = getAuthUser(u => u.isAdmin!)
     const badPassword = mockPassword()
     return service
       .authPOST(testAdmin.id, badPassword)
@@ -201,7 +201,9 @@ describe("Full API service test", () => {
   // hardcoded moderator should always be able to log in
   test("POST to auth with hardcoded credentials should return auth token", () => {
     const moderatorId = process.env.SIMPLE_COMMENT_MODERATOR_ID
+    if (!moderatorId) throw "SIMPLE_COMMENT_MODERATOR_ID is not defined"
     const moderatorPassword = process.env.SIMPLE_COMMENT_MODERATOR_PASSWORD
+    if (!moderatorPassword) throw "SIMPLE_COMMENT_MODERATOR_PASSWORD is not defined"
     return service
       .authPOST(moderatorId, moderatorPassword)
       .then((value: Success<AuthToken>) =>
@@ -210,7 +212,7 @@ describe("Full API service test", () => {
   })
   // User Create
   test("POST to /user should return user and 201 User created", () => {
-    const adminUser = getAuthUser(u => u.isAdmin)
+    const adminUser = getAuthUser(u => u.isAdmin!)
     return service.userPOST(testNewUser, adminUser.id).then(value => {
       expect(value).toHaveProperty("statusCode", 201)
       expect(value).toHaveProperty("body")
@@ -219,7 +221,7 @@ describe("Full API service test", () => {
   })
   test("POST to /user with id uuid with admin credentials should fail", () => {
     const guestUser = { ...testNewUser, id: uuidv4() }
-    const authUser = getAuthUser(u => u.isAdmin)
+    const authUser = getAuthUser(u => u.isAdmin!)
     expect.assertions(1)
     return service
       .userPOST(guestUser, authUser.id)
@@ -314,14 +316,14 @@ describe("Full API service test", () => {
       isVerified: false
     }
 
-    const adminUser = getAuthUser(u => u.isAdmin)
+    const adminUser = getAuthUser(u => u.isAdmin!)
     expect.assertions(1)
     return service
       .userPOST(newUser, adminUser.id)
       .catch(value => expect(value).toHaveProperty("statusCode", 403))
   })
   test("POST to /user with existing username should return 409 user exists", () => {
-    const authUser = getAuthUser(u => u.isAdmin)
+    const authUser = getAuthUser(u => u.isAdmin!)
     expect.assertions(1)
     return service
       .userPOST(testNewUser, authUser.id)
@@ -338,7 +340,7 @@ describe("Full API service test", () => {
 
   // User Read
   test("GET to /user/{userId} where userId does not exist should return 404", () => {
-    const adminUserTest = getAuthUser(u => u.isAdmin)
+    const adminUserTest = getAuthUser(u => u.isAdmin!)
     expect.assertions(1)
     return service
       .userGET(randomString(), adminUserTest.id)
@@ -346,7 +348,7 @@ describe("Full API service test", () => {
   })
   test("GET to /user/{userId} should return User and 200", () => {
     const targetUser = getTargetUser()
-    const authAdminUser = getAuthUser(u => u.isAdmin)
+    const authAdminUser = getAuthUser(u => u.isAdmin!)
     return service
       .userGET(targetUser.id, authAdminUser.id)
       .then((res: Success<PublicSafeUser | AdminSafeUser> | Error) => {
@@ -376,7 +378,7 @@ describe("Full API service test", () => {
       })
   })
   test("GET to /user with admin credentials can return list of users with email", () => {
-    const adminUserTest = getAuthUser(u => u.isAdmin)
+    const adminUserTest = getAuthUser(u => u.isAdmin!)
     return service
       .userListGET(adminUserTest.id)
       .then((res: Success<AdminSafeUser[] | PublicSafeUser[]> | Error) => {
@@ -393,7 +395,7 @@ describe("Full API service test", () => {
   }) // get to /user/{userId} should return user
   test("GET get to /user/{userId} should return user", () => {
     const user = getAuthUser()
-    const adminUserTest = getAuthUser(u => u.isAdmin)
+    const adminUserTest = getAuthUser(u => u.isAdmin!)
     return service
       .userGET(user.id, adminUserTest.id)
       .then((res: Success<PublicSafeUser | AdminSafeUser> | Error) => {
@@ -487,7 +489,7 @@ describe("Full API service test", () => {
   })
   test("PUT to /user/{userId} with invalid name, email, password should fail", () => {
     const targetUser = getTargetUser(u => !u.isAdmin && !u.isVerified)
-    const adminAuthUser = getAuthUser(u => u.isAdmin)
+    const adminAuthUser = getAuthUser(u => u.isAdmin!)
     const updatedUser: UpdateUser = {
       ...targetUser,
       name: " ",
@@ -505,7 +507,7 @@ describe("Full API service test", () => {
   })
   test("PUT to /user/{userId} with admin credentials should alter user return 204 User updated", () => {
     const targetUser = getTargetUser(u => !u.isAdmin && !u.isVerified)
-    const adminAuthUser = getAuthUser(u => u.isAdmin)
+    const adminAuthUser = getAuthUser(u => u.isAdmin!)
     const updatedUser: User = {
       ...targetUser,
       name: randomString(alphaUserInput, 25),
@@ -529,7 +531,7 @@ describe("Full API service test", () => {
       password: mockPassword(),
       email: mockEmail()
     }
-    const adminAuthUser = getAuthUser(u => u.isAdmin)
+    const adminAuthUser = getAuthUser(u => u.isAdmin!)
     const updatedGuestUser: User = {
       ...guestUser,
       name: randomString(alphaUserInput, 25)
@@ -556,7 +558,7 @@ describe("Full API service test", () => {
       password: mockPassword(),
       email: mockEmail()
     }
-    const adminAuthUser = getAuthUser(u => u.isAdmin)
+    const adminAuthUser = getAuthUser(u => u.isAdmin!)
     const updatedGuestUser: User = {
       ...guestUser,
       name: randomString(alphaUserInput, 25),
@@ -573,7 +575,7 @@ describe("Full API service test", () => {
   })
   test("PUT to /user/{userId} where userId does not exist (and admin credentials) should return 404", () => {
     const targetUser = mockUser()
-    const adminAuthUser = getAuthUser(u => u.isAdmin)
+    const adminAuthUser = getAuthUser(u => u.isAdmin!)
     expect.assertions(1)
     return service
       .userPUT(targetUser.id, targetUser, adminAuthUser.id)
@@ -600,15 +602,16 @@ describe("Full API service test", () => {
   })
   test("DELETE to /user/{userId} where userId does not exist and admin credentials should return 404", () => {
     const nonExistentUser = mockUser()
-    const adminAuthUser = getAuthUser(u => u.isAdmin)
+    const adminAuthUser = getAuthUser(u => u.isAdmin!)
     expect.assertions(1)
     return service
       .userDELETE(nonExistentUser.id, adminAuthUser.id)
       .catch(e => expect(e).toBe(error404UserUnknown))
   })
   test("DELETE to /user/{userId} with hardcoded admin userId should return 403", () => {
-    const adminAuthUser = getAuthUser(u => u.isAdmin)
+    const adminAuthUser = getAuthUser(u => u.isAdmin!)
     const simpleCommentModeratorId = process.env.SIMPLE_COMMENT_MODERATOR_ID
+    if (!simpleCommentModeratorId) throw "SIMPLE_COMMENT_MODERATOR_ID is not defined"
     expect.assertions(1)
     return service
       .userDELETE(simpleCommentModeratorId, adminAuthUser.id)
@@ -616,7 +619,7 @@ describe("Full API service test", () => {
   })
   test("DELETE to /user/{userId} should delete user and return 202 User deleted", () => {
     const userToDelete = getTargetUser()
-    const adminAuthUser = getAuthUser(u => u.isAdmin)
+    const adminAuthUser = getAuthUser(u => u.isAdmin!)
     expect.assertions(2)
     return service
       .userDELETE(userToDelete.id, adminAuthUser.id)
@@ -655,7 +658,7 @@ describe("Full API service test", () => {
   test("POST comment to /comment/{commentId} should return comment and 201 Comment created", async () => {
     const postResponse = await service.commentPOST(
       newCommentTest.parentId,
-      newCommentTest.text,
+      newCommentTest.text!,
       newCommentTest.userId
     )
 
@@ -664,7 +667,7 @@ describe("Full API service test", () => {
     expect(postResponse).toHaveProperty("body")
     expect(resbody).toHaveProperty("text", newCommentTest.text)
     expect(resbody).toHaveProperty("user")
-    expect(resbody.user.id).toBe(newCommentTest.userId)
+    expect(resbody?.user?.id).toBe(newCommentTest.userId)
   })
   test("POST comment to /comment/{commentId} without credentials should fail", () => {
     const parentComment = chooseRandomElement(testComments)
@@ -680,7 +683,7 @@ describe("Full API service test", () => {
     return service
       .commentPOST(
         newCommentTest.parentId,
-        newCommentTest.text,
+        newCommentTest.text!,
         newCommentTest.userId
       )
       .catch(e => expect(e).toBe(error409DuplicateComment))
@@ -732,18 +735,18 @@ describe("Full API service test", () => {
         expect(res).toHaveProperty("body")
         expect(res.body).toHaveProperty("id", targetComment.id)
         expect(res.body).toHaveProperty("text", targetComment.text)
-        expect(isPublicSafeUser(res.body.user)).toBe(true)
+        expect(isPublicSafeUser(res.body.user!)).toBe(true)
         expect(res.body).toHaveProperty("replies")
-        expect(res.body.replies.length).toBeGreaterThan(0)
+        expect(res.body.replies?.length).toBeGreaterThan(0)
         expect(
-          getChildren(res.body.id, res.body.replies).map(r =>
+          getChildren(res.body.id, res.body.replies!).map(r =>
             r.id.toLowerCase()
           )
         ).toEqual(
           expect.arrayContaining(targetChildren.map(t => t.id.toLowerCase()))
         )
         expect(res.body).toHaveProperty("user")
-        expect(allUsers(res.body.replies).every(u => isPublicSafeUser(u))).toBe(
+        expect(allUsers(res.body.replies!).every(u => isPublicSafeUser(u!))).toBe(
           true
         )
       })
@@ -820,7 +823,7 @@ describe("Full API service test", () => {
   })
   test("DELETE comment to /comment/{commentId} where Id does not exist should return 404", () => {
     const commentId = randomString()
-    const adminUser = getAuthUser(u => u.isAdmin)
+    const adminUser = getAuthUser(u => u.isAdmin!)
     expect.assertions(1)
     return service
       .commentDELETE(commentId, adminUser.id)
@@ -828,7 +831,7 @@ describe("Full API service test", () => {
   })
   test("DELETE comment to /comment/{commentId} by an admin should delete the comment and return 202 Comment deleted", () => {
     const targetComment = chooseRandomElement(testComments.filter(isComment))
-    const adminUser = getAuthUser(u => u.isAdmin)
+    const adminUser = getAuthUser(u => u.isAdmin!)
     return service
       .commentDELETE(targetComment.id, adminUser.id)
       .then(value =>
@@ -874,16 +877,16 @@ describe("Full API service test", () => {
     })
   })
   test("POST to /topic should return Discussion object and 201 Discussion created", () => {
-    const adminUserTest = getAuthUser(u => u.isAdmin)
+    const adminUserTest = getAuthUser(u => u.isAdmin!)
     return service
       .topicPOST(testNewTopic, adminUserTest.id)
       .then(async value => {
-        const insertedTopic: Discussion = await db
+        const insertedTopic: Discussion | null = await db
           .collection<Discussion>("comments")
           .findOne({ id: testNewTopic.id })
-        expect(insertedTopic.id).toBe(testNewTopic.id)
-        expect(insertedTopic.title).toBe(testNewTopic.title)
-        expect(insertedTopic.isLocked).toBe(testNewTopic.isLocked)
+        expect(insertedTopic?.id).toBe(testNewTopic.id)
+        expect(insertedTopic?.title).toBe(testNewTopic.title)
+        expect(insertedTopic?.isLocked).toBe(testNewTopic.isLocked)
         expect(value).toHaveProperty("statusCode", 201)
       })
   })
@@ -916,7 +919,7 @@ describe("Full API service test", () => {
       dateCreated: new Date(),
       title: randomString()
     }
-    const adminUserTest = getAuthUser(u => u.isAdmin)
+    const adminUserTest = getAuthUser(u => u.isAdmin!)
     return service
       .topicPUT(putTopic.id, putTopic, adminUserTest.id)
       .then((res: Success<Topic> | Error) => {
@@ -954,7 +957,7 @@ describe("Full API service test", () => {
   test("PUT to /topic/{topicId} where Id does not exist should return 404", () => {
     const topic = chooseRandomElement(testTopics)
     const putTopic = { ...topic, id: randomString() }
-    const adminUserTest = getAuthUser(u => u.isAdmin)
+    const adminUserTest = getAuthUser(u => u.isAdmin!)
     expect.assertions(1)
     return service
       .topicPUT(putTopic.id, putTopic, adminUserTest.id)
@@ -963,7 +966,7 @@ describe("Full API service test", () => {
   test("PUT topic with {topicId} to /topic/{topicId} should return topic and 204 Discussion updated", () => {
     const topic = chooseRandomElement(testTopics)
     const putTopic = { ...topic, title: randomString() }
-    const adminUserTest = getAuthUser(u => u.isAdmin)
+    const adminUserTest = getAuthUser(u => u.isAdmin!)
     return service
       .topicPUT(putTopic.id, putTopic, adminUserTest.id)
       .then((res: Success<Topic> | Error) => {
@@ -987,13 +990,13 @@ describe("Full API service test", () => {
   })
   test("DELETE to /topic/{topicId} where Id does not exist should return 404", () => {
     const deleteTopicId = uuidv4()
-    const adminUserTest = getAuthUser(u => u.isAdmin)
+    const adminUserTest = getAuthUser(u => u.isAdmin!)
     return service
       .topicDELETE(deleteTopicId, adminUserTest.id)
       .catch(e => expect(e).toHaveProperty("statusCode", 404))
   })
   test("DELETE to /topic/{topicId} should delete the topic and return 202 Discussion deleted", () => {
-    const adminUserTest = getAuthUser(u => u.isAdmin)
+    const adminUserTest = getAuthUser(u => u.isAdmin!)
     return service
       .topicDELETE(testDeleteTopic.id, adminUserTest.id)
       .then((res: Success) => expect(res).toBe(success202TopicDeleted))

@@ -32,7 +32,7 @@ export const comparePassword = async (
 export const getAuthToken = (
   user: string,
   exp: number = getExpirationTime(YEAR_SECONDS)
-) => jwt.sign({ user, exp }, process.env.JWT_SECRET)
+):string => jwt.sign({ user, exp }, process.env.JWT_SECRET)
 
 export const uuidv4 = () => v4()
 
