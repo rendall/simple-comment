@@ -1,0 +1,12 @@
+{
+    "isGuestAccountAllowed": true,
+    "canFirstVisitCreateTopic": true,
+    "canGuestCreateUser": true,
+    "canGuestReadDiscussion": true,
+    "canGuestReadUser": true,
+    "canPublicCreateUser": false,
+    "canPublicReadDiscussion": true,
+    "canPublicReadUser": true,
+    "canUserDeleteSelf": true,
+    "maxCommentLengthChars": 5000
+}

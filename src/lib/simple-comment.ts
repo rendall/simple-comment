@@ -106,3 +106,27 @@ export type NewUser = {
 }
 // The information that can be updated for a user
 export type UpdateUser = Partial<Omit<NewUser, "id">>
+
+const actionValues = [
+  "postComment"
+] as const;
+
+type ValueMap<T extends readonly string[]> = {
+  [K in T[number]]: K;
+};
+
+export const Action: ValueMap<typeof actionValues> = actionValues.reduce((acc, value) => ({ ...acc, value }), {} as ValueMap<typeof actionValues>);
+export type ActionType = (typeof Action)[keyof typeof Action]
+
+export type Policy = {
+  isGuestAccountAllowed : boolean, // if true, a visitor can post anonymously using a guest account. if false, only authenticated users can comment.
+  canFirstVisitCreateTopic : boolean, // if a discussion does not exist for a page, shall it be created when visited for the first time, or does admin create all topics?
+  canGuestCreateUser : boolean, // can a user with guest credentials create (their own) user profile? if 'canPublicCreateUser' is set to 'true' this setting is ignored
+  canGuestReadDiscussion : boolean, // can a user with guest credentials browse and read discussions? if 'canPublicReadDiscussion' is set to 'true' this setting is ignored
+  canGuestReadUser : boolean, // can a user with guest credentials view user profiles? if 'canPublicReadUser' is true, this setting is ignored
+  canPublicCreateUser : boolean, // can a user with no credentials create (their own) user profile?
+  canPublicReadDiscussion : boolean, // can a user with no credentials browse and read discussions?
+  canPublicReadUser : boolean, // can an anonymous visitor view any user's profile?
+  canUserDeleteSelf : boolean, // can a user delete their own profile?
+  maxCommentLengthChars : number, // Attempting to post a comment longer than this number of characters will be rejected by the API
+}
