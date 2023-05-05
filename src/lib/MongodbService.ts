@@ -1,4 +1,4 @@
-import type {
+import {
   AuthToken,
   Comment,
   CommentId,
@@ -15,8 +15,10 @@ import type {
   NewUser,
   UpdateUser,
   TokenClaim,
-  NewTopic
+  NewTopic,
+  Action
 } from "./simple-comment"
+import { isUserAllowedTo } from "./policyEnforcement";
 import { Collection, Db, MongoClient, WithId } from "mongodb"
 import { Service } from "./Service"
 import {
@@ -34,7 +36,7 @@ import {
   isAllowedReferer,
   getAllowedOrigins
 } from "./utilities"
-import { policy } from "../policy"
+import  policy  from "../policy.json"
 import {
   error400BadRequest,
   error400NoUpdate,
@@ -534,6 +536,13 @@ export class MongodbService extends Service {
         return
       }
 
+      const policyCheck = isUserAllowedTo(authUserId, Action.postComment)
+
+      if (policyCheck !== true) {
+        reject({ ...error403Forbidden, body: policyCheck })
+        return
+      }
+
       if (text.length > policy.maxCommentLengthChars) {
         reject(error413CommentTooLong)
         return
@@ -991,7 +1000,11 @@ export class MongodbService extends Service {
    *
    **/
   gauthGET = () =>
-    new Promise<Success<AuthToken> | Error>(resolve => {
+    new Promise<Success<AuthToken> | Error>(( resolve, reject ) => {
+      if (!policy.isGuestAccountAllowed) {
+        reject({ ...error403Forbidden, body: "Guest accounts are forbidden according to policy `isGuestAccountAllowed:false`" })
+        return
+      }
       const guestUserId = uuidv4()
       const gauthToken = getAuthToken(guestUserId)
       resolve({ ...success200OK, body: gauthToken })

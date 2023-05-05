@@ -1042,6 +1042,9 @@
               }
             }
           },
+          "403": {
+            "description": "Guest accounts are forbidden according to policy `isGuestAccountAllowed:false`"
+          },
           "429": {
             "description": "Too many hits on this endpoint in a short amount of time",
             "headers": {
@@ -1111,7 +1114,10 @@
   "components": {
     "schemas": {
       "Success": {
-        "required": ["statusCode", "body"],
+        "required": [
+          "statusCode",
+          "body"
+        ],
         "type": "object",
         "properties": {
           "body": {
@@ -1126,7 +1132,10 @@
         "description": "Success message when no other information is expected"
       },
       "Error": {
-        "required": ["statusCode", "body"],
+        "required": [
+          "statusCode",
+          "body"
+        ],
         "type": "object",
         "properties": {
           "body": {
@@ -1141,7 +1150,13 @@
         "description": "Error message "
       },
       "Comment": {
-        "required": ["id", "userId", "text", "parentId", "dateCreated"],
+        "required": [
+          "id",
+          "userId",
+          "text",
+          "parentId",
+          "dateCreated"
+        ],
         "type": "object",
         "properties": {
           "id": {
@@ -1180,7 +1195,10 @@
       },
       "User": {
         "type": "object",
-        "required": ["id", "name"],
+        "required": [
+          "id",
+          "name"
+        ],
         "properties": {
           "id": {
             "type": "string",
@@ -1210,7 +1228,12 @@
       },
       "Topic": {
         "type": "object",
-        "required": ["id", "title", "isLocked", "dateCreated"],
+        "required": [
+          "id",
+          "title",
+          "isLocked",
+          "dateCreated"
+        ],
         "properties": {
           "id": {
             "type": "string",
@@ -1230,7 +1253,12 @@
       },
       "Discussion": {
         "type": "object",
-        "required": ["id", "title", "isLocked", "dateCreated"],
+        "required": [
+          "id",
+          "title",
+          "isLocked",
+          "dateCreated"
+        ],
         "properties": {
           "id": {
             "type": "string",

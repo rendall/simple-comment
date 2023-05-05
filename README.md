@@ -206,7 +206,24 @@ Returns the logged-in user id or `401`
 
 ## policy
 
-`policy` is an [object holding key-value pairs](./src/policy.ts) that governs how _Simple Comment_ behaves, determining for instance maximum comment length or whether ordinary users can delete themselves
+`policy` is an [object holding key-value pairs](./src/policy.json) that governs how _Simple Comment_ behaves, determining for instance maximum comment length or whether ordinary users can delete themselves.
+
+```ts
+{
+  isGuestAccountAllowed : boolean, // if true, a visitor can post anonymously using a guest account. if false, only authenticated users can comment.
+  canFirstVisitCreateTopic : boolean, // if a discussion does not exist for a page, shall it be created when visited for the first time, or does admin create all topics?
+  canGuestCreateUser : boolean, // can a user with guest credentials create (their own) user profile? if 'canPublicCreateUser' is set to 'true' this setting is ignored
+  canGuestReadDiscussion : boolean, // can a user with guest credentials browse and read discussions? if 'canPublicReadDiscussion' is set to 'true' this setting is ignored
+  canGuestReadUser : boolean, // can a user with guest credentials view user profiles? if 'canPublicReadUser' is true, this setting is ignored
+  canPublicCreateUser : boolean, // can a user with no credentials create (their own) user profile?
+  canPublicReadDiscussion : boolean, // can a user with no credentials browse and read discussions?
+  canPublicReadUser : boolean, // can an anonymous visitor view any user's profile?
+  canUserDeleteSelf : boolean, // can a user delete their own profile?
+  maxCommentLengthChars : number, // Attempting to post a comment longer than this number of characters will be rejected by the API
+}
+```
+
+
 
 ## Alternatives
 
