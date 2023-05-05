@@ -2,7 +2,7 @@
 
 context("Essential actions", () => {
   before(() => {
-    cy.visit("http://localhost:8080")
+    cy.visit("http://localhost:7070")
   })
 
   beforeEach(() => {

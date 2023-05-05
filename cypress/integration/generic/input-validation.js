@@ -2,7 +2,7 @@
 
 context("Input invalid data", () => {
   beforeEach(() => {
-    cy.visit("http://localhost:8080")
+    cy.visit("http://localhost:7070")
     cy.get("#email-field").clear()
     cy.get("#name-field").clear()
     cy.get("#reply-field").clear()
