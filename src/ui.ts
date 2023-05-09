@@ -27,9 +27,9 @@ import {
   updateUser
 } from "./apiClient"
 
-let currUser: AdminSafeUser
-let clearReply = () => {}
-let updateReply = () => {}
+let currUser: AdminSafeUser | undefined
+let clearReply = () => { }
+let updateReply = () => { }
 
 // string type guard
 const isString = (x: unknown): x is string => typeof x === "string"
@@ -62,6 +62,8 @@ const insertReplyInput = (commentId: CommentId) => {
     `ul[data-comment='${commentId}']`
   ) as HTMLUListElement
   const target = ul.parentElement
+
+  if (!target) throw "Unordered list with data-comment not found"
 
   const replyInputGroup = document.createElement("div")
   replyInputGroup.classList.add("reply-input-group")
@@ -137,14 +139,16 @@ const insertReplyInput = (commentId: CommentId) => {
 /* setupSignup
  * Add event listener and handler for signup flow */
 const setupSignup = () => {
+  const signupStatus = document.querySelector("#sign-up-status")
+  if (!signupStatus) throw "div with id sign-up-status not found"
+
   const signupButton = document.querySelector(
     "#sign-up-button"
   ) as HTMLButtonElement
+
   const setSignupStatus = (message: string = "", isError: boolean = false) => {
-    document
-      .querySelector("#sign-up-status")
-      .classList.toggle("is-error", isError)
-    document.querySelector("#sign-up-status").textContent = message
+    signupStatus.classList.toggle("is-error", isError)
+    signupStatus.textContent = message
   }
   const getElem = id => document.querySelector(`#sign-up-${id}`) as HTMLElement
   const getValue = id => (getElem(id) as HTMLInputElement).value
@@ -161,7 +165,7 @@ const setupSignup = () => {
     if (!id.match(/[A-Za-z0-9]{5,20}/))
       return setSignupStatus(
         `Invalid username '${id}'. ` +
-          "The username must contain only letters or numbers and be between 5 and 20 characters. Go hog-wild on the display name, though!",
+        "The username must contain only letters or numbers and be between 5 and 20 characters. Go hog-wild on the display name, though!",
         true
       )
 
@@ -204,16 +208,16 @@ const setupSignup = () => {
 /* appendComment
  * Creates the UI for displaying a single comment, and appends it to HTMLElement `elem` */
 const appendComment = (comment: Comment, li: HTMLLIElement) => {
-  if (!li) throw new Error("parameter 'elem' is undefined in appendComment")
+  if (!li) throw new Error("parameter 'li' is undefined in appendComment")
+  if (!comment) throw "parameter `comment` is undefined in appendComment"
   const commentDisplay = document.createElement("div")
   commentDisplay.classList.add("comment-display")
   li.appendChild(commentDisplay)
 
   const isDeleted = !!comment.dateDeleted
-  const hasUser = comment.user && comment.user.id
-
   const userDisplay = document.createElement("P")
-  if (hasUser) {
+
+  if (comment.user && comment.user.id) {
     userDisplay.classList.add("user-display")
     userDisplay.setAttribute("id", comment.user.id)
     userDisplay.innerText = comment.user.name
@@ -233,7 +237,7 @@ const appendComment = (comment: Comment, li: HTMLLIElement) => {
     commentText.innerText = `Comment deleted ${formatDate(comment.dateDeleted)}`
     commentDisplay.classList.add("is-deleted")
   } else {
-    commentText.innerText = comment.text
+    commentText.innerText = comment.text ?? ""
 
     const replyCommentButton = document.createElement("button")
     replyCommentButton.innerText = "reply"
@@ -278,10 +282,8 @@ const appendComment = (comment: Comment, li: HTMLLIElement) => {
 /* setupUserLogin
  * Adds eventlisteners to the login UI */
 const setupUserLogin = () => {
-  const logoutButton = document.querySelector("#log-out-button")
-  logoutButton.addEventListener("click", onLogoutClick)
-  const loginButton = document.querySelector("#log-in-button")
-  loginButton.addEventListener("click", onLoginClick)
+  document.querySelector("#log-out-button")?.addEventListener("click", onLogoutClick)
+  document.querySelector("#log-in-button")?.addEventListener("click", onLoginClick)
 }
 
 export const threadReplies = (
@@ -322,7 +324,7 @@ const updateDiscussionDisplay = (
   const discussionDiv = document.querySelector("#discussion") as HTMLDivElement
 
   while (discussionDiv.hasChildNodes()) {
-    discussionDiv.removeChild(discussionDiv.lastChild)
+    if (discussionDiv.lastChild) discussionDiv.removeChild(discussionDiv.lastChild)
   }
 
   clearStatus()
@@ -405,9 +407,12 @@ const updateLoginStatus = (recurseLoop: number = 0) =>
     })
 
 const clearStatus = () => {
-  document.querySelector("#status-display").textContent = ""
-  document.querySelector("#status-display").classList.remove("error")
-  document.querySelector("body").classList.remove("is-logging-in")
+  const statusDisplay = document.querySelector("#status-display");
+  if (statusDisplay !== null) {
+    statusDisplay.textContent = "";
+  }
+  document.querySelector("#status-display")?.classList.remove("error")
+  document.querySelector("body")?.classList.remove("is-logging-in")
 }
 
 const setStatus = (
@@ -420,8 +425,10 @@ const setStatus = (
     return setStatus(JSON.stringify(message.body), isError)
   if (!isString(message)) return setStatus(JSON.stringify(message), isError)
   clearStatus()
-  document.querySelector("#status-display").classList.toggle("error", isError)
-  document.querySelector("#status-display").textContent = message
+  const statusDisplay = document.querySelector("#status-display");
+  if (!statusDisplay) return
+  statusDisplay.classList.toggle("error", isError)
+  statusDisplay.textContent = message
 }
 
 const setErrorStatus = (
@@ -436,10 +443,10 @@ const setErrorStatus = (
 
 const setUserStatus = (user?: AdminSafeUser) => {
   const docBody = document.querySelector("body")
+  if (!docBody) throw "No body found in document"
   const userName = user
-    ? `Logged in as: ${user.name} (${user.id}) ${
-        isGuestId(user.id) ? "(guest)" : ""
-      }${user.isAdmin ? "(admin)" : ""}`
+    ? `Logged in as: ${user.name} (${user.id}) ${isGuestId(user.id) ? "(guest)" : ""
+    }${user.isAdmin ? "(admin)" : ""}`
     : "Not logged in"
   if (user && user.isAdmin) docBody.classList.add("is-admin")
   else docBody.classList.remove("is-admin")
@@ -448,6 +455,8 @@ const setUserStatus = (user?: AdminSafeUser) => {
   else docBody.classList.remove("is-guest")
 
   const userNameField = document.querySelector("#user-name")
+  if (!userNameField) throw "HTML element with id 'user-name' not found."
+
   userNameField.textContent = userName
 
   docBody.classList.remove("is-logging-in")
@@ -537,7 +546,7 @@ const onCommentSubmit = (submitElems, targetId) => async () => {
   }
 
   const isLoggedIn = () =>
-    document.querySelector("body").classList.contains("is-logged-in")
+    document.querySelector("body")?.classList.contains("is-logged-in")
 
   if (!isLoggedIn()) {
     await updateLoginStatus()
@@ -576,17 +585,22 @@ const onCommentSubmit = (submitElems, targetId) => async () => {
   else ul.appendChild(li)
 
   const onCommentResponse =
-    parentElement => (response: ResolvedResponse<Comment>) => {
-      setStatus("Successfully posted comment")
+    (parentElement: HTMLLIElement) => (response: ResolvedResponse<Comment | string>) => {
       const comment = response.body
+      if (typeof comment === "string") {
+        setErrorStatus(comment)
+        return
+      }
+
+      setStatus("Successfully posted comment")
       appendComment(comment, parentElement)
       clearReply()
     }
 
-  const isSameUserInfo = name === currUser.name && email === currUser.email
+  const isSameUserInfo = name === currUser?.name && email === currUser.email
 
   // update the user info if the name or email is changed
-  if (!isSameUserInfo) await updateUser({ id: currUser.id, name, email })
+  if (!isSameUserInfo && currUser) await updateUser({ id: currUser.id, name, email })
 
   postComment(targetId, text).then(onCommentResponse(li)).catch(setErrorStatus)
 }
@@ -646,7 +660,7 @@ const onLoginClick = () => {
     return
   }
 
-  document.querySelector("body").classList.add("is-logging-in")
+  document.querySelector("body")?.classList.add("is-logging-in")
 
   postAuth(username, password)
     .then(() => updateLoginStatus())
@@ -688,8 +702,7 @@ export const getCommentDisplayDiv = (): HTMLDivElement => {
     createdDiv.setAttribute("id", "simple-comment-display")
 
     // append it to body:
-    const body = document.querySelector("body")
-    body.appendChild(createdDiv)
+    document.querySelector("body")?.appendChild(createdDiv)
     console.info("`div#simple-comment-display` created and appended to `body`.")
   }
 
