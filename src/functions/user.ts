@@ -1,8 +1,8 @@
 import * as dotenv from "dotenv"
 import type { APIGatewayEvent } from "aws-lambda"
 import {
-  error404CommentNotFound,
   error405MethodNotAllowed,
+  error500InternalServerError,
   success200OK
 } from "../lib/messages"
 import { MongodbService } from "../lib/MongodbService"
@@ -44,19 +44,7 @@ const getAllowHeaders = (event: APIGatewayEvent) => {
 }
 
 export const handler = async (event: APIGatewayEvent) => {
-  const dirs = event.path.split("/")
-  const isValidPath = dirs.length <= 5
   const headers = getAllowHeaders(event)
-
-  if (!isValidPath)
-    return addHeaders(
-      {
-        ...error404CommentNotFound,
-        body: `${event.path} is not valid`
-      },
-      headers
-    )
-
   const authUserId = getUserId(event.headers)
   const targetId = getTargetId(event.path, "user") as UserId
 
@@ -96,6 +84,7 @@ export const handler = async (event: APIGatewayEvent) => {
     const response = await handleMethod(event.httpMethod)
     return addHeaders(response, headers)
   } catch (error) {
-    return addHeaders(error, headers)
+    console.error({ error })
+    return addHeaders(error500InternalServerError, headers)
   }
 }

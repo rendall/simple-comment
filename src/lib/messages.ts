@@ -1,4 +1,4 @@
-import { Success, Error } from "./simple-comment"
+import type { Success, Error } from "./simple-comment"
 export const error400BadRequest: Error = {
   statusCode: 400,
   body: "Bad Request"
@@ -72,6 +72,10 @@ export const error409UserExists: Error = {
 export const error413CommentTooLong: Error = {
   statusCode: 413,
   body: "Comment too long"
+}
+export const error500InternalServerError: Error = {
+  statusCode: 500,
+  body: "Internal Server Error"
 }
 export const error500UpdateError: Error = {
   statusCode: 500,

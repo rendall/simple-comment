@@ -57,7 +57,6 @@ export const handler = async (event: APIGatewayEvent) => {
   const handleMethod = (method): Promise<Success | Error> => {
     switch (method) {
       case "POST":
-      case "GET":
         return handleAuth(event)
       case "OPTIONS":
         return handleOption(event)
@@ -80,7 +79,9 @@ export const handler = async (event: APIGatewayEvent) => {
   }
 }
 
-const handleAuth = async (event: APIGatewayEvent) => {
+const handleAuth = async (
+  event: APIGatewayEvent
+): Promise<Success<string> | Error> => {
   const isBasicAuth = hasBasicScheme(event.headers)
 
   const allowHeaders = getAllowHeaders(event)
@@ -97,7 +98,7 @@ const handleAuth = async (event: APIGatewayEvent) => {
     }
   else {
     const { user, password } = getUserIdPassword(event.headers)
-    const authUser = await service.authGET(user, password)
+    const authUser = await service.authPOST(user, password)
 
     if (authUser instanceof Error) return authUser
 

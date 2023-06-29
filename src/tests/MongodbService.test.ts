@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import type {
   AdminSafeUser,
   AuthToken,
   Comment,
   CommentId,
+  CreateUserPayload,
   DeletedComment,
   Discussion,
   Error,
@@ -52,11 +54,11 @@ import {
 } from "./mockData"
 
 declare const global: { __MONGO_URI__: string; __MONGO_DB_NAME__: string }
+const MONGO_URI = global.__MONGO_URI__
+const MONGO_DB = global.__MONGO_DB_NAME__
 
 const longFile = `${process.cwd()}/src/tests/veryLongRandomTestString`
 const veryLongString = fs.readFileSync(longFile, "utf8")
-const MONGO_URI = global.__MONGO_URI__
-const MONGO_DB = global.__MONGO_DB_NAME__
 
 const adminUnsafeUserProperties: (keyof User | "password")[] = [
   "hash",
@@ -85,7 +87,7 @@ const isAdminSafeUser = (u: Partial<User>): u is AdminSafeUser =>
 const testUsers = mockUsersArray(100)
 
 const testNewTopic = mockTopic("new-")
-const testNewUser: NewUser = {
+const testNewUser: CreateUserPayload = {
   ...mockUser("new-"),
   isAdmin: false,
   password: mockPassword(),
@@ -122,7 +124,7 @@ const getTargetUser = (p: (u: User) => boolean = () => true) => {
   return user
 }
 /** Return user from the unused pool, filtered optionally by a predicate */
-const getAuthUser = (p: (u: User) => boolean = (u: User) => true) => {
+const getAuthUser = (p: (u: User) => boolean = (_u: User) => true) => {
   const user = chooseRandomElement(
     testUsers
       .filter(t => !usedUsersTest.map(u => u.id).includes(t.id))
@@ -139,9 +141,10 @@ const newCommentTest: Pick<Comment, "text" | "userId" | "parentId"> = {
 }
 
 describe("Full API service test", () => {
-  let testAllUsers:User[] = []
+  let testAllUsers: User[] = []
   let service: MongodbService
-  let client: MongoClient
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  let _client: MongoClient
   let db: Db
 
   beforeAll(async () => {
@@ -149,7 +152,7 @@ describe("Full API service test", () => {
     const databaseName = MONGO_DB
 
     service = new MongodbService(connectionString, databaseName)
-    client = await service.getClient()
+    _client = await service.getClient()
     db = await service.getDb()
 
     // authUserTest needs a real hash
@@ -187,7 +190,7 @@ describe("Full API service test", () => {
       .authPOST(testAdmin.id, badPassword)
       .catch(e => expect(e).toEqual(error401BadCredentials))
   })
-  test("POST to auth with correct credentials should return auth token", () => {
+  test("POST to auth with user id and correct password should return auth token", () => {
     const authToken = getAuthToken(authUserTest.id)
     // The difference in timing between the line above and the authToken returned from the service
     // can change the two. We will compare only the first 70 characters, just to be sure that it
@@ -198,12 +201,21 @@ describe("Full API service test", () => {
         expect(value.body.slice(0, 70)).toEqual(authToken.slice(0, 70))
       )
   })
+  test("POST to auth with email and correct password should return auth token", () => {
+    const authToken = getAuthToken(authUserTest.id)
+    return service
+      .authPOST(authUserTest.email, authUserTest.password)
+      .then((value: Success<AuthToken>) =>
+        expect(value.body.slice(0, 70)).toEqual(authToken.slice(0, 70))
+      )
+  })
   // hardcoded moderator should always be able to log in
   test("POST to auth with hardcoded credentials should return auth token", () => {
     const moderatorId = process.env.SIMPLE_COMMENT_MODERATOR_ID
     if (!moderatorId) throw "SIMPLE_COMMENT_MODERATOR_ID is not defined"
     const moderatorPassword = process.env.SIMPLE_COMMENT_MODERATOR_PASSWORD
-    if (!moderatorPassword) throw "SIMPLE_COMMENT_MODERATOR_PASSWORD is not defined"
+    if (!moderatorPassword)
+      throw "SIMPLE_COMMENT_MODERATOR_PASSWORD is not defined"
     return service
       .authPOST(moderatorId, moderatorPassword)
       .then((value: Success<AuthToken>) =>
@@ -211,14 +223,28 @@ describe("Full API service test", () => {
       )
   })
   // User Create
-  test("POST to /user should return user and 201 User created", () => {
+  test("POST to /user with id should return user with same id and 201 User created", () => {
     const adminUser = getAuthUser(u => u.isAdmin!)
     return service.userPOST(testNewUser, adminUser.id).then(value => {
       expect(value).toHaveProperty("statusCode", 201)
       expect(value).toHaveProperty("body")
       expect(value.body).toHaveProperty("email", testNewUser.email)
+      expect(value.body).toHaveProperty("id", testNewUser.id)
     })
   })
+
+  test("POST to /user without id should return user with generated id and 201 User created", () => {
+    const adminUser = getAuthUser(u => u.isAdmin!)
+    const testUserWithoutId = { ...testNewUser }
+    delete testUserWithoutId.id
+    return service.userPOST(testUserWithoutId, adminUser.id).then(value => {
+      expect(value).toHaveProperty("statusCode", 201)
+      expect(value).toHaveProperty("body")
+      expect(value.body).toHaveProperty("email", testNewUser.email)
+      expect(value.body).toHaveProperty("id")
+    })
+  })
+
   test("POST to /user with id uuid with admin credentials should fail", () => {
     const guestUser = { ...testNewUser, id: uuidv4() }
     const authUser = getAuthUser(u => u.isAdmin!)
@@ -424,7 +450,7 @@ describe("Full API service test", () => {
     const targetUser = getTargetUser()
     return service
       .userPUT(targetUser.id, targetUser)
-      .then(res => expect(true).toBe(false))
+      .then(_res => expect(true).toBe(false))
       .catch(e => expect(e).toBe(error401UserNotAuthenticated))
   })
   test("PUT to /user/{userId} with improper credentials should return 403", () => {
@@ -432,7 +458,7 @@ describe("Full API service test", () => {
     const ordinaryUser = getAuthUser(u => !u.isAdmin)
     return service
       .userPUT(targetUser.id, targetUser, ordinaryUser.id)
-      .then(res => expect(true).toBe(false))
+      .then(_res => expect(true).toBe(false))
       .catch(e => expect(e.statusCode).toBe(403))
   })
   test("PUT to /user/{userId} with public, own credentials cannot modify isAdmin", () => {
@@ -611,7 +637,8 @@ describe("Full API service test", () => {
   test("DELETE to /user/{userId} with hardcoded admin userId should return 403", () => {
     const adminAuthUser = getAuthUser(u => u.isAdmin!)
     const simpleCommentModeratorId = process.env.SIMPLE_COMMENT_MODERATOR_ID
-    if (!simpleCommentModeratorId) throw "SIMPLE_COMMENT_MODERATOR_ID is not defined"
+    if (!simpleCommentModeratorId)
+      throw "SIMPLE_COMMENT_MODERATOR_ID is not defined"
     expect.assertions(1)
     return service
       .userDELETE(simpleCommentModeratorId, adminAuthUser.id)
@@ -746,9 +773,9 @@ describe("Full API service test", () => {
           expect.arrayContaining(targetChildren.map(t => t.id.toLowerCase()))
         )
         expect(res.body).toHaveProperty("user")
-        expect(allUsers(res.body.replies!).every(u => isPublicSafeUser(u!))).toBe(
-          true
-        )
+        expect(
+          allUsers(res.body.replies!).every(u => isPublicSafeUser(u!))
+        ).toBe(true)
       })
   })
 

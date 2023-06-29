@@ -48,6 +48,19 @@ export const verifyUser = () =>
     credentials: "include"
   }).then(res => resolveBody<TokenClaim>(res))
 
+/* getSelf
+ * Request information about the current user and display it */
+export const getSelf = (claim: TokenClaim) =>
+  getOneUser(claim.user).then(res => res.body as AdminSafeUser)
+
+/** verifySelf
+ * Verify token information and then retrieve self information using getSelf
+ */
+export const verifySelf = () =>
+  verifyUser()
+    .then(res => res.body as TokenClaim)
+    .then(getSelf)
+
 /** Fetch all user info
  * @async
  * @function
@@ -94,6 +107,7 @@ export const updateUser = (userInfo: User) =>
     method: "PUT",
     credentials: "include"
   }).then(res => resolveBody<AdminSafeUser>(res))
+
 /** Create a guest user
  * @async
  * @function
@@ -165,12 +179,15 @@ export const postAuth = (user: string, password: string) => {
  * @param {string} text - the comment copy
  * @returns {ResolvedResponse}
  */
-export const postComment = (targetId, text) =>
+export const postComment = (
+  targetId,
+  text
+): Promise<ResolvedResponse<string | Comment>> =>
   fetch(`${getSimpleCommentURL()}/comment/${targetId}`, {
     body: text,
     method: "POST",
     credentials: "include"
-  }).then(res => resolveBody(res))
+  }).then(res => resolveBody<Comment>(res))
 
 /** Delete a comment
  * @async
@@ -182,7 +199,7 @@ export const deleteComment = commentId =>
   fetch(`${getSimpleCommentURL()}/comment/${commentId}`, {
     method: "DELETE",
     credentials: "include"
-  }).then(res => resolveBody(res))
+  }).then(res => resolveBody<string>(res))
 
 // TOPIC & DISCUSSION
 // A discussion is a topic with all comments attached
@@ -240,13 +257,19 @@ export const createNewTopic = (id, title, isLocked = false) => {
 // UTILITY
 
 /** Convert an object of type { prop1:val1, prop2:val2, ... } to string "prop1=val1&prop2=val2..."
+ * Use this instead of formData to reduce complexity and avoid dependencies
  * @function
  * @param obj {object}
  * @returns {string}
  */
-export const objToQuery = <T>(obj: T) =>
+export const objToQuery = <T extends { [s: string]: unknown }>(obj: T) =>
   Object.entries(obj)
-    .map(entry => `${entry[0]}=${entry[1]}`)
+    .map(
+      entry =>
+        `${encodeURIComponent(entry[0])}=${encodeURIComponent(
+          entry[1] as string
+        )}`
+    )
     .join("&")
 
 /** Return true if UserId `id` is a GuestId
@@ -257,8 +280,8 @@ export const isGuestId = (id: UserId) =>
   id.match(
     /^(?:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|00000000-0000-0000-0000-000000000000)$/i
   )
-export const formatDate = (dateStr: string | Date) =>
-  `${new Date(dateStr).toLocaleString()}`
+export const formatDate = (dateStr: string | Date | undefined) =>
+  dateStr ? `${new Date(dateStr).toLocaleString()}` : "unknown"
 // Validate email
 export const isValidEmail = (x: string) =>
   x.match(/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i)

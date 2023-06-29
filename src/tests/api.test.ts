@@ -66,99 +66,141 @@ describe("Ensures API specs match controller service", () => {
     )
 
   class TestService extends Service {
-    authDELETE = () =>
-      new Promise<Success | Error>((resolve, reject) =>
-        reject("Error: not implemented")
-      )
-    authGET = (username: string, password: string) =>
-      new Promise<AuthToken | Error>((resolve, reject) =>
-        reject("Error: not implemented")
-      )
-    authPOST = (username: string, password: string) =>
-      new Promise<AuthToken | Error>((resolve, reject) =>
-        reject("Error: not implemented")
-      )
-    close = (): Promise<void> =>
-      new Promise<void>((resolve, reject) => reject("Error: not implemented"))
-    commentDELETE = (
-      topicId: TopicId,
-      commentId: CommentId,
-      authUser: UserId
-    ) =>
-      new Promise<Success | Error>((resolve, reject) =>
-        reject("Error: not implemented")
-      )
-    commentGET = (targetId: TopicId | CommentId, authUserId?: UserId) =>
-      new Promise<Success<Comment | Discussion> | Error>(
-        async (resolve, reject) => reject("Error: not implemented")
-      )
-    commentPOST = (
-      parentId: TopicId | CommentId,
-      text: string,
-      authUser?: UserId
-    ) =>
-      new Promise<Success<Comment> | Error>((resolve, reject) =>
-        reject("Error: not implemented")
-      )
-    commentPUT = (targetId: CommentId, text: string, authUser?: UserId) =>
-      new Promise<Success<Comment> | Error>((resolve, reject) =>
-        reject("Error: not implemented")
-      )
-    gauthGET = () =>
-      new Promise<AuthToken | Error>((resolve, reject) =>
-        reject("Error: not implemented")
-      )
-    topicDELETE = (topicId: TopicId, authUser?: UserId) =>
-      new Promise<Success | Error>((resolve, reject) =>
-        reject("Error: not implemented")
-      )
-    topicGET = (topicId: TopicId, authUser?: UserId) =>
-      new Promise<Success<Discussion> | Error>((resolve, reject) =>
-        reject("Error: not implemented")
-      )
-    topicListGET = (authUser?: UserId) =>
-      new Promise<Success<Discussion[]> | Error>((resolve, reject) =>
-        reject("Error: not implemented")
-      )
-    topicPOST = (topic: Topic, authUserId?: UserId) =>
-      new Promise<Success<Discussion> | Error>((resolve, reject) =>
-        reject("Error: not implemented")
-      )
-    topicPUT = (
-      topicId: TopicId,
-      topic: Pick<Topic, "title" | "isLocked">,
-      authUserId?: UserId
-    ) =>
-      new Promise<Success<Topic> | Error>((resolve, reject) =>
-        reject("Error: not implemented")
-      )
-    userDELETE = (userId: UserId, authUser: UserId) =>
-      new Promise<Success | Error>((resolve, reject) =>
-        reject("Error: not implemented")
-      )
-    userGET = (userId?: UserId, authUserId?: UserId) =>
-      new Promise<Success<Partial<User>> | Error>(async (resolve, reject) =>
-        reject("Error: not implemented")
-      )
-    userListGET = (authUserId?: UserId) =>
-      new Promise<Success<AdminSafeUser[] | PublicSafeUser[]> | Error>(
-        async (resolve, reject) => reject("Error: not implemented")
-      )
-    userPOST = (newUser: NewUser, authUserId?: UserId) =>
-      new Promise<Success<User> | Error>((resolve, reject) =>
-        reject("Error: not implemented")
-      )
-    userPUT = (targetId: UserId, user: UpdateUser, authUserId?: UserId) =>
-      new Promise<Success<User> | Error>((resolve, reject) =>
-        reject("Error: not implemented")
-      )
-    verifyGET = (authToken: AuthToken) =>
-      new Promise<Success<TokenClaim> | Error>((resolve, reject) =>
-        reject("Error: not implemented")
-      )
+    authDELETE = async (): Promise<Success | Error> => {
+      throw "Error: not implemented"
+    }
+
+    authGET = async (
+      _username: string,
+      _password: string
+    ): Promise<AuthToken | Error> => {
+      throw "Error: not implemented"
+    }
+
+    authPOST = async (
+      _username: string,
+      _password: string
+    ): Promise<AuthToken | Error> => {
+      throw "Error: not implemented"
+    }
+
+    close = (): Promise<void> => {
+      throw "Error: not implemented"
+    }
+    commentDELETE = async (
+      _topicId: TopicId,
+      _commentId: CommentId,
+      _authUser: UserId
+    ): Promise<Success | Error> => {
+      throw "Error: not implemented"
+    }
+
+    commentGET = async (
+      _targetId: TopicId | CommentId,
+      _authUserId?: UserId
+    ): Promise<Success<Comment | Discussion> | Error> => {
+      throw "Error: not implemented"
+    }
+
+    commentPOST = async (
+      _parentId: TopicId | CommentId,
+      _text: string,
+      _authUser?: UserId
+    ): Promise<Success<Comment> | Error> => {
+      throw "Error: not implemented"
+    }
+
+    commentPUT = async (
+      _targetId: CommentId,
+      _text: string,
+      _authUser?: UserId
+    ): Promise<Success<Comment> | Error> => {
+      throw "Error: not implemented"
+    }
+
+    gauthGET = async (): Promise<AuthToken | Error> => {
+      throw "Error: not implemented"
+    }
+
+    topicDELETE = async (
+      _topicId: TopicId,
+      _authUser?: UserId
+    ): Promise<Success | Error> => {
+      throw "Error: not implemented"
+    }
+
+    topicGET = async (
+      _topicId: TopicId,
+      _authUser?: UserId
+    ): Promise<Success<Discussion> | Error> => {
+      throw "Error: not implemented"
+    }
+
+    topicListGET = async (
+      _authUser?: UserId
+    ): Promise<Success<Discussion[]> | Error> => {
+      throw "Error: not implemented"
+    }
+
+    topicPOST = async (
+      _topic: Topic,
+      _authUserId?: UserId
+    ): Promise<Success<Discussion> | Error> => {
+      throw "Error: not implemented"
+    }
+
+    topicPUT = async (
+      _topicId: TopicId,
+      _topic: Pick<Topic, "title" | "isLocked">,
+      _authUserId?: UserId
+    ): Promise<Success<Topic> | Error> => {
+      throw "Error: not implemented"
+    }
+
+    userDELETE = async (
+      _userId: UserId,
+      _authUser: UserId
+    ): Promise<Success | Error> => {
+      throw "Error: not implemented"
+    }
+
+    userGET = async (
+      _userId?: UserId,
+      _authUserId?: UserId
+    ): Promise<Success<Partial<User>> | Error> => {
+      throw "Error: not implemented"
+    }
+
+    userListGET = async (
+      _authUserId?: UserId
+    ): Promise<Success<AdminSafeUser[] | PublicSafeUser[]> | Error> => {
+      throw "Error: not implemented"
+    }
+
+    userPOST = async (
+      _newUser: NewUser,
+      _authUserId?: UserId
+    ): Promise<Success<User> | Error> => {
+      throw "Error: not implemented"
+    }
+
+    userPUT = async (
+      _targetId: UserId,
+      _user: UpdateUser,
+      _authUserId?: UserId
+    ): Promise<Success<User> | Error> => {
+      throw "Error: not implemented"
+    }
+
+    verifyGET = async (
+      _authToken: AuthToken
+    ): Promise<Success<TokenClaim> | Error> => {
+      throw "Error: not implemented"
+    }
   }
 
   // TestService indirectly tests the abstract class Service
+  // This test relies on compile time flagging an error that TestService does not implment Service
   const testService = new TestService()
 
   // Make sure that each entry in serviceMethods has a corresponding

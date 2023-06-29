@@ -15,8 +15,11 @@ import {
   Discussion,
   PublicSafeUser,
   User,
-  TokenClaim
+  TokenClaim,
+  Email
 } from "./simple-comment"
+import { Collection, Db } from "mongodb"
+import { uuidv4 } from "./crypt"
 
 dotenv.config()
 
@@ -27,6 +30,10 @@ const BASIC_SCHEME = "Basic"
 
 const isDefined = <T>(x: T | undefined | null): x is T =>
   x !== undefined && x !== null
+
+/** Creates an id specifically for a guest */
+export const createGuestId = () => uuidv4()
+
 /**
  * Returns true if userId is a guest id
  */
@@ -36,6 +43,7 @@ export const isGuestId = (userId: UserId) => isUuid(userId)
  * These are user properties that are unsafe to return to admins
  */
 export const adminUnsafeUserProperties: (keyof User)[] = ["hash", "_id"]
+
 /**
  * These are user properties that are unsafe to return to ordinary users and the public
  */
@@ -44,6 +52,7 @@ export const publicUnsafeUserProperties: (keyof User)[] = [
   "email",
   "isVerified"
 ]
+
 /**
  * These are user properties that only admins can modify on users
  */
@@ -51,6 +60,7 @@ export const adminOnlyModifiableUserProperties: (keyof User)[] = [
   "isVerified",
   "isAdmin"
 ]
+
 /**
  * Return a user object that is clean and secure
  */
@@ -71,6 +81,9 @@ export const toAdminSafeUser = (user: User) =>
         "isVerified"
       ])
     : user
+
+export const isEmail = (x: string | Email): x is Email =>
+  /\S+@\S+\.\S+/.test(x.trim())
 
 export const isComment = (target: Comment | Discussion): target is Comment =>
   isDefined(target) && "parentId" in target
@@ -334,13 +347,19 @@ export const getTargetId = (
 
 type GenericObj = { [key: string]: string | number | boolean | Date }
 
-const parseBody = (body: string): GenericObj =>
-  body
-    .split("&")
-    .map(i => i.split("=") as [string, string])
-    .map(([key, value]: [string, string]) => [key, decodeURIComponent(value)])
-    .reduce((obj, [key, value]) => ({ ...obj, [key]: value }), {})
+const decode = (x: string | undefined) =>
+  x === undefined ? "" : decodeURIComponent(x)
 
+export const parseQuery = (body: string): GenericObj =>
+  body === ""
+    ? {}
+    : body
+        .split("&")
+        .map(i => i.split("=") as [string, string])
+        .map(([key, value]: [string, string]) => [decode(key), decode(value)])
+        .reduce((obj, [key, value]) => ({ ...obj, [key]: value }), {})
+
+/** Remove keys from "obj"  that are not explicitly set in the keys parameter as a way to sanitize user input */
 const narrowType = <T>(obj: GenericObj | User, keys: (keyof T)[]) =>
   Object.entries(obj).reduce(
     (narrowType, [key, value]) =>
@@ -358,8 +377,10 @@ const newUserKeys: (keyof NewUser)[] = [
   "name",
   "password"
 ]
-export const getNewUserInfo = (body: string): NewUser =>
-  narrowType<NewUser>(parseBody(body), newUserKeys)
+export const getNewUserInfo = (body: string): NewUser => {
+  const newUser = narrowType<NewUser>(parseQuery(body), newUserKeys)
+  return newUser
+}
 const updatedUserKeys: (keyof UpdateUser)[] = [
   "isAdmin",
   "email",
@@ -371,15 +392,16 @@ export const toUpdatedUser = (obj: GenericObj) =>
   narrowType<UpdateUser>(obj, updatedUserKeys) as UpdateUser
 
 export const getUpdatedUserInfo = (body: string): UpdateUser =>
-  toUpdatedUser(parseBody(body))
+  toUpdatedUser(parseQuery(body))
 
-export const getNewTopicInfo = (body: string): Topic => toTopic(parseBody(body))
+export const getNewTopicInfo = (body: string): Topic =>
+  toTopic(parseQuery(body))
 
 export const toTopic = (obj: GenericObj) =>
   narrowType<Topic>(obj, ["id", "title", "isLocked"]) as Topic
 
 export const getUpdateTopicInfo = (body: string): Topic =>
-  narrowType<Topic>(parseBody(body), ["title", "isLocked"]) as Topic
+  narrowType<Topic>(parseQuery(body), ["title", "isLocked"]) as Topic
 
 export const isError = (res: Success | Error): res is Error =>
   res.statusCode >= 400
@@ -405,6 +427,24 @@ export type ValidResult = {
   result?: RegExpMatchArray
   reason?: string
 }
+
+export const createNewUserId = async (db:Db): Promise<string> => {
+  // Generate a random id
+  const newId = Math.random().toString(36).slice(2, 10);
+
+  // Check if the id already exists in the database
+  const users: Collection<User> = db.collection("users");
+  const existingUser = await users.find({ id: newId }).limit(1).next();
+
+  // If the id already exists, recursively call this function again
+  if (existingUser) {
+    return createNewUserId(db);
+  }
+
+  // If the id doesn't exist, return the new id
+  else return newId;
+};
+
 
 export const validateUserId = (
   userId: string,

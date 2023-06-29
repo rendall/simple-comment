@@ -28,16 +28,6 @@ export abstract class Service {
   ) => Promise<AuthToken | Error>
 
   /**
-   * Accept a user name and password, return authentication token
-   *
-   * returns AuthToken
-   **/
-  abstract authGET: (
-    username: string,
-    password: string
-  ) => Promise<AuthToken | Error>
-
-  /**
    * Create user
    * returns Success | Error
    **/

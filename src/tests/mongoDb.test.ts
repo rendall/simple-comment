@@ -1,3 +1,4 @@
+/** Smoke test for the in-memory mongo db implementation */
 import { Db, MongoClient } from "mongodb"
 
 declare const global: { __MONGO_URI__: string; __MONGO_DB_NAME__: string }

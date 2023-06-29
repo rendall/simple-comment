@@ -223,8 +223,6 @@ Returns the logged-in user id or `401`
 }
 ```
 
-
-
 ## Alternatives
 
 There are 34 solutions that are not Simple Comment listed here. Nearly all of these are more mature than Simple Comment, and I would recommend considering one if you are not looking specifically for a serverless, open-source, self-hosted solution. Listed below each are pros and cons that distinguish it from Simple Comment. If _Trust is required_ is listed, it means that using the service requires trust in the company, because they will be serving closed-source code to your users that you do not control and cannot easily inspect; as well, user data will be held on servers they control. This list is based on public documentation, not experience. If anything is incorrect or missing, please let me know.

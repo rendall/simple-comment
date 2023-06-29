@@ -656,6 +656,47 @@
       "post": {
         "summary": "Create a user",
         "description": "Creates an authenticated user who can log in over mutliple devices. If the authId is a temporary user, link the temporary user to the authenticated user",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "Unique identifier for the user. If not provided, the API will assign one."
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "Name of the user"
+                  },
+                  "email": {
+                    "type": "string",
+                    "description": "Email address of the user"
+                  },
+                  "password": {
+                    "type": "string",
+                    "description": "Password for the user"
+                  },
+                  "isAdmin": {
+                    "type": "boolean",
+                    "description": "Whether the user is an admin"
+                  },
+                  "isVerified": {
+                    "type": "boolean",
+                    "description": "Whether the user is verified"
+                  }
+                },
+                "required": [
+                  "name",
+                  "email",
+                  "password"
+                ]
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "201": {
             "description": "User created",
@@ -908,60 +949,33 @@
       }
     },
     "/auth": {
-      "get": {
-        "summary": "Accept a user name and password and optional API key, return authentication token",
+      "post": {
+        "summary": "Accept a user name and password, return authentication token",
         "description": "The authentication token is set via the Set-Cookie header with a 'simple_comment_token' key or as an Authentication header with Bearer scheme, depending on Simple Comment configuration. If the authId is a temporary user, link the temporary user to the authenticated user",
-        "responses": {
-          "200": {
-            "description": "User authenticated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AuthToken"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Request format not understood",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Bad credentials",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Unknown user",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "identifier": {
+                    "type": "string",
+                    "description": "The user's ID or email"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password"
+                  }
+                },
+                "required": [
+                  "identifier",
+                  "password"
+                ]
               }
             }
           }
         },
-        "security": [
-          {
-            "BasicAuth": []
-          }
-        ]
-      },
-      "post": {
-        "summary": "Accept a user name and password, return authentication token",
-        "description": "The authentication token is set via the Set-Cookie header with a 'simple_comment_token' key or as an Authentication header with Bearer scheme, depending on Simple Comment configuration. If the authId is a temporary user, link the temporary user to the authenticated user",
         "responses": {
           "200": {
             "description": "User authenticated",

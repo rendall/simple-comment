@@ -11,6 +11,10 @@ module.exports = {
   mode: "production",
   entry: {
     "simple-comment": path.resolve(__dirname, "src/simple-comment.ts"),
+    "simple-comment-login": path.resolve(
+      __dirname,
+      "src/simple-comment-login.ts"
+    ),
     "all-comments": path.resolve(__dirname, "src/all-comments.ts")
   },
   devtool: "inline-source-map",

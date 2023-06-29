@@ -75,9 +75,9 @@
   display: inline;
 }
 
-#simple-comment-display #user-display {
+/* #simple-comment-display #user-display {
   display: none;
-}
+} */
 
 #simple-comment-display #log-in-form {
   display: none;

@@ -2,6 +2,7 @@ import {
   getAllowOriginHeaders,
   isAllowedReferer,
   isGuestId,
+  parseQuery,
   validateEmail,
   validateUserId
 } from "../../src/lib/utilities"
@@ -169,6 +170,43 @@ describe("isAllowedReferer()", () => {
   it("should evaluate referer with trailing / as true", () => {
     const allowedOrigin = ["https://example.com"]
     expect(isAllowedReferer("https://example.com/", allowedOrigin)).toBe(true)
+  })
+})
+
+describe("parseQuery()", () => {
+  it("should parse correctly", () => {
+    const query = "key1=value1&key2=value2"
+    const expected = { key1: "value1", key2: "value2" }
+    expect(parseQuery(query)).toEqual(expected)
+  })
+
+  it("should decode URI components", () => {
+    const query = "key1=value%20with%20spaces&key2=value%2Bwith%2Bpluses"
+    const expected = { key1: "value with spaces", key2: "value+with+pluses" }
+    expect(parseQuery(query)).toEqual(expected)
+  })
+
+  it("should handle empty strings", () => {
+    const query = ""
+    const expected = {}
+    expect(parseQuery(query)).toEqual(expected)
+  })
+
+  it("should handle keys without values", () => {
+    const query = "key1=&key2"
+    const expected = { key1: "", key2: "" }
+    expect(parseQuery(query)).toEqual(expected)
+  })
+
+  it("should handle values without keys", () => {
+    const query = "=value1&=value2"
+    const expected = { "": "value2" } // Only the last value will be kept
+    expect(parseQuery(query)).toEqual(expected)
+  })
+
+  it("should throw an error for malformed URI sequences", () => {
+    const query = "key1=%C0%C1"
+    expect(() => parseQuery(query)).toThrow()
   })
 })
 

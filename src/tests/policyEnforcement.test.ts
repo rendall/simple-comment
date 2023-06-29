@@ -1,5 +1,5 @@
-import { isUserAllowedTo } from "../lib/policyEnforcement";
-import { Action, Policy, User } from "../lib/simple-comment";
+import { isUserAllowedTo } from "../lib/policyEnforcement"
+import { Action, Policy, User } from "../lib/simple-comment"
 
 const mockPolicy: Policy = {
   isGuestAccountAllowed: false,
@@ -23,14 +23,22 @@ const mockGuestUser: User = {
 describe("isUserAllowedTo", () => {
   describe("isGuestAccountAllowed:false", () => {
     it("should not post comment", () => {
-      const policyCheck = isUserAllowedTo(mockGuestUser.id, Action.postComment, { ...mockPolicy, isGuestAccountAllowed: false })
+      const policyCheck = isUserAllowedTo(
+        mockGuestUser.id,
+        Action.postComment,
+        { ...mockPolicy, isGuestAccountAllowed: false }
+      )
       expect(policyCheck).not.toBe(true)
     })
   })
 
   describe("isGuestAccountAllowed:true", () => {
     it("should post comment", () => {
-      const policyCheck = isUserAllowedTo(mockGuestUser.id, Action.postComment, { ...mockPolicy, isGuestAccountAllowed: true })
+      const policyCheck = isUserAllowedTo(
+        mockGuestUser.id,
+        Action.postComment,
+        { ...mockPolicy, isGuestAccountAllowed: true }
+      )
       expect(policyCheck).toBe(true)
     })
   })

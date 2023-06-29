@@ -1,9 +1,9 @@
 import type { Comment, Discussion, Topic } from "./lib/simple-comment"
-import { formatDate, getAllTopics, getOneDiscussion } from "./apiClient"
-import { getCommentDisplayDiv } from "./ui"
+import { getAllTopics, getOneDiscussion } from "./apiClient"
+import { getDisplayDiv, appendComment } from "./ui"
 
 const getDiscussionDisplayList = (): HTMLUListElement => {
-  const displayDiv = getCommentDisplayDiv()
+  const displayDiv = getDisplayDiv()
   const discussionDisplayList = displayDiv.querySelector(
     "#discussion-display-list"
   ) as HTMLUListElement
@@ -21,39 +21,6 @@ const getDiscussionDisplayList = (): HTMLUListElement => {
   }
 
   return createdUl
-}
-
-const appendComment = (comment: Comment, li: HTMLLIElement) => {
-  if (!li) throw new Error("parameter 'elem' is undefined in appendComment")
-  if (!comment) throw new Error("comment is undefined in appendComment")
-  const commentDisplay = document.createElement("div")
-  commentDisplay.classList.add("comment-display")
-  li.appendChild(commentDisplay)
-
-  const isDeleted = !!comment.dateDeleted
-  const hasUser = comment.user && comment.user.id
-
-  const userDisplay = document.createElement("P")
-  if (hasUser) {
-    userDisplay.setAttribute("id", comment.user.id)
-    userDisplay.innerText = comment.user.name
-  } else {
-    userDisplay.classList.add("user-unknown")
-    userDisplay.innerText = "Unknown user"
-  }
-
-  if (!isDeleted) commentDisplay.appendChild(userDisplay)
-
-  const commentText = document.createElement("p")
-  commentText.setAttribute("id", comment.id)
-  commentDisplay.appendChild(commentText)
-
-  if (isDeleted) {
-    commentText.innerText = `Comment deleted ${formatDate(comment.dateDeleted)}`
-    commentDisplay.classList.add("is-deleted")
-  } else {
-    commentText.innerText = comment.text
-  }
 }
 
 const threadReplies = (
@@ -89,7 +56,7 @@ const displayDiscussion = (discussion: Discussion, ul: HTMLUListElement) => {
   li.setAttribute("id", `discussion-${discussion.id}`)
   ul.appendChild(li)
 
-  threadReplies(discussion, li, discussion.replies)
+  threadReplies(discussion, li, discussion.replies ?? [])
 }
 
 // There is also a type guard `isDiscussion` in /lib/simple-comment, but it is server-side
