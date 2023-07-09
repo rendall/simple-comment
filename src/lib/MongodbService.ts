@@ -45,7 +45,6 @@ import {
   error400BadRequest,
   error400NoUpdate,
   error400PasswordMissing,
-  error400UserIdMissing,
   error401BadCredentials,
   error401UserNotAuthenticated,
   error403Forbidden,
@@ -293,7 +292,7 @@ export class MongodbService extends Service {
         authUserId === process.env.SIMPLE_COMMENT_MODERATOR_ID
 
       if (!isModerator) {
-        throw error404UserUnknown
+        return { ...error404UserUnknown, body: "Authenticating user is unknown" }
       }
 
       // The Big Moderator is authenticated but has no user object in the database
@@ -991,9 +990,8 @@ export class MongodbService extends Service {
       if (!isAllowed) {
         throw {
           ...error403Forbidden,
-          body: `Unknown referer ${
-            newTopic.referer
-          }. Allowed: ${getAllowedOrigins().join(" or ")}`
+          body: `Unknown referer ${newTopic.referer
+            }. Allowed: ${getAllowedOrigins().join(" or ")}`
         }
       }
     }
@@ -1397,12 +1395,12 @@ export class MongodbService extends Service {
   authDELETE = (): Promise<Success> => {
     const pastDate = new Date(0).toUTCString()
     const COOKIE_HEADER = {
-      "Set-Cookie": `simple_comment_token=logged-out; path=/; SameSite=${
-        this.isCrossSite ? "None; Secure; " : "Strict; "
-      }HttpOnly; Expires=${pastDate};`
+      "Set-Cookie": `simple_comment_token=logged-out; path=/; SameSite=${this.isCrossSite ? "None; Secure; " : "Strict; "
+        }HttpOnly; Expires=${pastDate};`
     }
     return Promise.resolve({ ...success202LoggedOut, headers: COOKIE_HEADER })
   }
+
 
   verifyGET = async (
     token?: AuthToken

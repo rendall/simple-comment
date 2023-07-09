@@ -430,20 +430,20 @@ export type ValidResult = {
 
 export const createNewUserId = async (db:Db): Promise<string> => {
   // Generate a random id
-  const newId = Math.random().toString(36).slice(2, 10);
+  const newId = Math.random().toString(36).slice(2, 10)
 
   // Check if the id already exists in the database
-  const users: Collection<User> = db.collection("users");
-  const existingUser = await users.find({ id: newId }).limit(1).next();
+  const users: Collection<User> = db.collection("users")
+  const existingUser = await users.find({ id: newId }).limit(1).next()
 
   // If the id already exists, recursively call this function again
   if (existingUser) {
-    return createNewUserId(db);
+    return createNewUserId(db)
   }
 
   // If the id doesn't exist, return the new id
-  else return newId;
-};
+  else return newId
+}
 
 
 export const validateUserId = (

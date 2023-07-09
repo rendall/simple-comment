@@ -17,14 +17,20 @@ export type LoginTypestate = {
 }
 
 export type LoginMachineContext = {
-  error?: string
+  error?: ServerResponse
+}
+
+export type ServerResponse = {
+  status: number,
+  statusText: string,
+  ok: boolean,
+  body: string
 }
 
 export type LoginMachineEvent =
   | { type: "CANCEL" }
   | { type: "CONFIRM" }
-  | { type: "ERROR"; message: string }
-  | { type: "FAILURE"; message: string }
+  | { type: "ERROR"; error: ServerResponse }
   | { type: "FIRST_VISIT" }
   | { type: "LOGIN" }
   | { type: "LOGOUT" }
@@ -36,9 +42,10 @@ export const loginMachine = createMachine<
   LoginTypestate
 >(
   {
-    /** @xstate-layout N4IgpgJg5mDOIC5QBsD2UCWA7AtAMzQHcA6DCZMAYgG0AGAXUVAAdVYMAXDVLJkAD0QBGAGwAWYrSlSAnCIDsCmbQBMAZgA0IAJ6JxtYgA41JsSLVDaQiyoC+trWky4CqEgDcwAJwx5t2KEoAZQBVAGEwgFEgoLpGJBBWdi4ePkEEMVo1YnlDIRUAVhFzEVFDQwKtXQRxApyCqTFCtVy1FUN7R3RsfCJiTx8-AMpIgCVRgHlRuL4kzm5eBPT1Opl5GTEhMxaVMzEqxAKxCXkGqz21gpkhTpAnHtcSJ2coAEksYPComJmEuZTFqB0jIVEJiGZyqdCnkIQcEEI1uCZMi5MoVLRcgUOg47t0XH1ngF3iNxlNfiw2PNUktECCwRDDFCsVsRIY4XliGcpEcse0xGoRLd7vi3MR2FAsAEQsxPhForEGLNKQC0rTQeDWYyCtCWWydIgWtkxCiZIaWlljEK8b1ReLJVgoNKSZNpoq-sqFqqEHSNZDtczYfqECoZIZOdJdusrNq1FbnDanugYBBiQAZCYAcQmIQAKuTEh7qUC1TJOSIVKUEYZ+YYRDI4U0JNIpIp5G3MiICnGHgSkwEJgBXDiy74K+IU5KemkZLI5PKFYoCsoVOFCRSSYxqApCITbszyITYrrxx7EQkOwfDsITAByADFXqMALL5-5T4sz7K5fJFErLypBj+nKbjsGL8lk3YiomUAvJelBhAAgjeUSpq+haAgIwj5GCIhSJGmSmgKerVNupbHJ25Z8tWKh2DiwoJmefYXkOwSvBmN4hAACmhk5Fphn5zj+i6lJqAHVGos6FI0WSHi04iQQxzyQHB6YZq8N48VSGHpMUpbRp2tCGJG8gqKuFjECayJXFcGy7gpp5KRAcFBGxHHcW6E5aV6umSLuBlGWIbamYBRnhlI1hHFIEmhvZfTeF4qBeJQqnqZpKrThsIhGFcgXyE0chtvWgHmZZMjWcimxdnR1qnvFiWsexXFpe+-GmllWwYqyRQIjuwXVLsYbNpY1aVkc9g4lgqAQHAfD0Y8Sq8dpiA4CIcI4KspWlSZsWimQFALV505NHC5iliB8hboFu7IjtHjeL4-gOgd6UfhWEigoymw0eYtDbqtQanUYJiGkcB42bdjEwUSGFvnx6TrNktBrBdIaKIZ6xmSoYVWBsqhtPkYgQ3aUrMM9LXw+UFnVmIBRqMiAXHHCIZZVyxxXOICMQ457xk3DWG0O1SPGoUlgYtuJ1tMBJgHjRFi00euInr2UPMRwvNLcGRySKaig6+0P5whJWVSaov35LQxomFzSbKUO6tevL4KgtcW4ttumiAeuWLS0jBSFU08gQ3VXj29OO4C8QlgbCC25u0ITOMhZZzorhdabGu422EAA */
+    /** @xstate-layout N4IgpgJg5mDOIC5QBsD2UCWA7AtAMzQHcA6DCZMAYgG0AGAXUVAAdVYMAXDVLJkAD0QBGAGwBmYgE5p0oQHYArGIUKAHCIBMAGhABPRJI3FNC2svUjLQyWIC+tnWky4CqEgDcwAJwx5d2KEoAZQBVAGEwgFEgoLpGJBBWdi4ePkEEDSEJS1UxSQAWVVM5MWsdfQRrBWIxWnzCyUVlSTV7R3RsfCJiTx8-AMpIgCUhgHkhuL4kzm5eBPTRWmrVfIUhDVK1uQ1VcoMhYw182UkVsTlRBTaQJ07XD29ffyxAgDEASSGggBUAfQA1d5Bd7fSYJaYpOagdIiWiSYj5RZHMyqUS7PTCJQ1VSSOF5fEiFTXW4ubrsKBYAIhZjBcJRGJglhsGapeYGVbEWhyVRLRRrESnIR7BD4qSI7nbbkiFYaYkdUluYjkykvamDEbjRmJZmQtLCfJifLELIaORmEoKETyYXnA6ZBSZI6GERyaVyOXOLqKpwwCDvLCUAAyowA4qMQqCGFMdbM9ZUDjYslzVNtUbz0RVViJjLQRPlxFa5JIBZIPXduj6AqMAK4cWkRaKxKPgmOs6GIDSw4gaYtyVOqFPSzvClbw6y0DQaJaqU2ad0OG7yr0kSsvGt1sKjAByHyGAFktRDY2yRZ3iAPaEIDVbMrQuSO4cZDIVSs-EfkywqV+hnFB15QwgAQS3KJA0PVsoQERAxFKTlch2XN8inY4hAUYVCloYgFG2K8UzkeozCET9l2IVc-1rYJ3hDLcQgABXA5Jj3bDJ1iwsQZ0Qg1jkaORhVxIwigFdQkzWTtiPuUifyrCjhjGCZmyZRi2ygyolgRXt8m5QoeXzSQ+PzTkhHWV0dh5V0iIXEkSJ9SB-2DEN3i3BiWUghY6kwmDRHkU5CnwkRhVQiR2MkIz6kEmdznEisf1sijgWoujnN1E8bFUY0cVNBQWnHIsbUnbtCS5V04U08QrkspcJO8LxUC8INQ0cpKmJUpMgsC9YrQUfNpWFbCjXYvr1lNYtRCixVqtqyiEvohTtSU1zhGsA5+UvNZDBsbQMQQPt4VhY5TB7MwexEMaSAmur7PDSN4kUly4yyHkpB7GDVgNQx1gC3MJEnS0zBsMQyvKhcsFQCA4D4Kz7mjea4xwA1OUJTt-uwxRMnQ40NFMO8ClhK0WlLCrPQksgKGhu6TyQviDk0bizHECdlBOwny0VXongCMnkuYsQeykNQe07NREWMqnDlpgHag2LrTqVDAKSpZhOeahZ1gkQw4R2C4J3kIUttFAp5BTU11DOGWbL9SCj2UhZCk5fNckKSdzjK4VjYRTscQHUxpBKs2pLXWsletxAjRsTTaksJCjglXq1HSoQ-oNAcSjsZmv0kqBfXXIOFoQIpqjRGnLSLIoM0xIKcTxGwbEJB0ZfOnP7tWBNVg2BOSgytCttdMdYVLozDR5iz7CAA */
     id: "login-flow",
     initial: "idle",
+    context: {},
     states: {
       idle: {
         always: [
@@ -47,40 +54,45 @@ export const loginMachine = createMachine<
           }
         ]
       },
+
       verifying: {
-        on: { SUCCESS: "loggedIn", ERROR: "error", FIRST_VISIT: "loggedOut" }
-      },
-      loggingIn: {
         on: {
           SUCCESS: "loggedIn",
-          ERROR: {
-            target: "error",
-            actions: "assignErrorMessage"
-          }
+          ERROR: { target: "error", actions: "assignErrorMessage" },
+          FIRST_VISIT: "loggedOut"
         }
       },
+
       signingUp: {
-        on: { SUCCESS: "loggedIn", ERROR: "error" }
+        on: { SUCCESS: "loggedIn", ERROR: { target: "error", actions: "assignErrorMessage" } }
       },
+
       loggedIn: {
         on: { LOGOUT: "loggingOut" }
       },
+
       loggingOut: {
         on: {
           SUCCESS: "loggedOut",
           CONFIRM: "loggedOut",
-          CANCEL: "loggedIn",
+          CANCEL: "verifying",
           SIGNUP: "signingUp",
-          ERROR: "error"
+          ERROR: { target: "error", actions: "assignErrorMessage" }
         },
         description:
           'A "guest" account will permanently lose ability to edit its posts when logging out. For guests only, a confirm prompt gives the guest an opportunity to avoid this.'
       },
+
       loggedOut: {
-        on: { LOGIN: "loggingIn", SIGNUP: "signingUp" }
+        on: { LOGIN: "verifying", SIGNUP: "signingUp" }
       },
+
       error: {
-        on: { LOGIN: "loggingIn", SIGNUP: "signingUp" }
+        on: {
+          LOGIN: "verifying",
+          SIGNUP: "signingUp",
+          LOGOUT: "loggingOut"
+        }
       }
     },
     predictableActionArguments: true
@@ -90,7 +102,7 @@ export const loginMachine = createMachine<
       assignErrorMessage: assign({
         error: (_, event) => {
           if (event.type === "ERROR") {
-            return event.message
+            return event.error
           }
           return undefined
         }

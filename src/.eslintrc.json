@@ -26,6 +26,7 @@
     ],
     "no-async-promise-executor": "warn",
     "no-console": ["error", { "allow": ["error", "info", "warn"] }],
+    "no-fallthrough": "off",
     "semi": ["error", "never"]
   }
 }

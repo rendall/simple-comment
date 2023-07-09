@@ -8,7 +8,6 @@ import type {
   DeletedComment,
   Discussion,
   Error,
-  NewUser,
   PublicSafeUser,
   Success,
   Topic,
@@ -356,9 +355,9 @@ describe("Full API service test", () => {
       .catch(value => expect(value).toBe(error409UserExists))
   })
   test("GET to /auth with newly created user should return authtoken", () => {
-    const authToken = getAuthToken(testNewUser.id)
+    const authToken = getAuthToken(testNewUser.id!)
     return service
-      .authPOST(testNewUser.id, testNewUser.password)
+      .authPOST(testNewUser.id!, testNewUser.password)
       .then((value: Success<AuthToken>) =>
         expect(value.body.slice(0, 70)).toEqual(authToken.slice(0, 70))
       )
@@ -370,7 +369,7 @@ describe("Full API service test", () => {
     expect.assertions(1)
     return service
       .userGET(randomString(), adminUserTest.id)
-      .catch(e => expect(e).toEqual(error404UserUnknown))
+      .then(e => expect(e).toEqual({ ...error404UserUnknown, body: "Authenticating user is unknown" }))
   })
   test("GET to /user/{userId} should return User and 200", () => {
     const targetUser = getTargetUser()

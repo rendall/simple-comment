@@ -37,7 +37,7 @@
     "test": "jest --verbose",
     "test:e2e": "concurrently  \"netlify dev --port 7070\" \"cypress run\" --kill-others",
     "watch:backend": "tsc -p tsconfig.netlify.functions.json --listEmittedFiles --watch",
-    "watch:frontend": "tsc --listEmittedFiles --watch",
+    "watch:frontend": "webpack --watch",
     "watch:lint": "esw -w ./src/**/*.ts --color --clear --changed",
     "watch:test": "jest --watch --noStackTrace"
   },
