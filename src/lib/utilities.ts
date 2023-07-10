@@ -1,3 +1,4 @@
+/** Server-side utilities.  Using any of these in the front end will lead to darkness and despair. */
 import { validate as isUuid } from "uuid"
 import * as jwt from "jsonwebtoken"
 import * as dotenv from "dotenv"
@@ -727,3 +728,4 @@ const commonPasswords = [
   "zing",
   "zxcvbnm"
 ]
+

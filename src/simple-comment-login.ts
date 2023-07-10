@@ -17,6 +17,7 @@ import { AdminSafeUser } from "./lib/simple-comment"
 import { interpret } from "xstate"
 import { loginMachine } from "./lib/login.xstate"
 import { createUser, deleteAuth, getOneUser, postAuth, verifySelf } from "./apiClient" // assuming you have an apiClient.ts file
+import { debounceFunc } from "./apiClient"
 
 type LoginService = Interpreter<
   LoginMachineContext,
@@ -90,11 +91,12 @@ const loggingInStateHandler = (loginService: LoginService) => {
   const password = (
     loginForm.querySelector("#login-password") as HTMLInputElement
   )?.value
+
   postAuth(userId, password)
     .then(() => loginService.send("SUCCESS"))
-    .catch(error =>
+    .catch((error) => {
       loginService.send({ type: "ERROR", error })
-    )
+    })
 }
 
 const signingUpStateHandler = loginService => {
@@ -131,6 +133,7 @@ const loggingOutStateHandler = loginService => {
       loginService.send({ type: "ERROR", error })
     )
 }
+
 const loggedOutStateHandler = _loginService => {
   updateStatusDisplay("logged out")
   // In the 'loggedOut' state, you might want to update the UI to reflect the logged out status
@@ -139,14 +142,19 @@ const loggedOutStateHandler = _loginService => {
 }
 
 const errorStateHandler = loginService => {
-  const { error } = loginService.state.context
+  const error = loginService.state.context.error
   const { status, statusText, ok, body } = error as ServerResponse
   if (ok) console.warn("Error handler caught an OK response", error)
   switch (status) {
     case 404:
-      if (body === "Authenticating user is unknown") {
-        updateStatusDisplay("This user is unknown. Try logging out and back in again.", true)
-        return
+      switch (body) {
+        case "Unknown user":
+          updateStatusDisplay("It seems we couldn't find an account associated with the provided username or email. Please double-check your input for any typos. If you don't have an account yet, feel free to create one. We'd love to have you join our community!", true)
+          return
+
+        case "Authenticating user is unknown":
+          updateStatusDisplay("This user is unknown. Try logging out and back in again.", true)
+          return
       }
     default: updateStatusDisplay(`${status}:${statusText} ${body}`, true)
   }
@@ -161,7 +169,6 @@ const setupSignupNamesRelationship = () => {
     .toLowerCase() // Convert to lower case
     .replace(/\s+/g, '-') // Replace spaces with hyphens
     .replace(/[^a-z0-9-]/g, '') // Remove non-alphanumeric characters except hyphens
-  
 
   if (!displayNameInput || !userNameInput) {
     console.error('One or both input fields not found')
@@ -170,16 +177,34 @@ const setupSignupNamesRelationship = () => {
 
   let userNameManuallyChanged = false
 
+  const onInput = (username:string):void => {
+    getOneUser(username).then((response) => {
+      // update the UI with "username exists" message
+      console.log("user exists", response)
+
+    })
+    .catch((error) => {
+      // update the UI with "username ok" message
+      console.log("user name ok", error)
+    })
+
+  }
+
+  // Create a debounced version of the getOneUser function
+  const debouncedGetOneUser = debounceFunc(onInput)
+
   // Reflect changes from the display name input to the user name input
   displayNameInput.addEventListener('input', () => {
     if (!userNameManuallyChanged) {
       userNameInput.value = formatUserName(displayNameInput.value)
+      debouncedGetOneUser(userNameInput.value)
     }
   })
 
   // Mark the user name as manually changed if the user types in it
   userNameInput.addEventListener('input', () => {
     userNameManuallyChanged = true
+    debouncedGetOneUser(userNameInput.value)
   })
 
   // Check if the username already exists when it loses focus
@@ -195,6 +220,7 @@ const setupSignupNamesRelationship = () => {
     }
   })
 }
+
 
 const setupUI = (loginService: LoginService) => {
   const loginForm = document.querySelector(
@@ -268,3 +294,4 @@ const onLoad = () => {
 }
 
 window.addEventListener("load", onLoad)
+

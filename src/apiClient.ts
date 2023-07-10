@@ -165,9 +165,7 @@ export const postAuth = (user: string, password: string) => {
     }
   }
 
-  return fetch(`${getSimpleCommentURL()}/auth`, authReqInfo).then(res =>
-    resolveBody<AuthToken>(res)
-  )
+  return fetch(`${getSimpleCommentURL()}/auth`, authReqInfo).then((res) => { console.log({ res }); return resolveBody<AuthToken>(res) })
 }
 
 // COMMENT
@@ -325,3 +323,13 @@ export const getHttpCookie = (elem: HTMLElement, url: string) =>
       reject(error)
     }
   })
+
+export const debounceFunc = (func: (value: string) => void, wait = 250) => {
+  let debounceTimeout: number
+  return (value: string) => {
+    clearInterval(debounceTimeout)
+    debounceTimeout = window.setTimeout(() => {
+      func(value)
+    }, wait)
+  }
+}
