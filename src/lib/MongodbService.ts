@@ -160,7 +160,7 @@ export class MongodbService extends Service {
     authUserId?: UserId
   ): Promise<Success<AdminSafeUser> | Error> => {
     if (!authUserId && !policy.canPublicCreateUser) {
-      throw {
+      return {
         ...error401UserNotAuthenticated,
         body: "Policy violation: no authentication and canPublicCreateUser is false"
       }
@@ -171,7 +171,7 @@ export class MongodbService extends Service {
       isGuestId(authUserId) &&
       !policy.canGuestCreateUser
     ) {
-      throw {
+      return {
         ...error401UserNotAuthenticated,
         body: "Policy violation: guest authentication and both canGuestCreateUsercan and PublicCreateUser is false"
       }
@@ -185,28 +185,28 @@ export class MongodbService extends Service {
 
     const userCheck = validateUser(newUser)
     if (!userCheck.isValid) {
-      throw {
+      return {
         ...error400BadRequest,
         body: userCheck.reason
       }
     }
 
     if (newUserId === process.env.SIMPLE_COMMENT_MODERATOR_ID) {
-      throw {
+      return {
         ...error403ForbiddenToModify,
         body: "Cannot modify root credentials"
       }
     }
 
     if (isGuestId(newUserId) && authUserId !== newUserId) {
-      throw {
+      return {
         ...error403Forbidden,
         body: "New user id must not be in a uuid format"
       }
     }
 
     if (!isGuestId(newUserId) && !newUser.password) {
-      throw error400PasswordMissing
+      return error400PasswordMissing
     }
 
     const users: Collection<User> = db.collection("users")
@@ -216,7 +216,7 @@ export class MongodbService extends Service {
     const isUnknownUser = !isValidGuest && authUserId && !authUser
 
     if (isUnknownUser) {
-      throw {
+      return {
         ...error404UserUnknown,
         body: "Authenticating user is unknown"
       }
@@ -230,7 +230,7 @@ export class MongodbService extends Service {
       const adminOnlyProp = Object.keys(newUser).find(prop =>
         adminOnlyModifiableUserProperties.includes(prop as keyof User)
       )
-      throw {
+      return {
         ...error403ForbiddenToModify,
         body: `Forbidden to modify ${adminOnlyProp}`
       }
@@ -239,7 +239,7 @@ export class MongodbService extends Service {
     const oldUser = await users.find({ id: newUserId }).limit(1).next()
 
     if (oldUser) {
-      throw error409UserExists
+      return error409UserExists
     }
 
     const hash = isGuestId(newUserId)
@@ -255,7 +255,7 @@ export class MongodbService extends Service {
 
     const result = await users.insertOne(user)
     if (!result.acknowledged) {
-      throw error500UpdateError
+      return error500UpdateError
     }
     const body = toAdminSafeUser(user)
     return { ...success201UserCreated, body }
@@ -272,7 +272,7 @@ export class MongodbService extends Service {
     authUserId?: UserId
   ): Promise<Success<PublicSafeUser | AdminSafeUser> | Error> => {
     if (!authUserId && !policy.canPublicReadUser) {
-      throw error401UserNotAuthenticated
+      return error401UserNotAuthenticated
     }
 
     if (
@@ -280,7 +280,7 @@ export class MongodbService extends Service {
       !policy.canGuestReadUser &&
       !policy.canPublicReadUser
     ) {
-      throw error403UserNotAuthorized
+      return error403UserNotAuthorized
     }
 
     const users: Collection<User> = (await this.getDb()).collection("users")
@@ -354,12 +354,12 @@ export class MongodbService extends Service {
     authUserId?: UserId
   ): Promise<Success<AdminSafeUser> | Error> => {
     if (!authUserId) {
-      throw error401UserNotAuthenticated
+      return error401UserNotAuthenticated
     }
 
     const checkUser = validateUser(user as User)
     if (!checkUser.isValid) {
-      throw {
+      return {
         ...error400BadRequest,
         body: checkUser.reason
       }
@@ -371,7 +371,7 @@ export class MongodbService extends Service {
       )
 
       if (hasAdminProps) {
-        throw {
+        return {
           ...error403Forbidden,
           body: "Attempt to modify guest user forbidden property"
         }
@@ -382,7 +382,7 @@ export class MongodbService extends Service {
     const authUser = await users.findOne({ id: authUserId })
 
     if (targetId !== authUser.id && !authUser.isAdmin) {
-      throw {
+      return {
         ...error403UserNotAuthorized,
         body: `id of user ${targetId} does not match id of credentials ${authUser.id} and credentialed user is not admin`
       }
@@ -394,7 +394,7 @@ export class MongodbService extends Service {
         adminOnlyModifiableUserProperties.includes(key)
       )
     ) {
-      throw error403ForbiddenToModify
+      return error403ForbiddenToModify
     }
 
     if (authUserId === process.env.SIMPLE_COMMENT_MODERATOR_ID) {
@@ -407,7 +407,7 @@ export class MongodbService extends Service {
         key => cannotModify.includes(key)
       )
       if (isForbidden) {
-        throw {
+        return {
           ...error403ForbiddenToModify,
           body: `Modify properties ${cannotModify.join(", ")} via .env file`
         }
@@ -417,7 +417,7 @@ export class MongodbService extends Service {
     const foundUser = await users.find({ id: targetId }).limit(1).next()
 
     if (!foundUser) {
-      throw error404UserUnknown
+      return error404UserUnknown
     }
 
     const newProps = toUpdatedUser(user)
@@ -432,7 +432,7 @@ export class MongodbService extends Service {
       const safeUser = toAdminSafeUser(updatedUser)
       return { ...success204UserUpdated, body: safeUser }
     } else {
-      throw error500UpdateError
+      return error500UpdateError
     }
   }
 
@@ -447,39 +447,39 @@ export class MongodbService extends Service {
     authUserId?: UserId
   ): Promise<Success | Error> => {
     if (!authUserId || isGuestId(authUserId)) {
-      throw error401UserNotAuthenticated
+      return error401UserNotAuthenticated
     }
 
     const users: Collection<User> = (await this.getDb()).collection("users")
 
     if (userId === process.env.SIMPLE_COMMENT_MODERATOR_ID) {
-      throw error403Forbidden
+      return error403Forbidden
     }
 
     const foundUser = await users.findOne({ id: userId })
 
     if (!foundUser) {
-      throw error404UserUnknown
+      return error404UserUnknown
     }
 
     const authUser = await users.findOne({ id: authUserId })
 
     if (!authUser) {
-      throw error401UserNotAuthenticated
+      return error401UserNotAuthenticated
     }
 
     const canDelete =
       authUser.isAdmin || (authUserId === userId && policy.canUserDeleteSelf)
 
     if (!canDelete) {
-      throw error403UserNotAuthorized
+      return error403UserNotAuthorized
     }
 
     try {
       await users.deleteOne({ id: userId })
       return success202UserDeleted
     } catch (e) {
-      throw authUser.isAdmin
+      return authUser.isAdmin
         ? { ...error500UpdateError, body: e }
         : error500UpdateError
     }
@@ -497,24 +497,24 @@ export class MongodbService extends Service {
     authUserId?: UserId
   ): Promise<Success<Comment> | Error> => {
     if (!authUserId) {
-      throw error401UserNotAuthenticated
+      return error401UserNotAuthenticated
     }
 
     const policyCheck = isUserAllowedTo(authUserId, Action.postComment)
 
     if (policyCheck !== true) {
-      throw { ...error403Forbidden, body: policyCheck }
+      return { ...error403Forbidden, body: policyCheck }
     }
 
     if (text.length > policy.maxCommentLengthChars) {
-      throw error413CommentTooLong
+      return error413CommentTooLong
     }
 
     const users: Collection<User> = (await this.getDb()).collection("users")
     const authUser = authUserId ? await users.findOne({ id: authUserId }) : null
 
     if (authUserId && !authUser) {
-      throw error404UserUnknown
+      return error404UserUnknown
     }
 
     const comments: Collection<Comment | DeletedComment | Discussion> = (
@@ -523,7 +523,7 @@ export class MongodbService extends Service {
     const parent = await comments.findOne({ id: parentId })
 
     if (!parent || isDeleted(parent)) {
-      throw {
+      return {
         ...error404CommentNotFound,
         body: `Discussion '${parentId}' not found`
       }
@@ -539,7 +539,7 @@ export class MongodbService extends Service {
       lastComment.text === text &&
       lastComment.parentId === parentId
     ) {
-      throw error409DuplicateComment
+      return error409DuplicateComment
     }
 
     const adminSafeUser = toAdminSafeUser(authUser)
@@ -555,7 +555,7 @@ export class MongodbService extends Service {
     try {
       const result = await comments.insertOne(insertComment)
       if (!result.acknowledged) {
-        throw {
+        return {
           statusCode: 500,
           body: "Database insertion error"
         }
@@ -566,7 +566,7 @@ export class MongodbService extends Service {
       }
     } catch (e) {
       console.error(e)
-      throw authUser.isAdmin
+      return authUser.isAdmin
         ? { ...error500UpdateError, body: e }
         : error500UpdateError
     }
@@ -582,20 +582,20 @@ export class MongodbService extends Service {
   commentGET = async (
     targetId: TopicId | CommentId,
     authUserId?: UserId
-  ): Promise<Success<Comment>> => {
+  ): Promise<Success<Comment> | Error> => {
     if (!targetId) {
-      throw error404CommentNotFound
+      return error404CommentNotFound
     }
 
     if (!authUserId && !policy.canPublicReadDiscussion) {
-      throw error401UserNotAuthenticated
+      return error401UserNotAuthenticated
     }
 
     const users: Collection<User> = (await this.getDb()).collection("users")
     const authUser = authUserId ? await users.findOne({ id: authUserId }) : null
 
     if (!authUser && !policy.canPublicReadDiscussion) {
-      throw error401UserNotAuthenticated
+      return error401UserNotAuthenticated
     }
 
     if (
@@ -603,7 +603,7 @@ export class MongodbService extends Service {
       !policy.canPublicReadDiscussion &&
       !policy.canGuestReadDiscussion
     ) {
-      throw error401UserNotAuthenticated
+      return error401UserNotAuthenticated
     }
 
     const isAdmin = authUser ? authUser.isAdmin : false
@@ -613,7 +613,7 @@ export class MongodbService extends Service {
     const cursor = await comments.find({ id: targetId }).limit(1)
 
     if (!cursor) {
-      throw {
+      return {
         ...error404CommentNotFound,
         body: `Comment '${targetId}' not found`
       }
@@ -621,7 +621,7 @@ export class MongodbService extends Service {
 
     const foundComment = await cursor.next()
     if (!isComment(foundComment) || isDeletedComment(foundComment)) {
-      throw {
+      return {
         ...error404CommentNotFound,
         body: `Comment '${targetId}' not found`
       }
@@ -801,7 +801,7 @@ export class MongodbService extends Service {
     const authUser = await users.find({ id: authUserId }).limit(1).next()
 
     if (!authUser) {
-      throw error401UserNotAuthenticated
+      return error401UserNotAuthenticated
     }
 
     const comments: Collection<Comment | Discussion> = (
@@ -817,20 +817,20 @@ export class MongodbService extends Service {
       !isComment(foundComment) ||
       isDeletedComment(foundComment)
     ) {
-      throw {
+      return {
         ...error404CommentNotFound,
         body: `Comment '${targetId}' not found`
       }
     }
 
     if (foundComment.text === text) {
-      throw error400NoUpdate
+      return error400NoUpdate
     }
 
     const canEdit = authUser.isAdmin || authUser.id === foundComment.userId
 
     if (!canEdit) {
-      throw error403UserNotAuthorized
+      return error403UserNotAuthorized
     }
 
     const user = toSafeUser(foundComment.user as User, authUser.isAdmin)
@@ -847,9 +847,13 @@ export class MongodbService extends Service {
         body: returnComment
       }
     } else {
-      throw authUser.isAdmin
-        ? { ...error500UpdateError, body: modifyResult }
-        : error500UpdateError
+      if (authUser.isAdmin) {
+        const errorMessage = modifyResult.lastErrorObject
+          ? JSON.stringify(modifyResult.lastErrorObject)
+          : 'Unknown error';
+        return { ...error500UpdateError, body: errorMessage }
+      }
+      else return error500UpdateError
     }
   }
 
@@ -865,14 +869,14 @@ export class MongodbService extends Service {
     authUserId?: UserId
   ): Promise<Success | Error> => {
     if (!authUserId) {
-      throw error401UserNotAuthenticated
+      return error401UserNotAuthenticated
     }
 
     const users: Collection<User> = (await this.getDb()).collection("users")
     const authUser = await users.find({ id: authUserId }).limit(1).next()
 
     if (!authUser) {
-      throw error404UserUnknown
+      return error404UserUnknown
     }
 
     const comments: Collection<Comment | Discussion> = (
@@ -885,7 +889,7 @@ export class MongodbService extends Service {
       !isComment(foundComment) ||
       isDeletedComment(foundComment)
     ) {
-      throw {
+      return {
         ...error404CommentNotFound,
         body: `Comment '${targetId}' not found`
       }
@@ -894,7 +898,7 @@ export class MongodbService extends Service {
     const canDelete = authUser.isAdmin || authUser.id === foundComment.userId
 
     if (!canDelete) {
-      throw error403UserNotAuthorized
+      return error403UserNotAuthorized
     }
 
     const reply = await comments.findOne({ parentId: targetId })
@@ -914,7 +918,7 @@ export class MongodbService extends Service {
         )
         return { ...success202CommentDeleted }
       } catch (e) {
-        throw authUser.isAdmin
+        return authUser.isAdmin
           ? { ...error500UpdateError, body: e }
           : error500UpdateError
       }
@@ -923,7 +927,7 @@ export class MongodbService extends Service {
         await comments.findOneAndDelete({ id: foundComment.id })
         return success202CommentDeleted
       } catch (e) {
-        throw authUser.isAdmin
+        return authUser.isAdmin
           ? { ...error500UpdateError, body: e }
           : error500UpdateError
       }
@@ -962,18 +966,18 @@ export class MongodbService extends Service {
     authUserId?: UserId
   ): Promise<Success<Topic> | Error> => {
     if (!policy.canFirstVisitCreateTopic && !authUserId) {
-      throw error401UserNotAuthenticated
+      return error401UserNotAuthenticated
     }
 
     const users: Collection<User> = (await this.getDb()).collection("users")
     const authUser = await users.findOne({ id: authUserId })
 
     if (authUserId && !authUser && !policy.canFirstVisitCreateTopic) {
-      throw error404UserUnknown
+      return error404UserUnknown
     }
 
     if (!policy.canFirstVisitCreateTopic && (!authUser || !authUser.isAdmin)) {
-      throw error403UserNotAuthorized
+      return error403UserNotAuthorized
     }
 
     if (!authUserId || !authUser || !authUser.isAdmin) {
@@ -982,13 +986,13 @@ export class MongodbService extends Service {
       // They should be the same. If not, reject it
 
       if (!newTopic.referer) {
-        throw error403UserNotAuthorized
+        return error403UserNotAuthorized
       }
 
       const isAllowed = isAllowedReferer(newTopic.referer, getAllowedOrigins())
 
       if (!isAllowed) {
-        throw {
+        return {
           ...error403Forbidden,
           body: `Unknown referer ${newTopic.referer
             }. Allowed: ${getAllowedOrigins().join(" or ")}`
@@ -999,7 +1003,7 @@ export class MongodbService extends Service {
     const hasInvalidCharacters = newTopic.id.match(/[^a-z0-9-]/)
     if (hasInvalidCharacters) {
       const invalidChar = hasInvalidCharacters ? hasInvalidCharacters[0] : ""
-      throw {
+      return {
         ...error400BadRequest,
         body: `Invalid character '${invalidChar}' in topicId`
       }
@@ -1014,7 +1018,7 @@ export class MongodbService extends Service {
     const oldDiscussion = await discussions.findOne({ id: topic.id })
 
     if (oldDiscussion) {
-      throw error409DuplicateTopic
+      return error409DuplicateTopic
     }
 
     return discussions
@@ -1047,14 +1051,14 @@ export class MongodbService extends Service {
     authUserId?: UserId
   ): Promise<Success<Discussion> | Error> => {
     if (!authUserId && !policy.canPublicReadDiscussion) {
-      throw error401UserNotAuthenticated
+      return error401UserNotAuthenticated
     }
 
     const users: Collection<User> = (await this.getDb()).collection("users")
     const authUser = await users.findOne({ id: authUserId })
 
     if (!authUser && !policy.canPublicReadDiscussion) {
-      throw error404UserUnknown
+      return error404UserUnknown
     }
 
     const isAdmin = authUser ? authUser.isAdmin : false
@@ -1065,7 +1069,7 @@ export class MongodbService extends Service {
     const discussion = await comments.findOne({ id: targetId })
 
     if (!discussion || isComment(discussion)) {
-      throw {
+      return {
         ...error404CommentNotFound,
         body: `Topic '${targetId}' not found`
       }
@@ -1230,14 +1234,14 @@ export class MongodbService extends Service {
     authUserId?: UserId
   ): Promise<Success<Topic[]> | Error> => {
     if (!authUserId && !policy.canPublicReadDiscussion) {
-      throw error401UserNotAuthenticated
+      return error401UserNotAuthenticated
     }
 
     const users: Collection<User> = (await this.getDb()).collection("users")
     const authUser = await users.find({ id: authUserId }).limit(1)
 
     if (!authUser && !policy.canPublicReadDiscussion) {
-      throw error404UserUnknown
+      return error404UserUnknown
     }
 
     const db = await this.getDb()
@@ -1265,14 +1269,14 @@ export class MongodbService extends Service {
     authUserId?: UserId
   ): Promise<Success<Topic> | Error> => {
     if (!authUserId) {
-      throw error401UserNotAuthenticated
+      return error401UserNotAuthenticated
     }
 
     const users: Collection<User> = (await this.getDb()).collection("users")
     const authUser = await users.findOne({ id: authUserId })
 
     if (!authUser) {
-      throw error404UserUnknown
+      return error404UserUnknown
     }
 
     const targetId = topicId
@@ -1282,14 +1286,14 @@ export class MongodbService extends Service {
     const foundTopic = await comments.findOne({ id: targetId })
 
     if (!foundTopic || isComment(foundTopic)) {
-      throw {
+      return {
         ...error404CommentNotFound,
         body: `Topic '${targetId}' not found`
       }
     }
 
     if (!authUser.isAdmin) {
-      throw error403UserNotAuthorized
+      return error403UserNotAuthorized
     }
 
     const { title, isLocked } = topic
@@ -1301,17 +1305,20 @@ export class MongodbService extends Service {
         if (modifyResult.ok)
           return { ...success204CommentUpdated, body: updateTopic }
         else
-          throw {
+          return {
             statusCode: 500,
             body: authUser.isAdmin
               ? modifyResult.lastErrorObject
               : error500UpdateError.body
-          }
+          } as Error
       })
       .catch(e => {
-        throw authUser.isAdmin
-          ? { ...error500UpdateError, body: e }
-          : error500UpdateError
+        if (authUser.isAdmin) {
+          const errorMessage = e ? JSON.stringify(e) : 'Unknown error'
+          return { ...error500UpdateError, body: errorMessage } as Error
+        }
+        else return error500UpdateError
+
       })
   }
 
@@ -1325,14 +1332,14 @@ export class MongodbService extends Service {
     authUserId?: UserId
   ): Promise<Success | Error> => {
     if (!authUserId) {
-      throw error401UserNotAuthenticated
+      return error401UserNotAuthenticated
     }
 
     const users: Collection<User> = (await this.getDb()).collection("users")
     const authUser = await users.findOne({ id: authUserId })
 
     if (!authUser) {
-      throw error404UserUnknown
+      return error404UserUnknown
     }
 
     const discussions: Collection<Comment | Topic> = (
@@ -1343,14 +1350,14 @@ export class MongodbService extends Service {
     const foundTopic = await cursor.next()
 
     if (!foundTopic || isComment(foundTopic)) {
-      throw {
+      return {
         ...error404TopicNotFound,
         body: `Topic '${topicId}' not found`
       }
     }
 
     if (!authUser.isAdmin) {
-      throw error403UserNotAuthorized
+      return error403UserNotAuthorized
     }
 
     // If we delete a topic that has replies it will orphan
@@ -1386,7 +1393,7 @@ export class MongodbService extends Service {
       .findOneAndDelete({ id: topicId })
       .then(() => success202TopicDeleted)
       .catch(e => {
-        throw authUser.isAdmin
+        return authUser.isAdmin
           ? { ...error500UpdateError, body: e }
           : error500UpdateError
       })
@@ -1419,7 +1426,7 @@ export class MongodbService extends Service {
             body: `token expired at ${error.expiredAt}`
           }
         default:
-          throw error400BadRequest
+          return error400BadRequest
       }
     }
   }
