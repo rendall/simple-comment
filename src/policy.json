@@ -4,7 +4,7 @@
   "canGuestCreateUser": true,
   "canGuestReadDiscussion": true,
   "canGuestReadUser": true,
-  "canPublicCreateUser": false,
+  "canPublicCreateUser": true,
   "canPublicReadDiscussion": true,
   "canPublicReadUser": true,
   "canUserDeleteSelf": true,

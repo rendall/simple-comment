@@ -38,6 +38,8 @@ export const mockEmail = (): Email =>
     3
   )}`
 
+export const mockUserId = (): string => randomString(emailAscii, randomNumber(5, 36))
+
 export const mockPassword = () =>
   randomString(passwordInput, randomNumber(10, 50))
 // Functions that generate fake data - these could be moved to a common file to help other Service tests

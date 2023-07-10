@@ -50,33 +50,16 @@ const verifyingStateHandler = loginService => {
 
   verifySelf()
     .then((user: AdminSafeUser) => {
-      // If the user is logged in, update the UI and display the user's information
       document.body.classList.remove("is-logged-out")
       document.body.classList.add("is-logged-in")
-
       const userDisplay = document.getElementById("user-display")
-      if (userDisplay) {
-        userDisplay.textContent = `Logged in as ${user.name}`
-      }
-
-      // Send a 'SUCCESS' event to the login machine with the user data
+      if (userDisplay) userDisplay.textContent = `Logged in as ${user.name}`
       loginService.send({ type: "SUCCESS", user })
     })
     .catch(error => {
-      console.error("Error verifying user:", error)
-
-      const { status, body } = error
-
-      switch (status) {
-        case 401:
-          if (body === "No Cookie header 'simple-comment-token' value")
-            loginService.send({ type: "FIRST_VISIT" })
-          break
-
-        default:
-          loginService.send({ type: "ERROR", error })
-          break
-      }
+      const { body } = error
+      if (body === "No Cookie header 'simple-comment-token' value") loginService.send({ type: "FIRST_VISIT" })
+      else loginService.send({ type: "ERROR", error })
     })
 }
 
@@ -86,7 +69,7 @@ const loggingInStateHandler = (loginService: LoginService) => {
   const loginForm = document.querySelector(
     "#simple-comment-login #login-form"
   ) as HTMLFormElement
-  const userId = (loginForm.querySelector("#login-email") as HTMLInputElement)
+  const userId = (loginForm.querySelector("#login-user-name") as HTMLInputElement)
     ?.value
   const password = (
     loginForm.querySelector("#login-password") as HTMLInputElement
@@ -113,14 +96,11 @@ const signingUpStateHandler = loginService => {
   )?.value
   createUser({ id, name, email, password })
     .then(() => loginService.send("SUCCESS"))
-    .catch(error =>
-      loginService.send({ type: "ERROR", error })
-    )
+    .catch(error => loginService.send({ type: "ERROR", error }))
 }
 
 const loggedInStateHandler = _loginService => {
   updateStatusDisplay("logged in")
-  // In the 'loggedIn' state, you might want to update the UI to reflect the logged in status
   document.body.classList.remove("is-logged-out")
   document.body.classList.add("is-logged-in")
 }
@@ -145,24 +125,31 @@ const errorStateHandler = loginService => {
   const error = loginService.state.context.error
   const { status, statusText, ok, body } = error as ServerResponse
   if (ok) console.warn("Error handler caught an OK response", error)
-  switch (status) {
-    case 404:
-      switch (body) {
-        case "Unknown user":
-          updateStatusDisplay("It seems we couldn't find an account associated with the provided username or email. Please double-check your input for any typos. If you don't have an account yet, feel free to create one. We'd love to have you join our community!", true)
-          return
 
-        case "Authenticating user is unknown":
-          updateStatusDisplay("This user is unknown. Try logging out and back in again.", true)
-          return
-      }
-    default: updateStatusDisplay(`${status}:${statusText} ${body}`, true)
+  const errorMessages = [
+    [401, "Policy violation: no authentication and canPublicCreateUser is false", "Sorry, new user registration is currently closed. Please contact the site administrator for assistance."],
+    [401, "Bad credentials", "Oops! The password you entered is incorrect. Please try again. If you've forgotten your password, you can reset it."],
+    [403, "Cannot modify root credentials", "Sorry, but the changes you're trying to make are not allowed. The administrator credentials you're attempting to modify are secured and can only be updated through the appropriate channels. If you need to make changes, please contact your system administrator or refer to your system documentation for the correct procedure."],
+    [404, "Unknown user", "It seems we couldn't find an account associated with the provided username or email. Please double-check your input for any typos. If you don't have an account yet, feel free to create one. We'd love to have you join our community!"],
+    [404, "Authenticating user is unknown", "It seems there's an issue with your current session. Please log out and log back in again. If the problem persists, contact the site administrator for assistance."],
+  ]
+
+  const messageTuple = errorMessages.find(([_code, text, _friendly]) => text === body)
+  if (messageTuple) {
+    const [code, _text, friendly] = messageTuple as [number, string, string]
+    if (code !== status) console.warn(`Error response code ${status} does not match error message code ${code}`)
+    updateStatusDisplay(friendly, true)
   }
+  else updateStatusDisplay(`${status}:${statusText} ${body}`, true)
+
+
 }
 
+/** This function handles the way that the username and display name fields interoperate  */
 const setupSignupNamesRelationship = () => {
   const displayNameInput = document.getElementById('signup-name') as HTMLInputElement
   const userNameInput = document.getElementById('signup-user-name') as HTMLInputElement
+  const messageElement = document.getElementById('signup-user-name-message')
 
   const formatUserName = (displayName: string): string => displayName
     .trim() // Remove leading and trailing whitespace
@@ -177,16 +164,32 @@ const setupSignupNamesRelationship = () => {
 
   let userNameManuallyChanged = false
 
-  const onInput = (username:string):void => {
+  const onInput = (username: string): void => {
+
+    const isValid = /^[a-z0-9\-]{3,}$/.test(username)
+
+    if (!isValid) {
+      if (messageElement) {
+        messageElement.textContent = `Username '${username}' is not valid. Please use only lowercase letters, numbers, and hyphens.`;
+        messageElement.style.color = "red";
+      }
+      return
+    }
+
     getOneUser(username).then((response) => {
       // update the UI with "username exists" message
-      console.log("user exists", response)
-
+      if (messageElement) {
+        messageElement.textContent = "This username is already taken. Please try another one.";
+        messageElement.style.color = "red";
+      }
     })
-    .catch((error) => {
-      // update the UI with "username ok" message
-      console.log("user name ok", error)
-    })
+      .catch((error) => {
+        // update the UI with "username ok" message
+        if (messageElement) {
+          messageElement.textContent = "This username is available.";
+          messageElement.style.color = "green";
+        }
+      })
 
   }
 
@@ -209,15 +212,7 @@ const setupSignupNamesRelationship = () => {
 
   // Check if the username already exists when it loses focus
   userNameInput.addEventListener('blur', async () => {
-    const response = await getOneUser(encodeURIComponent(userNameInput.value))
-
-    if (response.ok) {
-      console.info('Username already exists')
-    } else if (response.status === 404) {
-      console.info('Username does not exist')
-    } else {
-      console.error('An error occurred while checking the username')
-    }
+    debouncedGetOneUser(userNameInput.value)
   })
 }
 
@@ -234,6 +229,7 @@ const setupUI = (loginService: LoginService) => {
   // Add event listeners to the login form
   loginForm.addEventListener("submit", async event => {
     event.preventDefault()
+    console.log("loginform submit")
     loginService.send({ type: "LOGIN" })
   })
 
