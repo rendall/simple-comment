@@ -16,7 +16,13 @@ import type {
 import { AdminSafeUser } from "./lib/simple-comment"
 import { interpret } from "xstate"
 import { loginMachine } from "./lib/login.xstate"
-import { createUser, deleteAuth, getOneUser, postAuth, verifySelf } from "./apiClient" // assuming you have an apiClient.ts file
+import {
+  createUser,
+  deleteAuth,
+  getOneUser,
+  postAuth,
+  verifySelf
+} from "./apiClient" // assuming you have an apiClient.ts file
 import { debounceFunc } from "./apiClient"
 
 type LoginService = Interpreter<
@@ -33,8 +39,9 @@ type LoginService = Interpreter<
 >
 
 const updateStatusDisplay = (statusMessage: string = "", isError = false) => {
-  const statusDisplay = document.getElementById("status-display") as HTMLParagraphElement
-  console.log(`Status: ${statusMessage}`)
+  const statusDisplay = document.getElementById(
+    "status-display"
+  ) as HTMLParagraphElement
   if (!statusDisplay) {
     console.error("#status-display not found", statusMessage)
     return
@@ -58,7 +65,8 @@ const verifyingStateHandler = loginService => {
     })
     .catch(error => {
       const { body } = error
-      if (body === "No Cookie header 'simple-comment-token' value") loginService.send({ type: "FIRST_VISIT" })
+      if (body === "No Cookie header 'simple-comment-token' value")
+        loginService.send({ type: "FIRST_VISIT" })
       else loginService.send({ type: "ERROR", error })
     })
 }
@@ -69,15 +77,16 @@ const loggingInStateHandler = (loginService: LoginService) => {
   const loginForm = document.querySelector(
     "#simple-comment-login #login-form"
   ) as HTMLFormElement
-  const userId = (loginForm.querySelector("#login-user-name") as HTMLInputElement)
-    ?.value
+  const userId = (
+    loginForm.querySelector("#login-user-name") as HTMLInputElement
+  )?.value
   const password = (
     loginForm.querySelector("#login-password") as HTMLInputElement
   )?.value
 
   postAuth(userId, password)
     .then(() => loginService.send("SUCCESS"))
-    .catch((error) => {
+    .catch(error => {
       loginService.send({ type: "ERROR", error })
     })
 }
@@ -87,8 +96,10 @@ const signingUpStateHandler = loginService => {
   const signupForm = document.querySelector(
     "#simple-comment-display #signup-form"
   ) as HTMLFormElement
-  const name = (signupForm.querySelector("#signup-name") as HTMLInputElement)?.value
-  const id = (signupForm.querySelector("#signup-user-name") as HTMLInputElement)?.value
+  const name = (signupForm.querySelector("#signup-name") as HTMLInputElement)
+    ?.value
+  const id = (signupForm.querySelector("#signup-user-name") as HTMLInputElement)
+    ?.value
   const email = (signupForm.querySelector("#signup-email") as HTMLInputElement)
     ?.value
   const password = (
@@ -109,9 +120,7 @@ const loggingOutStateHandler = loginService => {
   updateStatusDisplay("logging out")
   deleteAuth()
     .then(() => loginService.send("SUCCESS"))
-    .catch(error =>
-      loginService.send({ type: "ERROR", error })
-    )
+    .catch(error => loginService.send({ type: "ERROR", error }))
 }
 
 const loggedOutStateHandler = _loginService => {
@@ -127,77 +136,104 @@ const errorStateHandler = loginService => {
   if (ok) console.warn("Error handler caught an OK response", error)
 
   const errorMessages = [
-    [401, "Policy violation: no authentication and canPublicCreateUser is false", "Sorry, new user registration is currently closed. Please contact the site administrator for assistance."],
-    [401, "Bad credentials", "Oops! The password you entered is incorrect. Please try again. If you've forgotten your password, you can reset it."],
-    [403, "Cannot modify root credentials", "Sorry, but the changes you're trying to make are not allowed. The administrator credentials you're attempting to modify are secured and can only be updated through the appropriate channels. If you need to make changes, please contact your system administrator or refer to your system documentation for the correct procedure."],
-    [404, "Unknown user", "It seems we couldn't find an account associated with the provided username or email. Please double-check your input for any typos. If you don't have an account yet, feel free to create one. We'd love to have you join our community!"],
-    [404, "Authenticating user is unknown", "It seems there's an issue with your current session. Please log out and log back in again. If the problem persists, contact the site administrator for assistance."],
+    [
+      401,
+      "Policy violation: no authentication and canPublicCreateUser is false",
+      "Sorry, new user registration is currently closed. Please contact the site administrator for assistance."
+    ],
+    [
+      401,
+      "Bad credentials",
+      "Oops! The password you entered is incorrect. Please try again. If you've forgotten your password, you can reset it."
+    ],
+    [
+      403,
+      "Cannot modify root credentials",
+      "Sorry, but the changes you're trying to make are not allowed. The administrator credentials you're attempting to modify are secured and can only be updated through the appropriate channels. If you need to make changes, please contact your system administrator or refer to your system documentation for the correct procedure."
+    ],
+    [
+      404,
+      "Unknown user",
+      "It seems we couldn't find an account associated with the provided username or email. Please double-check your input for any typos. If you don't have an account yet, feel free to create one. We'd love to have you join our community!"
+    ],
+    [
+      404,
+      "Authenticating user is unknown",
+      "It seems there's an issue with your current session. Please log out and log back in again. If the problem persists, contact the site administrator for assistance."
+    ]
   ]
 
-  const messageTuple = errorMessages.find(([_code, text, _friendly]) => text === body)
+  const messageTuple = errorMessages.find(
+    ([_code, text, _friendly]) => text === body
+  )
   if (messageTuple) {
     const [code, _text, friendly] = messageTuple as [number, string, string]
-    if (code !== status) console.warn(`Error response code ${status} does not match error message code ${code}`)
+    if (code !== status)
+      console.warn(
+        `Error response code ${status} does not match error message code ${code}`
+      )
     updateStatusDisplay(friendly, true)
-  }
-  else updateStatusDisplay(`${status}:${statusText} ${body}`, true)
-
-
+  } else updateStatusDisplay(`${status}:${statusText} ${body}`, true)
 }
 
 /** This function handles the way that the username and display name fields interoperate  */
 const setupSignupNamesRelationship = () => {
-  const displayNameInput = document.getElementById('signup-name') as HTMLInputElement
-  const userNameInput = document.getElementById('signup-user-name') as HTMLInputElement
-  const messageElement = document.getElementById('signup-user-name-message')
+  const displayNameInput = document.getElementById(
+    "signup-name"
+  ) as HTMLInputElement
+  const userNameInput = document.getElementById(
+    "signup-user-name"
+  ) as HTMLInputElement
+  const messageElement = document.getElementById("signup-user-name-message")
 
-  const formatUserName = (displayName: string): string => displayName
-    .trim() // Remove leading and trailing whitespace
-    .toLowerCase() // Convert to lower case
-    .replace(/\s+/g, '-') // Replace spaces with hyphens
-    .replace(/[^a-z0-9-]/g, '') // Remove non-alphanumeric characters except hyphens
+  const formatUserName = (displayName: string): string =>
+    displayName
+      .trim() // Remove leading and trailing whitespace
+      .toLowerCase() // Convert to lower case
+      .replace(/\s+/g, "-") // Replace spaces with hyphens
+      .replace(/[^a-z0-9-]/g, "") // Remove non-alphanumeric characters except hyphens
 
   if (!displayNameInput || !userNameInput) {
-    console.error('One or both input fields not found')
+    console.error("One or both input fields not found")
     return
   }
 
   let userNameManuallyChanged = false
 
   const onInput = (username: string): void => {
-
-    const isValid = /^[a-z0-9\-]{3,}$/.test(username)
+    const isValid = /^[a-z0-9-]{3,}$/.test(username)
 
     if (!isValid) {
       if (messageElement) {
-        messageElement.textContent = `Username '${username}' is not valid. Please use only lowercase letters, numbers, and hyphens.`;
-        messageElement.style.color = "red";
+        messageElement.textContent = `Username '${username}' is not valid. Please use only lowercase letters, numbers, and hyphens.`
+        messageElement.style.color = "red"
       }
       return
     }
 
-    getOneUser(username).then((response) => {
-      // update the UI with "username exists" message
-      if (messageElement) {
-        messageElement.textContent = "This username is already taken. Please try another one.";
-        messageElement.style.color = "red";
-      }
-    })
-      .catch((error) => {
-        // update the UI with "username ok" message
+    getOneUser(username)
+      .then(response => {
+        // update the UI with "username exists" message
         if (messageElement) {
-          messageElement.textContent = "This username is available.";
-          messageElement.style.color = "green";
+          messageElement.textContent =
+            "This username is already taken. Please try another one."
+          messageElement.style.color = "red"
         }
       })
-
+      .catch(error => {
+        // update the UI with "username ok" message
+        if (messageElement) {
+          messageElement.textContent = "This username is available."
+          messageElement.style.color = "green"
+        }
+      })
   }
 
   // Create a debounced version of the getOneUser function
   const debouncedGetOneUser = debounceFunc(onInput)
 
   // Reflect changes from the display name input to the user name input
-  displayNameInput.addEventListener('input', () => {
+  displayNameInput.addEventListener("input", () => {
     if (!userNameManuallyChanged) {
       userNameInput.value = formatUserName(displayNameInput.value)
       debouncedGetOneUser(userNameInput.value)
@@ -205,17 +241,16 @@ const setupSignupNamesRelationship = () => {
   })
 
   // Mark the user name as manually changed if the user types in it
-  userNameInput.addEventListener('input', () => {
+  userNameInput.addEventListener("input", () => {
     userNameManuallyChanged = true
     debouncedGetOneUser(userNameInput.value)
   })
 
   // Check if the username already exists when it loses focus
-  userNameInput.addEventListener('blur', async () => {
+  userNameInput.addEventListener("blur", async () => {
     debouncedGetOneUser(userNameInput.value)
   })
 }
-
 
 const setupUI = (loginService: LoginService) => {
   const loginForm = document.querySelector(
@@ -229,7 +264,6 @@ const setupUI = (loginService: LoginService) => {
   // Add event listeners to the login form
   loginForm.addEventListener("submit", async event => {
     event.preventDefault()
-    console.log("loginform submit")
     loginService.send({ type: "LOGIN" })
   })
 
@@ -249,11 +283,12 @@ const setupUI = (loginService: LoginService) => {
     loginService.send({ type: "SIGNUP" })
   })
 
-  const logoutButton = document.getElementById("log-out-button") as HTMLButtonElement
+  const logoutButton = document.getElementById(
+    "log-out-button"
+  ) as HTMLButtonElement
 
   logoutButton.addEventListener("click", async event => {
     event.preventDefault()
-    console.log("logout press")
     loginService.send({ type: "LOGOUT" })
   })
 }
@@ -268,14 +303,14 @@ const onLoad = () => {
       LoginMachineState,
       (loginService: LoginService) => void
     ][] = [
-        ["verifying", verifyingStateHandler],
-        ["loggingIn", loggingInStateHandler],
-        ["signingUp", signingUpStateHandler],
-        ["loggedIn", loggedInStateHandler],
-        ["loggingOut", loggingOutStateHandler],
-        ["loggedOut", loggedOutStateHandler],
-        ["error", errorStateHandler]
-      ]
+      ["verifying", verifyingStateHandler],
+      ["loggingIn", loggingInStateHandler],
+      ["signingUp", signingUpStateHandler],
+      ["loggedIn", loggedInStateHandler],
+      ["loggingOut", loggingOutStateHandler],
+      ["loggedOut", loggedOutStateHandler],
+      ["error", errorStateHandler]
+    ]
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [_, handleState] =
       stateHandlers.find(([stateValue, _]) => state.matches(stateValue)) ?? []
@@ -290,4 +325,3 @@ const onLoad = () => {
 }
 
 window.addEventListener("load", onLoad)
-

@@ -4,9 +4,9 @@
 
 import { debounceFunc } from "../apiClient"
 
-describe('debounce', () => {
-  it('calls as expected', function (done) {
-    const callingArgument = 'debounce it!'
+describe("debounce", () => {
+  it("calls as expected", function (done) {
+    const callingArgument = "debounce it!"
     const debounceCallback = (value: string) => {
       expect(value).toBe(callingArgument)
       done()
@@ -15,7 +15,7 @@ describe('debounce', () => {
     debounce(callingArgument)
   })
 
-  it('does not call immediately', function (done) {
+  it("does not call immediately", function (done) {
     const startTime = new Date()
     const debounceCallback = () => {
       const duration = new Date().valueOf() - startTime.valueOf()
@@ -25,17 +25,17 @@ describe('debounce', () => {
 
     const debounce = debounceFunc(debounceCallback)
 
-    debounce('')
+    debounce("")
   })
 
-  it('never calls callback if continuously called', function (done) {
+  it("never calls callback if continuously called", function (done) {
     let numCalls = 0
 
     const debounceCallback = () => {
       numCalls++
     }
     const debounce = debounceFunc(debounceCallback)
-    const testInterval = window.setInterval(() => debounce(''), 50)
+    const testInterval = window.setInterval(() => debounce(""), 50)
     const endTest = (toclear: number) => () => {
       clearInterval(toclear)
       expect(numCalls).toBe(0)
@@ -44,14 +44,14 @@ describe('debounce', () => {
     setTimeout(endTest(testInterval), 500)
   })
 
-  it('calls once only after debounce ends', function (done) {
+  it("calls once only after debounce ends", function (done) {
     let numCalls = 0
 
     const debounceCallback = () => {
       numCalls++
     }
     const debounce = debounceFunc(debounceCallback)
-    const testInterval = window.setInterval(() => debounce(''), 50)
+    const testInterval = window.setInterval(() => debounce(""), 50)
     const endInterval = (toclear: number) => () => {
       clearInterval(toclear)
     }

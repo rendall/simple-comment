@@ -179,7 +179,7 @@ export class MongodbService extends Service {
 
     const db = await this.getDb()
 
-    const newUserId = createUser.id ?? await createNewUserId(db)
+    const newUserId = createUser.id ?? (await createNewUserId(db))
 
     const newUser: NewUser = { ...createUser, id: newUserId }
 
@@ -292,7 +292,10 @@ export class MongodbService extends Service {
         authUserId === process.env.SIMPLE_COMMENT_MODERATOR_ID
 
       if (!isModerator) {
-        return { ...error404UserUnknown, body: "Authenticating user is unknown" }
+        return {
+          ...error404UserUnknown,
+          body: "Authenticating user is unknown"
+        }
       }
 
       // The Big Moderator is authenticated but has no user object in the database
@@ -850,10 +853,9 @@ export class MongodbService extends Service {
       if (authUser.isAdmin) {
         const errorMessage = modifyResult.lastErrorObject
           ? JSON.stringify(modifyResult.lastErrorObject)
-          : 'Unknown error';
+          : "Unknown error"
         return { ...error500UpdateError, body: errorMessage }
-      }
-      else return error500UpdateError
+      } else return error500UpdateError
     }
   }
 
@@ -994,8 +996,9 @@ export class MongodbService extends Service {
       if (!isAllowed) {
         return {
           ...error403Forbidden,
-          body: `Unknown referer ${newTopic.referer
-            }. Allowed: ${getAllowedOrigins().join(" or ")}`
+          body: `Unknown referer ${
+            newTopic.referer
+          }. Allowed: ${getAllowedOrigins().join(" or ")}`
         }
       }
     }
@@ -1314,11 +1317,9 @@ export class MongodbService extends Service {
       })
       .catch(e => {
         if (authUser.isAdmin) {
-          const errorMessage = e ? JSON.stringify(e) : 'Unknown error'
+          const errorMessage = e ? JSON.stringify(e) : "Unknown error"
           return { ...error500UpdateError, body: errorMessage } as Error
-        }
-        else return error500UpdateError
-
+        } else return error500UpdateError
       })
   }
 
@@ -1402,12 +1403,12 @@ export class MongodbService extends Service {
   authDELETE = (): Promise<Success> => {
     const pastDate = new Date(0).toUTCString()
     const COOKIE_HEADER = {
-      "Set-Cookie": `simple_comment_token=logged-out; path=/; SameSite=${this.isCrossSite ? "None; Secure; " : "Strict; "
-        }HttpOnly; Expires=${pastDate};`
+      "Set-Cookie": `simple_comment_token=logged-out; path=/; SameSite=${
+        this.isCrossSite ? "None; Secure; " : "Strict; "
+      }HttpOnly; Expires=${pastDate};`
     }
     return Promise.resolve({ ...success202LoggedOut, headers: COOKIE_HEADER })
   }
-
 
   verifyGET = async (
     token?: AuthToken
@@ -1435,4 +1436,3 @@ export class MongodbService extends Service {
     await this.getClient().then(client => client.close())
   }
 }
-

@@ -429,7 +429,7 @@ export type ValidResult = {
   reason?: string
 }
 
-export const createNewUserId = async (db:Db): Promise<string> => {
+export const createNewUserId = async (db: Db): Promise<string> => {
   // Generate a random id
   const newId = Math.random().toString(36).slice(2, 10)
 
@@ -445,7 +445,6 @@ export const createNewUserId = async (db:Db): Promise<string> => {
   // If the id doesn't exist, return the new id
   else return newId
 }
-
 
 export const validateUserId = (
   userId: string,
@@ -728,4 +727,3 @@ const commonPasswords = [
   "zing",
   "zxcvbnm"
 ]
-

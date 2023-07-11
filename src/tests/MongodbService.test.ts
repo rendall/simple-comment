@@ -270,8 +270,10 @@ describe("Full API service test", () => {
       const name = randomString(alphaUserInput)
       const email = mockEmail()
       const newUser = {
-        id, name, email,
-        password: mockPassword(),
+        id,
+        name,
+        email,
+        password: mockPassword()
       }
       expect.assertions(1)
       const response = await service.userPOST(newUser)
@@ -365,7 +367,12 @@ describe("Full API service test", () => {
     expect.assertions(1)
     return service
       .userGET(randomString(), adminUserTest.id)
-      .then(e => expect(e).toEqual({ ...error404UserUnknown, body: "Authenticating user is unknown" }))
+      .then(e =>
+        expect(e).toEqual({
+          ...error404UserUnknown,
+          body: "Authenticating user is unknown"
+        })
+      )
   })
   test("GET to /user/{userId} should return User and 200", () => {
     const targetUser = getTargetUser()
@@ -458,14 +465,22 @@ describe("Full API service test", () => {
     const ordinaryUser = getTargetUser(u => !u.isAdmin)
     const updatedUser = { ...ordinaryUser, isAdmin: true }
     expect.assertions(1)
-    const e = await service.userPUT(updatedUser.id, updatedUser, ordinaryUser.id)
+    const e = await service.userPUT(
+      updatedUser.id,
+      updatedUser,
+      ordinaryUser.id
+    )
     expect(e).toBe(error403ForbiddenToModify)
   })
   test("PUT to /user/{userId} with public, own credentials cannot modify isVerified", async () => {
     const ordinaryUser = getTargetUser(u => !u.isAdmin)
     const updatedUser = { ...ordinaryUser, isVerified: true }
     expect.assertions(1)
-    const e = await service.userPUT(updatedUser.id, updatedUser, ordinaryUser.id)
+    const e = await service.userPUT(
+      updatedUser.id,
+      updatedUser,
+      ordinaryUser.id
+    )
     expect(e).toBe(error403ForbiddenToModify)
   })
   test("PUT to /user/{userId} with own credentials should alter user return 204 User updated", () => {
@@ -516,7 +531,11 @@ describe("Full API service test", () => {
       isVerified: true
     }
     expect.assertions(1)
-    const e = await service.userPUT(targetUser.id, updatedUser, adminAuthUser.id)
+    const e = await service.userPUT(
+      targetUser.id,
+      updatedUser,
+      adminAuthUser.id
+    )
     expect(e).toHaveProperty("statusCode", 400)
   })
   test("PUT to /user/{userId} with admin credentials should alter user return 204 User updated", () => {
@@ -581,10 +600,13 @@ describe("Full API service test", () => {
     expect.assertions(1)
 
     await service.userPOST(guestUser, id)
-    const e = await service.userPUT(updatedGuestUser.id, updatedGuestUser, adminAuthUser.id)
+    const e = await service.userPUT(
+      updatedGuestUser.id,
+      updatedGuestUser,
+      adminAuthUser.id
+    )
 
     expect(e).toHaveProperty("statusCode", 403)
-
   })
   test("PUT to /user/{userId} where userId does not exist (and admin credentials) should return 404", async () => {
     const targetUser = mockUser()
@@ -623,7 +645,10 @@ describe("Full API service test", () => {
     if (!simpleCommentModeratorId)
       throw "SIMPLE_COMMENT_MODERATOR_ID is not defined"
     expect.assertions(1)
-    const e = await service.userDELETE(simpleCommentModeratorId, adminAuthUser.id)
+    const e = await service.userDELETE(
+      simpleCommentModeratorId,
+      adminAuthUser.id
+    )
     expect(e).toBe(error403Forbidden)
   })
   test("DELETE to /user/{userId} should delete user and return 202 User deleted", () => {
@@ -703,7 +728,6 @@ describe("Full API service test", () => {
     expect.assertions(1)
     const e = await service.commentGET(parentCommentId, user.id)
     expect(e).toHaveProperty("statusCode", 404)
-
   })
   test("GET comment to /comment/{commentId} should return the comment with 200 OK", async () => {
     const commentsWithChildren = testComments
@@ -731,7 +755,7 @@ describe("Full API service test", () => {
       testComments
     ) as Comment[]
 
-    const res = await service.commentGET(targetComment.id) as Success<Comment>
+    const res = (await service.commentGET(targetComment.id)) as Success<Comment>
 
     expect.assertions(10)
 
@@ -744,17 +768,14 @@ describe("Full API service test", () => {
     expect(res.body).toHaveProperty("replies")
     expect(res.body.replies?.length).toBeGreaterThan(0)
     expect(
-      getChildren(res.body.id, res.body.replies!).map(r =>
-        r.id.toLowerCase()
-      )
+      getChildren(res.body.id, res.body.replies!).map(r => r.id.toLowerCase())
     ).toEqual(
       expect.arrayContaining(targetChildren.map(t => t.id.toLowerCase()))
     )
     expect(res.body).toHaveProperty("user")
-    expect(
-      allUsers(res.body.replies!).every(u => isPublicSafeUser(u!))
-    ).toBe(true)
-
+    expect(allUsers(res.body.replies!).every(u => isPublicSafeUser(u!))).toBe(
+      true
+    )
   })
 
   // Comment Update
@@ -774,14 +795,22 @@ describe("Full API service test", () => {
       u => !u.isAdmin && u.id !== randomComment.userId
     )
     expect.assertions(1)
-    const e = await service.commentPUT(randomComment.id, updateText, improperAuthUser.id)
+    const e = await service.commentPUT(
+      randomComment.id,
+      updateText,
+      improperAuthUser.id
+    )
     expect(e).toBe(error403UserNotAuthorized)
   })
   test("PUT comment to /comment/{commentId} where Id does not exist should return 404", async () => {
     const unknownComment = { text: randomString(), id: uuidv4() }
     const adminUserTest = authUserTest
     expect.assertions(1)
-    const e = await service.commentPUT(unknownComment.id, unknownComment.text, adminUserTest.id)
+    const e = await service.commentPUT(
+      unknownComment.id,
+      unknownComment.text,
+      adminUserTest.id
+    )
     expect(e).toHaveProperty("statusCode", 404)
   })
   test("PUT comment to /comment/{commentId} should return the edited comment with 202 Comment updated", () => {
@@ -796,18 +825,19 @@ describe("Full API service test", () => {
     return service
       .commentPUT(updatedComment.id, updatedComment.text, userId)
       .then((res: Success<Comment> | Error) => {
-        expect(res).toEqual(expect.objectContaining({
-          body: expect.objectContaining({
-            dateCreated: expect.any(Object),
-            id: targetComment.id,
-            parentId: targetComment.parentId,
-            text: updatedComment.text,
-            user: undefined,
-            userId,
-          }),
-          statusCode: 204,
-        }));
-
+        expect(res).toEqual(
+          expect.objectContaining({
+            body: expect.objectContaining({
+              dateCreated: expect.any(Object),
+              id: targetComment.id,
+              parentId: targetComment.parentId,
+              text: updatedComment.text,
+              user: undefined,
+              userId
+            }),
+            statusCode: 204
+          })
+        )
       })
   })
 
@@ -880,7 +910,6 @@ describe("Full API service test", () => {
       .findOne({ id: newTopic.id })
     expect(deletedTopic).toBeNull()
     expect(postResponse).toHaveProperty("statusCode", 403)
-
   })
   test("POST to /topic should return Discussion object and 201 Discussion created", () => {
     const adminUserTest = getAuthUser(u => u.isAdmin!)

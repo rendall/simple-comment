@@ -28,8 +28,8 @@ import {
 } from "./apiClient"
 
 let currUser: AdminSafeUser | undefined
-let clearReply = () => { }
-let updateReply = () => { }
+let clearReply = () => {}
+let updateReply = () => {}
 
 // string type guard
 const isString = (x: unknown): x is string => typeof x === "string"
@@ -179,7 +179,7 @@ const setupSignup = () => {
     if (!id.match(/[A-Za-z0-9]{5,20}/))
       return setSignupStatus(
         `Invalid username '${id}'. ` +
-        "The username must contain only letters or numbers and be between 5 and 20 characters. Go hog-wild on the display name, though!",
+          "The username must contain only letters or numbers and be between 5 and 20 characters. Go hog-wild on the display name, though!",
         true
       )
 
@@ -466,8 +466,9 @@ const setUserStatus = (user?: AdminSafeUser) => {
   const docBody = document.querySelector("body")
   if (!docBody) throw "No body found in document"
   const userName = user
-    ? `Logged in as: ${user.name} (${user.id}) ${isGuestId(user.id) ? "(guest)" : ""
-    }${user.isAdmin ? "(admin)" : ""}`
+    ? `Logged in as: ${user.name} (${user.id}) ${
+        isGuestId(user.id) ? "(guest)" : ""
+      }${user.isAdmin ? "(admin)" : ""}`
     : "Not logged in"
   if (user && user.isAdmin) docBody.classList.add("is-admin")
   else docBody.classList.remove("is-admin")
@@ -607,17 +608,17 @@ const onCommentSubmit = (submitElems, targetId) => async () => {
 
   const onCommentResponse =
     (parentElement: HTMLLIElement) =>
-      (response: ResolvedResponse<Comment | string>) => {
-        const comment = response.body
-        if (typeof comment === "string") {
-          setErrorStatus(comment)
-          return
-        }
-
-        setStatus("Successfully posted comment")
-        appendComment(comment, parentElement)
-        clearReply()
+    (response: ResolvedResponse<Comment | string>) => {
+      const comment = response.body
+      if (typeof comment === "string") {
+        setErrorStatus(comment)
+        return
       }
+
+      setStatus("Successfully posted comment")
+      appendComment(comment, parentElement)
+      clearReply()
+    }
 
   const isSameUserInfo = name === currUser?.name && email === currUser.email
 

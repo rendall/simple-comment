@@ -210,7 +210,6 @@ describe("parseQuery()", () => {
   })
 })
 
-
 // Tests to do:
 // decodeAuthHeader
 // getAuthCredentials

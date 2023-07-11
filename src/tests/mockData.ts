@@ -38,7 +38,8 @@ export const mockEmail = (): Email =>
     3
   )}`
 
-export const mockUserId = (): string => randomString(emailAscii, randomNumber(5, 36))
+export const mockUserId = (): string =>
+  randomString(emailAscii, randomNumber(5, 36))
 
 export const mockPassword = () =>
   randomString(passwordInput, randomNumber(10, 50))

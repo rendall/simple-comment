@@ -165,7 +165,9 @@ export const postAuth = (user: string, password: string) => {
     }
   }
 
-  return fetch(`${getSimpleCommentURL()}/auth`, authReqInfo).then((res) => { console.log({ res }); return resolveBody<AuthToken>(res) })
+  return fetch(`${getSimpleCommentURL()}/auth`, authReqInfo).then(res =>
+    resolveBody<AuthToken>(res)
+  )
 }
 
 // COMMENT

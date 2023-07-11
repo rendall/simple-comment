@@ -21,9 +21,9 @@ export type LoginMachineContext = {
 }
 
 export type ServerResponse = {
-  status: number,
-  statusText: string,
-  ok: boolean,
+  status: number
+  statusText: string
+  ok: boolean
   body: string
 }
 
@@ -64,7 +64,10 @@ export const loginMachine = createMachine<
       },
 
       signingUp: {
-        on: { SUCCESS: "loggedIn", ERROR: { target: "error", actions: "assignErrorMessage" } }
+        on: {
+          SUCCESS: "loggedIn",
+          ERROR: { target: "error", actions: "assignErrorMessage" }
+        }
       },
 
       loggedIn: {
@@ -84,7 +87,10 @@ export const loginMachine = createMachine<
       },
 
       loggingIn: {
-        on: { SUCCESS: "loggedIn", ERROR: { target: "error", actions: "assignErrorMessage" } }
+        on: {
+          SUCCESS: "loggedIn",
+          ERROR: { target: "error", actions: "assignErrorMessage" }
+        }
       },
 
       loggedOut: {
