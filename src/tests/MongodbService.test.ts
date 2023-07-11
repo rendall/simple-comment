@@ -267,7 +267,7 @@ describe("Full API service test", () => {
   if (policy.canPublicCreateUser === true) {
     test("POST to /user without credentials should create user", async () => {
       const id = mockUserId()
-      const name = randomString(alphaUserInput)
+      const name = randomString(alphaUserInput).trim()
       const email = mockEmail()
       const newUser = {
         id,
@@ -300,7 +300,7 @@ describe("Full API service test", () => {
       const ordinaryUser = getAuthUser(u => !u.isAdmin)
       expect.assertions(1)
       const e = await service.userPOST(newUser, ordinaryUser.id)
-      expect(e).toHaveProperty("statusCode", 403)
+      expect(e).toEqual({ statusCode: 403, body: 'Forbidden to modify isVerified' })
     })
   } else {
     // policy is canPublicCreateUser = false
