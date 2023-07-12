@@ -1,5 +1,5 @@
-import { getAuthToken, getExpirationTime } from "../../src/lib/crypt"
-import type { TokenClaim, UserId } from "../../src/lib/simple-comment"
+import { getAuthToken, getExpirationTime } from "../../../src/lib/crypt"
+import type { TokenClaim, UserId } from "../../../src/lib/simple-comment"
 import * as jwt from "jsonwebtoken"
 
 describe("Test crypt", () => {

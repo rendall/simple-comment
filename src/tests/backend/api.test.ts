@@ -15,8 +15,8 @@ import type {
   UpdateUser,
   User,
   UserId
-} from "../../src/lib/simple-comment"
-import { Service } from "../../src/lib/Service"
+} from "../../../src/lib/simple-comment"
+import { Service } from "../../../src/lib/Service"
 
 type Method = "get" | "post" | "delete" | "put"
 

@@ -13,8 +13,8 @@ import type {
   Topic,
   UpdateUser,
   User
-} from "../../src/lib/simple-comment"
-import { MongodbService } from "../../src/lib/MongodbService"
+} from "../../../src/lib/simple-comment"
+import { MongodbService } from "../../../src/lib/MongodbService"
 import { Db, MongoClient } from "mongodb"
 import {
   error401BadCredentials,
@@ -29,15 +29,15 @@ import {
   success202CommentDeleted,
   success202TopicDeleted,
   success202UserDeleted
-} from "../../src/lib/messages"
-import { getAuthToken, hashPassword, uuidv4 } from "../../src/lib/crypt"
-import policy from "../policy.json"
+} from "../../../src/lib/messages"
+import { getAuthToken, hashPassword, uuidv4 } from "../../../src/lib/crypt"
+import policy from "../../policy.json"
 import {
   isComment,
   isDeletedComment,
   isDiscussion,
   toAdminSafeUser
-} from "../../src/lib/utilities"
+} from "../../../src/lib/utilities"
 import * as fs from "fs"
 import {
   alphaUserInput,
@@ -51,7 +51,7 @@ import {
   mockUserId,
   mockUsersArray,
   randomString
-} from "./mockData"
+} from "../mockData"
 
 declare const global: { __MONGO_URI__: string; __MONGO_DB_NAME__: string }
 const MONGO_URI = global.__MONGO_URI__
@@ -288,7 +288,7 @@ describe("Full API service test", () => {
       }
       expect.assertions(1)
       const e = await service.userPOST(newUser)
-      expect(e).toHaveProperty("statusCode", 403)
+      expect(e).toEqual({ statusCode: 403, body: 'Forbidden to modify isVerified' })
     })
     test("POST to /user with admin-only properties without admin credentials should error 403", async () => {
       const newUser = {
