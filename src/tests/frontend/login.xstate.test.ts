@@ -1,4 +1,4 @@
-import { loginMachine } from "../lib/login.xstate"
+import { loginMachine } from "../../lib/login.xstate"
 
 const initialState = loginMachine.initialState
 

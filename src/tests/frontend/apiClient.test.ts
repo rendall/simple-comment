@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 
-import { debounceFunc } from "../apiClient"
+import { debounceFunc } from "../../apiClient"
 
 describe("debounce", () => {
   it("calls as expected", function (done) {
