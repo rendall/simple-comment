@@ -27,7 +27,7 @@
   "scripts": {
     "build": "yarn run build:backend && yarn run build:frontend",
     "build:backend": "yarn run build:netlify",
-    "build:frontend": "webpack",
+    "build:frontend": "webpack --config ./webpack.frontend.js",
     "build:netlify": "webpack --config ./webpack.netlify.functions.js",
     "fix": "eslint . --fix && prettier . --write",
     "lint": "eslint .",

@@ -26,7 +26,12 @@ module.exports = {
     extensions: [".ts", ".tsx", ".js"]
   },
   module: {
-    rules: [{ test: /\.tsx?$/, loader: "ts-loader" }]
+    rules: [{
+      test: /\.ts$/,
+      loader: "ts-loader",
+      exclude: /node_modules/,
+      options: { configFile: "tsconfig.frontend.json" }
+    }]
   },
   plugins: [
     new webpack.EnvironmentPlugin(["SIMPLE_COMMENT_API_URL"]),
