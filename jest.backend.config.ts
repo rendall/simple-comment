@@ -1,14 +1,15 @@
+const merge = require("merge")
+const ts_preset = require("ts-jest/jest-preset")
+const jest_mongodb_preset = require("@shelf/jest-mongodb/jest-preset")
+
+const mergedConfig = merge.recursive(ts_preset, jest_mongodb_preset)
 export default {
+  ...mergedConfig,
   clearMocks: true,
   coverageDirectory: "coverage",
   coverageProvider: "v8",
-  preset: "./jest.preset.ts",
-  globals: {
-    'ts-jest': {
-      tsconfig: 'tsconfig.netlify.functions.json',
-    },
-  },
+  globals: { 'ts-jest': { tsconfig: 'tsconfig.netlify.functions.json', }, },
+  resetMocks: true,
   roots: ['<rootDir>/src/tests/backend/'],
   testPathIgnorePatterns: ["\\\\node_modules\\\\", "RAW", ".js$"],
-  resetMocks: true
 }
