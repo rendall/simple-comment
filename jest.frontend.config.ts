@@ -7,8 +7,8 @@ export default {
   clearMocks: true,
   coverageDirectory: "coverage",
   coverageProvider: "v8",
-  globals: { 'ts-jest': { tsconfig: 'tsconfig.frontend.json', }, },
   resetMocks: true,
   roots: ['<rootDir>/src/tests/frontend/'],
   testPathIgnorePatterns: ["\\\\node_modules\\\\", "RAW", ".js$"],
+  transform: { '^.+\\.ts$': ['ts-jest', { tsconfig: "tsconfig.frontend.json", isolatedModules: true, useESM: true }] },
 }

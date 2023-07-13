@@ -1,4 +1,4 @@
-import {
+import type {
   AuthToken,
   Comment,
   CommentId,
@@ -16,12 +16,13 @@ import {
   UpdateUser,
   TokenClaim,
   NewTopic,
-  Action,
   Email,
   CreateUserPayload
 } from "./simple-comment"
+import { Action } from "./simple-comment"
 import { isUserAllowedTo } from "./policyEnforcement"
-import { Collection, Db, MongoClient, WithId } from "mongodb"
+import type { Collection, Db, WithId } from "mongodb"
+import { MongoClient } from "mongodb"
 import { Service } from "./Service"
 import {
   adminOnlyModifiableUserProperties,

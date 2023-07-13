@@ -288,7 +288,10 @@ describe("Full API service test", () => {
       }
       expect.assertions(1)
       const e = await service.userPOST(newUser)
-      expect(e).toEqual({ statusCode: 403, body: 'Forbidden to modify isVerified' })
+      expect(e).toEqual({
+        statusCode: 403,
+        body: "Forbidden to modify isVerified"
+      })
     })
     test("POST to /user with admin-only properties without admin credentials should error 403", async () => {
       const newUser = {
@@ -300,7 +303,10 @@ describe("Full API service test", () => {
       const ordinaryUser = getAuthUser(u => !u.isAdmin)
       expect.assertions(1)
       const e = await service.userPOST(newUser, ordinaryUser.id)
-      expect(e).toEqual({ statusCode: 403, body: 'Forbidden to modify isVerified' })
+      expect(e).toEqual({
+        statusCode: 403,
+        body: "Forbidden to modify isVerified"
+      })
     })
   } else {
     // policy is canPublicCreateUser = false
@@ -365,14 +371,12 @@ describe("Full API service test", () => {
   test("GET to /user/{userId} where userId does not exist should return 404", () => {
     const adminUserTest = getAuthUser(u => u.isAdmin!)
     expect.assertions(1)
-    return service
-      .userGET(randomString(), adminUserTest.id)
-      .then(e =>
-        expect(e).toEqual({
-          ...error404UserUnknown,
-          body: "Authenticating user is unknown"
-        })
-      )
+    return service.userGET(randomString(), adminUserTest.id).then(e =>
+      expect(e).toEqual({
+        ...error404UserUnknown,
+        body: "Authenticating user is unknown"
+      })
+    )
   })
   test("GET to /user/{userId} should return User and 200", () => {
     const targetUser = getTargetUser()

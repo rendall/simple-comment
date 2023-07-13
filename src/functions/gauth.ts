@@ -3,7 +3,7 @@
 import * as dotenv from "dotenv"
 import type { APIGatewayEvent } from "aws-lambda"
 import { MongodbService } from "../lib/MongodbService"
-import { Success, Error, AuthToken } from "../lib/simple-comment"
+import type { Success, Error, AuthToken } from "../lib/simple-comment"
 import {
   error404CommentNotFound,
   error405MethodNotAllowed,

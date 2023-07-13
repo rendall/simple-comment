@@ -3,7 +3,7 @@ import { validate as isUuid } from "uuid"
 import * as jwt from "jsonwebtoken"
 import * as dotenv from "dotenv"
 import * as picomatch from "picomatch"
-import {
+import type {
   NewUser,
   Success,
   Error,

@@ -1,5 +1,5 @@
 import { assign, createMachine } from "xstate"
-import { AdminSafeUser, PublicSafeUser } from "./simple-comment"
+import type { AdminSafeUser, PublicSafeUser } from "./simple-comment"
 
 export type LoginMachineState =
   | "idle"

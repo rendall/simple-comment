@@ -8,8 +8,8 @@ export default {
   clearMocks: true,
   coverageDirectory: "coverage",
   coverageProvider: "v8",
-  globals: { 'ts-jest': { tsconfig: 'tsconfig.netlify.functions.json', }, },
   resetMocks: true,
-  roots: ['<rootDir>/src/tests/backend/'],
+  roots: ["<rootDir>/src/tests/backend/"],
   testPathIgnorePatterns: ["\\\\node_modules\\\\", "RAW", ".js$"],
+  transform: { '^.+\\.ts$': ['ts-jest', { tsconfig: "tsconfig.netlify.functions.json" }] },
 }

@@ -1,4 +1,4 @@
-import { Handler, APIGatewayEvent } from "aws-lambda"
+import type { Handler, APIGatewayEvent } from "aws-lambda"
 import * as dotenv from "dotenv"
 import {
   addHeaders,
@@ -10,7 +10,7 @@ import {
   hasBearerScheme,
   hasTokenCookie
 } from "../lib/utilities"
-import { Success, TokenClaim, Error } from "../lib/simple-comment"
+import type { Success, TokenClaim, Error } from "../lib/simple-comment"
 import {
   error401UserNotAuthenticated,
   error404NotFound,
@@ -22,8 +22,8 @@ import { MongodbService } from "../lib/MongodbService"
 dotenv.config()
 
 const service: MongodbService = new MongodbService(
-  process.env.DB_CONNECTION_STRING,
-  process.env.DATABASE_NAME
+  process.env.DB_CONNECTION_STRING!,
+  process.env.DATABASE_NAME!
 )
 
 const getAllowHeaders = (event: APIGatewayEvent) => {

@@ -10,7 +10,7 @@ import {
   getUpdateTopicInfo,
   getUserId
 } from "../lib/utilities"
-import {
+import type {
   Discussion,
   Error,
   Success,

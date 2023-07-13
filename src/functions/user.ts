@@ -6,7 +6,7 @@ import {
   success200OK
 } from "../lib/messages"
 import { MongodbService } from "../lib/MongodbService"
-import {
+import type {
   AdminSafeUser,
   PublicSafeUser,
   Success,
@@ -45,7 +45,7 @@ const getAllowHeaders = (event: APIGatewayEvent) => {
 
 export const handler = async (event: APIGatewayEvent) => {
   const headers = getAllowHeaders(event)
-  const authUserId = getUserId(event.headers)
+  const authUserId = getUserId(event.headers) ?? undefined
   const targetId = getTargetId(event.path, "user") as UserId
 
   const handleMethod = (
@@ -56,6 +56,7 @@ export const handler = async (event: APIGatewayEvent) => {
       >
     | Error
   > => {
+    // TODO: create an identicon for users based on their username. consider https://github.com/dmester/jdenticon
     switch (method) {
       case "GET": {
         if (targetId) return service.userGET(targetId, authUserId)
