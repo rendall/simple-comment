@@ -40,6 +40,7 @@
     >
   >
 
+  let nextEvents = []
   let self: AdminSafeUser
   let isError = false
   let loginPassword = ""
@@ -128,7 +129,7 @@
 
   const loggedOutStateHandler = _loginService => {
     updateStatusDisplay("logged out")
-    self=undefined
+    self = undefined
   }
 
   const errorStateHandler = loginService => {
@@ -237,6 +238,10 @@
   onMount(() => {
     // Define the transition handler
     const transitionHandler = state => {
+      nextEvents = state.nextEvents
+
+      console.log({ nextEvents })
+
       const stateHandlers: [
         LoginMachineState,
         (loginService: LoginService) => void
@@ -257,8 +262,6 @@
 
     // Set the onTransition handler
     loginService.onTransition(transitionHandler)
-
-    // Continue with the rest of your code...
   })
 </script>
 
@@ -272,63 +275,74 @@
       <p id="self-is-admin">Is Admin: {self.isAdmin.toString()}</p>
     </div>
   {/if}
-  <div id="login-form">
-    <h2>Login</h2>
-    <form on:submit|preventDefault={onLoginClick}>
-      <label for="login-user-name">User name:</label><br />
-      <input
-        type="text"
-        id="login-user-name"
-        bind:value={loginUserName}
-        required
-      /><br />
-      <label for="login-password">Password:</label><br />
-      <input
-        type="password"
-        id="login-password"
-        bind:value={loginPassword}
-        required
-      /><br />
-      <input type="submit" value="Login" />
-    </form>
-  </div>
 
-  <div id="signup-form">
-    <h2>Signup</h2>
-    <form on:submit|preventDefault={onSignupClick}>
-      <label for="signup-name">Display Name:</label><br />
-      <input
-        type="text"
-        bind:value={signupDisplayName}
-        on:input={handleDisplayNameInput}
-      /><br />
-      <label for="signup-user-name">User name:</label><br />
-      <input
-        type="text"
-        bind:value={userName}
-        on:input={handleUserNameInput}
-        on:blur={handleUserNameBlur}
-      />
-      <br />
-      <label for="signup-email">Email:</label><br />
-      <input
-        type="email"
-        id="signup-email"
-        bind:value={signupEmail}
-        required
-      /><br />
-      <p style="color: {userNameMessageColor};">{userNameMessage}</p>
-      <label for="signup-password">Password:</label><br />
-      <input
-        type="password"
-        id="signup-password"
-        bind:value={signupPassword}
-        required
-      /><br />
-      <input type="submit" value="Signup" />
-    </form>
-  </div>
-  <button id="log-out-button" on:click={onLogoutClick}>Log out</button>
+  {#if nextEvents.includes("LOGIN")}
+    <div id="login-form">
+      <h2>Login</h2>
+      <form on:submit|preventDefault={onLoginClick}>
+        <label for="login-user-name">User name:</label><br />
+        <input
+          type="text"
+          id="login-user-name"
+          bind:value={loginUserName}
+          required
+        /><br />
+        <label for="login-password">Password:</label><br />
+        <input
+          type="password"
+          id="login-password"
+          bind:value={loginPassword}
+          required
+        /><br />
+        <input type="submit" value="Login" />
+      </form>
+    </div>
+  {/if}
+
+  {#if nextEvents.includes("SIGNUP")}
+    <div id="signup-form">
+      <h2>Signup</h2>
+      <form on:submit|preventDefault={onSignupClick}>
+        <label for="signup-name">Display Name:</label><br />
+        <input
+          id="signup-name"
+          type="text"
+          bind:value={signupDisplayName}
+          on:input={handleDisplayNameInput}
+        /><br />
+        <label for="signup-user-name">User name:</label><br />
+        <input
+          id="signup-user-name"
+          type="text"
+          bind:value={userName}
+          on:input={handleUserNameInput}
+          on:blur={handleUserNameBlur}
+        />
+        <br />
+        <label for="signup-email">Email:</label><br />
+        <input
+          type="email"
+          id="signup-email"
+          bind:value={signupEmail}
+          required
+        /><br />
+        <p style="color: {userNameMessageColor};">{userNameMessage}</p>
+        <label for="signup-password">Password:</label><br />
+        <input
+          type="password"
+          id="signup-password"
+          bind:value={signupPassword}
+          required
+        /><br />
+        <input type="submit" value="Signup" />
+      </form>
+    </div>
+  {/if}
+
+  {#if nextEvents.includes("LOGOUT")}
+    <button id="log-out-button" on:click={onLogoutClick}>Log out</button>
+  {/if}
+
   <p id="user-display">{userDisplay}</p>
 </section>
 
