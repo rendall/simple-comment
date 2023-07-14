@@ -1,5 +1,5 @@
 /// <reference types="cypress" />
-const pages = ["http://localhost:7070/svelte.html", "http://localhost:7070/login.html"]
+const pages = ["http://localhost:7070/svelte-login.html", "http://localhost:7070/login.html"]
 
 pages.forEach((page) => {
   describe(`User Authentication Flow: ${page}`, () => {

@@ -20,6 +20,7 @@ module.exports = {
   entry: {
     "simple-comment": path.resolve(__dirname, "src/simple-comment.ts"),
     "svelte": path.resolve(__dirname, "src/svelte.ts"),
+    "svelte-login": path.resolve(__dirname, "src/svelte-login.ts"),
     "simple-comment-login": path.resolve(
       __dirname,
       "src/simple-comment-login.ts"
