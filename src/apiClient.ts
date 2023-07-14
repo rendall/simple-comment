@@ -24,8 +24,6 @@ export const toSlug = (x: string) => {
 // Set SIMPLE_COMMENT_API_URL variable in the .env file, following example.env
 const SIMPLE_COMMENT_API_URL = process.env.SIMPLE_COMMENT_API_URL
 
-console.log({SIMPLE_COMMENT_API_URL})
-
 const getSimpleCommentURL = () => {
   if (SIMPLE_COMMENT_API_URL === undefined)
     throw new Error("Simple comment URL is not set in .env file")

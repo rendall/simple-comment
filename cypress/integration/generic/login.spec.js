@@ -51,7 +51,12 @@ pages.forEach((page) => {
           body: { message: "Logged out" }
         })
       })
+      // First log in
+      cy.get("#login-user-name").type("testuser")
+      cy.get("#login-password").type("testpassword")
+      cy.get('#login-form input[type="submit"]').click()
 
+      // Then test the log out
       cy.get("#log-out-button").click()
     })
   })
