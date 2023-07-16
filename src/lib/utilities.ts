@@ -21,6 +21,7 @@ import type {
 } from "./simple-comment"
 import { Collection, Db } from "mongodb"
 import { uuidv4 } from "./crypt"
+import urlNormalizer from "normalize-url";
 
 dotenv.config()
 
@@ -145,6 +146,13 @@ const getOrigin = (headers: { [header: string]: string }) =>
 
 export const getAllowedOrigins = () => process.env.ALLOW_ORIGIN.split(",")
 
+/** Normalize a url for allowedReferer test
+ * - strips hash and query parameters
+ * - strips protocol (https)
+ * - removes directory index (/index.[a-z]+$/)
+ */
+export const normalizeUrl = (url: string) => urlNormalizer(url, { stripHash: true, stripProtocol: true, removeQueryParameters: true, removeDirectoryIndex: true })
+
 /**
  * Return true if `url` matches any of the patterns in `allowedPatterns`
  * Strips any trailing '/' from the referring url
@@ -159,10 +167,7 @@ export const getAllowedOrigins = () => process.env.ALLOW_ORIGIN.split(",")
 export const isAllowedReferer = (
   url: string,
   allowedPatterns: string[] = getAllowedOrigins()
-) =>
-  url.slice(-1) === "/"
-    ? isAllowedReferer(url.slice(0, url.length - 1), allowedPatterns)
-    : picomatch.isMatch(url, allowedPatterns)
+) => picomatch.isMatch(normalizeUrl(url), allowedPatterns)
 
 /** Returns the proper headers for Access-Control-Allow-Origin
  * as set in .env and as determined by the Request Origin header

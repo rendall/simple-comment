@@ -12,7 +12,8 @@ export default {
   roots: ["<rootDir>/src/tests/backend/"],
   testPathIgnorePatterns: ["\\\\node_modules\\\\", "RAW", ".js$"],
   transform: {
-    "^.+\\.ts$": ["ts-jest", { tsconfig: "tsconfig.netlify.functions.json" }]
+    "^.+\\.ts$": ["ts-jest", { tsconfig: "tsconfig.netlify.functions.json" }],
+    '^.+\\.js$': 'babel-jest',
   },
   transformIgnorePatterns: ["/node_modules/(?!normalize-url)"]
 }

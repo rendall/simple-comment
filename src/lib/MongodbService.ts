@@ -39,7 +39,8 @@ import {
   isAllowedReferer,
   getAllowedOrigins,
   isEmail,
-  createNewUserId
+  createNewUserId,
+  normalizeUrl
 } from "./utilities"
 import policy from "../policy.json"
 import {
@@ -995,13 +996,14 @@ export class MongodbService extends Service {
       const isAllowed = isAllowedReferer(newTopic.referer, getAllowedOrigins())
 
       if (!isAllowed) {
+        const normalizedReferer = normalizeUrl(newTopic.referer)
 
         if (getAllowedOrigins().length > 1) {
-          const body = `The referer '${newTopic.referer}' does not match any of the expected patterns. Allowed patterns: '${getAllowedOrigins().join(" or ")}'. Please ensure the referer matches one of the allowed patterns.`
+          const body = `The referer '${normalizedReferer}' does not match any of the expected patterns. Allowed patterns: '${getAllowedOrigins().join(" or ")}'. Please ensure the referer matches one of the allowed patterns.`
           return {...error403Forbidden, body}
         }
         else {
-          const body = `The referer '${newTopic.referer}' does not match the expected pattern: '${getAllowedOrigins().join()}'. Please ensure the referer matches the allowed pattern.`
+          const body = `The referer '${normalizedReferer}' does not match the expected pattern: '${getAllowedOrigins().join()}'. Please ensure the referer matches the allowed pattern.`
           return {...error403Forbidden, body}
         }
       }
