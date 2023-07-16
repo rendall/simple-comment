@@ -59,7 +59,6 @@
   const loginService = interpret(loginMachine).start()
 
   const updateStatusDisplay = (message = "", error = false) => {
-    console.log({ statusMessage: message, isError: error })
     statusMessage = message
     isError = error
   }
@@ -236,12 +235,8 @@
   }
 
   onMount(() => {
-    // Define the transition handler
     const transitionHandler = state => {
       nextEvents = state.nextEvents
-
-      console.log({ nextEvents })
-
       const stateHandlers: [
         LoginMachineState,
         (loginService: LoginService) => void
@@ -260,7 +255,6 @@
       if (handleState) handleState(loginService)
     }
 
-    // Set the onTransition handler
     loginService.onTransition(transitionHandler)
   })
 </script>
@@ -272,7 +266,7 @@
       <p id="self-user-name">User Name: {self.id}</p>
       <p id="self-name">Name: {self.name}</p>
       <p id="self-email">Email: {self.email}</p>
-      <p id="self-is-admin">Is Admin: {self.isAdmin.toString()}</p>
+      <p id="self-is-admin">Is Admin: {self.isAdmin ? "Yes" : "No"}</p>
     </div>
   {/if}
 

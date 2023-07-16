@@ -995,11 +995,14 @@ export class MongodbService extends Service {
       const isAllowed = isAllowedReferer(newTopic.referer, getAllowedOrigins())
 
       if (!isAllowed) {
-        return {
-          ...error403Forbidden,
-          body: `Unknown referer ${
-            newTopic.referer
-          }. Allowed: ${getAllowedOrigins().join(" or ")}`
+
+        if (getAllowedOrigins().length > 1) {
+          const body = `The referer '${newTopic.referer}' does not match any of the expected patterns. Allowed patterns: '${getAllowedOrigins().join(" or ")}'. Please ensure the referer matches one of the allowed patterns.`
+          return {...error403Forbidden, body}
+        }
+        else {
+          const body = `The referer '${newTopic.referer}' does not match the expected pattern: '${getAllowedOrigins().join()}'. Please ensure the referer matches the allowed pattern.`
+          return {...error403Forbidden, body}
         }
       }
     }

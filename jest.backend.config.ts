@@ -11,5 +11,9 @@ export default {
   resetMocks: true,
   roots: ["<rootDir>/src/tests/backend/"],
   testPathIgnorePatterns: ["\\\\node_modules\\\\", "RAW", ".js$"],
-  transform: { '^.+\\.ts$': ['ts-jest', { tsconfig: "tsconfig.netlify.functions.json" }] },
+  transform: {
+    "^.+\\.ts$": ["ts-jest", { tsconfig: "tsconfig.netlify.functions.json" }]
+  },
+  transformIgnorePatterns: ["/node_modules/(?!normalize-url)"]
 }
+

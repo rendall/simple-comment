@@ -11,10 +11,16 @@ dotenv.config({
 })
 
 module.exports = {
+  stats: {
+    // Examine all modules
+    modules: true,
+    // Display bailout reasons
+    optimizationBailout: true
+  },
   devServer: {
     static: path.join(__dirname, "dist"),
     compress: true,
-    port: 5000,
+    port: 5000
   },
   devtool: "inline-source-map",
   entry: {
@@ -44,7 +50,7 @@ module.exports = {
       {
         test: /\.ts$/,
         loader: "ts-loader",
-        exclude: /node_modules/,
+        exclude: [/node_modules/, /tests/],
         options: { configFile: "tsconfig.frontend.json" }
       },
       {
