@@ -17,11 +17,11 @@ import type {
   PublicSafeUser,
   User,
   TokenClaim,
-  Email
+  Email,
 } from "./simple-comment"
 import { Collection, Db } from "mongodb"
 import { uuidv4 } from "./crypt"
-import urlNormalizer from "normalize-url";
+import urlNormalizer from "normalize-url"
 
 dotenv.config()
 
@@ -52,7 +52,7 @@ export const adminUnsafeUserProperties: (keyof User)[] = ["hash", "_id"]
 export const publicUnsafeUserProperties: (keyof User)[] = [
   ...adminUnsafeUserProperties,
   "email",
-  "isVerified"
+  "isVerified",
 ]
 
 /**
@@ -60,7 +60,7 @@ export const publicUnsafeUserProperties: (keyof User)[] = [
  */
 export const adminOnlyModifiableUserProperties: (keyof User)[] = [
   "isVerified",
-  "isAdmin"
+  "isAdmin",
 ]
 
 /**
@@ -80,7 +80,7 @@ export const toAdminSafeUser = (user: User) =>
         "name",
         "email",
         "isAdmin",
-        "isVerified"
+        "isVerified",
       ])
     : user
 
@@ -133,11 +133,11 @@ export const addHeaders = (
     ? {
         ...res,
         body: JSON.stringify(res.body),
-        headers: { ...resHeaders, ...headers }
+        headers: { ...resHeaders, ...headers },
       }
     : {
         ...res,
-        headers: { ...resHeaders, ...headers }
+        headers: { ...resHeaders, ...headers },
       }
 }
 
@@ -151,7 +151,13 @@ export const getAllowedOrigins = () => process.env.ALLOW_ORIGIN.split(",")
  * - strips protocol (https)
  * - removes directory index (/index.[a-z]+$/)
  */
-export const normalizeUrl = (url: string) => urlNormalizer(url, { stripHash: true, stripProtocol: true, removeQueryParameters: true, removeDirectoryIndex: true })
+export const normalizeUrl = (url: string) =>
+  urlNormalizer(url, {
+    stripHash: true,
+    stripProtocol: true,
+    removeQueryParameters: true,
+    removeDirectoryIndex: true,
+  })
 
 /**
  * Return true if `url` matches any of the patterns in `allowedPatterns`
@@ -204,7 +210,7 @@ const parseAuthHeaderValue = (
     ? parseAuthHeaderValue(authHeaderValue, authHeaderValue.indexOf(" "))
     : {
         scheme: authHeaderValue.slice(0, spaceIndex),
-        credentials: authHeaderValue.slice(spaceIndex + 1)
+        credentials: authHeaderValue.slice(spaceIndex + 1),
       }
 
 /** nowPlusMinutes returns the numericDate `minutes` from now */
@@ -282,7 +288,7 @@ const parseAuthHeader = (
     ? parseAuthHeader(plainText, plainText.indexOf(":"))
     : {
         user: plainText.slice(0, colonIndex),
-        password: plainText.slice(colonIndex + 1)
+        password: plainText.slice(colonIndex + 1),
       }
 
 export const getUserIdPassword = eventHeaders =>
@@ -381,7 +387,7 @@ const newUserKeys: (keyof NewUser)[] = [
   "email",
   "isVerified",
   "name",
-  "password"
+  "password",
 ]
 export const getNewUserInfo = (body: string): NewUser => {
   const newUser = narrowType<NewUser>(parseQuery(body), newUserKeys)
@@ -391,7 +397,7 @@ const updatedUserKeys: (keyof UpdateUser)[] = [
   "isAdmin",
   "email",
   "isVerified",
-  "name"
+  "name",
 ]
 
 export const toUpdatedUser = (obj: GenericObj) =>
@@ -490,14 +496,14 @@ export const validatePassword = (password: string): ValidResult => {
   if (password !== password.trim())
     return {
       isValid: false,
-      reason: "Passwords cannot contain leading or trailing spaces"
+      reason: "Passwords cannot contain leading or trailing spaces",
     }
   if (commonPasswords.includes(password))
     return { isValid: false, reason: `${password} is too easily guessed` }
   if (password.length < 7)
     return {
       isValid: false,
-      reason: "Passwords must be longer than 6 characters"
+      reason: "Passwords must be longer than 6 characters",
     }
   //  bcrypt will only check the first 72 characters
   //  therefore we truncate using sha-512
@@ -511,7 +517,7 @@ export const validateUser = (user: UpdateUser & User): ValidResult => {
       const badChars = idCheck.result?.join(", ")
       return {
         ...idCheck,
-        reason: `UserId '${user.id}' contains invalid characters '${badChars}'. Only lowercase letters, numbers, '-' and '_' are valid.`
+        reason: `UserId '${user.id}' contains invalid characters '${badChars}'. Only lowercase letters, numbers, '-' and '_' are valid.`,
       }
     }
   }
@@ -730,5 +736,5 @@ const commonPasswords = [
   "x4ivygA51F",
   "yugioh",
   "zing",
-  "zxcvbnm"
+  "zxcvbnm",
 ]

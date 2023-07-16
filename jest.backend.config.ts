@@ -13,8 +13,7 @@ export default {
   testPathIgnorePatterns: ["\\\\node_modules\\\\", "RAW", ".js$"],
   transform: {
     "^.+\\.ts$": ["ts-jest", { tsconfig: "tsconfig.netlify.functions.json" }],
-    '^.+\\.js$': 'babel-jest',
+    "^.+\\.js$": "babel-jest",
   },
-  transformIgnorePatterns: ["/node_modules/(?!normalize-url)"]
+  transformIgnorePatterns: ["/node_modules/(?!normalize-url)"],
 }
-

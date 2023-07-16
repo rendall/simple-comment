@@ -4,14 +4,14 @@ import type {
   ResolveTypegenMeta,
   ServiceMap,
   StateSchema,
-  TypegenDisabled
+  TypegenDisabled,
 } from "xstate"
 import type {
   LoginMachineContext,
   LoginMachineEvent,
   LoginMachineState,
   LoginTypestate,
-  ServerResponse
+  ServerResponse,
 } from "./lib/login.xstate"
 import type { AdminSafeUser } from "./lib/simple-comment"
 import { interpret } from "xstate"
@@ -21,7 +21,7 @@ import {
   deleteAuth,
   getOneUser,
   postAuth,
-  verifySelf
+  verifySelf,
 } from "./apiClient" // assuming you have an apiClient.ts file
 import { debounceFunc } from "./apiClient"
 
@@ -139,28 +139,28 @@ const errorStateHandler = loginService => {
     [
       401,
       "Policy violation: no authentication and canPublicCreateUser is false",
-      "Sorry, new user registration is currently closed. Please contact the site administrator for assistance."
+      "Sorry, new user registration is currently closed. Please contact the site administrator for assistance.",
     ],
     [
       401,
       "Bad credentials",
-      "Oops! The password you entered is incorrect. Please try again. If you've forgotten your password, you can reset it."
+      "Oops! The password you entered is incorrect. Please try again. If you've forgotten your password, you can reset it.",
     ],
     [
       403,
       "Cannot modify root credentials",
-      "Sorry, but the changes you're trying to make are not allowed. The administrator credentials you're attempting to modify are secured and can only be updated through the appropriate channels. If you need to make changes, please contact your system administrator or refer to your system documentation for the correct procedure."
+      "Sorry, but the changes you're trying to make are not allowed. The administrator credentials you're attempting to modify are secured and can only be updated through the appropriate channels. If you need to make changes, please contact your system administrator or refer to your system documentation for the correct procedure.",
     ],
     [
       404,
       "Unknown user",
-      "It seems we couldn't find an account associated with the provided username or email. Please double-check your input for any typos. If you don't have an account yet, feel free to create one. We'd love to have you join our community!"
+      "It seems we couldn't find an account associated with the provided username or email. Please double-check your input for any typos. If you don't have an account yet, feel free to create one. We'd love to have you join our community!",
     ],
     [
       404,
       "Authenticating user is unknown",
-      "It seems there's an issue with your current session. Please log out and log back in again. If the problem persists, contact the site administrator for assistance."
-    ]
+      "It seems there's an issue with your current session. Please log out and log back in again. If the problem persists, contact the site administrator for assistance.",
+    ],
   ]
 
   const messageTuple = errorMessages.find(
@@ -212,7 +212,7 @@ const setupSignupNamesRelationship = () => {
     }
 
     getOneUser(username)
-      .then(response => {
+      .then(_response => {
         // update the UI with "username exists" message
         if (messageElement) {
           messageElement.textContent =
@@ -220,7 +220,7 @@ const setupSignupNamesRelationship = () => {
           messageElement.style.color = "red"
         }
       })
-      .catch(error => {
+      .catch(_error => {
         // update the UI with "username ok" message
         if (messageElement) {
           messageElement.textContent = "This username is available."
@@ -309,7 +309,7 @@ const onLoad = () => {
       ["loggedIn", loggedInStateHandler],
       ["loggingOut", loggingOutStateHandler],
       ["loggedOut", loggedOutStateHandler],
-      ["error", errorStateHandler]
+      ["error", errorStateHandler],
     ]
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [_, handleState] =

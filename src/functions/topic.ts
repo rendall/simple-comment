@@ -8,19 +8,19 @@ import {
   getNewTopicInfo,
   getTargetId,
   getUpdateTopicInfo,
-  getUserId
+  getUserId,
 } from "../lib/utilities"
 import type {
   Discussion,
   Error,
   Success,
   Topic,
-  TopicId
+  TopicId,
 } from "../lib/simple-comment"
 import {
   error404TopicNotFound,
   error405MethodNotAllowed,
-  success200OK
+  success200OK,
 } from "./../lib/messages"
 import { MongodbService } from "../lib/MongodbService"
 
@@ -35,7 +35,7 @@ const getAllowHeaders = (event: APIGatewayEvent) => {
   const allowHeaders = {
     "Access-Control-Allow-Methods": "GET,OPTIONS",
     "Access-Control-Allow-Credentials": "true",
-    "Access-Control-Allow-Headers": "Cookie,Referrer-Policy"
+    "Access-Control-Allow-Headers": "Cookie,Referrer-Policy",
   }
   const allowedOriginHeaders = getAllowOriginHeaders(
     event.headers,
@@ -71,7 +71,7 @@ export const handler = async (event: APIGatewayEvent) => {
           return new Promise<Error>(resolve =>
             resolve({
               ...error404TopicNotFound,
-              body: `${event.path} is not valid`
+              body: `${event.path} is not valid`,
             })
           )
         const referer = getHeaderValue(event.headers, "Referer")

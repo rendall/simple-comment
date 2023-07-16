@@ -8,28 +8,28 @@ import {
   getAuthHeaderValue,
   getCookieToken,
   hasBearerScheme,
-  hasTokenCookie
+  hasTokenCookie,
 } from "../lib/utilities"
 import type { Success, TokenClaim, Error } from "../lib/simple-comment"
 import {
   error401UserNotAuthenticated,
   error404NotFound,
   error405MethodNotAllowed,
-  success200OK
+  success200OK,
 } from "../lib/messages"
 import { MongodbService } from "../lib/MongodbService"
 
 dotenv.config()
 
 const service: MongodbService = new MongodbService(
-  process.env.DB_CONNECTION_STRING!,
-  process.env.DATABASE_NAME!
+  process.env.DB_CONNECTION_STRING,
+  process.env.DATABASE_NAME
 )
 
 const getAllowHeaders = (event: APIGatewayEvent) => {
   const allowedHeaders = {
     "Access-Control-Allow-Methods": "GET,OPTIONS",
-    "Access-Control-Allow-Credentials": "true"
+    "Access-Control-Allow-Credentials": "true",
   }
   const allowedOriginHeaders = getAllowOriginHeaders(
     event.headers,
@@ -57,7 +57,7 @@ export const handler: Handler = async (event: APIGatewayEvent) => {
     return addHeaders(
       {
         ...error401UserNotAuthenticated,
-        body: "No Cookie header 'simple-comment-token' value"
+        body: "No Cookie header 'simple-comment-token' value",
       },
       headers
     )

@@ -1,7 +1,7 @@
 /// <reference types="cypress" />
 const pages = [
   "http://localhost:7070/svelte-login.html",
-  "http://localhost:7070/login.html"
+  "http://localhost:7070/login.html",
 ]
 
 pages.forEach(page => {
@@ -14,11 +14,11 @@ pages.forEach(page => {
       cy.intercept("POST", "/auth", req => {
         expect(req.body).to.include({
           identifier: "testuser",
-          password: "testpassword"
+          password: "testpassword",
         })
         req.reply({
           statusCode: 200,
-          body: { token: "testToken" }
+          body: { token: "testToken" },
         })
       })
 
@@ -32,11 +32,11 @@ pages.forEach(page => {
         expect(req.body).to.include({
           name: "testname",
           email: "testemail@test.com",
-          password: "testpassword"
+          password: "testpassword",
         })
         req.reply({
           statusCode: 201,
-          body: { id: "testId" }
+          body: { id: "testId" },
         })
       })
 
@@ -51,7 +51,7 @@ pages.forEach(page => {
       cy.intercept("DELETE", "/auth", req => {
         req.reply({
           statusCode: 202,
-          body: { message: "Logged out" }
+          body: { message: "Logged out" },
         })
       })
       // First log in

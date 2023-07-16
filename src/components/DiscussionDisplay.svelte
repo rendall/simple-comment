@@ -5,7 +5,7 @@
     Interpreter,
     ResolveTypegenMeta,
     ServiceMap,
-    TypegenDisabled
+    TypegenDisabled,
   } from "xstate"
   import type { Discussion } from "../lib/simple-comment"
   import type {
@@ -13,7 +13,7 @@
     DiscussionMachineEvent,
     DiscussionMachineState,
     DiscussionTypestate,
-    ServerResponse
+    ServerResponse,
   } from "../lib/discussion.xstate"
   import { discussionMachine } from "../lib/discussion.xstate"
   import { createNewTopic, getOneDiscussion } from "../apiClient"
@@ -86,8 +86,8 @@
       [
         403,
         "User not authorized",
-        "Oops! It looks like this discussion topic hasn't been created yet. The administrator needs to set it up. Please check back later or contact the site admin. Thanks for your patience!"
-      ]
+        "Oops! It looks like this discussion topic hasn't been created yet. The administrator needs to set it up. Please check back later or contact the site admin. Thanks for your patience!",
+      ],
     ]
 
     const messageTuple = errorMessages.find(
@@ -108,9 +108,9 @@
     createNewTopic(discussionId, title)
       .then(response => {
         if (response.ok) discussionService.send("SUCCESS")
-        else discussionService.send({ type:"ERROR", error:response })
+        else discussionService.send({ type: "ERROR", error: response })
       })
-      .catch(error => discussionService.send({type:"ERROR", error}))
+      .catch(error => discussionService.send({ type: "ERROR", error }))
   }
 
   const loadedStateHandler = () => {
@@ -127,7 +127,7 @@
         ["loading", loadingStateHandler],
         ["loaded", loadedStateHandler],
         ["creating", creatingStateHandler],
-        ["error", errorStateHandler]
+        ["error", errorStateHandler],
       ]
 
       // eslint-disable-next-line @typescript-eslint/no-unused-vars

@@ -37,7 +37,7 @@ describe("Login flow state machine", () => {
       "CONFIRM",
       "CANCEL",
       "SIGNUP",
-      "ERROR"
+      "ERROR",
     ])
   })
 

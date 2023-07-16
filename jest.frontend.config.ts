@@ -18,8 +18,8 @@ export default {
       {
         tsconfig: "tsconfig.frontend.json",
         isolatedModules: true,
-        useESM: true
-      }
-    ]
-  }
+        useESM: true,
+      },
+    ],
+  },
 }

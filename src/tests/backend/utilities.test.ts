@@ -4,7 +4,7 @@ import {
   isGuestId,
   parseQuery,
   validateEmail,
-  validateUserId
+  validateUserId,
 } from "../../../src/lib/utilities"
 import { v4 as uuidv4 } from "uuid"
 import type { Email } from "../../../src/lib/simple-comment"
@@ -14,12 +14,12 @@ describe("test the `getAllowOriginHeaders` function", () => {
     const headers = {
       "Origin": "https://blog.example.com",
       "Pragma": "no-cache",
-      "referer": "https://blog.example.com/"
+      "referer": "https://blog.example.com/",
     }
     const allowedOrigin = ["https://blog.example.com"]
     expect(getAllowOriginHeaders(headers, allowedOrigin)).toEqual({
       "Access-Control-Allow-Origin": "https://blog.example.com",
-      Vary: "Origin"
+      Vary: "Origin",
     })
   })
 
@@ -27,7 +27,7 @@ describe("test the `getAllowOriginHeaders` function", () => {
     const headers = {
       "Origin": "https://blog.example.com",
       "Pragma": "no-cache",
-      "referer": "https://blog.example.com/"
+      "referer": "https://blog.example.com/",
     }
     const allowedOrigin = ["https://blog.no-example.com"]
     expect(getAllowOriginHeaders(headers, allowedOrigin)).toEqual({})
@@ -37,11 +37,11 @@ describe("test the `getAllowOriginHeaders` function", () => {
     const headers = {
       "Origin": "https://blog.example.com",
       "Pragma": "no-cache",
-      "referer": "https://blog.example.com/"
+      "referer": "https://blog.example.com/",
     }
     const allowedOrigin = ["*"]
     expect(getAllowOriginHeaders(headers, allowedOrigin)).toEqual({
-      "Access-Control-Allow-Origin": "*"
+      "Access-Control-Allow-Origin": "*",
     })
   })
 })
@@ -99,10 +99,10 @@ describe("Test validations", () => {
     len === 0
       ? str
       : randomString(
-        alpha,
-        len - 1,
-        `${str}${alpha.charAt(Math.floor(Math.random() * alpha.length))}`
-      )
+          alpha,
+          len - 1,
+          `${str}${alpha.charAt(Math.floor(Math.random() * alpha.length))}`
+        )
   const createRandomEmail = (): Email =>
     `${randomString(emailAscii)}@${randomString(emailAscii)}.${randomString(
       "abcdefghijklmnopqrstuvwxyz",
@@ -123,82 +123,78 @@ describe("Test validations", () => {
   })
 })
 
-describe('isAllowedReferer', () => {
-  const normalAllowedOrigins = [
-    'example.com',
-    'example.com/*',
-  ];
+describe("isAllowedReferer", () => {
+  const normalAllowedOrigins = ["example.com", "example.com/*"]
 
   test.each([
-    'https://example.com',
-    'https://example.com/about/index.html',
-    'https://www.example.com/blog',
-  ])('%s should be allowed', (url: string) => {
-    expect(isAllowedReferer(url, normalAllowedOrigins)).toBe(true);
-  });
+    "https://example.com",
+    "https://example.com/about/index.html",
+    "https://www.example.com/blog",
+  ])("%s should be allowed", (url: string) => {
+    expect(isAllowedReferer(url, normalAllowedOrigins)).toBe(true)
+  })
 
   test.each([
-    'https://example.com/blog/no.html', // not in allowed patterns
-    'https://other-example.com/about', // not in allowed patterns
-    'https://yet-another-example.com', // completely different domain
-  ])('%s should not be allowed', (url: string) => {
-    expect(isAllowedReferer(url, normalAllowedOrigins)).toBe(false);
-  });
+    "https://example.com/blog/no.html", // not in allowed patterns
+    "https://other-example.com/about", // not in allowed patterns
+    "https://yet-another-example.com", // completely different domain
+  ])("%s should not be allowed", (url: string) => {
+    expect(isAllowedReferer(url, normalAllowedOrigins)).toBe(false)
+  })
 
-  it('should handle URLs with hash, query parameters, and directory index', () => {
-    const url = 'https://www.example.com:443/about/index.html?param=value#hash';
-    expect(isAllowedReferer(url, normalAllowedOrigins)).toBe(true);
-  });
+  it("should handle URLs with hash, query parameters, and directory index", () => {
+    const url = "https://www.example.com:443/about/index.html?param=value#hash"
+    expect(isAllowedReferer(url, normalAllowedOrigins)).toBe(true)
+  })
 
-  it('should handle URLs without any of the stripped elements', () => {
-    const url = 'example.com';
-    expect(isAllowedReferer(url, normalAllowedOrigins)).toBe(true);
-  });
-});
+  it("should handle URLs without any of the stripped elements", () => {
+    const url = "example.com"
+    expect(isAllowedReferer(url, normalAllowedOrigins)).toBe(true)
+  })
+})
 
-describe('isAllowedReferer with advanced patterns', () => {
+describe("isAllowedReferer with advanced patterns", () => {
   const allowedOriginArray = [
-    '*.example.com', // any subdomain of example.com
-    'example.com/*/**/blog', // any path segment followed by /blog
-    'example-*.com', // any domain that starts with 'example-' and ends with '.com'
-    'example.com/about(/foo)?', // optional path segment after /about
-  ];
+    "*.example.com", // any subdomain of example.com
+    "example.com/*/**/blog", // any path segment followed by /blog
+    "example-*.com", // any domain that starts with 'example-' and ends with '.com'
+    "example.com/about(/foo)?", // optional path segment after /about
+  ]
 
   test.each([
-    'https://example-123.com',
-    'https://example.com/about',
-    'https://example.com/about/foo',
-    'https://example.com/foo/bar/baz/blog/',
-    'https://example.com/foo/blog',
-    'https://sub.example.com',
-  ])('%s should be allowed', (url: string) => {
-    expect(isAllowedReferer(url, allowedOriginArray)).toBe(true);
-  });
+    "https://example-123.com",
+    "https://example.com/about",
+    "https://example.com/about/foo",
+    "https://example.com/foo/bar/baz/blog/",
+    "https://example.com/foo/blog",
+    "https://sub.example.com",
+  ])("%s should be allowed", (url: string) => {
+    expect(isAllowedReferer(url, allowedOriginArray)).toBe(true)
+  })
 
   test.each([
-    'https://example.com', // no subdomain or path
-    'https://example.com/blog', // missing path segment before /blog
-    'https://example123.com', // does not start with 'example-'
-    'https://example.com/about/foo/bar', // extra path segment after /about/foo
-    'https://other-example.com', // not in allowed patterns
-  ])('%s should not be allowed', (url: string) => {
-    expect(isAllowedReferer(url, allowedOriginArray)).toBe(false);
-  });
+    "https://example.com", // no subdomain or path
+    "https://example.com/blog", // missing path segment before /blog
+    "https://example123.com", // does not start with 'example-'
+    "https://example.com/about/foo/bar", // extra path segment after /about/foo
+    "https://other-example.com", // not in allowed patterns
+  ])("%s should not be allowed", (url: string) => {
+    expect(isAllowedReferer(url, allowedOriginArray)).toBe(false)
+  })
 
   // never use these as allowed origins
   test.each([
-    'https://example.com', // protocol is stripped by normalization
-    'http://example.com', // protocol is stripped by normalization
-    'www.example.com', // 'www' is always stripped
-    'example.com/', // trailing slash is stripped by normalization
-    'example.com/index.html', // directory index is stripped by normalization
-    'example.com?foo=bar', // query parameters are stripped by normalization
-    'example.com#foo', // hash is stripped by normalization
-  ])('allowed origin %s will not match', (url: string) => {
-    expect(isAllowedReferer(url, [url])).toBe(false);
-  });
-});
-
+    "https://example.com", // protocol is stripped by normalization
+    "http://example.com", // protocol is stripped by normalization
+    "www.example.com", // 'www' is always stripped
+    "example.com/", // trailing slash is stripped by normalization
+    "example.com/index.html", // directory index is stripped by normalization
+    "example.com?foo=bar", // query parameters are stripped by normalization
+    "example.com#foo", // hash is stripped by normalization
+  ])("allowed origin %s will not match", (url: string) => {
+    expect(isAllowedReferer(url, [url])).toBe(false)
+  })
+})
 
 describe("parseQuery()", () => {
   it("should parse correctly", () => {

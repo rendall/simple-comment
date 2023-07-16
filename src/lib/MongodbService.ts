@@ -17,7 +17,7 @@ import type {
   TokenClaim,
   NewTopic,
   Email,
-  CreateUserPayload
+  CreateUserPayload,
 } from "./simple-comment"
 import { Action } from "./simple-comment"
 import { isUserAllowedTo } from "./policyEnforcement"
@@ -40,7 +40,7 @@ import {
   getAllowedOrigins,
   isEmail,
   createNewUserId,
-  normalizeUrl
+  normalizeUrl,
 } from "./utilities"
 import policy from "../policy.json"
 import {
@@ -67,7 +67,7 @@ import {
   success202TopicDeleted,
   success202UserDeleted,
   success204CommentUpdated,
-  success204UserUpdated
+  success204UserUpdated,
 } from "./messages"
 import { comparePassword, getAuthToken, hashPassword, uuidv4 } from "./crypt"
 import * as jwt from "jsonwebtoken"
@@ -164,7 +164,7 @@ export class MongodbService extends Service {
     if (!authUserId && !policy.canPublicCreateUser) {
       return {
         ...error401UserNotAuthenticated,
-        body: "Policy violation: no authentication and canPublicCreateUser is false"
+        body: "Policy violation: no authentication and canPublicCreateUser is false",
       }
     }
 
@@ -175,7 +175,7 @@ export class MongodbService extends Service {
     ) {
       return {
         ...error401UserNotAuthenticated,
-        body: "Policy violation: guest authentication and both canGuestCreateUsercan and PublicCreateUser is false"
+        body: "Policy violation: guest authentication and both canGuestCreateUsercan and PublicCreateUser is false",
       }
     }
 
@@ -189,21 +189,21 @@ export class MongodbService extends Service {
     if (!userCheck.isValid) {
       return {
         ...error400BadRequest,
-        body: userCheck.reason
+        body: userCheck.reason,
       }
     }
 
     if (newUserId === process.env.SIMPLE_COMMENT_MODERATOR_ID) {
       return {
         ...error403ForbiddenToModify,
-        body: "Cannot modify root credentials"
+        body: "Cannot modify root credentials",
       }
     }
 
     if (isGuestId(newUserId) && authUserId !== newUserId) {
       return {
         ...error403Forbidden,
-        body: "New user id must not be in a uuid format"
+        body: "New user id must not be in a uuid format",
       }
     }
 
@@ -220,7 +220,7 @@ export class MongodbService extends Service {
     if (isUnknownUser) {
       return {
         ...error404UserUnknown,
-        body: "Authenticating user is unknown"
+        body: "Authenticating user is unknown",
       }
     }
 
@@ -234,7 +234,7 @@ export class MongodbService extends Service {
       )
       return {
         ...error403ForbiddenToModify,
-        body: `Forbidden to modify ${adminOnlyProp}`
+        body: `Forbidden to modify ${adminOnlyProp}`,
       }
     }
 
@@ -249,7 +249,7 @@ export class MongodbService extends Service {
       : await hashPassword(newUser.password)
     const adminSafeUser = {
       ...toAdminSafeUser(newUser),
-      name: newUser.name.trim()
+      name: newUser.name.trim(),
     }
     const user: User = isGuestId(newUserId)
       ? adminSafeUser
@@ -296,7 +296,7 @@ export class MongodbService extends Service {
       if (!isModerator) {
         return {
           ...error404UserUnknown,
-          body: "Authenticating user is unknown"
+          body: "Authenticating user is unknown",
         }
       }
 
@@ -310,7 +310,7 @@ export class MongodbService extends Service {
         name: "Simple Comment Moderator",
         isAdmin: true,
         hash,
-        email: process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL
+        email: process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL,
       }
       await users.insertOne(adminUser)
 
@@ -366,7 +366,7 @@ export class MongodbService extends Service {
     if (!checkUser.isValid) {
       return {
         ...error400BadRequest,
-        body: checkUser.reason
+        body: checkUser.reason,
       }
     }
 
@@ -378,7 +378,7 @@ export class MongodbService extends Service {
       if (hasAdminProps) {
         return {
           ...error403Forbidden,
-          body: "Attempt to modify guest user forbidden property"
+          body: "Attempt to modify guest user forbidden property",
         }
       }
     }
@@ -389,7 +389,7 @@ export class MongodbService extends Service {
     if (targetId !== authUser.id && !authUser.isAdmin) {
       return {
         ...error403UserNotAuthorized,
-        body: `id of user ${targetId} does not match id of credentials ${authUser.id} and credentialed user is not admin`
+        body: `id of user ${targetId} does not match id of credentials ${authUser.id} and credentialed user is not admin`,
       }
     }
 
@@ -406,7 +406,7 @@ export class MongodbService extends Service {
       const cannotModify: (keyof UpdateUser)[] = [
         "password",
         "isAdmin",
-        "email"
+        "email",
       ]
       const isForbidden = (Object.keys(user) as (keyof UpdateUser)[]).some(
         key => cannotModify.includes(key)
@@ -414,7 +414,7 @@ export class MongodbService extends Service {
       if (isForbidden) {
         return {
           ...error403ForbiddenToModify,
-          body: `Modify properties ${cannotModify.join(", ")} via .env file`
+          body: `Modify properties ${cannotModify.join(", ")} via .env file`,
         }
       }
     }
@@ -530,7 +530,7 @@ export class MongodbService extends Service {
     if (!parent || isDeleted(parent)) {
       return {
         ...error404CommentNotFound,
-        body: `Discussion '${parentId}' not found`
+        body: `Discussion '${parentId}' not found`,
       }
     }
 
@@ -554,7 +554,7 @@ export class MongodbService extends Service {
       text,
       dateCreated: new Date(),
       parentId,
-      userId: authUserId
+      userId: authUserId,
     } as Comment
 
     try {
@@ -562,12 +562,12 @@ export class MongodbService extends Service {
       if (!result.acknowledged) {
         return {
           statusCode: 500,
-          body: "Database insertion error"
+          body: "Database insertion error",
         }
       }
       return {
         statusCode: 201,
-        body: { ...insertComment, user: adminSafeUser }
+        body: { ...insertComment, user: adminSafeUser },
       }
     } catch (e) {
       console.error(e)
@@ -620,7 +620,7 @@ export class MongodbService extends Service {
     if (!cursor) {
       return {
         ...error404CommentNotFound,
-        body: `Comment '${targetId}' not found`
+        body: `Comment '${targetId}' not found`,
       }
     }
 
@@ -628,35 +628,35 @@ export class MongodbService extends Service {
     if (!isComment(foundComment) || isDeletedComment(foundComment)) {
       return {
         ...error404CommentNotFound,
-        body: `Comment '${targetId}' not found`
+        body: `Comment '${targetId}' not found`,
       }
     }
 
     const fullCommentPipeline = (id: CommentId, isAdminSafe: boolean) => [
       {
         $match: {
-          id
-        }
+          id,
+        },
       },
       {
         $addFields: {
-          isAdminSafe
-        }
+          isAdminSafe,
+        },
       },
       {
         $lookup: {
           from: "users",
           localField: "userId",
           foreignField: "id",
-          as: "userarr"
-        }
+          as: "userarr",
+        },
       },
       {
         $addFields: {
           user: {
-            $arrayElemAt: ["$userarr", 0]
-          }
-        }
+            $arrayElemAt: ["$userarr", 0],
+          },
+        },
       },
       {
         $graphLookup: {
@@ -664,29 +664,29 @@ export class MongodbService extends Service {
           startWith: "$id",
           connectFromField: "id",
           connectToField: "parentId",
-          as: "replies"
-        }
+          as: "replies",
+        },
       },
       {
         $unwind: {
           path: "$replies",
-          preserveNullAndEmptyArrays: true
-        }
+          preserveNullAndEmptyArrays: true,
+        },
       },
       {
         $lookup: {
           from: "users",
           localField: "replies.userId",
           foreignField: "id",
-          as: "replies.userarr"
-        }
+          as: "replies.userarr",
+        },
       },
       {
         $addFields: {
           "replies.user": {
-            $arrayElemAt: ["$replies.userarr", 0]
-          }
-        }
+            $arrayElemAt: ["$replies.userarr", 0],
+          },
+        },
       },
       {
         $project: {
@@ -699,21 +699,21 @@ export class MongodbService extends Service {
           "user.email": {
             $cond: {
               "if": {
-                $eq: ["$isAdminSafe", true]
+                $eq: ["$isAdminSafe", true],
               },
               then: "$user.email",
-              "else": "$$REMOVE"
-            }
+              "else": "$$REMOVE",
+            },
           },
           "user.name": 1,
           "user.isVerified": {
             $cond: {
               "if": {
-                $eq: ["$isAdminSafe", true]
+                $eq: ["$isAdminSafe", true],
               },
               then: "$user.isVerified",
-              "else": "$$REMOVE"
-            }
+              "else": "$$REMOVE",
+            },
           },
           "user.isAdmin": 1,
           "replies.parentId": 1,
@@ -727,60 +727,60 @@ export class MongodbService extends Service {
           "replies.user.isVerified": {
             $cond: {
               "if": {
-                $eq: ["$isAdminSafe", true]
+                $eq: ["$isAdminSafe", true],
               },
               then: "$replies.user.isVerified",
-              "else": "$$REMOVE"
-            }
+              "else": "$$REMOVE",
+            },
           },
           "replies.user.email": {
             $cond: {
               "if": {
-                $eq: ["$isAdminSafe", true]
+                $eq: ["$isAdminSafe", true],
               },
               then: "$replies.user.email",
-              "else": "$$REMOVE"
-            }
-          }
-        }
+              "else": "$$REMOVE",
+            },
+          },
+        },
       },
       {
         $project: {
           "replies.userarr": 0,
           "replies.userId": 0,
           "replies.user.hash": 0,
-          "user.hash": 0
-        }
+          "user.hash": 0,
+        },
       },
       {
         $group: {
           _id: "$_id",
           id: {
-            $first: "$id"
+            $first: "$id",
           },
           parentId: {
-            $first: "$parentId"
+            $first: "$parentId",
           },
           text: {
-            $first: "$text"
+            $first: "$text",
           },
           title: {
-            $first: "$title"
+            $first: "$title",
           },
           user: {
-            $first: "$user"
+            $first: "$user",
           },
           replies: {
-            $push: "$replies"
+            $push: "$replies",
           },
           dateCreated: {
-            $first: "$dateCreated"
+            $first: "$dateCreated",
           },
           dateDeleted: {
-            $first: "$dateDeleted"
-          }
-        }
-      }
+            $first: "$dateDeleted",
+          },
+        },
+      },
     ]
 
     const comment = (await comments
@@ -824,7 +824,7 @@ export class MongodbService extends Service {
     ) {
       return {
         ...error404CommentNotFound,
-        body: `Comment '${targetId}' not found`
+        body: `Comment '${targetId}' not found`,
       }
     }
 
@@ -849,7 +849,7 @@ export class MongodbService extends Service {
     if (modifyResult.ok) {
       return {
         ...success204CommentUpdated,
-        body: returnComment
+        body: returnComment,
       }
     } else {
       if (authUser.isAdmin) {
@@ -895,7 +895,7 @@ export class MongodbService extends Service {
     ) {
       return {
         ...error404CommentNotFound,
-        body: `Comment '${targetId}' not found`
+        body: `Comment '${targetId}' not found`,
       }
     }
 
@@ -912,7 +912,7 @@ export class MongodbService extends Service {
         ...foundComment,
         userId: null,
         text: null,
-        dateDeleted: new Date()
+        dateDeleted: new Date(),
       }
 
       try {
@@ -947,7 +947,7 @@ export class MongodbService extends Service {
       if (!policy.isGuestAccountAllowed) {
         reject({
           ...error403Forbidden,
-          body: "Guest accounts are forbidden according to policy `isGuestAccountAllowed:false`"
+          body: "Guest accounts are forbidden according to policy `isGuestAccountAllowed:false`",
         })
         return
       }
@@ -999,12 +999,13 @@ export class MongodbService extends Service {
         const normalizedReferer = normalizeUrl(newTopic.referer)
 
         if (getAllowedOrigins().length > 1) {
-          const body = `The referer '${normalizedReferer}' does not match any of the expected patterns. Allowed patterns: '${getAllowedOrigins().join(" or ")}'. Please ensure the referer matches one of the allowed patterns.`
-          return {...error403Forbidden, body}
-        }
-        else {
+          const body = `The referer '${normalizedReferer}' does not match any of the expected patterns. Allowed patterns: '${getAllowedOrigins().join(
+            " or "
+          )}'. Please ensure the referer matches one of the allowed patterns.`
+          return { ...error403Forbidden, body }
+        } else {
           const body = `The referer '${normalizedReferer}' does not match the expected pattern: '${getAllowedOrigins().join()}'. Please ensure the referer matches the allowed pattern.`
-          return {...error403Forbidden, body}
+          return { ...error403Forbidden, body }
         }
       }
     }
@@ -1014,7 +1015,7 @@ export class MongodbService extends Service {
       const invalidChar = hasInvalidCharacters ? hasInvalidCharacters[0] : ""
       return {
         ...error400BadRequest,
-        body: `Invalid character '${invalidChar}' in topicId`
+        body: `Invalid character '${invalidChar}' in topicId`,
       }
     }
 
@@ -1036,12 +1037,12 @@ export class MongodbService extends Service {
         if (response.acknowledged)
           return {
             statusCode: 201,
-            body: `Topic ${topic.id}:'${topic.title}' created`
+            body: `Topic ${topic.id}:'${topic.title}' created`,
           }
         else
           return {
             statusCode: 500,
-            body: "Database insertion error"
+            body: "Database insertion error",
           }
       })
       .catch(e => {
@@ -1080,31 +1081,31 @@ export class MongodbService extends Service {
     if (!discussion || isComment(discussion)) {
       return {
         ...error404CommentNotFound,
-        body: `Topic '${targetId}' not found`
+        body: `Topic '${targetId}' not found`,
       }
     }
 
     const fullTopicPipeline = (id: CommentId, isAdminSafe: boolean) => [
       {
-        $match: { id }
+        $match: { id },
       },
       {
-        $addFields: { isAdminSafe }
+        $addFields: { isAdminSafe },
       },
       {
         $lookup: {
           from: "users",
           localField: "userId",
           foreignField: "id",
-          as: "userarr"
-        }
+          as: "userarr",
+        },
       },
       {
         $addFields: {
           user: {
-            $arrayElemAt: ["$userarr", 0]
-          }
-        }
+            $arrayElemAt: ["$userarr", 0],
+          },
+        },
       },
       {
         $graphLookup: {
@@ -1112,29 +1113,29 @@ export class MongodbService extends Service {
           startWith: "$id",
           connectFromField: "id",
           connectToField: "parentId",
-          as: "replies"
-        }
+          as: "replies",
+        },
       },
       {
         $unwind: {
           path: "$replies",
-          preserveNullAndEmptyArrays: true
-        }
+          preserveNullAndEmptyArrays: true,
+        },
       },
       {
         $lookup: {
           from: "users",
           localField: "replies.userId",
           foreignField: "id",
-          as: "replies.userarr"
-        }
+          as: "replies.userarr",
+        },
       },
       {
         $addFields: {
           "replies.user": {
-            $arrayElemAt: ["$replies.userarr", 0]
-          }
-        }
+            $arrayElemAt: ["$replies.userarr", 0],
+          },
+        },
       },
       {
         $project: {
@@ -1149,16 +1150,16 @@ export class MongodbService extends Service {
             $cond: {
               if: { $eq: ["$isAdminSafe", true] },
               then: "$user.email",
-              else: "$$REMOVE"
-            }
+              else: "$$REMOVE",
+            },
           },
           "user.name": 1,
           "user.isVerified": {
             $cond: {
               if: { $eq: ["$isAdminSafe", true] },
               then: "$user.isVerified",
-              else: "$$REMOVE"
-            }
+              else: "$$REMOVE",
+            },
           },
           "user.isAdmin": 1,
           "replies.parentId": 1,
@@ -1173,55 +1174,55 @@ export class MongodbService extends Service {
             $cond: {
               if: { $eq: ["$isAdminSafe", true] },
               then: "$replies.user.isVerified",
-              else: "$$REMOVE"
-            }
+              else: "$$REMOVE",
+            },
           },
           "replies.user.email": {
             $cond: {
               if: { $eq: ["$isAdminSafe", true] },
               then: "$replies.user.email",
-              else: "$$REMOVE"
-            }
-          }
-        }
+              else: "$$REMOVE",
+            },
+          },
+        },
       },
       {
         $project: {
           "replies.userarr": 0,
           "replies.userId": 0,
           "replies.user.hash": 0,
-          "user.hash": 0
-        }
+          "user.hash": 0,
+        },
       },
       {
         $group: {
           _id: "$_id",
           id: {
-            $first: "$id"
+            $first: "$id",
           },
           parentId: {
-            $first: "$parentId"
+            $first: "$parentId",
           },
           text: {
-            $first: "$text"
+            $first: "$text",
           },
           title: {
-            $first: "$title"
+            $first: "$title",
           },
           user: {
-            $first: "$user"
+            $first: "$user",
           },
           replies: {
-            $push: "$replies"
+            $push: "$replies",
           },
           dateCreated: {
-            $first: "$dateCreated"
+            $first: "$dateCreated",
           },
           dateDeleted: {
-            $first: "$dateDeleted"
-          }
-        }
-      }
+            $first: "$dateDeleted",
+          },
+        },
+      },
     ]
 
     const comment = (await comments
@@ -1258,7 +1259,7 @@ export class MongodbService extends Service {
     const comments = db.collection("comments")
 
     const topicsCursor = await comments.find<WithId<Topic>>({
-      parentId: null
+      parentId: null,
     })
 
     const topics = await topicsCursor.toArray()
@@ -1297,7 +1298,7 @@ export class MongodbService extends Service {
     if (!foundTopic || isComment(foundTopic)) {
       return {
         ...error404CommentNotFound,
-        body: `Topic '${targetId}' not found`
+        body: `Topic '${targetId}' not found`,
       }
     }
 
@@ -1318,7 +1319,7 @@ export class MongodbService extends Service {
             statusCode: 500,
             body: authUser.isAdmin
               ? modifyResult.lastErrorObject
-              : error500UpdateError.body
+              : error500UpdateError.body,
           } as Error
       })
       .catch(e => {
@@ -1359,7 +1360,7 @@ export class MongodbService extends Service {
     if (!foundTopic || isComment(foundTopic)) {
       return {
         ...error404TopicNotFound,
-        body: `Topic '${topicId}' not found`
+        body: `Topic '${topicId}' not found`,
       }
     }
 
@@ -1381,9 +1382,9 @@ export class MongodbService extends Service {
             startWith: "$id",
             connectFromField: "id",
             connectToField: "parentId",
-            as: "replies"
-          }
-        }
+            as: "replies",
+          },
+        },
       ]
 
       const rawReplies = await discussions
@@ -1411,7 +1412,7 @@ export class MongodbService extends Service {
     const COOKIE_HEADER = {
       "Set-Cookie": `simple_comment_token=logged-out; path=/; SameSite=${
         this.isCrossSite ? "None; Secure; " : "Strict; "
-      }HttpOnly; Expires=${pastDate};`
+      }HttpOnly; Expires=${pastDate};`,
     }
     return Promise.resolve({ ...success202LoggedOut, headers: COOKIE_HEADER })
   }
@@ -1421,7 +1422,7 @@ export class MongodbService extends Service {
   ): Promise<Success<TokenClaim> | Error> => {
     try {
       const claim: TokenClaim = jwt.verify(token, process.env.JWT_SECRET, {
-        ignoreExpiration: false
+        ignoreExpiration: false,
       }) as TokenClaim
       return { ...success200OK, body: claim }
     } catch (error) {
@@ -1430,7 +1431,7 @@ export class MongodbService extends Service {
         case "TokenExpiredError":
           return {
             ...error403Forbidden,
-            body: `token expired at ${error.expiredAt}`
+            body: `token expired at ${error.expiredAt}`,
           }
         default:
           return error400BadRequest

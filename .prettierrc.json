@@ -3,5 +3,5 @@
   "quoteProps": "preserve",
   "semi": false,
   "tabWidth": 2,
-  "trailingComma": "none"
+  "trailingComma": "es5"
 }

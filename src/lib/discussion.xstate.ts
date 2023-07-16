@@ -46,44 +46,44 @@ export const discussionMachine = createMachine<
     states: {
       idle: {
         always: {
-          target: "loading"
-        }
+          target: "loading",
+        },
       },
 
       loading: {
         on: {
           SUCCESS: { target: "loaded" },
-          ERROR: { target: "error", actions: "assignErrorMessage" }
-        }
+          ERROR: { target: "error", actions: "assignErrorMessage" },
+        },
       },
 
       creating: {
         on: {
           SUCCESS: { target: "created" },
-          ERROR: { target: "error", actions: "assignErrorMessage" }
-        }
+          ERROR: { target: "error", actions: "assignErrorMessage" },
+        },
       },
 
       created: {
         always: {
-          target: "loading"
-        }
+          target: "loading",
+        },
       },
 
       loaded: {
         on: {
-          LOAD: "loading"
-        }
+          LOAD: "loading",
+        },
       },
 
       error: {
         on: {
           RETRY: "loading",
-          CREATE: "creating"
-        }
-      }
+          CREATE: "creating",
+        },
+      },
     },
-    predictableActionArguments: true
+    predictableActionArguments: true,
   },
   {
     actions: {
@@ -93,8 +93,8 @@ export const discussionMachine = createMachine<
             return event.error
           }
           return undefined
-        }
-      })
-    }
+        },
+      }),
+    },
   }
 )

@@ -4,7 +4,7 @@ import type {
   CommentId,
   Discussion,
   ResolvedResponse,
-  TokenClaim
+  TokenClaim,
 } from "./lib/simple-comment"
 
 import {
@@ -24,7 +24,7 @@ import {
   deleteComment,
   formatDate,
   isTopic,
-  updateUser
+  updateUser,
 } from "./apiClient"
 
 let currUser: AdminSafeUser | undefined
@@ -109,7 +109,7 @@ const insertReplyInput = (commentId: CommentId) => {
       {
         replyTextarea: replyField,
         nameInput: nameField,
-        emailInput: emailField
+        emailInput: emailField,
       },
       commentId
     )

@@ -4,8 +4,8 @@ import SimpleComment from "./components/SimpleComment.svelte"
 
 declare global {
   interface Window {
-    setSimpleCommentOptions: any
-    setSimpleCommentDiscussion: any
+    setSimpleCommentOptions: (setupOptions: { [key: string]: unknown }) => void
+    setSimpleCommentDiscussion: (discussionId: string) => void
   }
 }
 
@@ -14,7 +14,7 @@ let simpleComment
 let options = {
   discussionId: getDefaultDiscussionId(),
   title: document.title,
-  target: document.getElementById("simple-comment") ?? document.body
+  target: document.getElementById("simple-comment") ?? document.body,
 }
 
 /**
@@ -27,8 +27,6 @@ let options = {
  * @param {string} setupOptions.title - The title of the discussion.
  * @param {HTMLElement} setupOptions.target - The HTML element in which the SimpleComment component should be rendered.
  */
-window.setSimpleCommentOptions = setupOptions =>
-  (options = { ...options, ...setupOptions })
 window.setSimpleCommentOptions = setupOptions =>
   (options = { ...options, ...setupOptions })
 
@@ -57,12 +55,12 @@ window.setSimpleCommentDiscussion = (discussionId: string) =>
 document.addEventListener("DOMContentLoaded", () => {
   simpleComment = new SimpleComment({
     target: options.target,
-    props: { discussionId: options.discussionId, title: options.title }
+    props: { discussionId: options.discussionId, title: options.title },
   })
 })
 
 export default {
   simpleComment,
   setSimpleCommentOptions: window.setSimpleCommentOptions,
-  setSimpleCommentDiscussion: window.setSimpleCommentDiscussion
+  setSimpleCommentDiscussion: window.setSimpleCommentDiscussion,
 }

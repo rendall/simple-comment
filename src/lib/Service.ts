@@ -13,7 +13,7 @@ import type {
   PublicSafeUser,
   UpdateUser,
   NewUser,
-  TokenClaim
+  TokenClaim,
 } from "./simple-comment"
 
 export abstract class Service {

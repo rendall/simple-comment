@@ -3,7 +3,7 @@ import type { APIGatewayEvent } from "aws-lambda"
 import {
   error405MethodNotAllowed,
   error500InternalServerError,
-  success200OK
+  success200OK,
 } from "../lib/messages"
 import { MongodbService } from "../lib/MongodbService"
 import type {
@@ -11,7 +11,7 @@ import type {
   PublicSafeUser,
   Success,
   UserId,
-  Error
+  Error,
 } from "../lib/simple-comment"
 import {
   addHeaders,
@@ -20,7 +20,7 @@ import {
   getNewUserInfo,
   getTargetId,
   getUpdatedUserInfo,
-  getUserId
+  getUserId,
 } from "../lib/utilities"
 dotenv.config()
 
@@ -33,7 +33,7 @@ const getAllowHeaders = (event: APIGatewayEvent) => {
   const allowedMethods = {
     "Access-Control-Allow-Methods": "POST,GET,PUT,DELETE,OPTIONS",
     "Access-Control-Allow-Credentials": "true",
-    "Access-Control-Allow-Headers": "Cookie"
+    "Access-Control-Allow-Headers": "Cookie",
   }
   const allowedOriginHeaders = getAllowOriginHeaders(
     event.headers,

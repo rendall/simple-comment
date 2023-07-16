@@ -6,7 +6,7 @@ import {
   error401UserNotAuthenticated,
   error404CommentNotFound,
   error405MethodNotAllowed,
-  success200OK
+  success200OK,
 } from "../lib/messages"
 import {
   getUserIdPassword,
@@ -14,7 +14,7 @@ import {
   REALM,
   getAllowOriginHeaders,
   getAllowedOrigins,
-  addHeaders
+  addHeaders,
 } from "../lib/utilities"
 dotenv.config()
 
@@ -30,7 +30,7 @@ const getAllowHeaders = (event: APIGatewayEvent) => {
   const allowedMethods = {
     "Access-Control-Allow-Methods": "POST,GET,OPTIONS,DELETE",
     "Access-Control-Allow-Credentials": "true",
-    "Access-Control-Allow-Headers": "Cookie,Authorization"
+    "Access-Control-Allow-Headers": "Cookie,Authorization",
   }
   const allowedOriginHeaders = getAllowOriginHeaders(
     event.headers,
@@ -49,7 +49,7 @@ export const handler = async (event: APIGatewayEvent) => {
     return addHeaders(
       {
         ...error404CommentNotFound,
-        body: `${event.path} is not valid`
+        body: `${event.path} is not valid`,
       },
       headers
     )
@@ -93,8 +93,8 @@ const handleAuth = async (
       ...error401UserNotAuthenticated,
       headers: {
         ...allowHeaders,
-        "WWW-Authenticate": `Basic realm="${REALM}", charset="UTF-8"`
-      }
+        "WWW-Authenticate": `Basic realm="${REALM}", charset="UTF-8"`,
+      },
     }
   else {
     const { user, password } = getUserIdPassword(event.headers)
@@ -107,7 +107,7 @@ const handleAuth = async (
     const COOKIE_HEADER = {
       "Set-Cookie": `simple_comment_token=${token}; path=/; SameSite=${
         isCrossSite ? "None; Secure; " : "Strict; "
-      }HttpOnly; Max-Age=${YEAR_SECONDS}`
+      }HttpOnly; Max-Age=${YEAR_SECONDS}`,
     }
 
     const headers = { ...allowHeaders, ...COOKIE_HEADER }

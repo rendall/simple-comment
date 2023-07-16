@@ -12,13 +12,13 @@ const mockPolicy: Policy = {
   canPublicReadDiscussion: false,
   canPublicReadUser: false,
   canUserDeleteSelf: false,
-  maxCommentLengthChars: 0
+  maxCommentLengthChars: 0,
 }
 
 const mockGuestUser: User = {
   id: "6e3c9dd2-fb1f-4c10-8d19-c6bdc0156b07",
   name: "",
-  email: ""
+  email: "",
 }
 
 describe("isUserAllowedTo", () => {

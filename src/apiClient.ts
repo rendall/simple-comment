@@ -9,7 +9,7 @@ import type {
   Topic,
   Comment,
   UserId,
-  User
+  User,
 } from "./lib/simple-comment"
 
 const trimDash = (slug: string) => slug.replace(/-+$/, "").replace(/^-+/, "")
@@ -35,7 +35,7 @@ const getSimpleCommentURL = () => {
  */
 export const getGuestToken = () =>
   fetch(`${getSimpleCommentURL()}/gauth`, {
-    credentials: "include"
+    credentials: "include",
   }).then(res => resolveBody<AuthToken>(res))
 
 /** Verify claim in local HTTPCookie, if it exists
@@ -45,7 +45,7 @@ export const getGuestToken = () =>
  */
 export const verifyUser = () =>
   fetch(`${getSimpleCommentURL()}/verify`, {
-    credentials: "include"
+    credentials: "include",
   }).then(res => resolveBody<TokenClaim>(res))
 
 /* getSelf
@@ -68,7 +68,7 @@ export const verifySelf = () =>
  */
 export const getAllUsers = () =>
   fetch(`${getSimpleCommentURL()}/user`, {
-    credentials: "include"
+    credentials: "include",
   }).then(res => resolveBody<AdminSafeUser[] | PublicSafeUser[]>(res))
 
 /** Fetch user info
@@ -79,7 +79,7 @@ export const getAllUsers = () =>
  */
 export const getOneUser = (userId: UserId) =>
   fetch(`${getSimpleCommentURL()}/user/${userId}`, {
-    credentials: "include"
+    credentials: "include",
   }).then(res => resolveBody<AdminSafeUser | PublicSafeUser>(res))
 
 /** Create a user
@@ -92,7 +92,7 @@ export const createUser = (newUserInfo: NewUser) =>
   fetch(`${getSimpleCommentURL()}/user/`, {
     body: objToQuery(newUserInfo),
     method: "POST",
-    credentials: "include"
+    credentials: "include",
   }).then(res => resolveBody<AdminSafeUser>(res))
 
 /** Update a user
@@ -105,7 +105,7 @@ export const updateUser = (userInfo: User) =>
   fetch(`${getSimpleCommentURL()}/user/${userInfo.id}`, {
     body: objToQuery(userInfo),
     method: "PUT",
-    credentials: "include"
+    credentials: "include",
   }).then(res => resolveBody<AdminSafeUser>(res))
 
 /** Create a guest user
@@ -128,7 +128,7 @@ export const createGuestUser = (userInfo: {
 export const deleteAuth = () =>
   fetch(`${getSimpleCommentURL()}/auth`, {
     method: "DELETE",
-    credentials: "include"
+    credentials: "include",
   }).then(res => resolveBody(res))
 
 /** Retrieve user authentication
@@ -161,8 +161,8 @@ export const postAuth = (user: string, password: string) => {
     credentials: credentials,
     method: "POST",
     headers: {
-      Authorization: `Basic ${basicCred}`
-    }
+      Authorization: `Basic ${basicCred}`,
+    },
   }
 
   return fetch(`${getSimpleCommentURL()}/auth`, authReqInfo).then(res =>
@@ -186,7 +186,7 @@ export const postComment = (
   fetch(`${getSimpleCommentURL()}/comment/${targetId}`, {
     body: text,
     method: "POST",
-    credentials: "include"
+    credentials: "include",
   }).then(res => resolveBody<Comment>(res))
 
 /** Delete a comment
@@ -198,7 +198,7 @@ export const postComment = (
 export const deleteComment = commentId =>
   fetch(`${getSimpleCommentURL()}/comment/${commentId}`, {
     method: "DELETE",
-    credentials: "include"
+    credentials: "include",
   }).then(res => resolveBody<string>(res))
 
 // TOPIC & DISCUSSION
@@ -212,7 +212,7 @@ export const deleteComment = commentId =>
  */
 export const getOneDiscussion = topicId =>
   fetch(`${getSimpleCommentURL()}/topic/${topicId}`, {
-    credentials: "include"
+    credentials: "include",
   }).then(res => resolveBody<Discussion>(res))
 
 /** Fetch all topics
@@ -222,7 +222,7 @@ export const getOneDiscussion = topicId =>
  */
 export const getAllTopics = () =>
   fetch(`${getSimpleCommentURL()}/topic`, {
-    credentials: "include"
+    credentials: "include",
   }).then(res => resolveBody<Topic[]>(res))
 
 /** Generate a Topic id
@@ -246,7 +246,7 @@ export const createNewTopic = (id, title, isLocked = false) => {
   const authReqInfo = {
     method: "POST",
     body,
-    credentials
+    credentials,
   }
 
   return fetch(`${getSimpleCommentURL()}/topic`, authReqInfo).then(res =>

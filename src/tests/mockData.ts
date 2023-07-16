@@ -6,7 +6,7 @@ import type {
   Email,
   Topic,
   TopicId,
-  User
+  User,
 } from "../../src/lib/simple-comment"
 
 export const alphaUserInput =
@@ -49,7 +49,7 @@ const mockComment = (parentId: TopicId | CommentId, user: User): Comment => ({
   parentId,
   userId: user.id,
   text: randomString(alphaUserInput, randomNumber(50, 500)),
-  dateCreated: new Date()
+  dateCreated: new Date(),
 })
 
 export const mockCommentTree = (
@@ -61,7 +61,7 @@ export const mockCommentTree = (
     ? chain
     : mockCommentTree(replies - 1, users, [
         ...chain,
-        mockComment(chooseRandomElement(chain).id, chooseRandomElement(users))
+        mockComment(chooseRandomElement(chain).id, chooseRandomElement(users)),
       ])
 export const chooseRandomElement = <T>(arr: T[]) =>
   arr[Math.floor(Math.random() * arr.length)]
@@ -86,7 +86,7 @@ export const mockTopic = (prepend = ""): Topic => ({
   id: getTopicId(prepend),
   isLocked: false,
   title: randomString(alphaUserInput, randomNumber(25, 100)),
-  dateCreated: randomDate()
+  dateCreated: randomDate(),
 })
 
 let userCount = 0
@@ -97,5 +97,5 @@ export const mockUser = (prepend = ""): User => ({
   name: randomString(alphaUserInput),
   isVerified: Math.random() > 0.5,
   isAdmin: Math.random() > 0.5,
-  hash: randomString(alphaAscii, 32)
+  hash: randomString(alphaAscii, 32),
 })

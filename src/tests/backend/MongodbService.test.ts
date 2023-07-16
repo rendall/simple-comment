@@ -12,7 +12,7 @@ import type {
   Success,
   Topic,
   UpdateUser,
-  User
+  User,
 } from "../../../src/lib/simple-comment"
 import { MongodbService } from "../../../src/lib/MongodbService"
 import { Db, MongoClient } from "mongodb"
@@ -28,7 +28,7 @@ import {
   error413CommentTooLong,
   success202CommentDeleted,
   success202TopicDeleted,
-  success202UserDeleted
+  success202UserDeleted,
 } from "../../../src/lib/messages"
 import { getAuthToken, hashPassword, uuidv4 } from "../../../src/lib/crypt"
 import policy from "../../policy.json"
@@ -36,7 +36,7 @@ import {
   isComment,
   isDeletedComment,
   isDiscussion,
-  toAdminSafeUser
+  toAdminSafeUser,
 } from "../../../src/lib/utilities"
 import * as fs from "fs"
 import {
@@ -50,7 +50,7 @@ import {
   mockUser,
   mockUserId,
   mockUsersArray,
-  randomString
+  randomString,
 } from "../mockData"
 
 declare const global: { __MONGO_URI__: string; __MONGO_DB_NAME__: string }
@@ -63,12 +63,12 @@ const veryLongString = fs.readFileSync(longFile, "utf8")
 const adminUnsafeUserProperties: (keyof User | "password")[] = [
   "hash",
   "_id",
-  "password"
+  "password",
 ]
 const publicUnsafeUserProperties: (keyof User | "password")[] = [
   ...adminUnsafeUserProperties,
   "email",
-  "isVerified"
+  "isVerified",
 ]
 
 // Verification functions
@@ -91,13 +91,13 @@ const testNewUser: CreateUserPayload = {
   ...mockUser("new-"),
   isAdmin: false,
   password: mockPassword(),
-  email: mockEmail()
+  email: mockEmail(),
 }
 
 // This is a topic + comments that will be deleted
 const testDeleteTopic: Topic = mockTopic("delete-")
 const testDeleteTopicComments = mockCommentTree(20, testUsers, [
-  testDeleteTopic
+  testDeleteTopic,
 ])
 
 const testTopics: Topic[] = mockTopicsArray()
@@ -108,7 +108,7 @@ const authUserTest = {
   ...mockUser("auth-"),
   isAdmin: true,
   password: mockPassword(),
-  email: mockEmail()
+  email: mockEmail(),
 }
 
 // Testing randomly from testGroupUsers causes test fails if the user has been
@@ -137,7 +137,7 @@ const getAuthUser = (p: (u: User) => boolean = (_u: User) => true) => {
 const newCommentTest: Pick<Comment, "text" | "userId" | "parentId"> = {
   text: randomString(alphaUserInput, policy.maxCommentLengthChars - 1),
   parentId: chooseRandomElement(testComments).id,
-  userId: getAuthUser().id
+  userId: getAuthUser().id,
 }
 
 describe("Full API service test", () => {
@@ -258,7 +258,7 @@ describe("Full API service test", () => {
       id,
       name: randomString(alphaUserInput),
       password: mockPassword(),
-      email: mockEmail()
+      email: mockEmail(),
     }
     return service
       .userPOST(guestUser, id)
@@ -273,7 +273,7 @@ describe("Full API service test", () => {
         id,
         name,
         email,
-        password: mockPassword()
+        password: mockPassword(),
       }
       expect.assertions(1)
       const response = await service.userPOST(newUser)
@@ -284,13 +284,13 @@ describe("Full API service test", () => {
         ...mockUser(),
         password: mockPassword(),
         email: mockEmail(),
-        isAdmin: true
+        isAdmin: true,
       }
       expect.assertions(1)
       const e = await service.userPOST(newUser)
       expect(e).toEqual({
         statusCode: 403,
-        body: "Forbidden to modify isVerified"
+        body: "Forbidden to modify isVerified",
       })
     })
     test("POST to /user with admin-only properties without admin credentials should error 403", async () => {
@@ -298,14 +298,14 @@ describe("Full API service test", () => {
         ...mockUser(),
         password: mockPassword(),
         email: mockEmail(),
-        isAdmin: true
+        isAdmin: true,
       }
       const ordinaryUser = getAuthUser(u => !u.isAdmin)
       expect.assertions(1)
       const e = await service.userPOST(newUser, ordinaryUser.id)
       expect(e).toEqual({
         statusCode: 403,
-        body: "Forbidden to modify isVerified"
+        body: "Forbidden to modify isVerified",
       })
     })
   } else {
@@ -316,7 +316,7 @@ describe("Full API service test", () => {
         password: mockPassword(),
         email: mockEmail(),
         isAdmin: false,
-        isVerified: false
+        isVerified: false,
       }
       expect.assertions(1)
       const e = await service.userPOST(newUser)
@@ -328,7 +328,7 @@ describe("Full API service test", () => {
         password: mockPassword(),
         email: mockEmail(),
         isAdmin: false,
-        isVerified: false
+        isVerified: false,
       }
       const ordinaryUser = getAuthUser(u => !u.isAdmin)
       expect.assertions(1)
@@ -344,7 +344,7 @@ describe("Full API service test", () => {
       password: mockPassword(),
       email: mockEmail(),
       isAdmin: false,
-      isVerified: false
+      isVerified: false,
     }
 
     const adminUser = getAuthUser(u => u.isAdmin!)
@@ -374,7 +374,7 @@ describe("Full API service test", () => {
     return service.userGET(randomString(), adminUserTest.id).then(e =>
       expect(e).toEqual({
         ...error404UserUnknown,
-        body: "Authenticating user is unknown"
+        body: "Authenticating user is unknown",
       })
     )
   })
@@ -491,7 +491,7 @@ describe("Full API service test", () => {
     const targetUser = getTargetUser()
     const updatedUser = {
       id: targetUser.id,
-      name: randomString(alphaUserInput, 25)
+      name: randomString(alphaUserInput, 25),
     }
     return service
       .userPUT(updatedUser.id, updatedUser, targetUser.id)
@@ -510,7 +510,7 @@ describe("Full API service test", () => {
     const updatedUser = {
       id: targetUser.id,
       name: randomString(alphaUserInput, 25),
-      password: veryLongString
+      password: veryLongString,
     }
     return service
       .userPUT(updatedUser.id, updatedUser, targetUser.id)
@@ -532,7 +532,7 @@ describe("Full API service test", () => {
       email: " ",
       password: " ",
       isAdmin: true,
-      isVerified: true
+      isVerified: true,
     }
     expect.assertions(1)
     const e = await service.userPUT(
@@ -549,7 +549,7 @@ describe("Full API service test", () => {
       ...targetUser,
       name: randomString(alphaUserInput, 25),
       isAdmin: true,
-      isVerified: true
+      isVerified: true,
     }
     return service
       .userPUT(updatedUser.id, updatedUser, adminAuthUser.id)
@@ -566,12 +566,12 @@ describe("Full API service test", () => {
       id,
       name: randomString(alphaUserInput),
       password: mockPassword(),
-      email: mockEmail()
+      email: mockEmail(),
     }
     const adminAuthUser = getAuthUser(u => u.isAdmin!)
     const updatedGuestUser: User = {
       ...guestUser,
-      name: randomString(alphaUserInput, 25)
+      name: randomString(alphaUserInput, 25),
     }
 
     await service.userPOST(guestUser, id)
@@ -593,13 +593,13 @@ describe("Full API service test", () => {
       id,
       name: randomString(alphaUserInput),
       password: mockPassword(),
-      email: mockEmail()
+      email: mockEmail(),
     }
     const adminAuthUser = getAuthUser(u => u.isAdmin!)
     const updatedGuestUser: User = {
       ...guestUser,
       name: randomString(alphaUserInput, 25),
-      isAdmin: true
+      isAdmin: true,
     }
     expect.assertions(1)
 
@@ -823,7 +823,7 @@ describe("Full API service test", () => {
     ) as Comment
     const updatedComment = {
       id: targetComment.id,
-      text: randomString(alphaUserInput, 500)
+      text: randomString(alphaUserInput, 500),
     }
     const userId = targetComment.userId
     return service
@@ -837,9 +837,9 @@ describe("Full API service test", () => {
               parentId: targetComment.parentId,
               text: updatedComment.text,
               user: undefined,
-              userId
+              userId,
             }),
-            statusCode: 204
+            statusCode: 204,
           })
         )
       })
@@ -956,7 +956,7 @@ describe("Full API service test", () => {
     const putTopic = {
       ...topic,
       dateCreated: new Date(),
-      title: randomString()
+      title: randomString(),
     }
     const adminUserTest = getAuthUser(u => u.isAdmin!)
     return service
@@ -974,7 +974,7 @@ describe("Full API service test", () => {
     const putTopic = {
       ...topic,
       isLocked: !topic.isLocked,
-      title: randomString(alphaUserInput, 500)
+      title: randomString(alphaUserInput, 500),
     }
     expect.assertions(1)
     const e = await service.topicPUT(putTopic.id, putTopic)
@@ -985,7 +985,7 @@ describe("Full API service test", () => {
     const putTopic = {
       ...topic,
       isLocked: !topic.isLocked,
-      title: randomString(alphaUserInput, 500)
+      title: randomString(alphaUserInput, 500),
     }
     expect.assertions(1)
     const e = await service.topicPUT(putTopic.id, putTopic, testNewUser.id)

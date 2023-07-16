@@ -14,7 +14,7 @@ import type {
   TopicId,
   UpdateUser,
   User,
-  UserId
+  UserId,
 } from "../../../src/lib/simple-comment"
 import { Service } from "../../../src/lib/Service"
 
@@ -60,7 +60,7 @@ describe("Ensures API specs match controller service", () => {
         ...methods,
         ...Object.keys(mObj).map(
           method => `${normalizeRoute(route)}${method.toUpperCase()}`
-        )
+        ),
       ],
       []
     )

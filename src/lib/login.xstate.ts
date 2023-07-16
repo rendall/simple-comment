@@ -50,28 +50,28 @@ export const loginMachine = createMachine<
       idle: {
         always: [
           {
-            target: "verifying"
-          }
-        ]
+            target: "verifying",
+          },
+        ],
       },
 
       verifying: {
         on: {
           SUCCESS: "loggedIn",
           ERROR: { target: "error", actions: "assignErrorMessage" },
-          FIRST_VISIT: "loggedOut"
-        }
+          FIRST_VISIT: "loggedOut",
+        },
       },
 
       signingUp: {
         on: {
           SUCCESS: "loggedIn",
-          ERROR: { target: "error", actions: "assignErrorMessage" }
-        }
+          ERROR: { target: "error", actions: "assignErrorMessage" },
+        },
       },
 
       loggedIn: {
-        on: { LOGOUT: "loggingOut" }
+        on: { LOGOUT: "loggingOut" },
       },
 
       loggingOut: {
@@ -80,32 +80,32 @@ export const loginMachine = createMachine<
           CONFIRM: "loggedOut",
           CANCEL: "verifying",
           SIGNUP: "signingUp",
-          ERROR: { target: "error", actions: "assignErrorMessage" }
+          ERROR: { target: "error", actions: "assignErrorMessage" },
         },
         description:
-          'A "guest" account will permanently lose ability to edit its posts when logging out. For guests only, a confirm prompt gives the guest an opportunity to avoid this.'
+          'A "guest" account will permanently lose ability to edit its posts when logging out. For guests only, a confirm prompt gives the guest an opportunity to avoid this.',
       },
 
       loggingIn: {
         on: {
           SUCCESS: "loggedIn",
-          ERROR: { target: "error", actions: "assignErrorMessage" }
-        }
+          ERROR: { target: "error", actions: "assignErrorMessage" },
+        },
       },
 
       loggedOut: {
-        on: { LOGIN: "loggingIn", SIGNUP: "signingUp" }
+        on: { LOGIN: "loggingIn", SIGNUP: "signingUp" },
       },
 
       error: {
         on: {
           LOGIN: "loggingIn",
           SIGNUP: "signingUp",
-          LOGOUT: "loggingOut"
-        }
-      }
+          LOGOUT: "loggingOut",
+        },
+      },
     },
-    predictableActionArguments: true
+    predictableActionArguments: true,
   },
   {
     actions: {
@@ -115,8 +115,8 @@ export const loginMachine = createMachine<
             return event.error
           }
           return undefined
-        }
-      })
-    }
+        },
+      }),
+    },
   }
 )

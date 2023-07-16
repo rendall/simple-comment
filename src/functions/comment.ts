@@ -5,14 +5,14 @@ import { MongodbService } from "../lib/MongodbService"
 import {
   error404CommentNotFound,
   error405MethodNotAllowed,
-  success200OK
+  success200OK,
 } from "./../lib/messages"
 import {
   addHeaders,
   getAllowedOrigins,
   getAllowOriginHeaders,
   getTargetId,
-  getUserId
+  getUserId,
 } from "../lib/utilities"
 dotenv.config()
 
@@ -24,7 +24,7 @@ const service: MongodbService = new MongodbService(
 const getAllowHeaders = (event: APIGatewayEvent) => {
   const allowedMethods = {
     "Access-Control-Allow-Methods": "POST,GET,OPTIONS,PUT,DELETE",
-    "Access-Control-Allow-Credentials": "true"
+    "Access-Control-Allow-Credentials": "true",
   }
   const allowedOriginHeaders = getAllowOriginHeaders(
     event.headers,
@@ -43,7 +43,7 @@ export const handler = async (event: APIGatewayEvent) => {
     return addHeaders(
       {
         ...error404CommentNotFound,
-        body: `${event.path} is not valid`
+        body: `${event.path} is not valid`,
       },
       headers
     )

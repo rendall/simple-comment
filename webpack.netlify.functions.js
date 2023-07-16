@@ -8,7 +8,7 @@ const entry = fs
   .reduce(
     (entry, filename) => ({
       ...entry,
-      [filename.replace(/\.ts$/, "")]: `./src/functions/${filename}`
+      [filename.replace(/\.ts$/, "")]: `./src/functions/${filename}`,
     }),
     {}
   )
@@ -17,7 +17,7 @@ const config = {
   mode,
   entry,
   resolve: {
-    extensions: [".ts", ".js"]
+    extensions: [".ts", ".js"],
   },
   module: {
     rules: [
@@ -25,24 +25,24 @@ const config = {
         test: /\.ts$/,
         loader: "ts-loader",
         exclude: /node_modules/,
-        options: { configFile: "tsconfig.netlify.functions.json" }
-      }
-    ]
+        options: { configFile: "tsconfig.netlify.functions.json" },
+      },
+    ],
   },
   target: "node",
   output: {
     path: path.resolve(__dirname, "functions"),
     filename: "[name].js",
-    libraryTarget: "commonjs"
+    libraryTarget: "commonjs",
   },
   optimization: {
-    nodeEnv: "production"
+    nodeEnv: "production",
   },
   bail: true,
   devtool: false,
   stats: {
-    colors: true
-  }
+    colors: true,
+  },
 }
 
 module.exports = config
