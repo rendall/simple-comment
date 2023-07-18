@@ -3,12 +3,13 @@ const webpack = require("webpack")
 const dotenv = require("dotenv")
 const CopyWebpackPlugin = require("copy-webpack-plugin")
 const sveltePreprocess = require("svelte-preprocess")
-
-const mode = "development"
+const LicensePlugin = require('webpack-license-plugin')
 
 dotenv.config({
   path: path.join(__dirname, ".env"),
 })
+
+const mode = process.env.NODE_ENV ?? "development"
 
 module.exports = {
   stats: {
@@ -63,6 +64,7 @@ module.exports = {
   plugins: [
     new CopyWebpackPlugin({ patterns: [{ from: "src/static", to: "." }] }),
     new webpack.EnvironmentPlugin(["SIMPLE_COMMENT_API_URL"]),
+    new LicensePlugin(),
   ],
   resolve: {
     alias: { svelte: path.resolve("node_modules", "svelte") },
