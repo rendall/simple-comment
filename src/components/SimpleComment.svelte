@@ -6,7 +6,7 @@
   export let title
 </script>
 
-<div class="simple-comment">
+<section class="simple-comment">
   <Login />
   <DiscussionDisplay {discussionId} {title} />
-</div>
+</section>

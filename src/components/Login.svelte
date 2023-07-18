@@ -259,15 +259,28 @@
   })
 </script>
 
-<section>
+<section class="simple-comment-login">
   <p id="status-display" class={isError ? "error" : ""}>{statusMessage}</p>
   {#if self}
-    <div id="self-display">
-      <p id="self-user-name">User Name: {self.id}</p>
-      <p id="self-name">Name: {self.name}</p>
-      <p id="self-email">Email: {self.email}</p>
-      <p id="self-is-admin">Is Admin: {self.isAdmin ? "Yes" : "No"}</p>
-    </div>
+    <section class="card" id="self-display">
+      <div class="avatar">
+        <img
+          src="https://source.unsplash.com/random/70x70"
+          alt="Random thumbnail"
+        />
+      </div>
+      <div class="info">
+        <h2 id="self-user-name">{self.name}</h2>
+        <p id="self-name">@{self.id} {self.isAdmin ? "(admin)" : ""}</p>
+        <p id="self-email">{self.email}</p>
+      </div>
+      {#if nextEvents.includes("LOGOUT")}
+        <button class="primary" id="log-out-button" on:click={onLogoutClick}>Log out</button>
+      {/if}
+    </section>
+  {/if}
+  {#if !self && nextEvents.includes("LOGOUT")}
+    <button id="log-out-button" on:click={onLogoutClick}>Log out</button>
   {/if}
 
   {#if nextEvents.includes("LOGIN")}
@@ -288,7 +301,7 @@
           bind:value={loginPassword}
           required
         /><br />
-        <input type="submit" value="Login" />
+        <button class="primary" type="submit">Log in</button>
       </form>
     </div>
   {/if}
@@ -328,20 +341,10 @@
           bind:value={signupPassword}
           required
         /><br />
-        <input type="submit" value="Signup" />
+        <button class="primary" type="submit">Sign up</button>
       </form>
     </div>
   {/if}
 
-  {#if nextEvents.includes("LOGOUT")}
-    <button id="log-out-button" on:click={onLogoutClick}>Log out</button>
-  {/if}
-
   <p id="user-display">{userDisplay}</p>
 </section>
-
-<style>
-  .error {
-    color: red;
-  }
-</style>
