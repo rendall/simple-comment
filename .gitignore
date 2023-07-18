@@ -8,6 +8,7 @@
 /cypress/screenshots
 /cypress/support
 /cypress/videos/
+/dist
 /functions
 /lib
 /node_modules
