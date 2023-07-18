@@ -19,6 +19,6 @@ yarn-error.log
 !/docs/**/*.js
 !webpack.config.js
 !webpack.netlify.functions.js
-
+!dist/css/simple-comment-style.css
 # Local Netlify folder
 .netlify

@@ -1,10 +1,11 @@
+const CopyWebpackPlugin = require("copy-webpack-plugin")
+const MiniCssExtractPlugin = require("mini-css-extract-plugin")
+const TerserPlugin = require("terser-webpack-plugin")
 const path = require("path")
 const sveltePreprocess = require("svelte-preprocess")
 const webpack = require("webpack")
-const CopyWebpackPlugin = require("copy-webpack-plugin")
-
+const { optimizeImports } = require("carbon-preprocess-svelte")
 // const LicensePlugin = require('webpack-license-plugin')
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 const dotenv = require("dotenv")
 
@@ -27,7 +28,7 @@ module.exports = {
     optimizationBailout: true,
   },
   devServer: {
-    client: { overlay: false, },
+    client: { overlay: false },
     compress: true,
     port: 5000,
     static: path.join(__dirname, "dist"),
@@ -37,8 +38,10 @@ module.exports = {
     "simple-comment": path.resolve(__dirname, "src/simple-comment.ts"),
     "svelte": path.resolve(__dirname, "src/svelte.ts"),
     "svelte-login": path.resolve(__dirname, "src/svelte-login.ts"),
-    "simple-comment-login": path.resolve( __dirname, "src/simple-comment-login.ts"),
-    "simple-comment-style": path.resolve(__dirname, "src/scss/simple-comment-style.scss"),
+    "simple-comment-login": path.resolve(
+      __dirname,
+      "src/simple-comment-login.ts"
+    ),
   },
   module: {
     rules: [
@@ -47,33 +50,29 @@ module.exports = {
         use: {
           loader: "svelte-loader",
           options: {
-            compilerOptions: { dev: !isProduction, },
-            emitCss: false,
+            compilerOptions: { dev: !isProduction },
+            emitCss: true,
             hotReload: false,
-            preprocess: sveltePreprocess(),
+            preprocess: [sveltePreprocess(), optimizeImports()],
           },
         },
       },
       {
         test: /\.scss$/,
-        use: [
-          MiniCssExtractPlugin.loader,
-          'css-loader',
-          'sass-loader'
-        ]
-      }, 
+        use: [MiniCssExtractPlugin.loader, "css-loader", "sass-loader"],
+      },
       {
         test: /\.css$/,
         use: [
           MiniCssExtractPlugin.loader,
           {
-            loader: 'css-loader',
+            loader: "css-loader",
             options: {
-              url: false, // necessary if you use url('/path/to/some/asset.png|jpg|gif')
-            }
-          }
-        ]
-      }, 
+              url: false,
+            },
+          },
+        ],
+      },
       {
         test: /\.ts$/,
         loader: "ts-loader",
@@ -87,10 +86,14 @@ module.exports = {
     ],
   },
   output: { filename: "js/[name].js", path: path.resolve(__dirname, "dist") },
+  optimization: {
+    minimize: true,
+    minimizer: [new TerserPlugin()],
+  },
   plugins: [
     new CopyWebpackPlugin({ patterns: [{ from: "src/static", to: "." }] }),
     // new LicensePlugin(),
-    new MiniCssExtractPlugin({ filename: 'css/[name].css' }),
+    new MiniCssExtractPlugin({ filename: "css/[name].css" }),
     new webpack.EnvironmentPlugin(["SIMPLE_COMMENT_API_URL"]),
   ],
   resolve: {

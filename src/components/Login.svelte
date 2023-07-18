@@ -275,7 +275,9 @@
         <p id="self-email">{self.email}</p>
       </div>
       {#if nextEvents.includes("LOGOUT")}
-        <button class="primary" id="log-out-button" on:click={onLogoutClick}>Log out</button>
+        <button class="primary" id="log-out-button" on:click={onLogoutClick}
+          >Log out</button
+        >
       {/if}
     </section>
   {/if}

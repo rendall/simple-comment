@@ -1,208 +1,436 @@
-  .simple-comment {
-    -moz-osx-font-smoothing: grayscale;
-    -webkit-font-smoothing: antialiased;
-    background-color: #f8fcff;
-    color: #33475c;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-    font-size: 1.125rem;
-    line-height: 1.61111em;
-    margin-bottom: 1em;
-    margin-top: 1em;
-    margin: 0 auto;
-    padding: 0 1rem;
-    max-width: 38rem;
-    margin: 0 auto;
+// Use the "white" (White) Carbon theme
+@import "carbon-components/scss/globals/scss/vendor/@carbon/themes/scss";
 
+$carbon--theme: $carbon--theme--white;
+@include carbon--theme();
 
-    section {
-      margin-bottom: 3em;
-    }
+$feature-flags: (
+  ui-shell: true,
+  grid-columns-16: true
+);
 
-    section.comment-display {
-      padding-right: 1rem;
-    }
+$css--font-face: false;
+$css--helpers: true;
+$css--body: false;
+$css--use-layer: true;
+$css--reset: false;
+$css--default-type: true;
+$css--plex: false;
 
-    section.comment-display textarea,
-    section.comment-display input {
-      width: calc(100% - 2rem);
-    }
+@import "carbon-components/scss/globals/scss/component-tokens";
+@import "carbon-components/src/components/tag/tag";
+@import "carbon-components/src/components/notification/inline-notification";
+@import "carbon-components/src/components/notification/toast-notification";
+// node_modules/carbon-components-svelte/css/_popover.scss
+// @import "./popover";
+@import "carbon-components-svelte/css/popover";
 
-    h1,
-    h2 {
-      color: #3287e6;
-    }
+@import "carbon-components/scss/globals/scss/_css--reset";
+@import "carbon-components/scss/globals/scss/_css--font-face";
+@import "carbon-components/scss/globals/scss/_css--helpers";
+@import "carbon-components/scss/globals/scss/_css--body";
+@import "carbon-components/scss/globals/grid/grid";
 
-    h1 {
-      font-family: "Comfortaa", sans-serif;
-      font-size: 3.4rem;
-      font-weight: 500;
-      line-height: 4rem;
-      margin-left: 1rem;
-    }
+// Import all component styles
+//
+// Copyright IBM Corp. 2016, 2018
+//
+// This source code is licensed under the Apache-2.0 license found in the
+// LICENSE file in the root directory of this source tree.
+//
 
-    input {
-      height: 2rem;
-      width: 100%;
-      font-size: 1.35rem;
-      padding: 0.5rem;
-      border-radius: 0.5rem;
-      border: 1px solid;
-      font-family: monospace;
-    }
+//-------------------------
+// 🌍 Global
+//-------------------------
 
-    textarea {
-      display: block;
-      height: 7rem;
-      width: 100%;
-      border-radius: 0.5rem;
-      border: 1px solid;
-      font-size: 1.35rem;
-      padding: 0.5rem;
-      font-family: monospace;
-    }
+/// If true, includes font face mixins in `_css--font-face.scss` depending on the `css--plex` feature flag
+/// @access public
+/// @type Bool
+/// @group feature-flags
+$css--font-face: true !default;
 
-    button:hover {
-      font-weight: bold;
-    }
+/// If true, includes the `css-helpers()` mixin
+/// @access public
+/// @type Bool
+/// @group feature-flags
+$css--helpers: true !default;
 
-    button {
-      appearance: none;
-      background-color: transparent;
-      background: transparent;
-      border-radius: 0.65rem;
-      border: 1px solid;
-      cursor: pointer;
-      font-size: inherit;
-      margin: 0.5rem 1rem 0.5rem 0;
-      padding: 0.5rem 1rem;
-      text-align: center;
-      transition: background-color 0.25s ease, color 0.25s ease;
-      width: 7rem;
-    }
+/// If true, includes the `css-body()` mixin
+/// @access public
+/// @type Bool
+/// @group feature-flags
+$css--body: true !default;
 
-    p {
-      margin-top: 0;
-    }
+/// If true, include reset CSS
+/// @access public
+/// @type Bool
+/// @group feature-flags
+$css--reset: true !default;
 
-    p>span {
-      color: #3287e6;
-      font-size: 1.2rem;
-      font-weight: bold;
-    }
+/// If true, include default type
+/// @access public
+/// @type Bool
+/// @group feature-flags
+$css--default-type: true !default;
 
-    a:hover {
-      color: #007b8c;
-      text-decoration: underline;
-    }
+/// Used with `css--font-face` feature flag, if true, uses Plex font families instead of Helvetica
+/// @access public
+/// @type Bool
+/// @group feature-flags
+$css--plex: true !default;
 
-    a {
-      color: #3287e6;
-      font-weight: 600;
-      text-decoration: none;
-    }
+/// This feature flag was used during development of the v10 experimental grid.
+/// TODO: remove in next major release. Synced in `feature-flags` as an adapter in the interim
+/// @deprecated (For v10) v10 always uses `@carbon/grid`
+/// @access public
+/// @type Bool
+/// @group feature-flags
+$css--use-experimental-grid: false !default;
 
-    a[title] {
-      color: unset;
-    }
+/// This feature flag was used during development of the v10 experimental grid.
+/// TODO: remove in next major release. Synced in `feature-flags` as an adapter in the interim.
+/// @access public
+/// @type Bool
+/// @group feature-flags
+/// @deprecated (For v10) v10 always uses `@carbon/grid`
+$css--use-experimental-grid-fallback: false !default;
 
-    textarea#reply-field {
-      min-height: 7rem;
-    }
+/// If `enable-v11-release` is set to `true`, it automatically enables the custom properties flag.
+/// If so, we need a way to disable custom properties, but use the new tokens.
+/// @access public
+/// @type Bool
+/// @group feature-flags
+$css--disable-css-custom-properties: false !default;
+// carbon-components/scss/globals/scss/
+@import 'carbon-components/scss/globals/scss/feature-flags';
+@import 'carbon-components/scss/globals/scss/vars';
+@import 'carbon-components/scss/globals/scss/colors';
+@import 'carbon-components/scss/globals/scss/theme';
+@import 'carbon-components/scss/globals/scss/mixins';
+@import 'carbon-components/scss/globals/scss/layout';
+@import 'carbon-components/scss/globals/scss/layer';
+@import 'carbon-components/scss/globals/scss/spacing';
+@import 'carbon-components/scss/globals/scss/typography';
+@import 'carbon-components/scss/globals/scss/./vendor/@carbon/elements/scss/import-once/import-once';
+@import 'carbon-components/scss/globals/scss/css--reset';
+@import 'carbon-components/scss/globals/scss/css--font-face';
+@import 'carbon-components/scss/globals/scss/css--helpers';
+@import 'carbon-components/scss/globals/scss/css--body';
+@import 'carbon-components/scss/globals/scss/../grid/grid';
 
-    header {
-      display: flex;
-      margin: 0 auto;
-      max-width: 59rem;
-      min-height: 10rem;
-      align-items: center;
-    }
+//-------------------------
+// ⚠️ Manage deprecations
+//-------------------------
 
-    li.comment-item:first-child {
-      margin-top: 3rem;
-    }
+/// We flag this variable as true if someone uses the globals/scss/styles.scss
+/// entry-point. This allows us to collect all the messages and display them at
+/// the end of the file instead of bringing it up per-component.
+///
+/// If a consumer instead gets the components by importing the partial directly,
+/// this variable _will not_ be set to true, so the deprecation message will be
+/// displayed after the @import.
+/// @access private
+/// @type Bool
+/// @group global-deprecate
+$deprecations--entry: true;
 
-    li.comment-item {
-      border-left: 1px solid gray;
-      margin-bottom: 3rem;
-      padding-left: 1rem;
-      position: relative;
-      list-style: none;
-    }
+/// Collect all deprecation reasons into this list throughout the import cycle.
+/// @access private
+/// @type Map
+/// @group global-deprecate
+$deprecations--reasons: ();
 
-    p.user-display {
-      font-size: 1.1rem;
-      font-weight: bold;
-      left: -1rem;
-      padding: 0.25rem;
-      position: absolute;
-      top: -2rem;
-    }
+/// This message will be prepended to any deprecation notice.
+/// @access private
+/// @type String
+/// @group global-deprecate
+$deprecations--message: 'Deprecated code was found, this code will be removed before the next release of Carbon.';
 
-    ul.comment-replies {
-      padding-left: 1rem;
-    }
+//-------------------------
+// 🍕 Components
+//-------------------------
+// node_modules/carbon-components/scss/components/accordion/_accordion.scss
+@import 'carbon-components/scss/components/accordion/accordion';
+@import 'carbon-components/scss/components/breadcrumb/breadcrumb';
+@import 'carbon-components/scss/components/button/button';
+@import 'carbon-components/scss/components/checkbox/checkbox';
+@import 'carbon-components/scss/components/code-snippet/code-snippet';
+@import 'carbon-components/scss/components/combo-box/combo-box';
+@import 'carbon-components/scss/components/content-switcher/content-switcher';
+@import 'carbon-components/scss/components/copy-button/copy-button';
+@import 'carbon-components/scss/components/data-table/data-table';
+@import 'carbon-components/scss/components/date-picker/date-picker';
+@import 'carbon-components/scss/components/dropdown/dropdown';
+@import 'carbon-components/scss/components/file-uploader/file-uploader';
+@import 'carbon-components/scss/components/form/form';
+@import 'carbon-components/scss/components/inline-loading/inline-loading';
+@import 'carbon-components/scss/components/link/link';
+@import 'carbon-components/scss/components/list-box/list-box';
+@import 'carbon-components/scss/components/list/list';
+@import 'carbon-components/scss/components/loading/loading';
+@import 'carbon-components/scss/components/menu/menu';
+@import 'carbon-components/scss/components/modal/modal';
+@import 'carbon-components/scss/components/multi-select/multi-select';
+@import 'carbon-components/scss/components/notification/inline-notification';
+@import 'carbon-components/scss/components/notification/toast-notification';
+@import 'carbon-components/scss/components/number-input/number-input';
+@import 'carbon-components/scss/components/overflow-menu/overflow-menu';
+@import 'carbon-components/scss/components/pagination-nav/pagination-nav';
+@import 'carbon-components/scss/components/pagination/pagination';
+@import 'carbon-components/scss/components/progress-bar/progress-bar';
+@import 'carbon-components/scss/components/progress-indicator/progress-indicator';
+@import 'carbon-components/scss/components/radio-button/radio-button';
+@import 'carbon-components/scss/components/search/search';
+@import 'carbon-components/scss/components/select/select';
+@import 'carbon-components/scss/components/skeleton/skeleton';
+@import 'carbon-components/scss/components/slider/slider';
+@import 'carbon-components/scss/components/structured-list/structured-list';
+@import 'carbon-components/scss/components/tabs/tabs';
+@import 'carbon-components/scss/components/tag/tag';
+@import 'carbon-components/scss/components/text-area/text-area';
+@import 'carbon-components/scss/components/text-input/text-input';
+@import 'carbon-components/scss/components/tile/tile';
+@import 'carbon-components/scss/components/time-picker/time-picker';
+@import 'carbon-components/scss/components/toggle/toggle';
+@import 'carbon-components/scss/components/toolbar/toolbar';
+@import 'carbon-components/scss/components/tooltip/tooltip';
 
-    p.comment-text {
-      margin: 0;
-    }
+//-------------------------------------
+// 🔬 Experimental
+//-------------------------------------
+@import 'carbon-components/scss/components/pagination/unstable_pagination';
+@import 'carbon-components/scss/components/ui-shell/ui-shell';
+@import 'carbon-components/scss/components/treeview/treeview';
 
-    .simple-comment-logo {
-      max-width: 9.1rem;
-      min-width: 9.1rem;
-      fill: #3287e6;
-    }
+//-------------------------------------
+// 🙈 Hidden (Not exposed on website)
+//-------------------------------------
 
-    button.primary {
-      background-color: #3287e6;
-      border-color: #3287e6;
-      color: white;
-      height: 2.5rem;
-      padding-bottom: 0.6rem;
-
-      &:hover {
-        background-color: white;
-        color: #3287e6;
-      }
-
-    }
-
-    .simple-comment-login {
-      .card {
-        display: flex;
-        border: 1px solid #ddd;
-        padding: 1rem;
-        border-radius: 0.5rem;
-
-        > :last-child {
-          align-items: end;
-          align-self: end;
-        }
-      }
-
-      .avatar {
-        flex: 0 0 70px;
-        margin: .5rem;
-        margin-right: 1.3rem;
-
-        img {
-          width: 70px;
-          height: 70px;
-          border-radius: 50%;
-        }
-      }
-
-      .info {
-        flex: 1;
-
-        h2 {
-          margin: 0;
-          font-size: 1.2em;
-        }
-
-        p {
-          margin: 0.5em 0;
-        }
-      }
-    }
-
+// Cycle through all the deprecation reasons, if any exist, that have been
+// accumulated through the @import process.
+@if (length($deprecations--reasons) > 0) {
+  $deprecations--message: '';
+  @each $reason in $deprecations--reasons {
+    $deprecations--message: '#{$deprecations--message} REASON: #{$reason}';
   }
+
+  @warn $deprecations--message;
+}
+
+.simple-comment {
+
+
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  background-color: #f8fcff;
+  color: #33475c;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  font-size: 1.125rem;
+  line-height: 1.61111em;
+  margin-bottom: 1em;
+  margin-top: 1em;
+  margin: 0 auto;
+  padding: 0 1rem;
+  max-width: 38rem;
+  margin: 0 auto;
+
+
+  // @import 'carbon-components/scss/globals/scss/_css--helpers.scss';
+
+  // Optionally include the grid
+  // @import 'carbon-components/scss/globals/grid/_grid.scss';
+
+  // Optionally include components that you need
+  // @import 'carbon-components/scss/components/button/button';
+  // @import 'carbon-components/scss/components/file-uploader/file-uploader';
+
+  section {
+    margin-bottom: 3em;
+  }
+
+  section.comment-display {
+    padding-right: 1rem;
+  }
+
+  section.comment-display textarea,
+  section.comment-display input {
+    width: calc(100% - 2rem);
+  }
+
+  h1,
+  h2 {
+    color: #3287e6;
+  }
+
+  h1 {
+    font-family: "Comfortaa", sans-serif;
+    font-size: 3.4rem;
+    font-weight: 500;
+    line-height: 4rem;
+    margin-left: 1rem;
+  }
+
+  input {
+    height: 2rem;
+    width: 100%;
+    font-size: 1.35rem;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    border: 1px solid;
+    font-family: monospace;
+  }
+
+  textarea {
+    display: block;
+    height: 7rem;
+    width: 100%;
+    border-radius: 0.5rem;
+    border: 1px solid;
+    font-size: 1.35rem;
+    padding: 0.5rem;
+    font-family: monospace;
+  }
+
+  button:hover {
+    font-weight: bold;
+  }
+
+  button {
+    appearance: none;
+    background-color: transparent;
+    background: transparent;
+    border-radius: 0.65rem;
+    border: 1px solid;
+    cursor: pointer;
+    font-size: inherit;
+    margin: 0.5rem 1rem 0.5rem 0;
+    padding: 0.5rem 1rem;
+    text-align: center;
+    transition: background-color 0.25s ease, color 0.25s ease;
+    width: 7rem;
+  }
+
+  p {
+    margin-top: 0;
+  }
+
+  p>span {
+    color: #3287e6;
+    font-size: 1.2rem;
+    font-weight: bold;
+  }
+
+  a:hover {
+    color: #007b8c;
+    text-decoration: underline;
+  }
+
+  a {
+    color: #3287e6;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  a[title] {
+    color: unset;
+  }
+
+  textarea#reply-field {
+    min-height: 7rem;
+  }
+
+  header {
+    display: flex;
+    margin: 0 auto;
+    max-width: 59rem;
+    min-height: 10rem;
+    align-items: center;
+  }
+
+  li.comment-item:first-child {
+    margin-top: 3rem;
+  }
+
+  li.comment-item {
+    border-left: 1px solid gray;
+    margin-bottom: 3rem;
+    padding-left: 1rem;
+    position: relative;
+    list-style: none;
+  }
+
+  p.user-display {
+    font-size: 1.1rem;
+    font-weight: bold;
+    left: -1rem;
+    padding: 0.25rem;
+    position: absolute;
+    top: -2rem;
+  }
+
+  ul.comment-replies {
+    padding-left: 1rem;
+  }
+
+  p.comment-text {
+    margin: 0;
+  }
+
+  .simple-comment-logo {
+    max-width: 9.1rem;
+    min-width: 9.1rem;
+    fill: #3287e6;
+  }
+
+  button.primary {
+    background-color: #3287e6;
+    border-color: #3287e6;
+    color: white;
+    height: 2.5rem;
+    padding-bottom: 0.6rem;
+
+    &:hover {
+      background-color: white;
+      color: #3287e6;
+    }
+  }
+
+  .simple-comment-login {
+    .card {
+      display: flex;
+      border: 1px solid #ddd;
+      padding: 1rem;
+      border-radius: 0.5rem;
+
+      > :last-child {
+        align-items: end;
+        align-self: end;
+      }
+    }
+
+    .avatar {
+      flex: 0 0 70px;
+      margin: 0.5rem;
+      margin-right: 1.3rem;
+
+      img {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+      }
+    }
+
+    .info {
+      flex: 1;
+
+      h2 {
+        margin: 0;
+        font-size: 1.2em;
+      }
+
+      p {
+        margin: 0.5em 0;
+      }
+    }
+  }
+}
