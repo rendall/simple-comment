@@ -53,16 +53,19 @@ const mockComment = (parentId: TopicId | CommentId, user: User): Comment => ({
 })
 
 export const mockCommentTree = (
-  replies: number,
-  users: User[],
-  chain: (Comment | Discussion)[]
-): (Comment | Discussion)[] =>
-  replies <= 0
-    ? chain
-    : mockCommentTree(replies - 1, users, [
-        ...chain,
-        mockComment(chooseRandomElement(chain).id, chooseRandomElement(users)),
-      ])
+  replies: number = 500,
+  users: User[] = mockUsersArray(100),
+  chain: (Comment | Discussion)[] = mockTopicsArray()
+): (Comment | Discussion)[] => {
+  for (let i = 0; i < replies; i++) {
+    chain = [
+      ...chain,
+      mockComment(chooseRandomElement(chain).id, chooseRandomElement(users)),
+    ]
+  }
+  return chain
+}
+
 export const chooseRandomElement = <T>(arr: T[]) =>
   arr[Math.floor(Math.random() * arr.length)]
 export const mockUsersArray = (
