@@ -19,7 +19,7 @@
   import { discussionMachine } from "../lib/discussion.xstate"
   import { interpret } from "xstate"
   import { onMount } from "svelte"
-  import { threadComments } from "../frontend-utilities";
+  import { threadComments } from "../frontend-utilities"
 
   type DiscussionService = Interpreter<
     DiscussionMachineContext,
@@ -59,7 +59,13 @@
       .then(response => {
         if (response.ok) {
           const topic = response.body as Discussion
-          discussion = threadComments(topic, topic.replies, (a, b) => new Date(b.dateCreated).valueOf() - new Date(a.dateCreated).valueOf())
+          discussion = threadComments(
+            topic,
+            topic.replies,
+            (a, b) =>
+              new Date(b.dateCreated).valueOf() -
+              new Date(a.dateCreated).valueOf()
+          )
           discussionService.send({ type: "SUCCESS" })
         } else {
           discussionService.send({ type: "ERROR", error: response })
