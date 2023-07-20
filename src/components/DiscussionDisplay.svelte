@@ -7,7 +7,7 @@
     ServiceMap,
     TypegenDisabled,
   } from "xstate"
-  import type { Discussion } from "../lib/simple-comment"
+  import type { Discussion, Comment, User } from "../lib/simple-comment"
   import type {
     DiscussionMachineContext,
     DiscussionMachineEvent,
@@ -15,10 +15,12 @@
     DiscussionTypestate,
     ServerResponse,
   } from "../lib/discussion.xstate"
-  import { discussionMachine } from "../lib/discussion.xstate"
   import { createNewTopic, getOneDiscussion } from "../apiClient"
+  import { discussionMachine } from "../lib/discussion.xstate"
   import { interpret } from "xstate"
   import { onMount } from "svelte"
+  import { threadComments } from "../frontend-utilities";
+
   type DiscussionService = Interpreter<
     DiscussionMachineContext,
     any,
@@ -34,11 +36,13 @@
 
   export let discussionId: string
   export let title: string
+  export let currentUser: User | undefined
 
   let discussion: Discussion
   let replies
   let statusMessage = ""
   let isError = false
+
   // let nextEvents = []
 
   const discussionService = interpret(discussionMachine).start()
@@ -53,17 +57,15 @@
     updateStatusDisplay("loading")
     getOneDiscussion(discussionId)
       .then(response => {
-        console.log("getOneDiscussion", response)
         if (response.ok) {
-          discussion = response.body as Discussion
+          const topic = response.body as Discussion
+          discussion = threadComments(topic, topic.replies, (a, b) => new Date(b.dateCreated).valueOf() - new Date(a.dateCreated).valueOf())
           discussionService.send({ type: "SUCCESS" })
         } else {
-          console.log("getOneDiscussion soft error", response)
           discussionService.send({ type: "ERROR", error: response })
         }
       })
       .catch(error => {
-        console.log("getOneDiscussionError", error)
         discussionService.send({ type: "ERROR", error })
       })
   }
@@ -140,12 +142,12 @@
   })
 </script>
 
-<div class="discussion">
+<section class="discussion-display">
   <p id="status-display" class={isError ? "error" : ""}>{statusMessage}</p>
   {#if discussion?.replies}
-    <CommentDisplay replies={discussion.replies} />
+    <CommentDisplay {currentUser} replies={discussion.replies} />
   {/if}
-</div>
+</section>
 
 <style>
   .error {
