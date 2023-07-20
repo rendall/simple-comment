@@ -36,7 +36,7 @@ export type LoginMachineEvent =
   | { type: "LOGIN" }
   | { type: "LOGOUT" }
   | { type: "SIGNUP" }
-  | { type: "SUCCESS"; user: PublicSafeUser | AdminSafeUser }
+  | { type: "SUCCESS" }
 export const loginMachine = createMachine<
   LoginMachineContext,
   LoginMachineEvent,

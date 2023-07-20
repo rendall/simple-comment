@@ -15,9 +15,9 @@
     TypegenDisabled,
   } from "xstate"
   import type { AdminSafeUser } from "../lib/simple-comment"
-  import { interpret } from "xstate"
+  import { useMachine } from "@xstate/svelte"
   import { loginMachine } from "../lib/login.xstate"
-  import { createEventDispatcher, onMount } from "svelte"
+  import { createEventDispatcher } from "svelte"
   import {
     createUser,
     deleteAuth,
@@ -61,11 +61,9 @@
   let userNameManuallyChanged = false
   let userNameMessage = ""
   let userNameMessageStatus = ""
-  let state: LoginMachineState
   let selectedIndex = 0
 
-  const loginService = interpret(loginMachine).start()
-
+  const { state, send } = useMachine(loginMachine)
   const updateStatusDisplay = (message = "", error = false) => {
     statusMessage = message
     isError = error
@@ -73,46 +71,46 @@
 
   const onLoginClick = async (e: Event) => {
     e.preventDefault()
-    loginService.send({ type: "LOGIN" })
+    send({ type: "LOGIN" })
   }
 
   const onSignupClick = async (e: Event) => {
     e.preventDefault()
-    loginService.send({ type: "SIGNUP" })
+    send({ type: "SIGNUP" })
   }
 
   const onLogoutClick = async () => {
-    loginService.send({ type: "LOGOUT" })
+    send({ type: "LOGOUT" })
   }
 
   /** Handler for XState "verifying" state */
-  const verifyingStateHandler = loginService => {
+  const verifyingStateHandler = () => {
     updateStatusDisplay("verifying")
 
     verifySelf()
       .then((user: AdminSafeUser) => {
         self = user
-        loginService.send({ type: "SUCCESS" })
+        send({ type: "SUCCESS" })
       })
       .catch(error => {
         const { body } = error
         if (body === "No Cookie header 'simple-comment-token' value")
-          loginService.send({ type: "FIRST_VISIT" })
-        else loginService.send({ type: "ERROR", error })
+          send({ type: "FIRST_VISIT" })
+        else send({ type: "ERROR", error })
       })
   }
 
-  const loggingInStateHandler = (loginService: LoginService) => {
+  const loggingInStateHandler = () => {
     updateStatusDisplay("logging in")
 
     postAuth(loginUserName, loginPassword)
-      .then(() => loginService.send("SUCCESS"))
+      .then(() => send("SUCCESS"))
       .catch(error => {
-        loginService.send({ type: "ERROR", error })
+        send({ type: "ERROR", error })
       })
   }
 
-  const signingUpStateHandler = loginService => {
+  const signingUpStateHandler = () => {
     updateStatusDisplay("signing up")
     const userInfo = {
       id: loginUserName,
@@ -121,28 +119,28 @@
       password: loginPassword,
     }
     createUser(userInfo)
-      .then(() => loginService.send("SUCCESS"))
-      .catch(error => loginService.send({ type: "ERROR", error }))
+      .then(() => send("SUCCESS"))
+      .catch(error => send({ type: "ERROR", error }))
   }
 
-  const loggedInStateHandler = _loginService => {
+  const loggedInStateHandler = () => {
     updateStatusDisplay("logged in")
   }
 
-  const loggingOutStateHandler = loginService => {
+  const loggingOutStateHandler = () => {
     updateStatusDisplay("logging out")
     deleteAuth()
-      .then(() => loginService.send("SUCCESS"))
-      .catch(error => loginService.send({ type: "ERROR", error }))
+      .then(() => send("SUCCESS"))
+      .catch(error => send({ type: "ERROR", error }))
   }
 
-  const loggedOutStateHandler = _loginService => {
+  const loggedOutStateHandler = () => {
     updateStatusDisplay("logged out")
     self = undefined
   }
 
-  const errorStateHandler = loginService => {
-    const error = loginService.state.context.error
+  const errorStateHandler = () => {
+    const error = $state.context.error
     const { status, statusText, ok, body } = error as ServerResponse
     if (ok) console.warn("Error handler caught an OK response", error)
 
@@ -278,36 +276,25 @@
     checkUserExists_debounced(loginUserName)
   }
 
-  onMount(() => {
-    const transitionHandler = _state => {
-      state = _state.value
-      nextEvents = _state.nextEvents
-      const stateHandlers: [
-        LoginMachineState,
-        (loginService: LoginService) => void
-      ][] = [
-        ["verifying", verifyingStateHandler],
-        ["loggingIn", loggingInStateHandler],
-        ["signingUp", signingUpStateHandler],
-        ["loggedIn", loggedInStateHandler],
-        ["loggingOut", loggingOutStateHandler],
-        ["loggedOut", loggedOutStateHandler],
-        ["error", errorStateHandler],
-      ]
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const [_, handleState] =
-        stateHandlers.find(([stateValue, _]) => _state.matches(stateValue)) ??
-        []
-      if (handleState) {
-        handleState(loginService)
-      }
-    }
+  $: {
+    const stateHandlers: [string, () => void][] = [
+      ["verifying", verifyingStateHandler],
+      ["loggingIn", loggingInStateHandler],
+      ["signingUp", signingUpStateHandler],
+      ["loggedIn", loggedInStateHandler],
+      ["loggingOut", loggingOutStateHandler],
+      ["loggedOut", loggedOutStateHandler],
+      ["error", errorStateHandler],
+    ]
 
-    loginService.onTransition(transitionHandler)
-  })
+    stateHandlers.forEach(([stateValue, stateHandler]) => {
+      if ($state.value === stateValue) stateHandler()
+    })
+
+    nextEvents = $state.nextEvents
+  }
 
   const dispatch = createEventDispatcher()
-
   $: {
     console.log("userChange")
     dispatch("userChange", { currentUser: self })
@@ -316,7 +303,7 @@
 
 <section class="simple-comment-login outline">
   <p id="status-display" class={isError ? "error" : ""}>{statusMessage}</p>
-  {#if state === "verifying" || state === "loggingIn" || state === "loggingOut"}
+  {#if $state.value === "verifying" || $state.value === "loggingIn" || $state.value === "loggingOut"}
     <section class="self-display">
       <div class="self-avatar">
         <SkeletonPlaceholder />

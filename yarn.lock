@@ -3729,6 +3729,11 @@
     "@babel/types" "^7.21.4"
     recast "^0.23.1"
 
+"@xstate/svelte@^2.1.0":
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/@xstate/svelte/-/svelte-2.1.0.tgz#f955b07f4acd02fdbb7b0d86544091995e73f6b4"
+  integrity sha512-cot553w2v4MdmDLkRBLhEjGO5LlnlPcpZ9RT7jFqpn+h0rpmjtkva6zjIZddPrxEOM6DVHDwzYbpDe+BErElQg==
+
 "@xstate/test@^1.0.0-alpha.1":
   version "1.0.0-alpha.1"
   resolved "https://registry.yarnpkg.com/@xstate/test/-/test-1.0.0-alpha.1.tgz#46ce7730fa8710590dc917dd348359d4c1202d20"

@@ -68,6 +68,7 @@
     "@typescript-eslint/eslint-plugin": "^5.22.0",
     "@typescript-eslint/parser": "^5.22.0",
     "@xstate/cli": "^0.5.1",
+    "@xstate/svelte": "^2.1.0",
     "@xstate/test": "^1.0.0-alpha.1",
     "bcryptjs": "^2.4.3",
     "carbon-components-svelte": "^0.77.0",

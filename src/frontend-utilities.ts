@@ -19,7 +19,7 @@ export const threadComments = <T extends MinComment, U extends MinComment>(
   comment: T,
   allComments: U[],
   sort: (a: U, b: U) => number = (a, b) => (b.id < a.id ? 0 : 1)
-) => {
+): T => {
   // Create a map of parent IDs to arrays of their child comments
   const parentToChildrenMap = allComments.reduce(
     (map, reply) =>
@@ -31,11 +31,11 @@ export const threadComments = <T extends MinComment, U extends MinComment>(
               : [reply],
           }
         : map,
-    {} as Record<string, MinComment[]>
+    {} as Record<string, U[]>
   )
 
   // Now we can use this map to quickly look up the child comments for each comment
-  const threadCommentsWithMap = (comment: MinComment): MinComment => {
+  const threadCommentsWithMap = <W extends MinComment>(comment: W): W => {
     const replies = parentToChildrenMap[comment.id]
     if (replies) {
       return {
