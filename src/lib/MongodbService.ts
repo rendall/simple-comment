@@ -12,7 +12,6 @@ import type {
   AdminSafeUser,
   DeletedComment,
   PublicSafeUser,
-  NewUser,
   UpdateUser,
   TokenClaim,
   NewTopic,
@@ -39,7 +38,6 @@ import {
   isAllowedReferer,
   getAllowedOrigins,
   isEmail,
-  createNewUserId,
   normalizeUrl,
 } from "./utilities"
 import policy from "../policy.json"
@@ -158,7 +156,7 @@ export class MongodbService extends Service {
    * returns User
    **/
   userPOST = async (
-    createUser: CreateUserPayload,
+    newUser: CreateUserPayload,
     authUserId?: UserId
   ): Promise<Success<AdminSafeUser> | Error> => {
     if (!authUserId && !policy.canPublicCreateUser) {
@@ -179,12 +177,6 @@ export class MongodbService extends Service {
       }
     }
 
-    const db = await this.getDb()
-
-    const newUserId = createUser.id ?? (await createNewUserId(db))
-
-    const newUser: NewUser = { ...createUser, id: newUserId }
-
     const userCheck = validateUser(newUser)
     if (!userCheck.isValid) {
       return {
@@ -193,21 +185,23 @@ export class MongodbService extends Service {
       }
     }
 
-    if (newUserId === process.env.SIMPLE_COMMENT_MODERATOR_ID) {
+    const db = await this.getDb()
+
+    if (newUser.id === process.env.SIMPLE_COMMENT_MODERATOR_ID) {
       return {
         ...error403ForbiddenToModify,
         body: "Cannot modify root credentials",
       }
     }
 
-    if (isGuestId(newUserId) && authUserId !== newUserId) {
+    if (isGuestId(newUser.id) && authUserId !== newUser.id) {
       return {
         ...error403Forbidden,
         body: "New user id must not be in a uuid format",
       }
     }
 
-    if (!isGuestId(newUserId) && !newUser.password) {
+    if (!isGuestId(newUser.id) && !newUser.password) {
       return error400PasswordMissing
     }
 
@@ -238,20 +232,20 @@ export class MongodbService extends Service {
       }
     }
 
-    const oldUser = await users.find({ id: newUserId }).limit(1).next()
+    const oldUser = await users.find({ id: newUser.id }).limit(1).next()
 
     if (oldUser) {
-      return error409UserExists
+      return { ...error409UserExists, body: `UserId '${newUser.id}' exists` }
     }
 
-    const hash = isGuestId(newUserId)
+    const hash = isGuestId(newUser.id)
       ? ""
       : await hashPassword(newUser.password)
     const adminSafeUser = {
       ...toAdminSafeUser(newUser),
       name: newUser.name.trim(),
     }
-    const user: User = isGuestId(newUserId)
+    const user: User = isGuestId(newUser.id)
       ? adminSafeUser
       : ({ ...adminSafeUser, hash } as User)
 

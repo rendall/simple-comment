@@ -233,15 +233,15 @@ describe("Full API service test", () => {
     })
   })
 
-  test("POST to /user without id should return user with generated id and 201 User created", () => {
+  test("POST to /user without id should return 400: Invalid user id 'undefined'", () => {
     const adminUser = getAuthUser(u => u.isAdmin!)
     const testUserWithoutId = { ...testNewUser }
     delete testUserWithoutId.id
     return service.userPOST(testUserWithoutId, adminUser.id).then(value => {
-      expect(value).toHaveProperty("statusCode", 201)
-      expect(value).toHaveProperty("body")
-      expect(value.body).toHaveProperty("email", testNewUser.email)
-      expect(value.body).toHaveProperty("id")
+      expect(value).toEqual({
+        "body": "Invalid user id 'undefined'",
+        "statusCode": 400,
+      })
     })
   })
 
@@ -356,7 +356,10 @@ describe("Full API service test", () => {
     const authUser = getAuthUser(u => u.isAdmin!)
     expect.assertions(1)
     const e = await service.userPOST(testNewUser, authUser.id)
-    expect(e).toBe(error409UserExists)
+    expect(e).toEqual({
+      ...error409UserExists,
+      body: `UserId '${testNewUser.id}' exists`,
+    })
   })
   test("GET to /auth with newly created user should return authtoken", () => {
     const authToken = getAuthToken(testNewUser.id!)

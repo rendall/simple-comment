@@ -107,7 +107,7 @@ export type NewUser = {
 }
 
 // The payload POSTed by the client to the `/user` endpoint
-export type CreateUserPayload = Omit<NewUser, "id"> & { id?: UserId }
+export type CreateUserPayload = NewUser
 
 // The information that can be updated for a user
 export type UpdateUser = Partial<Omit<NewUser, "id">>
