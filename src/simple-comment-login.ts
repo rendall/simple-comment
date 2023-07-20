@@ -22,8 +22,8 @@ import {
   getOneUser,
   postAuth,
   verifySelf,
-} from "./apiClient" // assuming you have an apiClient.ts file
-import { debounceFunc } from "./apiClient"
+} from "./apiClient"
+import { debounceFunc } from "./frontend-utilities"
 
 type LoginService = Interpreter<
   LoginMachineContext,
