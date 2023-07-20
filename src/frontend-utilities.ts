@@ -12,7 +12,7 @@ type MinComment = {
  * @param {T} topic - The topic to which the comments belong.
  * @param {U[]} replies - An array of replies to the topic.
  * @param {(a: U, b: U) => number} [sort=(a, b) => (b.id < a.id ? 0 : 1)] - An optional sorting function for ordering the replies. By default, it sorts by id in descending order.
- * 
+ *
  * @returns {T} - A new topic object with the same type as the input topic, where each comment includes its child replies.
  */
 export const threadComments = <T extends MinComment, U extends MinComment>(
@@ -48,4 +48,70 @@ export const threadComments = <T extends MinComment, U extends MinComment>(
   }
 
   return threadCommentsWithMap(comment)
+}
+
+export const validateUserName = (
+  username: string
+): { isValid: true } | { isValid: false; reason: string } => {
+  if (username.length === 0) {
+    return { isValid: false, reason: "Username cannot be empty." }
+  }
+
+  const isValid = /^[a-z0-9-]*$/.test(username)
+  if (!isValid) {
+    return {
+      isValid: false,
+      reason:
+        "Username is not valid. Please use only lowercase letters (a-z), numbers (0-9), and hyphens (-).",
+    }
+  }
+
+  const isTooShort = username.length < 4
+  if (isTooShort) {
+    return {
+      isValid: false,
+      reason:
+        "Username is too short. The username must be at least 4 characters.",
+    }
+  }
+
+  const isTooLong = username.length > 30
+  if (isTooLong) {
+    return { isValid: false, reason: "Username is too long." }
+  }
+
+  return { isValid: true }
+}
+
+/**
+ * Creates a debounced function that delays invoking the provided
+ * function until after `wait` milliseconds have elapsed since the
+ * last time the debounced function was invoked. Typically used to
+ * run an expensive or async function after user interaction.
+ *
+ * @template T The type of the function to debounce.
+ * @param {T} func The function to debounce.
+ * @param {number} [wait=250] The number of milliseconds to delay.
+ * @returns {(...args: Parameters<T>) => void} Returns the new debounced function.
+ *
+ * @example
+ * // Usage with a function that takes one string parameter
+ * const logMessage = (message: string) => console.log(message);
+ * const debouncedLogMessage = debounceFunc(logMessage, 300);
+ * debouncedLogMessage('Hello, world!');
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const debounceFunc = <T extends (...args: any[]) => void>(
+  func: T,
+  wait = 250
+) => {
+  let debounceTimeout: number | null = null
+  return (...args: Parameters<T>): void => {
+    if (debounceTimeout) {
+      window.clearTimeout(debounceTimeout)
+    }
+    debounceTimeout = window.setTimeout(() => {
+      func(...args)
+    }, wait)
+  }
 }

@@ -325,13 +325,3 @@ export const getHttpCookie = (elem: HTMLElement, url: string) =>
       reject(error)
     }
   })
-
-export const debounceFunc = (func: (value: string) => void, wait = 250) => {
-  let debounceTimeout: number
-  return (value: string) => {
-    clearInterval(debounceTimeout)
-    debounceTimeout = window.setTimeout(() => {
-      func(value)
-    }, wait)
-  }
-}
