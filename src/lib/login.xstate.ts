@@ -6,6 +6,7 @@ export type LoginMachineState =
   | "verifying"
   | "loggingIn"
   | "signingUp"
+  | "signedUp"
   | "loggedIn"
   | "loggingOut"
   | "loggedOut"
@@ -65,9 +66,16 @@ export const loginMachine = createMachine<
 
       signingUp: {
         on: {
-          SUCCESS: "loggedIn",
+          SUCCESS: "signedUp",
           ERROR: { target: "error", actions: "assignErrorMessage" },
         },
+      },
+      signedUp: {
+        always: [
+          {
+            target: "loggingIn",
+          },
+        ],
       },
 
       loggedIn: {

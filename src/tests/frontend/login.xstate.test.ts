@@ -70,14 +70,14 @@ describe("Login flow state machine", () => {
     expect(nextState.value).toBe("error")
   })
 
-  test("loggingIn with SUCCESS should transition to state `loggedIn`", () => {
+  test("loggingIn with SUCCESS should transition to state `verifying`", () => {
     const nextState = loginMachine.transition("loggingIn", "SUCCESS")
     expect(nextState.value).toBe("verifying")
   })
 
-  test("signingUp with SUCCESS should transition to state `loggedIn`", () => {
+  test("signingUp with SUCCESS should transition to state `loggingIn`", () => {
     const nextState = loginMachine.transition("signingUp", "SUCCESS")
-    expect(nextState.value).toBe("loggedIn")
+    expect(nextState.value).toBe("loggingIn")
   })
 
   test("loggingIn with ERROR should transition to state `error`", () => {

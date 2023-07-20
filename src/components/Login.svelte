@@ -25,7 +25,7 @@
     postAuth,
     verifySelf,
   } from "../apiClient"
-  import { debounceFunc } from "../apiClient"
+  import { validateUserName, debounceFunc } from "../frontend-utilities"
   import {
     Button,
     ContentSwitcher,
@@ -56,11 +56,8 @@
   let loginUserName = ""
   let signupEmail = ""
   let signupDisplayName = ""
-  let signupPassword = ""
-  let signupUserName = ""
   let statusMessage = ""
   let userDisplay = ""
-  let userName = ""
   let userNameManuallyChanged = false
   let userNameMessage = ""
   let userNameMessageStatus = ""
@@ -118,10 +115,10 @@
   const signingUpStateHandler = loginService => {
     updateStatusDisplay("signing up")
     const userInfo = {
-      id: signupUserName,
+      id: loginUserName,
       name: signupDisplayName,
       email: signupEmail,
-      password: signupPassword,
+      password: loginPassword,
     }
     createUser(userInfo)
       .then(() => loginService.send("SUCCESS"))
@@ -198,57 +195,12 @@
       .replace(/[^a-z0-9-]/g, "-")
   }
 
-  const onInput = debounceFunc(async username => {
-    const isValid = /^[a-z0-9-]*$/.test(username)
-    document
-      .getElementById("helper-signup-user-name")
-      ?.removeAttribute("data-valid")
-    const svg = document
-      .getElementById("signup-user-name")
-      ?.parentElement.querySelector(".bx--text-input__valid-icon")
-    if (svg) {
-      svg.remove()
-    }
-    if (userNameMessageStatus === "valid") {
-    } else {
-    }
-
-    if (username.length === 0) {
-      userNameMessage = ""
-      userNameMessageStatus = ""
-      return
-    }
-
-    if (!isValid) {
-      userNameMessage = `Username '${username}' is not valid. Please use only lowercase letters (a-z), numbers (0-9), and hyphens (-).`
-      userNameMessageStatus = "invalid"
-      return
-    }
-    const isTooShort = username.length < 4
-
-    if (isTooShort) {
-      userNameMessage = `Username '${username}' is too short. The username must be at least 4 characters.`
-      userNameMessageStatus = "invalid"
-      return
-    }
-
-    const isTooLong = username.length > 30
-    if (isTooLong) {
-      userNameMessage = `Username '${username}' is too long.`
-      userNameMessageStatus = "invalid"
-      return
-    }
-
-    try {
-      await getOneUser(username)
-      userNameMessage = `The username '${username}' is already taken. Please try another one.`
-      userNameMessageStatus = "invalid"
-    } catch (error) {
+  /** Set the green, success "valid" state on the user name input (or remove it by setting toggle to false) */
+  const setValidStatus = (toggle: boolean = true) => {
+    if (toggle) {
       document
         .getElementById("helper-signup-user-name")
         ?.setAttribute("data-valid", "true")
-      userNameMessage = "This username is available."
-      userNameMessageStatus = "valid"
       let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg")
       svg.setAttribute("viewBox", "0 0 32 32")
       svg.setAttribute("fill", "currentColor")
@@ -260,23 +212,70 @@
       svg.innerHTML = `<defs><style> .cls-1 { fill: none; } </style> </defs> <path d="M16,2A14,14,0,1,0,30,16,14,14,0,0,0,16,2ZM14,21.5908l-5-5L10.5906,15,14,18.4092,21.41,11l1.5957,1.5859Z"/> <polygon id="inner-path" class="cls-1" points="14 21.591 9 16.591 10.591 15 14 18.409 21.41 11 23.005 12.585 14 21.591"/> <rect id="_Transparent_Rectangle_" data-name="&lt;Transparent Rectangle&gt;" class="cls-1" width="32" height="32"/> ` // This is a simple checkmark path
       let inputField = document.getElementById("signup-user-name")
       inputField.parentElement.insertBefore(svg, inputField)
+    } else {
+      document
+        .getElementById("helper-signup-user-name")
+        ?.removeAttribute("data-valid")
+      const svg = document
+        .getElementById("signup-user-name")
+        ?.parentElement.querySelector(".bx--text-input__valid-icon")
+      if (svg) {
+        svg.remove()
+      }
     }
-  }, 300)
+  }
+  const checkUserNameExists = async username => {
+    if (!validateUserName(username).isValid) return
+
+    setValidStatus(false)
+    try {
+      await getOneUser(username)
+      userNameMessage = `The username '${username}' is already taken. Please try another one.`
+      userNameMessageStatus = "invalid"
+    } catch (error) {
+      userNameMessage = "This username is available."
+      userNameMessageStatus = "valid"
+      setValidStatus()
+    }
+  }
+
+  const checkUserNameValid = username => {
+    setValidStatus(false)
+    const validation = validateUserName(username)
+
+    const isValid = (
+      validation: ReturnType<typeof validateUserName>
+    ): validation is { isValid: true } => validation.isValid === true
+
+    if (isValid(validation)) {
+      userNameMessage = ""
+      userNameMessageStatus = ""
+    } else {
+      userNameMessageStatus = "invalid"
+      userNameMessage = validation.reason
+    }
+  }
+
+  const checkUserExists_debounced = debounceFunc(checkUserNameExists, 300)
 
   const handleDisplayNameInput = () => {
     if (!userNameManuallyChanged) {
-      userName = formatUserName(signupDisplayName)
-      onInput(userName)
+      const formattedUserName = formatUserName(signupDisplayName)
+      checkUserNameValid(formattedUserName)
+      checkUserExists_debounced(formattedUserName)
+      loginUserName = formattedUserName
     }
   }
 
   const handleUserNameInput = () => {
     userNameManuallyChanged = true
-    onInput(userName)
+    checkUserNameValid(loginUserName)
+    checkUserExists_debounced(loginUserName)
   }
 
   const handleUserNameBlur = () => {
-    onInput(userName)
+    checkUserNameValid(loginUserName)
+    checkUserExists_debounced(loginUserName)
   }
 
   onMount(() => {
@@ -387,7 +386,7 @@
           on:input={handleDisplayNameInput}
         />
         <TextInput
-          bind:value={userName}
+          bind:value={loginUserName}
           helperText={userNameMessageStatus === "valid"
             ? userNameMessage
             : "This is the name that uniquely identifies you"}
@@ -414,7 +413,7 @@
           type="password"
           id="signup-password"
           labelText="Password"
-          bind:value={signupPassword}
+          bind:value={loginPassword}
           required
         />
         <Button type="submit">Sign up</Button>
