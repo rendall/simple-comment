@@ -19,7 +19,6 @@ import type {
   TokenClaim,
   Email,
 } from "./simple-comment"
-import { Collection, Db } from "mongodb"
 import { uuidv4 } from "./crypt"
 import urlNormalizer from "normalize-url"
 
@@ -440,23 +439,6 @@ export type ValidResult = {
   reason?: string
 }
 
-export const createNewUserId = async (db: Db): Promise<string> => {
-  // Generate a random id
-  const newId = Math.random().toString(36).slice(2, 10)
-
-  // Check if the id already exists in the database
-  const users: Collection<User> = db.collection("users")
-  const existingUser = await users.find({ id: newId }).limit(1).next()
-
-  // If the id already exists, recursively call this function again
-  if (existingUser) {
-    return createNewUserId(db)
-  }
-
-  // If the id doesn't exist, return the new id
-  else return newId
-}
-
 export const validateUserId = (
   userId: string,
   result?: RegExpMatchArray
@@ -485,10 +467,13 @@ export const validateEmail = (
 // This validation is intended to be as broad as possible but
 // may still get it wrong in your use case
 // (q.v. https://www.kalzumeus.com/2010/06/17/falsehoods-programmers-believe-about-names/ )
-export const validateDisplayName = (name: string): ValidResult =>
-  name.length <= 3 || name.length >= 100
-    ? { isValid: false }
-    : { isValid: true }
+export const validateDisplayName = (name: string): ValidResult => {
+  if (name.length < 3)
+    return { isValid: false, reason: "Display name is too short" }
+  if (name.length > 100)
+    return { isValid: false, reason: "Display name is too long" }
+  return { isValid: true }
+}
 
 // Have a very loose password policy and encourage password complexity on the frontend.
 // Checking here only for length and common passwords
@@ -511,6 +496,8 @@ export const validatePassword = (password: string): ValidResult => {
 }
 
 export const validateUser = (user: UpdateUser & User): ValidResult => {
+  if (!user.id || user.id === "" || typeof user.id !== "string")
+    return { isValid: false, reason: `Invalid user id '${user.id}'` }
   if (user.id) {
     const idCheck = validateUserId(user.id)
     if (!idCheck.isValid) {
