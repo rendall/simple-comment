@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Comment, User } from "../lib/simple-comment"
+  import { Comment, User } from "../lib/simple-comment-types"
 
   export let currentUser: User | undefined
   export let replies: Comment[] = []

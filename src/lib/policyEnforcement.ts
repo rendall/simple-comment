@@ -1,5 +1,5 @@
-import type { ActionType, Policy, UserId } from "./simple-comment"
-import { Action } from "./simple-comment"
+import type { ActionType, Policy, UserId } from "./simple-comment-types"
+import { Action } from "./simple-comment-types"
 import policy from "../policy.json"
 import { isGuestId } from "../lib/utilities"
 

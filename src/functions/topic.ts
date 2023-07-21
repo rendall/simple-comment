@@ -16,7 +16,7 @@ import type {
   Success,
   Topic,
   TopicId,
-} from "../lib/simple-comment"
+} from "../lib/simple-comment-types"
 import {
   error404TopicNotFound,
   error405MethodNotAllowed,

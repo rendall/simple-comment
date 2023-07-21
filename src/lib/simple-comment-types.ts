@@ -1,4 +1,4 @@
-import { ObjectId } from "mongodb"
+import type { ObjectId } from "mongodb"
 
 // These are convenience types that are subtypes of strings
 export type AuthToken = string
@@ -28,14 +28,41 @@ export type Error = {
 }
 
 /**
- * Holds salient values of a Response,
- * particularly the value of `body` after ReadableStream is read **/
-export type ResolvedResponse<T = string> = {
+ * Represents a successful response with a resolved body value.
+ *
+ * @template T - The type of the `body` property in the response.
+ */
+export type ResolvedResponseSuccess<T = string> = {
   status: number
-  ok: boolean
+  ok: true
   statusText: string
   body: T
 }
+
+/**
+ * Represents an error response with a resolved body value.
+ * In errors the body type is always "string"
+ *
+ * @extends ResolvedResponseSuccess<string>
+ */
+export type ResolvedResponseError = {
+  status: number
+  ok: false
+  statusText: string
+  body: string
+}
+
+/**
+ * Represents a resolved response containing salient values of a Response,
+ * particularly the value of `body` after the ReadableStream is read.
+ *
+ * @template T - The type of the `body` property in the response.
+ */
+export type ResolvedResponse<T = string> =
+  | ResolvedResponseSuccess<T>
+  | ResolvedResponseError
+
+export type Validation = { isValid: true } | { isValid: false; reason: string }
 
 export type Discussion = {
   _id?: ObjectId

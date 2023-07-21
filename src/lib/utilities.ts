@@ -18,7 +18,7 @@ import type {
   User,
   TokenClaim,
   Email,
-} from "./simple-comment"
+} from "./simple-comment-types"
 import { uuidv4 } from "./crypt"
 import urlNormalizer from "normalize-url"
 

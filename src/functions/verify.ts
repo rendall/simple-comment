@@ -10,7 +10,7 @@ import {
   hasBearerScheme,
   hasTokenCookie,
 } from "../lib/utilities"
-import type { Success, TokenClaim, Error } from "../lib/simple-comment"
+import type { Success, TokenClaim, Error } from "../lib/simple-comment-types"
 import {
   error401UserNotAuthenticated,
   error404NotFound,

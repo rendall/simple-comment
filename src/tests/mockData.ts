@@ -6,7 +6,7 @@ import type {
   Topic,
   TopicId,
   User,
-} from "../../src/lib/simple-comment"
+} from "../../src/lib/simple-comment-types"
 
 export const alphaUserInput =
   "ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÅ abcdefghijklmnopqrstuvwxyzäöå 1234567890 !@#$%^&*()_+-= "

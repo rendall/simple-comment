@@ -5,7 +5,7 @@ import type {
   Discussion,
   ResolvedResponse,
   TokenClaim,
-} from "./lib/simple-comment"
+} from "./lib/simple-comment-types"
 
 import {
   createNewTopic,

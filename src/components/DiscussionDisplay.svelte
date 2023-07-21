@@ -1,13 +1,7 @@
 <script lang="ts">
   import CommentDisplay from "./CommentDisplay.svelte"
-  import type {
-    BaseActionObject,
-    Interpreter,
-    ResolveTypegenMeta,
-    ServiceMap,
-    TypegenDisabled,
-  } from "xstate"
-  import type { Discussion, Comment, User } from "../lib/simple-comment"
+  import type { Discussion, Comment, User } from "../lib/simple-comment-types"
+  import { useMachine } from "@xstate/svelte"
   import type {
     DiscussionMachineContext,
     DiscussionMachineEvent,
@@ -17,47 +11,25 @@
   } from "../lib/discussion.xstate"
   import { createNewTopic, getOneDiscussion } from "../apiClient"
   import { discussionMachine } from "../lib/discussion.xstate"
-  import { interpret } from "xstate"
-  import { onMount } from "svelte"
-  import { threadComments } from "../frontend-utilities"
-
-  type DiscussionService = Interpreter<
-    DiscussionMachineContext,
-    any,
-    DiscussionMachineEvent,
-    DiscussionTypestate,
-    ResolveTypegenMeta<
-      TypegenDisabled,
-      DiscussionMachineEvent,
-      BaseActionObject,
-      ServiceMap
-    >
-  >
+  import { isResponseOk, threadComments } from "../frontend-utilities"
 
   export let discussionId: string
   export let title: string
   export let currentUser: User | undefined
 
   let discussion: Discussion
-  let replies
-  let statusMessage = ""
-  let isError = false
 
-  // let nextEvents = []
-
-  const discussionService = interpret(discussionMachine).start()
+  const { state, send } = useMachine(discussionMachine)
 
   const updateStatusDisplay = (message = "", error = false) => {
     console.log({ statusMessage: message, isError: error })
-    statusMessage = message
-    isError = error
   }
 
-  const loadingStateHandler = discussionService => {
+  const loadingStateHandler = () => {
     updateStatusDisplay("loading")
     getOneDiscussion(discussionId)
       .then(response => {
-        if (response.ok) {
+        if (isResponseOk(response)) {
           const topic = response.body as Discussion
           discussion = threadComments(
             topic,
@@ -66,18 +38,18 @@
               new Date(b.dateCreated).valueOf() -
               new Date(a.dateCreated).valueOf()
           )
-          discussionService.send({ type: "SUCCESS" })
+          send({ type: "SUCCESS" })
         } else {
-          discussionService.send({ type: "ERROR", error: response })
+          send({ type: "ERROR", error: response })
         }
       })
       .catch(error => {
-        discussionService.send({ type: "ERROR", error })
+        send({ type: "ERROR", error })
       })
   }
 
-  const errorStateHandler = discussionService => {
-    const error = discussionService.state.context.error
+  const errorStateHandler = () => {
+    const error = $state.context.error
     const { status, statusText, ok, body } = error as ServerResponse
     if (ok) console.warn("Error handler caught an OK response", error)
 
@@ -86,7 +58,7 @@
       statusText === "Not Found" &&
       body.startsWith("Topic")
     ) {
-      discussionService.send("CREATE")
+      send("CREATE")
       return
     }
 
@@ -111,52 +83,38 @@
     } else updateStatusDisplay(`${status}:${statusText} ${body}`, true)
   }
 
-  const creatingStateHandler = discussionService => {
+  const creatingStateHandler = () => {
     console.log("creatingStateHandler")
     createNewTopic(discussionId, title)
       .then(response => {
-        if (response.ok) discussionService.send("SUCCESS")
-        else discussionService.send({ type: "ERROR", error: response })
+        if (isResponseOk(response)) send("SUCCESS")
+        else send({ type: "ERROR", error: response })
       })
-      .catch(error => discussionService.send({ type: "ERROR", error }))
+      .catch(error => send({ type: "ERROR", error }))
   }
 
   const loadedStateHandler = () => {
     updateStatusDisplay("loaded")
   }
 
-  onMount(() => {
-    const transitionHandler = state => {
-      // nextEvents = state.nextEvents
-      const stateHandlers: [
-        DiscussionMachineState,
-        (discussionService: DiscussionService) => void
-      ][] = [
-        ["loading", loadingStateHandler],
-        ["loaded", loadedStateHandler],
-        ["creating", creatingStateHandler],
-        ["error", errorStateHandler],
-      ]
+  $: {
+    const stateHandlers: [string, () => void][] = [
+      ["loading", loadingStateHandler],
+      ["loaded", loadedStateHandler],
+      ["creating", creatingStateHandler],
+      ["error", errorStateHandler],
+    ]
 
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const [_, handleState] =
-        stateHandlers.find(([stateValue, _]) => state.matches(stateValue)) ?? []
-      if (handleState) handleState(discussionService)
-    }
-
-    discussionService.onTransition(transitionHandler)
-  })
+    stateHandlers.forEach(([stateValue, stateHandler]) => {
+      if ($state.value === stateValue) stateHandler()
+    })
+  }
 </script>
 
-<section class="discussion-display">
-  <p id="status-display" class={isError ? "error" : ""}>{statusMessage}</p>
+<section class="simple-comment-discussion">
+  <textarea placeholder="Your comment" />
+  <div class="button-row"><button>submit</button></div>
   {#if discussion?.replies}
     <CommentDisplay {currentUser} replies={discussion.replies} />
   {/if}
 </section>
-
-<style>
-  .error {
-    color: red;
-  }
-</style>

@@ -1,6 +1,6 @@
 import { isUserAllowedTo } from "../../lib/policyEnforcement"
-import type { Policy, User } from "../../lib/simple-comment"
-import { Action } from "../../lib/simple-comment"
+import type { Policy, User } from "../../lib/simple-comment-types"
+import { Action } from "../../lib/simple-comment-types"
 
 const mockPolicy: Policy = {
   isGuestAccountAllowed: false,

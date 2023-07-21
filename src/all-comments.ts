@@ -1,4 +1,4 @@
-import type { Comment, Discussion, Topic } from "./lib/simple-comment"
+import type { Comment, Discussion, Topic } from "./lib/simple-comment-types"
 import { getAllTopics, getOneDiscussion } from "./apiClient"
 import { getDisplayDiv, appendComment } from "./ui"
 

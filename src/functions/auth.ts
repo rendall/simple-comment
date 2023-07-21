@@ -1,7 +1,7 @@
 import * as dotenv from "dotenv"
 import type { APIGatewayEvent } from "aws-lambda"
 import { MongodbService } from "../lib/MongodbService"
-import type { Success, Error, AuthToken } from "../lib/simple-comment"
+import type { Success, Error, AuthToken } from "../lib/simple-comment-types"
 import {
   error401UserNotAuthenticated,
   error404CommentNotFound,

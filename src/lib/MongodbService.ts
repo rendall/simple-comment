@@ -17,8 +17,8 @@ import type {
   NewTopic,
   Email,
   CreateUserPayload,
-} from "./simple-comment"
-import { Action } from "./simple-comment"
+} from "./simple-comment-types"
+import { Action } from "./simple-comment-types"
 import { isUserAllowedTo } from "./policyEnforcement"
 import type { Collection, Db, WithId } from "mongodb"
 import { MongoClient } from "mongodb"

@@ -14,7 +14,7 @@ import type {
   UpdateUser,
   NewUser,
   TokenClaim,
-} from "./simple-comment"
+} from "./simple-comment-types"
 
 export abstract class Service {
   /**

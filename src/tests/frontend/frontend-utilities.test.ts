@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 import { threadComments } from "../../frontend-utilities"
-import { Comment } from "../../lib/simple-comment"
+import { Comment } from "../../lib/simple-comment-types"
 import { mockCommentTree, mockTopic } from "../mockData"
 import { performance } from "perf_hooks"
 import { debounceFunc } from "../../frontend-utilities"
@@ -79,7 +79,7 @@ describe("debounce", () => {
 
     const debounce = debounceFunc(debounceCallback)
 
-    debounce("")
+    debounce()
   })
 
   it("never calls callback if continuously called", function (done) {
@@ -89,7 +89,7 @@ describe("debounce", () => {
       numCalls++
     }
     const debounce = debounceFunc(debounceCallback)
-    const testInterval = window.setInterval(() => debounce(""), 50)
+    const testInterval = window.setInterval(() => debounce(), 50)
     const endTest = (toclear: number) => () => {
       clearInterval(toclear)
       expect(numCalls).toBe(0)
@@ -110,7 +110,7 @@ describe("debounce", () => {
       done()
     }
     const debounce = debounceFunc(debounceCallback, waitTime)
-    debounce("")
+    debounce()
   })
 
   it("calls once only after debounce ends", function (done) {
@@ -120,7 +120,7 @@ describe("debounce", () => {
       numCalls++
     }
     const debounce = debounceFunc(debounceCallback)
-    const testInterval = window.setInterval(() => debounce(""), 50)
+    const testInterval = window.setInterval(() => debounce(), 50)
     const endInterval = (toclear: number) => () => {
       clearInterval(toclear)
     }

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { User } from "../lib/simple-comment"
+  import type { User } from "../lib/simple-comment-types"
   import DiscussionDisplay from "./DiscussionDisplay.svelte"
   import Login from "./Login.svelte"
   export let discussionId

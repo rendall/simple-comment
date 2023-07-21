@@ -1,5 +1,5 @@
 import { assign, createMachine } from "xstate"
-import type { Discussion } from "./simple-comment"
+import type { Discussion } from "./simple-comment-types"
 
 export type DiscussionMachineState =
   | "idle"

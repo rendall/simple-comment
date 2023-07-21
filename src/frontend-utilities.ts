@@ -1,3 +1,9 @@
+import type {
+  ResolvedResponse,
+  ResolvedResponseSuccess,
+  Validation,
+} from "./lib/simple-comment-types"
+
 type MinComment = {
   id: string
   parentId?: string | null
@@ -50,9 +56,7 @@ export const threadComments = <T extends MinComment, U extends MinComment>(
   return threadCommentsWithMap(comment)
 }
 
-export const validateUserName = (
-  username: string
-): { isValid: true } | { isValid: false; reason: string } => {
+export const validateUserName = (username: string): Validation => {
   if (username.length === 0) {
     return { isValid: false, reason: "Username cannot be empty." }
   }
@@ -82,6 +86,16 @@ export const validateUserName = (
 
   return { isValid: true }
 }
+
+/** Serves as both a type guard and predicate for validation objects */
+export const isValidationTrue = (
+  validation: Validation
+): validation is { isValid: true } => validation.isValid === true
+
+/** Type guard for success vs error responses */
+export const isResponseOk = <T>(
+  res: ResolvedResponse<T>
+): res is ResolvedResponseSuccess<T> => res.ok === true
 
 /**
  * Creates a debounced function that delays invoking the provided

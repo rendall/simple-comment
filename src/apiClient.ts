@@ -10,7 +10,8 @@ import type {
   Comment,
   UserId,
   User,
-} from "./lib/simple-comment"
+  ResolvedResponseError,
+} from "./lib/simple-comment-types"
 
 const trimDash = (slug: string) => slug.replace(/-+$/, "").replace(/^-+/, "")
 const cleanSlug = (slug: string) =>
@@ -294,8 +295,8 @@ const resolveBody = async <T>(
   const { status, ok, statusText } = res
   const resolvedRes = { status, ok, statusText, body }
 
-  if (!resolvedRes.ok) throw resolvedRes
-  else return resolvedRes
+  if (resolvedRes.ok) return resolvedRes as ResolvedResponse
+  else throw resolvedRes as ResolvedResponseError
 }
 
 /** Return true if 'discussion' or 'comment' is a Topic, false otherwise

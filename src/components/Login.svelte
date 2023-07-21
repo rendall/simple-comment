@@ -1,20 +1,6 @@
 <script lang="ts">
-  import type {
-    LoginMachineState,
-    ServerResponse,
-    LoginMachineContext,
-    LoginMachineEvent,
-    LoginTypestate,
-  } from "../lib/login.xstate"
-  import type {
-    BaseActionObject,
-    Interpreter,
-    ResolveTypegenMeta,
-    ServiceMap,
-    StateSchema,
-    TypegenDisabled,
-  } from "xstate"
-  import type { AdminSafeUser } from "../lib/simple-comment"
+  import type { ServerResponse } from "../lib/login.xstate"
+  import type { AdminSafeUser } from "../lib/simple-comment-types"
   import { useMachine } from "@xstate/svelte"
   import { loginMachine } from "../lib/login.xstate"
   import { createEventDispatcher } from "svelte"
@@ -25,29 +11,11 @@
     postAuth,
     verifySelf,
   } from "../apiClient"
-  import { validateUserName, debounceFunc } from "../frontend-utilities"
   import {
-    Button,
-    ContentSwitcher,
-    Form,
-    PasswordInput,
-    SkeletonPlaceholder,
-    SkeletonText,
-    Switch,
-    TextInput,
-  } from "carbon-components-svelte"
-  type LoginService = Interpreter<
-    LoginMachineContext,
-    StateSchema<Record<string, never>>,
-    LoginMachineEvent,
-    LoginTypestate,
-    ResolveTypegenMeta<
-      TypegenDisabled,
-      LoginMachineEvent,
-      BaseActionObject,
-      ServiceMap
-    >
-  >
+    validateUserName,
+    debounceFunc,
+    isValidationTrue,
+  } from "../frontend-utilities"
 
   let nextEvents = []
   let self: AdminSafeUser
@@ -241,11 +209,7 @@
     setValidStatus(false)
     const validation = validateUserName(username)
 
-    const isValid = (
-      validation: ReturnType<typeof validateUserName>
-    ): validation is { isValid: true } => validation.isValid === true
-
-    if (isValid(validation)) {
+    if (isValidationTrue(validation)) {
       userNameMessage = ""
       userNameMessageStatus = ""
     } else {
@@ -301,111 +265,74 @@
   }
 </script>
 
-<section class="simple-comment-login outline">
-  <p id="status-display" class={isError ? "error" : ""}>{statusMessage}</p>
-  {#if $state.value === "verifying" || $state.value === "loggingIn" || $state.value === "loggingOut"}
-    <section class="self-display">
-      <div class="self-avatar">
-        <SkeletonPlaceholder />
-      </div>
-      <div class="self-info">
-        <SkeletonText heading />
-        <SkeletonText paragraph lines={2} />
-      </div>
-      <SkeletonPlaceholder class="button-placeholder" />
-    </section>
-  {:else if self}
-    <section class="self-display" id="self-display">
-      <div class="self-avatar">
-        <img src="https://source.unsplash.com/random/70x70" alt="" />
-      </div>
-      <div class="self-info">
-        <h2 id="self-user-name">{self.name}</h2>
-        <p id="self-name">@{self.id} {self.isAdmin ? "(admin)" : ""}</p>
-        <p id="self-email">{self.email}</p>
-      </div>
-      {#if nextEvents.includes("LOGOUT")}
-        <Button id="log-out-button" on:click={onLogoutClick}>Log out</Button>
-      {/if}
-    </section>
-  {/if}
-  {#if !self && nextEvents.includes("LOGOUT")}
-    <Button id="log-out-button" on:click={onLogoutClick}>Log out</Button>
-  {/if}
-
-  {#if nextEvents.includes("LOGIN") || nextEvents.includes("SIGNUP")}
-    <ContentSwitcher class="context-switcher" bind:selectedIndex>
-      <Switch text="Log in" />
-      <Switch text="Sign up" />
-    </ContentSwitcher>
-
-    {#if selectedIndex === 0}
-      <Form class="login-form" id="login-form" on:submit={onLoginClick}>
-        <TextInput
-          id="login-user-name"
-          labelText="User name"
-          bind:value={loginUserName}
-          required
-        />
-        <PasswordInput
-          type="password"
-          id="login-password"
-          labelText="Password"
-          bind:value={loginPassword}
-          required
-        />
-        <Button type="submit">Log in</Button>
-      </Form>
+<p id="status-display" class={isError ? "error" : ""}>{statusMessage}</p>
+{#if $state.value === "verifying" || $state.value === "loggingIn" || $state.value === "loggingOut"}
+  <section class="self-display">
+    <div class="self-avatar skeleton" />
+    <div class="self-info skeleton" />
+  </section>
+{:else if self}
+  <section class="self-display" id="self-display">
+    <div class="self-avatar">
+      <img src="https://source.unsplash.com/random/70x70" alt="" />
+    </div>
+    <div class="self-info">
+      <h2 id="self-user-name">{self.name}</h2>
+      <p id="self-name">@{self.id} {self.isAdmin ? "(admin)" : ""}</p>
+      <p id="self-email">{self.email}</p>
+    </div>
+    {#if nextEvents.includes("LOGOUT")}
+      <button id="log-out-button" on:click={onLogoutClick}>Log out</button>
     {/if}
+  </section>
+{/if}
+{#if !self && nextEvents.includes("LOGOUT")}
+  <button id="log-out-button" on:click={onLogoutClick}>Log out</button>
+{/if}
 
-    {#if selectedIndex === 1}
-      <Form class="signup-form" id="signup-form" on:submit={onSignupClick}>
-        <p>
-          Unlock the full power of our platform with a quick sign-up. Secure
-          your ability to edit and manage your posts from any device, anytime.
-          Don't just join the conversation, own it. Sign up today!
-        </p>
-        <TextInput
-          bind:value={signupDisplayName}
-          helperText="This is the name that other users will see"
-          id="signup-name"
-          labelText="Display name"
-          on:input={handleDisplayNameInput}
-        />
-        <TextInput
-          bind:value={loginUserName}
-          helperText={userNameMessageStatus === "valid"
-            ? userNameMessage
-            : "This is the name that uniquely identifies you"}
-          id="signup-user-name"
-          labelText="Username"
-          on:blur={handleUserNameBlur}
-          on:input={handleUserNameInput}
-          invalidText={userNameMessageStatus === "invalid"
-            ? userNameMessage
-            : undefined}
-          invalid={userNameMessageStatus === "invalid"}
-          data-valid={userNameMessageStatus === "valid"}
-        />
-
-        <TextInput
-          bind:value={signupEmail}
-          helperText="Used only for verification and approved notifications. We never show or share your email."
-          id="signup-email"
-          labelText="Email"
-          required
-          type="email"
-        />
-        <PasswordInput
-          type="password"
-          id="signup-password"
-          labelText="Password"
-          bind:value={loginPassword}
-          required
-        />
-        <Button type="submit">Sign up</Button>
-      </Form>
-    {/if}
+{#if nextEvents.includes("LOGIN") || nextEvents.includes("SIGNUP")}
+  {#if selectedIndex === 0}
+    <form class="login-form" id="login-form" on:submit={onLoginClick}>
+      <input id="login-user-name" bind:value={loginUserName} required />
+      <input
+        type="password"
+        id="login-password"
+        bind:value={loginPassword}
+        required
+      />
+      <button type="submit">Log in</button>
+    </form>
   {/if}
-  <p id="user-display">{userDisplay}</p>
-</section>
+
+  {#if selectedIndex === 1}
+    <form class="signup-form" id="signup-form" on:submit={onSignupClick}>
+      <p>
+        Unlock the full power of our platform with a quick sign-up. Secure your
+        ability to edit and manage your posts from any device, anytime. Don't
+        just join the conversation, own it. Sign up today!
+      </p>
+      <input
+        bind:value={signupDisplayName}
+        id="signup-name"
+        on:input={handleDisplayNameInput}
+      />
+      <input
+        bind:value={loginUserName}
+        id="signup-user-name"
+        on:blur={handleUserNameBlur}
+        on:input={handleUserNameInput}
+        data-valid={userNameMessageStatus === "valid"}
+      />
+
+      <input bind:value={signupEmail} id="signup-email" required type="email" />
+      <input
+        type="password"
+        id="signup-password"
+        bind:value={loginPassword}
+        required
+      />
+      <button type="submit">Sign up</button>
+    </form>
+  {/if}
+{/if}
+<p id="user-display">{userDisplay}</p>

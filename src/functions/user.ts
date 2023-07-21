@@ -12,7 +12,7 @@ import type {
   Success,
   UserId,
   Error,
-} from "../lib/simple-comment"
+} from "../lib/simple-comment-types"
 import {
   addHeaders,
   getAllowedOrigins,

@@ -13,7 +13,7 @@ import type {
   Topic,
   UpdateUser,
   User,
-} from "../../../src/lib/simple-comment"
+} from "../../../src/lib/simple-comment-types"
 import { MongodbService } from "../../../src/lib/MongodbService"
 import { Db, MongoClient } from "mongodb"
 import {
