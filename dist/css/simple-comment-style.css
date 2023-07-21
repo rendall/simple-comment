@@ -1,94 +1,202 @@
-/*!*****************************************************************************************************************************!*\
-  !*** css ./node_modules/css-loader/dist/cjs.js!./node_modules/sass-loader/dist/cjs.js!./src/scss/simple-comment-style.scss ***!
-  \*****************************************************************************************************************************/
+/*!*********************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[1].use[1]!./node_modules/sass-loader/dist/cjs.js!./src/scss/simple-comment-style.scss ***!
+  \*********************************************************************************************************************************************************/
 .simple-comment {
-  -webkit-text-size-adjust: 100%;
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-  background-color: red;
-  /*--- <main> for IE 11 ---*/
-  /*--- for Safari (add/remove types as needed) ---*/
-  /*--- for Firefox ---*/
+  background-color: #f8fcff;
+  color: #33475c;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial,
+    sans-serif;
+  font-size: 1.125rem;
+  line-height: 1.61111em;
+  margin-bottom: 1em;
+  margin-top: 1em;
+  margin: 0 auto;
+  padding: 0 1rem;
   /* Skeleton styles */
   /* Animation keyframes for shimmer effect */
 }
+@font-face {
+  font-family: "Comfortaa";
+  font-style: normal;
+  font-weight: 500;
+  font-display: block;
+  src: url(../font/simple-comment.woff2) format("woff2");
+}
+.simple-comment main {
+  max-width: 38rem;
+  margin: 0 auto;
+}
+.simple-comment section {
+  margin-bottom: 3em;
+}
+.simple-comment section.comment-display {
+  padding-right: 1rem;
+}
+.simple-comment section.comment-display textarea,
+.simple-comment section.comment-display input {
+  width: calc(100% - 2rem);
+}
 .simple-comment h1,
-.simple-comment h2,
-.simple-comment h3,
-.simple-comment h4,
-.simple-comment h5,
-.simple-comment h6,
-.simple-comment figure,
-.simple-comment pre,
-.simple-comment dl,
-.simple-comment dd,
-.simple-comment blockquote,
-.simple-comment input[type=radio],
-.simple-comment input[type=checkbox] {
-  margin: 0;
+.simple-comment h2 {
+  color: #3287e6;
 }
-.simple-comment legend {
-  padding: 0;
+.simple-comment h1 {
+  font-family: "Comfortaa", sans-serif;
+  font-size: 3.4rem;
+  font-weight: 500;
+  line-height: 4rem;
+  margin-left: 1rem;
 }
-.simple-comment fieldset,
-.simple-comment ul,
-.simple-comment ol {
-  padding: 0;
-  margin: 0;
+.simple-comment input {
+  height: 2rem;
+  width: 100%;
+  font-size: 1.35rem;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid;
+  font-family: monospace;
 }
-.simple-comment ul,
-.simple-comment ol {
-  list-style: none;
-}
-.simple-comment body {
-  line-height: 1;
-}
-.simple-comment main,
-.simple-comment figure,
-.simple-comment figcaption,
-.simple-comment img {
+.simple-comment textarea {
   display: block;
+  height: 7rem;
+  width: 100%;
+  border-radius: 0.5rem;
+  border: 1px solid;
+  font-size: 1.35rem;
+  padding: 0.5rem;
+  font-family: monospace;
 }
-.simple-comment img {
-  max-width: 100%;
-  height: auto;
+.simple-comment button:hover {
+  font-weight: bold;
+}
+.simple-comment button {
+  appearance: none;
+  border: none;
+  background: transparent;
+  background-color: transparent;
+  cursor: pointer;
+  font-size: inherit;
+  padding: 0.5rem 1rem;
+  width: 7rem;
+  text-align: center;
+  border: 1px solid;
+  border-radius: 0.65rem;
+  margin: 0.5rem 1rem 0.5rem 0;
+}
+.simple-comment p {
+  margin-top: 0;
+}
+.simple-comment p > span {
+  color: #3287e6;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+.simple-comment a:hover {
+  color: #007b8c;
+  text-decoration: underline;
 }
 .simple-comment a {
+  color: #3287e6;
+  font-weight: 600;
   text-decoration: none;
 }
-.simple-comment fieldset {
-  border: 0;
+.simple-comment a[title] {
+  color: unset;
 }
-.simple-comment input,
-.simple-comment textarea,
-.simple-comment select,
-.simple-comment button {
-  display: block;
-  max-width: 100%;
-  font-family: inherit;
-  font-size: inherit;
-  color: inherit;
+.simple-comment textarea#reply-field {
+  min-height: 7rem;
 }
-.simple-comment label {
-  display: table;
+.simple-comment header {
+  display: flex;
+  margin: 0 auto;
+  max-width: 59rem;
+  min-height: 10rem;
+  align-items: center;
 }
-.simple-comment input[type=text],
-.simple-comment input[type=email],
-.simple-comment input[type=password],
-.simple-comment input[type=search] {
-  -webkit-appearance: none;
-  appearance: none;
+.simple-comment li.comment-item:first-child {
+  margin-top: 3rem;
 }
-.simple-comment button {
-  line-height: inherit;
+.simple-comment li.comment-item {
+  border-left: 1px solid gray;
+  margin-bottom: 3rem;
+  padding-left: 1rem;
+  position: relative;
+  list-style: none;
 }
-.simple-comment button::-moz-focus-inner {
-  border: 0;
+.simple-comment p.user-display {
+  font-size: 1.1rem;
+  font-weight: bold;
+  left: -1rem;
+  padding: 0.25rem;
+  position: absolute;
+  top: -2rem;
+}
+.simple-comment ul.comment-replies {
+  padding-left: 1rem;
+}
+.simple-comment p.comment-text {
+  margin: 0;
+}
+.simple-comment #discussion-title {
+  display: none;
+}
+.simple-comment #login-pulser {
+  display: none;
+}
+.simple-comment .is-logging-in #login-pulser {
+  display: inline;
+}
+.simple-comment #log-out-button {
+  display: none;
+}
+.simple-comment .is-logged-in:not(.is-guest) #log-out-button {
+  display: unset;
+}
+.simple-comment .is-logged-in #log-in-form {
+  display: none;
+}
+.simple-comment .is-logged-in .user-info {
+  display: none;
+}
+.simple-comment .is-logged-in:not(.is-guest) .sign-up-form {
+  display: none;
+}
+.simple-comment .is-error,
+.simple-comment .error {
+  font-weight: bold;
+  color: red;
+}
+.simple-comment .is-reply > .comment-display .comment-button {
+  display: none;
+}
+.simple-comment .is-deleted {
+  font-style: italic;
+  opacity: 0.5;
+}
+.simple-comment .is-deleted > .comment-button {
+  display: none;
+}
+.simple-comment .simple-comment-logo {
+  max-width: 9.1rem;
+  min-width: 9.1rem;
+  fill: #3287e6;
+}
+@media (max-width: 1024px) {
+  .simple-comment main {
+    margin: 0 1rem;
+    max-width: unset;
+  }
 }
 .simple-comment .skeleton {
   /* Create a background color animation to simulate shimmer effect */
-  background-image: linear-gradient(90deg, rgba(255, 255, 255, 0.2) 25%, rgba(255, 255, 255, 0.4) 50%, rgba(255, 255, 255, 0.2) 75%);
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.2) 25%,
+    rgba(255, 255, 255, 0.4) 50%,
+    rgba(255, 255, 255, 0.2) 75%
+  );
   background-size: 200% 100%;
   animation: shimmer 1s infinite;
 }
@@ -149,16 +257,30 @@
   height: 2.4rem;
   align-items: center;
 }
-.simple-comment .simple-comment-discussion .comment .comment-header .user-avatar {
+.simple-comment
+  .simple-comment-discussion
+  .comment
+  .comment-header
+  .user-avatar {
   flex: 0 0 45px;
   margin: 0.5rem;
   margin-right: 1.3rem;
 }
-.simple-comment .simple-comment-discussion .comment .comment-header .user-avatar img {
+.simple-comment
+  .simple-comment-discussion
+  .comment
+  .comment-header
+  .user-avatar
+  img {
   background-color: gray;
   color: transparent;
 }
-.simple-comment .simple-comment-discussion .comment .comment-header .user-avatar > :first-child {
+.simple-comment
+  .simple-comment-discussion
+  .comment
+  .comment-header
+  .user-avatar
+  > :first-child {
   width: 45px;
   height: 45px;
   border-radius: 50%;

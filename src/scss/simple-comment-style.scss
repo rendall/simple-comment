@@ -1,103 +1,233 @@
+$corporate-blue: #3287e6;
+
+h1.simple-comment-logotype {
+  font-family: "Comfortaa", sans-serif;
+  font-size: 3.4rem;
+  font-weight: 500;
+  line-height: 4rem;
+  margin-left: 1rem;
+  color: $corporate-blue;
+}
+
 .simple-comment {
   // resets
-  -webkit-text-size-adjust: 100%;
+  @font-face {
+    font-family: "Comfortaa";
+    font-style: normal;
+    font-weight: 500;
+    font-display: block;
+    src: url(../font/simple-comment.woff2) format("woff2");
+  }
+
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
+  background-color: #f8fcff;
+  color: #33475c;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial,
     sans-serif;
+  font-size: 1.125rem;
+  line-height: 1.61111em;
+  margin-bottom: 1em;
+  margin-top: 1em;
+  margin: 0 auto;
+  padding: 0 1rem;
+  width: 38rem;
 
-  background-color: red;
+  section {
+    margin-bottom: 3em;
+  }
+
+  section.comment-display {
+    padding-right: 1rem;
+  }
+
+  section.comment-display textarea,
+  section.comment-display input {
+    width: calc(100% - 2rem);
+  }
 
   h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6,
-  figure,
-  pre,
-  dl,
-  dd,
-  blockquote,
-  input[type="radio"],
-  input[type="checkbox"] {
-    margin: 0;
+  h2 {
+    color: #3287e6;
   }
 
-  legend {
-    padding: 0;
+  h1 {
+    font-family: "Comfortaa", sans-serif;
+    font-size: 3.4rem;
+    font-weight: 500;
+    line-height: 4rem;
+    margin-left: 1rem;
   }
 
-  fieldset,
-  ul,
-  ol {
-    padding: 0;
-    margin: 0;
+  input {
+    height: 2rem;
+    width: 100%;
+    font-size: 1.35rem;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    border: 1px solid;
+    font-family: monospace;
   }
 
-  ul,
-  ol {
-    list-style: none;
-  }
-
-  body {
-    line-height: 1;
-  }
-
-  main,
-  figure,
-  figcaption,
-  img {
+  textarea {
     display: block;
+    height: 7rem;
+    width: 100%;
+    border-radius: 0.5rem;
+    border: 1px solid;
+    font-size: 1.35rem;
+    padding: 0.5rem;
+    font-family: monospace;
   }
 
-  /*--- <main> for IE 11 ---*/
-  img {
-    max-width: 100%;
-    height: auto;
+  button:hover {
+    font-weight: bold;
+  }
+
+  button {
+    appearance: none;
+    border: none;
+    background: transparent;
+    background-color: transparent;
+    cursor: pointer;
+    font-size: inherit;
+    padding: 0.5rem 1rem;
+    width: 7rem;
+    text-align: center;
+    border: 1px solid;
+    border-radius: 0.65rem;
+    margin: 0.5rem 1rem 0.5rem 0;
+  }
+
+  p {
+    margin-top: 0;
+  }
+
+  p > span {
+    color: #3287e6;
+    font-size: 1.2rem;
+    font-weight: bold;
+  }
+
+  a:hover {
+    color: #007b8c;
+    text-decoration: underline;
   }
 
   a {
+    color: #3287e6;
+    font-weight: 600;
     text-decoration: none;
   }
 
-  fieldset {
-    border: 0;
+  a[title] {
+    color: unset;
   }
 
-  input,
-  textarea,
-  select,
-  button {
-    display: block;
-    max-width: 100%;
-    font-family: inherit;
-    font-size: inherit;
-    color: inherit;
+  textarea#reply-field {
+    min-height: 7rem;
   }
 
-  label {
-    display: table;
+  header {
+    display: flex;
+    margin: 0 auto;
+    max-width: 59rem;
+    min-height: 10rem;
+    align-items: center;
   }
 
-  input[type="text"],
-  input[type="email"],
-  input[type="password"],
-  input[type="search"] {
-    -webkit-appearance: none;
-    appearance: none;
+  li.comment-item:first-child {
+    margin-top: 3rem;
   }
 
-  /*--- for Safari (add/remove types as needed) ---*/
-  button {
-    line-height: inherit;
+  li.comment-item {
+    border-left: 1px solid gray;
+    margin-bottom: 3rem;
+    padding-left: 1rem;
+    position: relative;
+    list-style: none;
   }
 
-  button::-moz-focus-inner {
-    border: 0;
+  p.user-display {
+    font-size: 1.1rem;
+    font-weight: bold;
+    left: -1rem;
+    padding: 0.25rem;
+    position: absolute;
+    top: -2rem;
   }
 
-  /*--- for Firefox ---*/
+  ul.comment-replies {
+    padding-left: 1rem;
+  }
+
+  p.comment-text {
+    margin: 0;
+  }
+
+  #discussion-title {
+    display: none;
+  }
+
+  #login-pulser {
+    display: none;
+  }
+
+  .is-logging-in #login-pulser {
+    display: inline;
+  }
+
+  #log-out-button {
+    display: none;
+  }
+
+  .is-logged-in:not(.is-guest) #log-out-button {
+    display: unset;
+  }
+
+  .is-logged-in #log-in-form {
+    display: none;
+  }
+
+  .is-logged-in .user-info {
+    display: none;
+  }
+
+  .is-logged-in:not(.is-guest) .sign-up-form {
+    display: none;
+  }
+
+  .is-error,
+  .error {
+    font-weight: bold;
+    color: red;
+  }
+
+  .is-reply > .comment-display .comment-button {
+    display: none;
+  }
+
+  .is-deleted {
+    font-style: italic;
+    opacity: 0.5;
+  }
+
+  .is-deleted > .comment-button {
+    display: none;
+  }
+
+  .simple-comment-logo {
+    max-width: 9.1rem;
+    min-width: 9.1rem;
+    fill: #3287e6;
+  }
+
+  @media (max-width: 1024px) {
+    main {
+      margin: 0 1rem;
+      max-width: unset;
+    }
+  }
 
   /* Skeleton styles */
   .skeleton {
@@ -117,6 +247,7 @@
     0% {
       background-position: -200% 0;
     }
+
     100% {
       background-position: 200% 0;
     }

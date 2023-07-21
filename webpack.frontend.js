@@ -1,5 +1,4 @@
-const BundleAnalyzerPlugin =
-  require("webpack-bundle-analyzer").BundleAnalyzerPlugin
+// const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin
 const CopyWebpackPlugin = require("copy-webpack-plugin")
 const MiniCssExtractPlugin = require("mini-css-extract-plugin")
 const TerserPlugin = require("terser-webpack-plugin")
@@ -59,7 +58,16 @@ module.exports = {
       },
       {
         test: /\.scss$/,
-        use: [MiniCssExtractPlugin.loader, "css-loader", "sass-loader"],
+        use: [
+          MiniCssExtractPlugin.loader,
+          {
+            loader: "css-loader",
+            options: {
+              url: false,
+            },
+          },
+          "sass-loader",
+        ],
       },
       {
         test: /\.css$/,
@@ -91,11 +99,11 @@ module.exports = {
     minimizer: [new TerserPlugin()],
   },
   plugins: [
-    new CopyWebpackPlugin({ patterns: [{ from: "src/static", to: "." }] }),
     // new LicensePlugin(),
+    // new BundleAnalyzerPlugin({ generateStatsFile: true }),
+    new CopyWebpackPlugin({ patterns: [{ from: "src/static", to: "." }] }),
     new MiniCssExtractPlugin({ filename: "css/[name].css" }),
     new webpack.EnvironmentPlugin(["SIMPLE_COMMENT_API_URL"]),
-    new BundleAnalyzerPlugin({ generateStatsFile: true }),
   ],
   resolve: {
     alias: { svelte: path.resolve("node_modules", "svelte") },
