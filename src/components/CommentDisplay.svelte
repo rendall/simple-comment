@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { Button } from "carbon-components-svelte"
   import { Comment, User } from "../lib/simple-comment"
 
   export let currentUser: User | undefined
@@ -10,26 +9,44 @@
       month: "long",
       day: "numeric",
     })
+
+  let showReply = false
+
+  const onReplyClick = (isOn: boolean) => () => (showReply = isOn)
 </script>
 
-{#each replies as comment}
-  <div class="comment">
-    <div class="comment-header">
-      <p class="comment-name">
-        {comment.user.name ?? "Anonymous"} said:
-      </p>
-      <p class="comment-date">{formatDate(comment.dateCreated)}</p>
-    </div>
-    <div class="comment-body">
-      <p>{comment.text}</p>
-      {#if comment.user.id === currentUser?.id || currentUser?.isAdmin}
-        <Button>Delete</Button>
-      {/if}
-    </div>
-    {#if comment.replies && comment.replies.length > 0}
-      <div class="comment-replies">
-        <svelte:self replies={comment.replies} {currentUser} />
-      </div>
-    {/if}
-  </div>
-{/each}
+<ul class="comment-replies">
+  {#each replies as comment}
+    <li class="comment">
+      <header class="comment-header">
+        <div class="user-avatar">
+          <img
+            src="https://source.unsplash.com/random/70x70"
+            alt={`${comment.user.name} avatar`}
+          />
+        </div>
+        <p class="user-name">
+          {comment.user.name ?? "Anonymous"}
+        </p>
+        <p class="comment-date">{formatDate(comment.dateCreated)}</p>
+      </header>
+      <article class="comment-body">
+        <p>{comment.text}</p>
+        {#if showReply}
+          <textarea />
+          <div class="button-row">
+            <button on:click={onReplyClick(false)}>Cancel</button>
+            <button>Submit</button>
+          </div>
+        {:else}
+          <div class="button-row">
+            <button on:click={onReplyClick(true)}>Reply</button>
+          </div>
+        {/if}
+        {#if comment.replies && comment.replies.length > 0}
+          <svelte:self replies={comment.replies} {currentUser} />
+        {/if}
+      </article>
+    </li>
+  {/each}
+</ul>

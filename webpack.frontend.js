@@ -1,10 +1,11 @@
+const BundleAnalyzerPlugin =
+  require("webpack-bundle-analyzer").BundleAnalyzerPlugin
 const CopyWebpackPlugin = require("copy-webpack-plugin")
 const MiniCssExtractPlugin = require("mini-css-extract-plugin")
 const TerserPlugin = require("terser-webpack-plugin")
 const path = require("path")
 const sveltePreprocess = require("svelte-preprocess")
 const webpack = require("webpack")
-const { optimizeImports } = require("carbon-preprocess-svelte")
 // const LicensePlugin = require('webpack-license-plugin')
 
 const dotenv = require("dotenv")
@@ -33,14 +34,13 @@ module.exports = {
     port: 5000,
     static: path.join(__dirname, "dist"),
   },
-  devtool: "source-map",
+  // devtool: isProduction? undefined : "source-map",
   entry: {
     "simple-comment": path.resolve(__dirname, "src/simple-comment.ts"),
     "svelte": path.resolve(__dirname, "src/svelte.ts"),
-    "svelte-login": path.resolve(__dirname, "src/svelte-login.ts"),
-    "simple-comment-login": path.resolve(
+    "simple-comment-style": path.resolve(
       __dirname,
-      "src/simple-comment-login.ts"
+      "src/scss/simple-comment-style.scss"
     ),
   },
   module: {
@@ -53,7 +53,7 @@ module.exports = {
             compilerOptions: { dev: !isProduction },
             emitCss: true,
             hotReload: false,
-            preprocess: [sveltePreprocess(), optimizeImports()],
+            preprocess: [sveltePreprocess()],
           },
         },
       },
@@ -95,6 +95,7 @@ module.exports = {
     // new LicensePlugin(),
     new MiniCssExtractPlugin({ filename: "css/[name].css" }),
     new webpack.EnvironmentPlugin(["SIMPLE_COMMENT_API_URL"]),
+    new BundleAnalyzerPlugin({ generateStatsFile: true }),
   ],
   resolve: {
     alias: { svelte: path.resolve("node_modules", "svelte") },

@@ -1,389 +1,131 @@
-// Use the "white" (White) Carbon theme
 .simple-comment {
-  @import "carbon-components/scss/globals/scss/vendor/@carbon/themes/scss";
-
-  $carbon--theme: $carbon--theme--white;
-  @include carbon--theme();
-
-  $feature-flags: (
-    ui-shell: true,
-    grid-columns-16: true,
-  );
-
-  $css--font-face: false;
-  $css--helpers: true;
-  $css--body: false;
-  $css--use-layer: true;
-  $css--reset: true;
-  $css--default-type: true;
-  $css--plex: true;
-
-  @import "carbon-components/scss/globals/scss/component-tokens";
-  // @import "carbon-components/src/components/tag/tag";
-  // @import "carbon-components/src/components/notification/inline-notification";
-  // @import "carbon-components/src/components/notification/toast-notification";
-  // @import "carbon-components-svelte/css/popover";
-
-  @import "carbon-components/scss/globals/grid/grid";
-
-  //-------------------------
-  // 🌍 Global
-  //-------------------------
-
-  /// This feature flag was used during development of the v10 experimental grid.
-  /// TODO: remove in next major release. Synced in `feature-flags` as an adapter in the interim
-  /// @deprecated (For v10) v10 always uses `@carbon/grid`
-  /// @access public
-  /// @type Bool
-  /// @group feature-flags
-  $css--use-experimental-grid: false !default;
-
-  /// This feature flag was used during development of the v10 experimental grid.
-  /// TODO: remove in next major release. Synced in `feature-flags` as an adapter in the interim.
-  /// @access public
-  /// @type Bool
-  /// @group feature-flags
-  /// @deprecated (For v10) v10 always uses `@carbon/grid`
-  $css--use-experimental-grid-fallback: false !default;
-
-  /// If `enable-v11-release` is set to `true`, it automatically enables the custom properties flag.
-  /// If so, we need a way to disable custom properties, but use the new tokens.
-  /// @access public
-  /// @type Bool
-  /// @group feature-flags
-  $css--disable-css-custom-properties: false !default;
-  // carbon-components/scss/globals/scss/
-  @import "carbon-components/scss/globals/scss/feature-flags";
-  @import "carbon-components/scss/globals/scss/vars";
-  @import "carbon-components/scss/globals/scss/colors";
-  @import "carbon-components/scss/globals/scss/theme";
-  @import "carbon-components/scss/globals/scss/mixins";
-  @import "carbon-components/scss/globals/scss/layout";
-  @import "carbon-components/scss/globals/scss/layer";
-  @import "carbon-components/scss/globals/scss/spacing";
-  @import "carbon-components/scss/globals/scss/typography";
-  @import "carbon-components/scss/globals/scss/./vendor/@carbon/elements/scss/import-once/import-once";
-  @import "carbon-components/scss/globals/scss/css--reset";
-  @import "carbon-components/scss/globals/scss/css--font-face";
-  @import "carbon-components/scss/globals/scss/css--helpers";
-  @import "carbon-components/scss/globals/scss/../grid/grid";
-
-  // Simple Comment  overrides
-
-  $interactive-01: #3287e6;
-  $interactive: #3287e6;
-
-  //-------------------------
-  // ⚠️ Manage deprecations
-  //-------------------------
-
-  /// We flag this variable as true if someone uses the globals/scss/styles.scss
-  /// entry-point. This allows us to collect all the messages and display them at
-  /// the end of the file instead of bringing it up per-component.
-  ///
-  /// If a consumer instead gets the components by importing the partial directly,
-  /// this variable _will not_ be set to true, so the deprecation message will be
-  /// displayed after the @import.
-  /// @access private
-  /// @type Bool
-  /// @group global-deprecate
-  $deprecations--entry: true;
-
-  /// Collect all deprecation reasons into this list throughout the import cycle.
-  /// @access private
-  /// @type Map
-  /// @group global-deprecate
-  $deprecations--reasons: ();
-
-  /// This message will be prepended to any deprecation notice.
-  /// @access private
-  /// @type String
-  /// @group global-deprecate
-  $deprecations--message: "Deprecated code was found, this code will be removed before the next release of Carbon.";
-
-  //-------------------------
-  // 🍕 Components
-  //-------------------------
-  // node_modules/carbon-components/scss/components/accordion/_accordion.scss
-  // @import 'carbon-components/scss/components/accordion/accordion';
-  // @import 'carbon-components/scss/components/breadcrumb/breadcrumb';
-  @import "carbon-components/scss/components/button/button";
-  // @import 'carbon-components/scss/components/checkbox/checkbox';
-  // @import 'carbon-components/scss/components/code-snippet/code-snippet';
-  // @import 'carbon-components/scss/components/combo-box/combo-box';
-  @import "carbon-components/scss/components/content-switcher/content-switcher";
-  // @import 'carbon-components/scss/components/copy-button/copy-button';
-  // @import 'carbon-components/scss/components/data-table/data-table';
-  // @import 'carbon-components/scss/components/date-picker/date-picker';
-  // @import 'carbon-components/scss/components/dropdown/dropdown';
-  // @import 'carbon-components/scss/components/file-uploader/file-uploader';
-  @import "carbon-components/scss/components/form/form";
-  // @import 'carbon-components/scss/components/inline-loading/inline-loading';
-  // @import 'carbon-components/scss/components/link/link';
-  // @import 'carbon-components/scss/components/list-box/list-box';
-  // @import 'carbon-components/scss/components/list/list';
-  // @import 'carbon-components/scss/components/loading/loading';
-  // @import 'carbon-components/scss/components/menu/menu';
-  // @import 'carbon-components/scss/components/modal/modal';
-  // @import 'carbon-components/scss/components/multi-select/multi-select';
-  // @import 'carbon-components/scss/components/notification/inline-notification';
-  // @import 'carbon-components/scss/components/notification/toast-notification';
-  // @import 'carbon-components/scss/components/number-input/number-input';
-  // @import 'carbon-components/scss/components/overflow-menu/overflow-menu';
-  // @import 'carbon-components/scss/components/pagination-nav/pagination-nav';
-  // @import 'carbon-components/scss/components/pagination/pagination';
-  // @import 'carbon-components/scss/components/progress-bar/progress-bar';
-  // @import 'carbon-components/scss/components/progress-indicator/progress-indicator';
-  // @import 'carbon-components/scss/components/radio-button/radio-button';
-  // @import 'carbon-components/scss/components/search/search';
-  // @import 'carbon-components/scss/components/select/select';
-  @import "carbon-components/scss/components/skeleton/skeleton";
-  // @import 'carbon-components/scss/components/slider/slider';
-  // @import 'carbon-components/scss/components/structured-list/structured-list';
-  // @import 'carbon-components/scss/components/tabs/tabs';
-  // @import 'carbon-components/scss/components/tag/tag';
-  @import "carbon-components/scss/components/text-area/text-area";
-  @import "carbon-components/scss/components/text-input/text-input";
-  // @import 'carbon-components/scss/components/tile/tile';
-  // @import 'carbon-components/scss/components/time-picker/time-picker';
-  // @import "carbon-components/scss/components/toggle/toggle";
-  // @import 'carbon-components/scss/components/toolbar/toolbar';
-  // @import 'carbon-components/scss/components/tooltip/tooltip';
-
-  // //-------------------------------------
-  // // 🔬 Experimental
-  // //-------------------------------------
-  // @import 'carbon-components/scss/components/pagination/unstable_pagination';
-  // @import "carbon-components/scss/components/ui-shell/ui-shell";
-  // @import 'carbon-components/scss/components/treeview/treeview';
-
-  //-------------------------------------
-  // 🙈 Hidden (Not exposed on website)
-  //-------------------------------------
-
-  // Cycle through all the deprecation reasons, if any exist, that have been
-  // accumulated through the @import process.
-  @if (length($deprecations--reasons) > 0) {
-    $deprecations--message: "";
-
-    @each $reason in $deprecations--reasons {
-      $deprecations--message: "#{$deprecations--message} REASON: #{$reason}";
-    }
-
-    @warn $deprecations--message;
-  }
-
+  // resets
+  -webkit-text-size-adjust: 100%;
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
-  background-color: #f8fcff;
-  // color: #33475c;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial,
     sans-serif;
-  // font-size: 1.125rem;
-  // line-height: 1.61111em;
-  // margin-bottom: 1em;
-  // margin-top: 1em;
-  margin: 1rem auto;
-  // padding: 0 1rem;
-  max-width: 38rem;
-  // margin: 0 auto;
 
-  // @import 'carbon-components/scss/globals/scss/_css--helpers.scss';
+  background-color: red;
 
-  // Optionally include the grid
-  // @import 'carbon-components/scss/globals/grid/_grid.scss';
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  figure,
+  pre,
+  dl,
+  dd,
+  blockquote,
+  input[type="radio"],
+  input[type="checkbox"] {
+    margin: 0;
+  }
 
-  // Optionally include components that you need
-  // @import 'carbon-components/scss/components/button/button';
-  // @import 'carbon-components/scss/components/file-uploader/file-uploader';
+  legend {
+    padding: 0;
+  }
 
-  // section {
-  //   margin-bottom: 3em;
-  // }
+  fieldset,
+  ul,
+  ol {
+    padding: 0;
+    margin: 0;
+  }
 
-  // section.comment-display {
-  //   padding-right: 1rem;
-  // }
+  ul,
+  ol {
+    list-style: none;
+  }
 
-  // section.comment-display textarea,
-  // section.comment-display input {
-  //   width: calc(100% - 2rem);
-  // }
+  body {
+    line-height: 1;
+  }
 
-  // h1,
-  // h2 {
-  //   color: #3287e6;
-  // }
+  main,
+  figure,
+  figcaption,
+  img {
+    display: block;
+  }
 
-  // h1 {
-  //   font-family: "Comfortaa", sans-serif;
-  //   font-size: 3.4rem;
-  //   font-weight: 500;
-  //   line-height: 4rem;
-  //   margin-left: 1rem;
-  // }
+  /*--- <main> for IE 11 ---*/
+  img {
+    max-width: 100%;
+    height: auto;
+  }
 
-  // input {
-  //   height: 2rem;
-  //   width: 100%;
-  //   font-size: 1.35rem;
-  //   padding: 0.5rem;
-  //   border-radius: 0.5rem;
-  //   border: 1px solid;
-  //   font-family: monospace;
-  // }
+  a {
+    text-decoration: none;
+  }
 
-  // textarea {
-  //   display: block;
-  //   height: 7rem;
-  //   width: 100%;
-  //   border-radius: 0.5rem;
-  //   border: 1px solid;
-  //   font-size: 1.35rem;
-  //   padding: 0.5rem;
-  //   font-family: monospace;
-  // }
+  fieldset {
+    border: 0;
+  }
 
-  // button:hover {
-  //   font-weight: bold;
-  // }
+  input,
+  textarea,
+  select,
+  button {
+    display: block;
+    max-width: 100%;
+    font-family: inherit;
+    font-size: inherit;
+    color: inherit;
+  }
 
-  // button {
-  //   appearance: none;
-  //   background-color: transparent;
-  //   background: transparent;
-  //   border-radius: 0.65rem;
-  //   border: 1px solid;
-  //   cursor: pointer;
-  //   font-size: inherit;
-  //   margin: 0.5rem 1rem 0.5rem 0;
-  //   padding: 0.5rem 1rem;
-  //   text-align: center;
-  //   transition: background-color 0.25s ease, color 0.25s ease;
-  //   width: 7rem;
-  // }
+  label {
+    display: table;
+  }
 
-  // p {
-  //   margin-top: 0;
-  // }
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"] {
+    -webkit-appearance: none;
+    appearance: none;
+  }
 
-  // p>span {
-  //   color: #3287e6;
-  //   font-size: 1.2rem;
-  //   font-weight: bold;
-  // }
+  /*--- for Safari (add/remove types as needed) ---*/
+  button {
+    line-height: inherit;
+  }
 
-  // a:hover {
-  //   color: #007b8c;
-  //   text-decoration: underline;
-  // }
+  button::-moz-focus-inner {
+    border: 0;
+  }
 
-  // a {
-  //   color: #3287e6;
-  //   font-weight: 600;
-  //   text-decoration: none;
-  // }
+  /*--- for Firefox ---*/
 
-  // a[title] {
-  //   color: unset;
-  // }
+  /* Skeleton styles */
+  .skeleton {
+    /* Create a background color animation to simulate shimmer effect */
+    background-image: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.2) 25%,
+      rgba(255, 255, 255, 0.4) 50%,
+      rgba(255, 255, 255, 0.2) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1s infinite;
+  }
 
-  // textarea#reply-field {
-  //   min-height: 7rem;
-  // }
-
-  // header {
-  //   display: flex;
-  //   margin: 0 auto;
-  //   max-width: 59rem;
-  //   min-height: 10rem;
-  //   align-items: center;
-  // }
-
-  // li.comment-item:first-child {
-  //   margin-top: 3rem;
-  // }
-
-  // li.comment-item {
-  //   border-left: 1px solid gray;
-  //   margin-bottom: 3rem;
-  //   padding-left: 1rem;
-  //   position: relative;
-  //   list-style: none;
-  // }
-
-  // p.user-display {
-  //   font-size: 1.1rem;
-  //   font-weight: bold;
-  //   left: -1rem;
-  //   padding: 0.25rem;
-  //   position: absolute;
-  //   top: -2rem;
-  // }
-
-  // ul.comment-replies {
-  //   padding-left: 1rem;
-  // }
-
-  // p.comment-text {
-  //   margin: 0;
-  // }
-
-  // .simple-comment-logo {
-  //   max-width: 9.1rem;
-  //   min-width: 9.1rem;
-  //   fill: #3287e6;
-  // }
-
-  // button.primary {
-  //   background-color: #3287e6;
-  //   border-color: #3287e6;
-  //   color: white;
-  //   height: 2.5rem;
-  //   padding-bottom: 0.6rem;
-
-  //   &:hover {
-  //     background-color: white;
-  //     color: #3287e6;
-  //   }
-  // }
-
-  // .outline {
-  //   border: 1px solid #ddd;
-  //   padding: 1rem;
-  //   border-radius: 0.5rem;
-  //   transition: height 0.5s ease-in-out;
-  // }
-
-  // Override UIShell to fix specific issues
-
-  .bx--header {
-    position: relative;
-    background-color: $interactive;
-    color: white;
-
-    .bx--header__global {
-      .bx--header__action {
-        position: absolute;
-        right: 0;
-        top: 0;
-      }
+  /* Animation keyframes for shimmer effect */
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
     }
   }
 
-  .bx--header-panel {
-    height: 10rem;
-    background-color: $interactive;
-
-    &.bx--header-panel--expanded {
-      position: relative;
-    }
-  }
-
-  &.hide-login {
-    .login-container {
-      display: none;
-    }
+  .button-row {
+    display: flex;
+    direction: row;
+    justify-content: flex-end;
   }
 
   .simple-comment-login {
@@ -435,47 +177,41 @@
     .context-switcher {
       margin-bottom: 3rem;
     }
-
-    .login-form,
-    .signup-form {
-      & > * {
-        margin-bottom: 3rem;
-      }
-
-      // Out of the box TextInput has "warn" and "invalid" states.
-      // This adds  a green "valid" state to signup form user name input
-      input[data-valid="true"]:not(:focus) {
-        outline: 2px solid $support-success;
-        outline-offset: -2px;
-      }
-
-      .bx--text-input__valid-icon {
-        fill: $support-success;
-        position: absolute;
-        top: 50%;
-        right: 1rem;
-        transform: translateY(-50%);
-      }
-
-      #helper-signup-user-name[data-valid="true"] {
-        color: $support-success;
-      }
-    }
-  }
-
-  .discussion-display {
-    .comment {
-      .comment-replies {
-        margin-left: 1rem;
-        border-left: 1px solid black;
-        padding-left: 1rem;
-      }
-    }
   }
 
   .simple-comment-discussion {
-    section {
-      margin-bottom: 3rem;
+    .comment {
+      .comment-header {
+        min-height: unset;
+        height: 2.4rem;
+        align-items: center;
+
+        .user-avatar {
+          flex: 0 0 45px;
+          margin: 0.5rem;
+          margin-right: 1.3rem;
+
+          img {
+            background-color: gray;
+            color: transparent; // visually hide the alt text
+          }
+
+          > :first-child {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+          }
+        }
+      }
+
+      .comment-body {
+        margin-left: 0.5rem;
+      }
+
+      .comment-replies {
+        margin-left: 1rem;
+        padding-left: 1rem;
+      }
     }
   }
 }
