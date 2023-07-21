@@ -8,6 +8,7 @@
     createUser,
     deleteAuth,
     getOneUser,
+    isValidEmail,
     postAuth,
     verifySelf,
   } from "../apiClient"
@@ -16,6 +17,7 @@
     debounceFunc,
     isValidationTrue,
   } from "../frontend-utilities"
+  import InputField from "./low-level/InputField.svelte"
 
   let nextEvents = []
   let self: AdminSafeUser
@@ -23,12 +25,15 @@
   let loginPassword = ""
   let loginUserName = ""
   let signupEmail = ""
+  let signupEmailStatus = ""
+  let signupEmailHelperText =
+    "Used only for verification and approved notifications. We never show or share your email."
   let signupDisplayName = ""
   let statusMessage = ""
   let userDisplay = ""
   let userNameManuallyChanged = false
-  let userNameMessage = ""
-  let userNameMessageStatus = ""
+  let userNameMessage = undefined
+  let userNameMessageStatus = undefined
   let selectedIndex = 0
 
   const { state, send } = useMachine(loginMachine)
@@ -44,7 +49,32 @@
 
   const onSignupClick = async (e: Event) => {
     e.preventDefault()
-    send({ type: "SIGNUP" })
+
+    const validations = [
+      () =>
+        userNameMessageStatus === "error"
+          ? { isValid: false, reason: userNameMessage }
+          : { isValid: true },
+      () => checkUserEmailValid(signupEmail),
+      () => validateUserName(loginUserName),
+    ]
+    validations.forEach(func => {
+      const valid = func()
+    })
+
+    const allValid =
+      validations.reduce(
+        (isValid, func) => (func().isValid ? isValid : false),
+        true
+      ) && userNameMessageStatus !== "error"
+
+    if (allValid) send({ type: "SIGNUP" })
+    else
+      send({
+        type: "ERROR",
+        error:
+          "The signup form has errors. Please correct them and click submit again.",
+      })
   }
 
   const onLogoutClick = async () => {
@@ -53,7 +83,7 @@
 
   /** Handler for XState "verifying" state */
   const verifyingStateHandler = () => {
-    updateStatusDisplay("verifying")
+    updateStatusDisplay()
 
     verifySelf()
       .then((user: AdminSafeUser) => {
@@ -69,7 +99,7 @@
   }
 
   const loggingInStateHandler = () => {
-    updateStatusDisplay("logging in")
+    updateStatusDisplay()
 
     postAuth(loginUserName, loginPassword)
       .then(() => send("SUCCESS"))
@@ -79,7 +109,7 @@
   }
 
   const signingUpStateHandler = () => {
-    updateStatusDisplay("signing up")
+    updateStatusDisplay()
     const userInfo = {
       id: loginUserName,
       name: signupDisplayName,
@@ -92,23 +122,29 @@
   }
 
   const loggedInStateHandler = () => {
-    updateStatusDisplay("logged in")
+    updateStatusDisplay()
   }
 
   const loggingOutStateHandler = () => {
-    updateStatusDisplay("logging out")
+    updateStatusDisplay()
     deleteAuth()
       .then(() => send("SUCCESS"))
       .catch(error => send({ type: "ERROR", error }))
   }
 
   const loggedOutStateHandler = () => {
-    updateStatusDisplay("logged out")
+    updateStatusDisplay()
     self = undefined
   }
 
   const errorStateHandler = () => {
     const error = $state.context.error
+
+    if (typeof error === "string") {
+      updateStatusDisplay(error, true)
+      return
+    }
+
     const { status, statusText, ok, body } = error as ServerResponse
     if (ok) console.warn("Error handler caught an OK response", error)
 
@@ -161,82 +197,91 @@
       .replace(/[^a-z0-9-]/g, "-")
   }
 
-  /** Set the green, success "valid" state on the user name input (or remove it by setting toggle to false) */
-  const setValidStatus = (toggle: boolean = true) => {
-    if (toggle) {
-      document
-        .getElementById("helper-signup-user-name")
-        ?.setAttribute("data-valid", "true")
-      let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg")
-      svg.setAttribute("viewBox", "0 0 32 32")
-      svg.setAttribute("fill", "currentColor")
-      svg.setAttribute("preserveAspectRatio", "xMidYMid meet")
-      svg.setAttribute("width", "16")
-      svg.setAttribute("height", "16")
-      svg.setAttribute("aria-hidden", "true")
-      svg.setAttribute("class", "bx--text-input__valid-icon")
-      svg.innerHTML = `<defs><style> .cls-1 { fill: none; } </style> </defs> <path d="M16,2A14,14,0,1,0,30,16,14,14,0,0,0,16,2ZM14,21.5908l-5-5L10.5906,15,14,18.4092,21.41,11l1.5957,1.5859Z"/> <polygon id="inner-path" class="cls-1" points="14 21.591 9 16.591 10.591 15 14 18.409 21.41 11 23.005 12.585 14 21.591"/> <rect id="_Transparent_Rectangle_" data-name="&lt;Transparent Rectangle&gt;" class="cls-1" width="32" height="32"/> ` // This is a simple checkmark path
-      let inputField = document.getElementById("signup-user-name")
-      inputField.parentElement.insertBefore(svg, inputField)
-    } else {
-      document
-        .getElementById("helper-signup-user-name")
-        ?.removeAttribute("data-valid")
-      const svg = document
-        .getElementById("signup-user-name")
-        ?.parentElement.querySelector(".bx--text-input__valid-icon")
-      if (svg) {
-        svg.remove()
-      }
-    }
-  }
   const checkUserNameExists = async username => {
-    if (!validateUserName(username).isValid) return
+    if (!onSubmitCheckUserNameValid(username).isValid) return
 
-    setValidStatus(false)
+    userNameMessage = "..."
     try {
       await getOneUser(username)
       userNameMessage = `The username '${username}' is already taken. Please try another one.`
-      userNameMessageStatus = "invalid"
+      userNameMessageStatus = "error"
     } catch (error) {
       userNameMessage = "This username is available."
-      userNameMessageStatus = "valid"
-      setValidStatus()
-    }
-  }
-
-  const checkUserNameValid = username => {
-    setValidStatus(false)
-    const validation = validateUserName(username)
-
-    if (isValidationTrue(validation)) {
-      userNameMessage = ""
-      userNameMessageStatus = ""
-    } else {
-      userNameMessageStatus = "invalid"
-      userNameMessage = validation.reason
+      userNameMessageStatus = "success"
     }
   }
 
   const checkUserExists_debounced = debounceFunc(checkUserNameExists, 300)
 
+  const onSubmitCheckUserNameValid = username => {
+    const validation = validateUserName(username)
+
+    if (isValidationTrue(validation)) {
+      userNameMessage = "..."
+      userNameMessageStatus = "valid"
+    } else {
+      userNameMessageStatus = "error"
+      userNameMessage = validation.reason
+    }
+    return validation
+  }
+
+  const onInputCheckUserNameValid = username => {
+    const validation = validateUserName(username)
+    const ignoreReasons = ["Username is too short.", "Username cannot be empty"]
+    const isIgnore = validation =>
+      ignoreReasons.some(ignoreReason =>
+        validation.reason?.startsWith(ignoreReason)
+      )
+
+    if (isValidationTrue(validation) || isIgnore(validation)) {
+      userNameMessage = "..."
+      userNameMessageStatus = undefined
+    } else {
+      userNameMessageStatus = "error"
+      userNameMessage = validation.reason
+    }
+  }
+
+  const checkUserNameValid_debounced = debounceFunc(
+    onInputCheckUserNameValid,
+    50
+  )
+
   const handleDisplayNameInput = () => {
     if (!userNameManuallyChanged) {
       const formattedUserName = formatUserName(signupDisplayName)
-      checkUserNameValid(formattedUserName)
+      checkUserNameValid_debounced(formattedUserName)
       checkUserExists_debounced(formattedUserName)
       loginUserName = formattedUserName
     }
   }
 
+  const checkUserEmailValid = email => {
+    if (isValidEmail(email)) {
+      signupEmailHelperText = "This email address is valid."
+      signupEmailStatus = "valid"
+      return { isValid: true }
+    } else {
+      signupEmailStatus = "error"
+      signupEmailHelperText =
+        "This email address appears to be invalid. Please check."
+      return { isValid: false, reason: signupEmailHelperText }
+    }
+  }
+
+  const checkUserEmailValid_debounced = debounceFunc(checkUserEmailValid, 50)
+
+  const handleUserEmailInput = () => checkUserEmailValid_debounced(signupEmail)
+
   const handleUserNameInput = () => {
     userNameManuallyChanged = true
-    checkUserNameValid(loginUserName)
+    checkUserNameValid_debounced(loginUserName)
     checkUserExists_debounced(loginUserName)
   }
 
   const handleUserNameBlur = () => {
-    checkUserNameValid(loginUserName)
+    checkUserNameValid_debounced(loginUserName)
     checkUserExists_debounced(loginUserName)
   }
 
@@ -260,79 +305,122 @@
 
   const dispatch = createEventDispatcher()
   $: {
-    console.log("userChange")
     dispatch("userChange", { currentUser: self })
+  }
+
+  $: {
+    if (loginUserName.length < 3 && !userNameMessageStatus)
+      userNameMessage = "This is the name that uniquely identifies you"
   }
 </script>
 
-<p id="status-display" class={isError ? "error" : ""}>{statusMessage}</p>
-{#if $state.value === "verifying" || $state.value === "loggingIn" || $state.value === "loggingOut"}
-  <section class="self-display">
-    <div class="self-avatar skeleton" />
-    <div class="self-info skeleton" />
-  </section>
-{:else if self}
-  <section class="self-display" id="self-display">
-    <div class="self-avatar">
-      <img src="https://source.unsplash.com/random/70x70" alt="" />
+<section class="simple-comment-login">
+  <p
+    id="status-display"
+    class:invisible={!statusMessage || statusMessage.length === 0}
+    class={isError ? "error" : ""}
+  >
+    {statusMessage}
+  </p>
+  {#if $state.value === "verifying" || $state.value === "loggingIn" || $state.value === "loggingOut"}
+    <section class="self-display">
+      <div class="self-avatar skeleton" />
+      <div class="self-info skeleton" />
+    </section>
+  {:else if self}
+    <section class="self-display" id="self-display">
+      <div class="self-avatar">
+        <img src="https://source.unsplash.com/random/70x70" alt="" />
+      </div>
+      <div class="self-info">
+        <h2 id="self-user-name">{self.name}</h2>
+        <p id="self-name">@{self.id} {self.isAdmin ? "(admin)" : ""}</p>
+        <p id="self-email">{self.email}</p>
+      </div>
+      {#if nextEvents.includes("LOGOUT")}
+        <button id="log-out-button" on:click={onLogoutClick}>Log out</button>
+      {/if}
+    </section>
+  {/if}
+  {#if !self && nextEvents.includes("LOGOUT")}
+    <button id="log-out-button" on:click={onLogoutClick}>Log out</button>
+  {/if}
+
+  {#if nextEvents.includes("LOGIN") || nextEvents.includes("SIGNUP")}
+    <div class="selection-buttons button-row">
+      <button
+        class="login-selection-button"
+        class:selected={selectedIndex === 0}
+        on:click={() => (selectedIndex = 0)}>login</button
+      >
+      <button
+        class="signup-selection-button"
+        class:selected={selectedIndex === 1}
+        on:click={() => (selectedIndex = 1)}>signup</button
+      >
     </div>
-    <div class="self-info">
-      <h2 id="self-user-name">{self.name}</h2>
-      <p id="self-name">@{self.id} {self.isAdmin ? "(admin)" : ""}</p>
-      <p id="self-email">{self.email}</p>
-    </div>
-    {#if nextEvents.includes("LOGOUT")}
-      <button id="log-out-button" on:click={onLogoutClick}>Log out</button>
+    {#if selectedIndex === 0}
+      <form class="login-form" id="login-form" on:submit={onLoginClick}>
+        <input id="login-user-name" bind:value={loginUserName} required />
+        <input
+          type="password"
+          id="login-password"
+          bind:value={loginPassword}
+          required
+        />
+        <button type="submit">Log in</button>
+      </form>
     {/if}
-  </section>
-{/if}
-{#if !self && nextEvents.includes("LOGOUT")}
-  <button id="log-out-button" on:click={onLogoutClick}>Log out</button>
-{/if}
 
-{#if nextEvents.includes("LOGIN") || nextEvents.includes("SIGNUP")}
-  {#if selectedIndex === 0}
-    <form class="login-form" id="login-form" on:submit={onLoginClick}>
-      <input id="login-user-name" bind:value={loginUserName} required />
-      <input
-        type="password"
-        id="login-password"
-        bind:value={loginPassword}
-        required
-      />
-      <button type="submit">Log in</button>
-    </form>
+    {#if selectedIndex === 1}
+      <form class="signup-form" id="signup-form" on:submit={onSignupClick}>
+        <p>
+          Unlock the full power of our platform with a quick sign-up. Secure
+          your ability to edit and manage your posts from any device, anytime.
+          Don't just join the conversation, own it. Sign up today!
+        </p>
+        <InputField
+          bind:value={signupDisplayName}
+          helperText="This is the name that others will see"
+          id="signup-name"
+          labelText="Display name"
+          onInput={handleDisplayNameInput}
+          placeholder="Display name"
+          required
+        />
+        <InputField
+          bind:value={loginUserName}
+          status={userNameMessageStatus}
+          helperText={userNameMessage}
+          id="signup-user-name"
+          labelText="Username"
+          onBlur={handleUserNameBlur}
+          onInput={handleUserNameInput}
+          placeholder="User handle"
+        />
+
+        <InputField
+          bind:value={signupEmail}
+          helperText={signupEmailHelperText}
+          status={signupEmailStatus}
+          id="signup-email"
+          labelText="Email"
+          placeholder="Email"
+          required
+          type="email"
+          onInput={handleUserEmailInput}
+        />
+        <InputField
+          bind:value={loginPassword}
+          id="signup-password"
+          labelText="Password"
+          placeholder="Password"
+          required
+          type="password"
+        />
+        <button type="submit">Sign up</button>
+      </form>
+    {/if}
   {/if}
-
-  {#if selectedIndex === 1}
-    <form class="signup-form" id="signup-form" on:submit={onSignupClick}>
-      <p>
-        Unlock the full power of our platform with a quick sign-up. Secure your
-        ability to edit and manage your posts from any device, anytime. Don't
-        just join the conversation, own it. Sign up today!
-      </p>
-      <input
-        bind:value={signupDisplayName}
-        id="signup-name"
-        on:input={handleDisplayNameInput}
-      />
-      <input
-        bind:value={loginUserName}
-        id="signup-user-name"
-        on:blur={handleUserNameBlur}
-        on:input={handleUserNameInput}
-        data-valid={userNameMessageStatus === "valid"}
-      />
-
-      <input bind:value={signupEmail} id="signup-email" required type="email" />
-      <input
-        type="password"
-        id="signup-password"
-        bind:value={loginPassword}
-        required
-      />
-      <button type="submit">Sign up</button>
-    </form>
-  {/if}
-{/if}
-<p id="user-display">{userDisplay}</p>
+  <p id="user-display">{userDisplay}</p>
+</section>

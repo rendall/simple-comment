@@ -17,7 +17,7 @@ export type LoginTypestate = {
 }
 
 export type LoginMachineContext = {
-  error?: ServerResponse
+  error?: ServerResponse | string
 }
 
 export type ServerResponse = {
@@ -30,7 +30,7 @@ export type ServerResponse = {
 export type LoginMachineEvent =
   | { type: "CANCEL" }
   | { type: "CONFIRM" }
-  | { type: "ERROR"; error: ServerResponse }
+  | { type: "ERROR"; error: ServerResponse | string }
   | { type: "FIRST_VISIT" }
   | { type: "LOGIN" }
   | { type: "LOGOUT" }
