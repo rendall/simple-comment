@@ -1,4 +1,3 @@
-import { uuidv4 } from "../../src/lib/crypt"
 import type {
   Comment,
   CommentId,
@@ -41,11 +40,19 @@ export const mockEmail = (): Email =>
 export const mockUserId = (): string =>
   randomString(emailAscii, randomNumber(5, 36))
 
+export const mockUuid4 = () => {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+    const r = (Math.random() * 16) | 0
+    const v = c === "x" ? r : (r & 0x3) | 0x8
+    return v.toString(16)
+  })
+}
+
 export const mockPassword = () =>
   randomString(passwordInput, randomNumber(10, 50))
 // Functions that generate fake data - these could be moved to a common file to help other Service tests
 const mockComment = (parentId: TopicId | CommentId, user: User): Comment => ({
-  id: uuidv4(),
+  id: mockUuid4(),
   parentId,
   userId: user.id,
   text: randomString(alphaUserInput, randomNumber(50, 500)),
