@@ -1,6 +1,8 @@
 <script lang="ts">
-  import type { ServerResponse } from "../lib/login.xstate"
-  import type { AdminSafeUser } from "../lib/simple-comment-types"
+  import type {
+    AdminSafeUser,
+    ServerResponse,
+  } from "../lib/simple-comment-types"
   import { useMachine } from "@xstate/svelte"
   import { loginMachine } from "../lib/login.xstate"
   import { createEventDispatcher } from "svelte"
@@ -342,33 +344,42 @@
       {/if}
     </section>
   {/if}
-  {#if !self && nextEvents.includes("LOGOUT")}
-    <button id="log-out-button" on:click={onLogoutClick}>Log out</button>
-  {/if}
 
-  {#if nextEvents.includes("LOGIN") || nextEvents.includes("SIGNUP")}
-    <div class="selection-buttons button-row">
+  <div class="selection-tabs button-row">
+    {#if nextEvents.includes("LOGIN")}
       <button
-        class="login-selection-button"
+        class="selection-tab selection-tab-login"
         class:selected={selectedIndex === 0}
         on:click={() => (selectedIndex = 0)}>login</button
       >
+    {/if}
+    {#if nextEvents.includes("SIGNUP")}
       <button
-        class="signup-selection-button"
+        class="selection-tab selection-tab-signup"
         class:selected={selectedIndex === 1}
         on:click={() => (selectedIndex = 1)}>signup</button
       >
-    </div>
+    {/if}
+  </div>
+  {#if nextEvents.includes("LOGIN") || nextEvents.includes("SIGNUP")}
     {#if selectedIndex === 0}
       <form class="login-form" id="login-form" on:submit={onLoginClick}>
-        <input id="login-user-name" bind:value={loginUserName} required />
-        <input
+        <InputField
+          id="login-user-name"
+          labelText="User handle"
+          bind:value={loginUserName}
+          required
+        />
+        <InputField
           type="password"
+          labelText="Password"
           id="login-password"
           bind:value={loginPassword}
           required
         />
-        <button type="submit">Log in</button>
+        <div class="button-row">
+          <button type="submit">Log in</button>
+        </div>
       </form>
     {/if}
 
@@ -385,7 +396,6 @@
           id="signup-name"
           labelText="Display name"
           onInput={handleDisplayNameInput}
-          placeholder="Display name"
           required
         />
         <InputField
@@ -393,10 +403,9 @@
           status={userNameMessageStatus}
           helperText={userNameMessage}
           id="signup-user-name"
-          labelText="Username"
+          labelText="User handle"
           onBlur={handleUserNameBlur}
           onInput={handleUserNameInput}
-          placeholder="User handle"
         />
 
         <InputField
@@ -405,7 +414,6 @@
           status={signupEmailStatus}
           id="signup-email"
           labelText="Email"
-          placeholder="Email"
           required
           type="email"
           onInput={handleUserEmailInput}
@@ -414,13 +422,13 @@
           bind:value={loginPassword}
           id="signup-password"
           labelText="Password"
-          placeholder="Password"
           required
           type="password"
         />
-        <button type="submit">Sign up</button>
+        <div class="button-row">
+          <button type="submit">Sign up</button>
+        </div>
       </form>
     {/if}
   {/if}
-  <p id="user-display">{userDisplay}</p>
 </section>

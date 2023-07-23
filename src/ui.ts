@@ -3,7 +3,7 @@ import type {
   Comment,
   CommentId,
   Discussion,
-  ResolvedResponse,
+  ServerResponse,
   TokenClaim,
 } from "./lib/simple-comment-types"
 
@@ -22,10 +22,10 @@ import {
   isValidEmail,
   createUser,
   deleteComment,
-  formatDate,
   isTopic,
   updateUser,
 } from "./apiClient"
+import { formatDate } from "./frontend-utilities"
 
 let currUser: AdminSafeUser | undefined
 let clearReply = () => {}
@@ -35,12 +35,12 @@ let updateReply = () => {}
 const isString = (x: unknown): x is string => typeof x === "string"
 // Response type guard
 const isResponse = (
-  res: string | ResolvedResponse | Response
+  res: string | ServerResponse | Response
 ): res is Response =>
   !isString(res) && "text" in res && typeof res.text === "function"
 // Resolved Response type guard
-const isResolvedResponse = (
-  res: string | ResolvedResponse | Response
+const isServerResponse = (
+  res: string | ServerResponse | Response
 ): res is Response => !isString(res) && "body" in res
 
 /* UI methods
@@ -210,7 +210,7 @@ const setupSignup = () => {
         clearSignupForm()
         return resp
       })
-      .catch((err: ResolvedResponse) =>
+      .catch((err: ServerResponse) =>
         setSignupStatus(
           `Error ${err.status} ${err.statusText}: ${err.body}`,
           true
@@ -275,7 +275,7 @@ export const appendComment = (comment: Comment, li: HTMLLIElement) => {
 
       deleteCommentButton.addEventListener("click", () => {
         deleteComment(comment.id)
-          .then((res: ResolvedResponse) => {
+          .then((res: ServerResponse) => {
             if (res.status !== 202) {
               console.error(res)
               throw new Error(`Unknown response status code ${res.status}`)
@@ -334,9 +334,9 @@ export const threadReplies = (
 
   if (isTopic(parent)) insertReplyInput(parentId)
 }
-let currDiscussion: ResolvedResponse<Discussion>
+let currDiscussion: ServerResponse<Discussion>
 const updateDiscussionDisplay = (
-  discussionResponse: ResolvedResponse<Discussion>
+  discussionResponse: ServerResponse<Discussion>
 ) => {
   const discussion: Discussion = discussionResponse.body as Discussion
   const discussionDiv = document.querySelector("#discussion") as HTMLDivElement
@@ -437,12 +437,12 @@ const clearStatus = () => {
 }
 
 const setStatus = (
-  message: string | ResolvedResponse | Response,
+  message: string | ServerResponse | Response,
   isError = false
 ) => {
   if (isResponse(message))
     return message.text().then(msg => setStatus(msg, isError))
-  if (isResolvedResponse(message))
+  if (isServerResponse(message))
     return setStatus(JSON.stringify(message.body), isError)
   if (!isString(message)) return setStatus(JSON.stringify(message), isError)
   clearStatus()
@@ -453,7 +453,7 @@ const setStatus = (
 }
 
 const setErrorStatus = (
-  error: Error | ResolvedResponse | Response | string
+  error: Error | ServerResponse | Response | string
 ) => {
   console.error(error)
   if (typeof error === "string") return setStatus(error, true)
@@ -509,7 +509,7 @@ const getSelf = (claim: TokenClaim) =>
  * endpoint, requesting a single topic and its replies. This method
  * handles the response. */
 const onReceiveDiscussion = (
-  discussionResponse: ResolvedResponse<Discussion>
+  discussionResponse: ServerResponse<Discussion>
 ) => {
   currDiscussion = discussionResponse
   updateDiscussionDisplay(currDiscussion)
@@ -580,7 +580,7 @@ const onCommentSubmit = (submitElems, targetId) => async () => {
     try {
       const createGuestUserResult = await createGuestUser({ id, name, email })
       if (createGuestUserResult.status === 201) await updateLoginStatus()
-      else setErrorStatus(createGuestUserResult as ResolvedResponse)
+      else setErrorStatus(createGuestUserResult as ServerResponse)
     } catch (error) {
       setErrorStatus(error)
       return
@@ -608,7 +608,7 @@ const onCommentSubmit = (submitElems, targetId) => async () => {
 
   const onCommentResponse =
     (parentElement: HTMLLIElement) =>
-    (response: ResolvedResponse<Comment | string>) => {
+    (response: ServerResponse<Comment | string>) => {
       const comment = response.body
       if (typeof comment === "string") {
         setErrorStatus(comment)
@@ -694,7 +694,7 @@ const onLoginClick = () => {
 const downloadDiscussion = discussionId =>
   getOneDiscussion(discussionId).then(resp => {
     setStatus("Discussion downloaded! - attempting to populate discussion...")
-    onReceiveDiscussion(resp as ResolvedResponse<Discussion>)
+    onReceiveDiscussion(resp as ServerResponse<Discussion>)
   })
 
 /* Send a POST request to create a topic for discussion */

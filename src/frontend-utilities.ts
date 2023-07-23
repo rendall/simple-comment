@@ -1,6 +1,6 @@
 import type {
-  ResolvedResponse,
-  ResolvedResponseSuccess,
+  ServerResponse,
+  ServerResponseSuccess,
   Validation,
 } from "./lib/simple-comment-types"
 
@@ -94,8 +94,8 @@ export const isValidationTrue = (
 
 /** Type guard for success vs error responses */
 export const isResponseOk = <T>(
-  res: ResolvedResponse<T>
-): res is ResolvedResponseSuccess<T> => res.ok === true
+  res: ServerResponse<T>
+): res is ServerResponseSuccess<T> => res.ok === true
 
 /**
  * Creates a debounced function that delays invoking the provided

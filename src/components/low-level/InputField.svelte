@@ -32,7 +32,7 @@
     on:input={onInput}
     on:blur={onBlur}
   />
-  {#if helperText}
+  {#if helperText?.length > 0}
     <p class="helper-text">{helperText}</p>
   {/if}
 </div>

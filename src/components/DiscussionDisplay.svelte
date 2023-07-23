@@ -1,17 +1,16 @@
 <script lang="ts">
   import CommentDisplay from "./CommentDisplay.svelte"
-  import type { Discussion, Comment, User } from "../lib/simple-comment-types"
-  import { useMachine } from "@xstate/svelte"
   import type {
-    DiscussionMachineContext,
-    DiscussionMachineEvent,
-    DiscussionMachineState,
-    DiscussionTypestate,
+    Discussion,
+    Comment,
+    User,
     ServerResponse,
-  } from "../lib/discussion.xstate"
+  } from "../lib/simple-comment-types"
+  import { useMachine } from "@xstate/svelte"
   import { createNewTopic, getOneDiscussion } from "../apiClient"
   import { discussionMachine } from "../lib/discussion.xstate"
   import { isResponseOk, threadComments } from "../frontend-utilities"
+  import CommentInput from "./CommentInput.svelte"
 
   export let discussionId: string
   export let title: string
@@ -112,8 +111,7 @@
 </script>
 
 <section class="simple-comment-discussion">
-  <textarea placeholder="Your comment" />
-  <div class="button-row"><button>submit</button></div>
+  <CommentInput {currentUser} commentId={discussionId} />
   {#if discussion?.replies}
     <CommentDisplay {currentUser} replies={discussion.replies} />
   {/if}

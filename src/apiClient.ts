@@ -1,16 +1,17 @@
+import { isResponseOk } from "./frontend-utilities"
 import type {
   AdminSafeUser,
   AuthToken,
   Discussion,
   NewUser,
   PublicSafeUser,
-  ResolvedResponse,
+  ServerResponse,
   TokenClaim,
   Topic,
   Comment,
   UserId,
   User,
-  ResolvedResponseError,
+  ServerResponseError,
 } from "./lib/simple-comment-types"
 
 const trimDash = (slug: string) => slug.replace(/-+$/, "").replace(/^-+/, "")
@@ -32,7 +33,7 @@ const getSimpleCommentURL = () => {
 }
 
 /** Fetch a guest token for guest posts, if allowed
- * @returns {ResolvedResponse<AuthToken>}
+ * @returns {ServerResponse<AuthToken>}
  */
 export const getGuestToken = () =>
   fetch(`${getSimpleCommentURL()}/gauth`, {
@@ -42,7 +43,7 @@ export const getGuestToken = () =>
 /** Verify claim in local HTTPCookie, if it exists
  * @async
  * @function
- * @returns {ResolvedResponse<TokenClaim>}
+ * @returns {ServerResponse<TokenClaim>}
  */
 export const verifyUser = () =>
   fetch(`${getSimpleCommentURL()}/verify`, {
@@ -65,7 +66,7 @@ export const verifySelf = () =>
 /** Fetch all user info
  * @async
  * @function
- * @returns {ResolvedResponse<User[]>}
+ * @returns {ServerResponse<User[]>}
  */
 export const getAllUsers = () =>
   fetch(`${getSimpleCommentURL()}/user`, {
@@ -76,7 +77,7 @@ export const getAllUsers = () =>
  * @async
  * @function
  * @param {UserId} userId - username/userid
- * @returns {ResolvedResponse<User>}
+ * @returns {ServerResponse<User>}
  */
 export const getOneUser = (userId: UserId) =>
   fetch(`${getSimpleCommentURL()}/user/${userId}`, {
@@ -87,7 +88,7 @@ export const getOneUser = (userId: UserId) =>
  * @async
  * @function
  * @param {NewUser} newUserInfo
- * @returns {ResolvedResponse<User>}
+ * @returns {ServerResponse<User>}
  */
 export const createUser = (newUserInfo: NewUser) =>
   fetch(`${getSimpleCommentURL()}/user/`, {
@@ -100,7 +101,7 @@ export const createUser = (newUserInfo: NewUser) =>
  * @async
  * @function
  * @param {NewUser} newUserInfo
- * @returns {ResolvedResponse<User>}
+ * @returns {ServerResponse<User>}
  */
 export const updateUser = (userInfo: User) =>
   fetch(`${getSimpleCommentURL()}/user/${userInfo.id}`, {
@@ -113,7 +114,7 @@ export const updateUser = (userInfo: User) =>
  * @async
  * @function
  * @param {obj} userInfo
- * @returns {ResolvedResponse<User>}
+ * @returns {ServerResponse<User>}
  */
 export const createGuestUser = (userInfo: {
   id: string
@@ -124,7 +125,7 @@ export const createGuestUser = (userInfo: {
 /** Revoke user authentication by expiring the auth token
  * @async
  * @function
- * @returns {ResolvedResponse}
+ * @returns {ServerResponse}
  */
 export const deleteAuth = () =>
   fetch(`${getSimpleCommentURL()}/auth`, {
@@ -135,7 +136,7 @@ export const deleteAuth = () =>
 /** Retrieve user authentication
  * @param {string} user - username/userid (term used interchangeably)
  * @param {string} password - user password
- * @returns {ResolvedResponse<AuthToken>}
+ * @returns {ServerResponse<AuthToken>}
  */
 export const postAuth = (user: string, password: string) => {
   const credentials: RequestCredentials = "include"
@@ -178,12 +179,12 @@ export const postAuth = (user: string, password: string) => {
  * @function
  * @param {string} targetId - comment or topic id to attach this reply to
  * @param {string} text - the comment copy
- * @returns {ResolvedResponse}
+ * @returns {ServerResponse}
  */
 export const postComment = (
   targetId,
   text
-): Promise<ResolvedResponse<string | Comment>> =>
+): Promise<ServerResponse<Comment>> =>
   fetch(`${getSimpleCommentURL()}/comment/${targetId}`, {
     body: text,
     method: "POST",
@@ -194,7 +195,7 @@ export const postComment = (
  * @async
  * @function
  * @param {string} commentId
- * @return {ResolvedResponse}
+ * @return {ServerResponse}
  */
 export const deleteComment = commentId =>
   fetch(`${getSimpleCommentURL()}/comment/${commentId}`, {
@@ -256,6 +257,7 @@ export const createNewTopic = (id, title, isLocked = false) => {
 }
 
 // UTILITY
+//TODO: Move these utilities to frontend-utilties.ts
 
 /** Convert an object of type { prop1:val1, prop2:val2, ... } to string "prop1=val1&prop2=val2..."
  * Use this instead of formData to reduce complexity and avoid dependencies
@@ -281,22 +283,21 @@ export const isGuestId = (id: UserId) =>
   id.match(
     /^(?:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|00000000-0000-0000-0000-000000000000)$/i
   )
-export const formatDate = (dateStr: string | Date | undefined) =>
-  dateStr ? `${new Date(dateStr).toLocaleString()}` : "unknown"
+
 // Validate email
 export const isValidEmail = (x: string) =>
   x.match(/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i)
 //  Return the response with the body field read and resolved
 const resolveBody = async <T>(
   res: Response
-): Promise<ResolvedResponse<string | T>> => {
+): Promise<ServerResponse<T>> => {
   const textRes = res.clone()
   const body = await res.json().catch(() => textRes.text())
   const { status, ok, statusText } = res
   const resolvedRes = { status, ok, statusText, body }
 
-  if (resolvedRes.ok) return resolvedRes as ResolvedResponse
-  else throw resolvedRes as ResolvedResponseError
+  if (isResponseOk(resolvedRes)) return resolvedRes as ServerResponse<T>
+  else throw resolvedRes as ServerResponseError
 }
 
 /** Return true if 'discussion' or 'comment' is a Topic, false otherwise

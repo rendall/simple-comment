@@ -32,7 +32,7 @@ export type Error = {
  *
  * @template T - The type of the `body` property in the response.
  */
-export type ResolvedResponseSuccess<T = string> = {
+export type ServerResponseSuccess<T = string> = {
   status: number
   ok: true
   statusText: string
@@ -43,9 +43,9 @@ export type ResolvedResponseSuccess<T = string> = {
  * Represents an error response with a resolved body value.
  * In errors the body type is always "string"
  *
- * @extends ResolvedResponseSuccess<string>
+ * @extends ServerResponseSuccess<string>
  */
-export type ResolvedResponseError = {
+export type ServerResponseError = {
   status: number
   ok: false
   statusText: string
@@ -58,9 +58,9 @@ export type ResolvedResponseError = {
  *
  * @template T - The type of the `body` property in the response.
  */
-export type ResolvedResponse<T = string> =
-  | ResolvedResponseSuccess<T>
-  | ResolvedResponseError
+export type ServerResponse<T = string> =
+  | ServerResponseSuccess<T>
+  | ServerResponseError
 
 export type Validation = { isValid: true } | { isValid: false; reason: string }
 

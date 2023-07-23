@@ -1,4 +1,5 @@
 import { assign, createMachine } from "xstate"
+import type { ServerResponse } from "./simple-comment-types"
 
 export type LoginMachineState =
   | "idle"
@@ -18,13 +19,6 @@ export type LoginTypestate = {
 
 export type LoginMachineContext = {
   error?: ServerResponse | string
-}
-
-export type ServerResponse = {
-  status: number
-  statusText: string
-  ok: boolean
-  body: string
 }
 
 export type LoginMachineEvent =

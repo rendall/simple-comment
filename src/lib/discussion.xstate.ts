@@ -1,5 +1,7 @@
+/** Discussion state machine deals with displaying a discussion: loading, creating and displaying */
+
 import { assign, createMachine } from "xstate"
-import type { Discussion } from "./simple-comment-types"
+import type { Discussion, ServerResponse } from "./simple-comment-types"
 
 export type DiscussionMachineState =
   | "idle"
@@ -17,13 +19,6 @@ export type DiscussionTypestate = {
 export type DiscussionMachineContext = {
   error?: ServerResponse
   discussion?: Discussion
-}
-
-export type ServerResponse = {
-  status: number
-  statusText: string
-  ok: boolean
-  body: string
 }
 
 export type DiscussionMachineEvent =

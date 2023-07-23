@@ -28,24 +28,16 @@ h1.simple-comment-logotype {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial,
     sans-serif;
   font-size: 1.125rem;
-  line-height: 1.61111em;
-  margin-bottom: 1em;
-  margin-top: 1em;
+  line-height: 1.61111rem;
+  margin-bottom: 1rem;
+  margin-top: 1rem;
   margin: 0 auto;
-  padding: 0 1rem;
   width: 38rem;
 
-  section {
-    margin-bottom: 3em;
-  }
-
-  section.comment-display {
-    padding-right: 1rem;
-  }
-
-  section.comment-display textarea,
-  section.comment-display input {
-    width: calc(100% - 2rem);
+  input,
+  textarea,
+  button {
+    box-sizing: border-box;
   }
 
   h1,
@@ -61,13 +53,17 @@ h1.simple-comment-logotype {
     margin-left: 1rem;
   }
 
+  section {
+    padding: 0;
+    margin: 0;
+  }
+
   input {
-    height: 2rem;
+    height: 3rem;
     width: 100%;
     font-size: 1.35rem;
     padding: 0.5rem;
-    border-radius: 0.5rem;
-    border: 1px solid;
+    border: 1px solid $corporate-blue;
     font-family: monospace;
   }
 
@@ -75,8 +71,7 @@ h1.simple-comment-logotype {
     display: block;
     height: 7rem;
     width: 100%;
-    border-radius: 0.5rem;
-    border: 1px solid;
+    border: 1px solid $corporate-blue;
     font-size: 1.35rem;
     padding: 0.5rem;
     font-family: monospace;
@@ -96,75 +91,7 @@ h1.simple-comment-logotype {
     padding: 0.5rem 1rem;
     width: 7rem;
     text-align: center;
-    border: 1px solid;
-    border-radius: 0.65rem;
-    margin: 0.5rem 1rem 0.5rem 0;
-  }
-
-  p {
-    margin-top: 0;
-  }
-
-  p > span {
-    color: #3287e6;
-    font-size: 1.2rem;
-    font-weight: bold;
-  }
-
-  a:hover {
-    color: #007b8c;
-    text-decoration: underline;
-  }
-
-  a {
-    color: #3287e6;
-    font-weight: 600;
-    text-decoration: none;
-  }
-
-  a[title] {
-    color: unset;
-  }
-
-  textarea#reply-field {
-    min-height: 7rem;
-  }
-
-  header {
-    display: flex;
-    margin: 0 auto;
-    max-width: 59rem;
-    min-height: 10rem;
-    align-items: center;
-  }
-
-  li.comment-item:first-child {
-    margin-top: 3rem;
-  }
-
-  li.comment-item {
-    border-left: 1px solid gray;
-    margin-bottom: 3rem;
-    padding-left: 1rem;
-    position: relative;
-    list-style: none;
-  }
-
-  p.user-display {
-    font-size: 1.1rem;
-    font-weight: bold;
-    left: -1rem;
-    padding: 0.25rem;
-    position: absolute;
-    top: -2rem;
-  }
-
-  ul.comment-replies {
-    padding-left: 1rem;
-  }
-
-  p.comment-text {
-    margin: 0;
+    border: 1px solid $corporate-blue;
   }
 
   /* Skeleton styles */
@@ -195,13 +122,24 @@ h1.simple-comment-logotype {
     display: flex;
     direction: row;
     justify-content: flex-end;
+
+    :last-child {
+      margin-right: 0;
+    }
   }
 
   .input-field {
+    margin-bottom: 0.5rem;
+
+    .helper-text {
+      margin: 0;
+    }
+
     &.is-error {
       .input-element {
         border: 1px solid $error-red;
       }
+
       .helper-text {
         color: $error-red;
       }
@@ -209,8 +147,9 @@ h1.simple-comment-logotype {
 
     &.is-success {
       .input-element {
-        outline: 1px solid $success-green;
+        border: 1px solid $success-green;
       }
+
       .helper-text {
         color: $success-green;
       }
@@ -218,15 +157,29 @@ h1.simple-comment-logotype {
   }
 
   .simple-comment-login {
-    .selection-buttons {
-      .signup-selection-button {
-        border: none;
-      }
+    margin-bottom: 3rem;
 
-      .selected {
-        background: $corporate-blue;
-        color: white;
-        font-weight: bold;
+    .selection-tabs {
+      margin-bottom: 1rem;
+
+      .selection-tab {
+        border: 0;
+        margin: 0;
+        border-bottom: 1px solid lightgray;
+        border-radius: 0;
+
+        &:hover:not(.selected) {
+          border-bottom-color: gray;
+          font-weight: normal;
+        }
+
+        &.selected {
+          font-weight: bold;
+          color: $corporate-blue;
+          border-bottom-color: $corporate-blue;
+          cursor: pointer;
+          border-bottom-width: 2px;
+        }
       }
     }
 
@@ -268,7 +221,7 @@ h1.simple-comment-logotype {
 
       h2 {
         margin: 0;
-        font-size: 1.2em;
+        font-size: 1.2rem;
       }
 
       p {
@@ -278,37 +231,85 @@ h1.simple-comment-logotype {
   }
 
   .simple-comment-discussion {
-    .comment {
-      .comment-header {
-        min-height: unset;
-        height: 2.4rem;
-        align-items: center;
+    .discussion-reply-field {
+      margin-bottom: 0.5rem;
+    }
 
-        .user-avatar {
-          flex: 0 0 45px;
-          margin: 0.5rem;
-          margin-right: 1.3rem;
+    ul.comment-replies {
+      list-style: none;
+      padding: 0;
+      margin: 0;
 
-          img {
-            background-color: gray;
-            color: transparent; // visually hide the alt text
+      &:not(.is-root) {
+        margin-left: 1rem;
+      }
+
+      li.comment {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        margin-bottom: 3rem;
+
+        .comment-header {
+          min-height: unset;
+          align-items: center;
+          display: flex;
+          flex-direction: row;
+
+          p {
+            margin: 0;
+            padding: 0;
           }
 
-          > :first-child {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
+          .user-avatar {
+            flex: 0 0 3rem;
+            margin-right: 1.3rem;
+
+            img {
+              background-color: gray;
+              color: transparent; // visually hide the alt text
+            }
+
+            > :first-child {
+              width: 3rem;
+              height: 3rem;
+              border-radius: 50%;
+            }
+          }
+
+          .comment-info {
+            display: flex;
+            flex-direction: column;
+            width: calc(
+              100% - 3rem - 1.3rem
+            ); // Subtract the width and margin of the .user-avatar
+
+            .user-name {
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              color: $corporate-blue;
+              font-weight: bold;
+            }
           }
         }
-      }
 
-      .comment-body {
-        margin-left: 0.5rem;
-      }
+        .comment-body {
+          position: relative;
 
-      .comment-replies {
-        margin-left: 1rem;
-        padding-left: 1rem;
+          &::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: -10px;
+            /* Adjust as needed */
+            border-left: 1px solid $corporate-blue;
+            /* Adjust as needed */
+          }
+
+          margin-left: 0.5rem;
+        }
       }
     }
   }
