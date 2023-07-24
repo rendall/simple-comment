@@ -8,7 +8,7 @@
     User,
   } from "../lib/simple-comment-types"
   import InputField from "./low-level/InputField.svelte"
-  import { commentMachine } from "../lib/comment.xstate"
+  import { commentMachine } from "../lib/commentPost.xstate"
   import { createEventDispatcher } from "svelte"
   import { isResponseOk } from "../frontend-utilities"
   import { guestUserCreation } from "../lib/svelte-stores"
