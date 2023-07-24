@@ -1,3 +1,4 @@
+import { blockiesMemoized } from "./lib/blockies"
 import type {
   ServerResponse,
   ServerResponseSuccess,
@@ -139,3 +140,11 @@ export const formatDate = (date: Date | string | undefined, locale?: string) =>
         minute: "numeric",
       })
     : "unknown"
+
+const idIconDataUrlFunc = blockiesMemoized()
+export const idIconDataUrl = (userId: string) =>
+  idIconDataUrlFunc({
+    seed: userId,
+    size: 8,
+    scale: 6,
+  })

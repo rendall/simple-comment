@@ -24,6 +24,7 @@
     debounceFunc,
     isValidationTrue,
     isResponseOk,
+    idIconDataUrl,
   } from "../frontend-utilities"
   import InputField from "./low-level/InputField.svelte"
   import { guestUserCreation } from "../lib/svelte-stores"
@@ -39,7 +40,6 @@
     "Used only for verification and approved notifications. We never show or share your email."
   let signupDisplayName = ""
   let statusMessage = ""
-  let userDisplay = ""
   let userNameManuallyChanged = false
   let userNameMessage = undefined
   let userNameMessageStatus = undefined
@@ -295,7 +295,6 @@
   }
 
   const guestLoggingInStateHandler = () => {
-     
     const { name, email } = $state.context.guest
     getGuestToken()
       .then(() => verifyUser())
@@ -309,7 +308,6 @@
   }
 
   guestUserCreation.subscribe(({ name, email }) => {
-     
     if (name && email) {
       const guest = { name, email }
       send({ type: "GUEST", guest })
@@ -362,7 +360,7 @@
   {:else if self}
     <section class="self-display" id="self-display">
       <div class="self-avatar">
-        <img src="https://source.unsplash.com/random/70x70" alt="" />
+        <img src={idIconDataUrl(self.id)} alt="" />
       </div>
       <div class="self-info">
         <h2 id="self-user-name">{self.name}</h2>

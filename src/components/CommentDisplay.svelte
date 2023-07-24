@@ -2,7 +2,7 @@
   import { Comment, User } from "../lib/simple-comment-types"
   import { createEventDispatcher } from "svelte"
   import CommentInput from "./CommentInput.svelte"
-  import { formatDate } from "../frontend-utilities"
+  import { formatDate, idIconDataUrl } from "../frontend-utilities"
 
   export let currentUser: User | undefined
   export let replies: Comment[] = []
@@ -56,7 +56,7 @@
       <header class="comment-header">
         <div class="user-avatar">
           <img
-            src="https://source.unsplash.com/random/70x70"
+            src={idIconDataUrl(comment.user.id)}
             alt={`${comment.user.name} avatar`}
           />
         </div>
