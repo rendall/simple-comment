@@ -885,7 +885,7 @@ export class MongodbService extends Service {
     if (
       !foundComment ||
       !isComment(foundComment) ||
-      isDeletedComment(foundComment)
+      (isDeletedComment(foundComment) && !authUser.isAdmin)
     ) {
       return {
         ...error404CommentNotFound,
@@ -1214,6 +1214,30 @@ export class MongodbService extends Service {
           },
           dateDeleted: {
             $first: "$dateDeleted",
+          },
+        },
+      },
+      {
+        $project: {
+          id: 1,
+          parentId: 1,
+          text: 1,
+          title: 1,
+          user: 1,
+          dateCreated: 1,
+          dateDeleted: 1,
+          replies: {
+            $cond: {
+              if: { $eq: [{ $size: "$replies" }, 1] },
+              then: {
+                $cond: {
+                  if: { $eq: [{ $arrayElemAt: ["$replies.user", 0] }, {}] },
+                  then: "$$REMOVE",
+                  else: "$replies",
+                },
+              },
+              else: "$replies",
+            },
           },
         },
       },
