@@ -33,7 +33,7 @@ module.exports = {
     port: 5000,
     static: path.join(__dirname, "dist"),
   },
-  // devtool: isProduction? undefined : "source-map",
+  devtool: "source-map",
   entry: {
     "simple-comment": path.resolve(__dirname, "src/simple-comment.ts"),
     "svelte": path.resolve(__dirname, "src/svelte.ts"),
@@ -95,8 +95,14 @@ module.exports = {
   },
   output: { filename: "js/[name].js", path: path.resolve(__dirname, "dist") },
   optimization: {
-    minimize: true,
-    minimizer: [new TerserPlugin()],
+    minimize: false,
+    minimizer: [
+      new TerserPlugin({
+        terserOptions: {
+          mangle: false, // Note `mangle: false`
+        },
+      }),
+    ],
   },
   plugins: [
     // new LicensePlugin(),
