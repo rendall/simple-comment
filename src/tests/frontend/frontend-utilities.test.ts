@@ -135,60 +135,65 @@ describe("debounce", () => {
 })
 
 describe("formatDate", () => {
+  const localesArr = [
+    ["af-ZA", "23 Julie 2023 13:31"],
+    ["ar-SA", "٥ محرم ١٤٤٥ هـ في ١:٣١ م"],
+    ["de-DE", "23. Juli 2023 um 13:31"],
+    ["el-GR", "23 Ιουλίου 2023 - 1:31 μ.μ."],
+    ["en-AU", "23 July 2023 at 1:31 pm"],
+    ["en-GB", "23 July 2023 at 13:31"],
+    ["en-IN", "23 July 2023 at 1:31 pm"],
+    ["en-US", "July 23, 2023 at 1:31 PM"],
+    ["es-ES", "23 de julio de 2023, 13:31"],
+    ["es-MX", "23 de julio de 2023, 13:31"],
+    ["fi-FI", "23. heinäkuuta 2023 klo 13.31"],
+    ["fr-CA", "23 juillet 2023 à 13 h 31"],
+    ["fr-FR", "23 juillet 2023 à 13:31"],
+    ["he-IL", "23 ביולי 2023 בשעה 13:31"],
+    ["hi-IN", "23 जुलाई 2023 को 1:31 pm"],
+    ["id-ID", "23 Juli 2023 13.31"],
+    ["it-IT", "23 luglio 2023 13:31"],
+    ["ja-JP", "2023年7月23日 13:31"],
+    ["ko-KR", "2023년 7월 23일 오후 1:31"],
+    ["nl-NL", "23 juli 2023 om 13:31"],
+    ["pl-PL", "23 lipca 2023 13:31"],
+    ["pt-BR", "23 de julho de 2023 13:31"],
+    ["pt-PT", "23 de julho de 2023 às 13:31"],
+    ["ru-RU", "23 июля 2023 г., 13:31"],
+    ["sv-SE", "23 juli 2023 13:31"],
+    ["th-TH", "23 กรกฎาคม 2566 13:31"],
+    ["tr-TR", "23 Temmuz 2023 13:31"],
+    ["vi-VN", "13:31 23 tháng 7, 2023"],
+    ["zh-CN", "2023年7月23日 13:31"],
+    ["zh-TW", "2023年7月23日 下午1:31"],
+  ]
 
-  const localesArr =  [
-      [ 'af-ZA', '23 Julie 2023 13:31' ],
-      [ 'ar-SA', '٥ محرم ١٤٤٥ هـ في ١:٣١ م' ],
-      [ 'de-DE', '23. Juli 2023 um 13:31' ],
-      [ 'el-GR', '23 Ιουλίου 2023 - 1:31 μ.μ.' ],
-      [ 'en-AU', '23 July 2023 at 1:31 pm' ],
-      [ 'en-GB', '23 July 2023 at 13:31' ],
-      [ 'en-IN', '23 July 2023 at 1:31 pm' ],
-      [ 'en-US', 'July 23, 2023 at 1:31 PM' ],
-      [ 'es-ES', '23 de julio de 2023, 13:31' ],
-      [ 'es-MX', '23 de julio de 2023, 13:31' ],
-      [ 'fi-FI', '23. heinäkuuta 2023 klo 13.31' ],
-      [ 'fr-CA', '23 juillet 2023 à 13 h 31' ],
-      [ 'fr-FR', '23 juillet 2023 à 13:31' ],
-      [ 'he-IL', '23 ביולי 2023 בשעה 13:31' ],
-      [ 'hi-IN', '23 जुलाई 2023 को 1:31 pm' ],
-      [ 'id-ID', '23 Juli 2023 13.31' ],
-      [ 'it-IT', '23 luglio 2023 13:31' ],
-      [ 'ja-JP', '2023年7月23日 13:31' ],
-      [ 'ko-KR', '2023년 7월 23일 오후 1:31' ],
-      [ 'nl-NL', '23 juli 2023 om 13:31' ],
-      [ 'pl-PL', '23 lipca 2023 13:31' ],
-      [ 'pt-BR', '23 de julho de 2023 13:31' ],
-      [ 'pt-PT', '23 de julho de 2023 às 13:31' ],
-      [ 'ru-RU', '23 июля 2023 г., 13:31' ],
-      [ 'sv-SE', '23 juli 2023 13:31' ],
-      [ 'th-TH', '23 กรกฎาคม 2566 13:31' ],
-      [ 'tr-TR', '23 Temmuz 2023 13:31' ],
-      [ 'vi-VN', '13:31 23 tháng 7, 2023' ],
-      [ 'zh-CN', '2023年7月23日 13:31' ],
-      [ 'zh-TW', '2023年7月23日 下午1:31' ],
-    ]
-  
-  it.each(localesArr)("should format %s date to %s", (locale, expectedFormat) => {
-    const date = new Date(2023, 6, 23, 13, 31); // July 23, 2023 13:31
-    const result = formatDate(date, locale);
-    expect(result).toBe(expectedFormat);
-  });
+  it.each(localesArr)(
+    "should format %s date to %s",
+    (locale, expectedFormat) => {
+      const date = new Date(2023, 6, 23, 13, 31) // July 23, 2023 13:31
+      const result = formatDate(date, locale)
+      expect(result).toBe(expectedFormat)
+    }
+  )
 
   it("should handle undefined date", () => {
-    const result = formatDate(undefined);
-    expect(result).toBe("unknown");
-  });
-
-  it.each(localesArr)("should handle string date %s date to %s", (locale, expectedFormat) => {
-    const date = "2023-07-23T13:31:00"; // July 23, 2023 13:31 UTC
-    const result = formatDate(date, locale);
-    expect(result).toBe(expectedFormat);
+    const result = formatDate(undefined)
+    expect(result).toBe("unknown")
   })
 
+  it.each(localesArr)(
+    "should handle string date %s date to %s",
+    (locale, expectedFormat) => {
+      const date = "2023-07-23T13:31:00" // July 23, 2023 13:31 UTC
+      const result = formatDate(date, locale)
+      expect(result).toBe(expectedFormat)
+    }
+  )
+
   it("should handle invalid date", () => {
-    const date = "invalid date";
-    const result = formatDate(date);
-    expect(result).toBe("Invalid Date");
-  });
-});
+    const date = "invalid date"
+    const result = formatDate(date)
+    expect(result).toBe("Invalid Date")
+  })
+})

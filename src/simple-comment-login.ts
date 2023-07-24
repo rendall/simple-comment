@@ -12,10 +12,7 @@ import type {
   LoginMachineState,
   LoginTypestate,
 } from "./lib/login.xstate"
-import type {
-  AdminSafeUser,
-  ServerResponse,
-} from "./lib/simple-comment-types"
+import type { AdminSafeUser, ServerResponse } from "./lib/simple-comment-types"
 import { interpret } from "xstate"
 import { loginMachine } from "./lib/login.xstate"
 import {

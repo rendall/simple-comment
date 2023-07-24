@@ -129,7 +129,7 @@ export const debounceFunc = <T extends (...args: any[]) => void>(
     }, wait)
   }
 }
-export const formatDate = (date: Date | string | undefined, locale?:string) =>
+export const formatDate = (date: Date | string | undefined, locale?: string) =>
   date
     ? new Date(date).toLocaleDateString(locale, {
         year: "numeric",

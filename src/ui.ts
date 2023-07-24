@@ -34,9 +34,7 @@ let updateReply = () => {}
 // string type guard
 const isString = (x: unknown): x is string => typeof x === "string"
 // Response type guard
-const isResponse = (
-  res: string | ServerResponse | Response
-): res is Response =>
+const isResponse = (res: string | ServerResponse | Response): res is Response =>
   !isString(res) && "text" in res && typeof res.text === "function"
 // Resolved Response type guard
 const isServerResponse = (
@@ -452,9 +450,7 @@ const setStatus = (
   statusDisplay.textContent = message
 }
 
-const setErrorStatus = (
-  error: Error | ServerResponse | Response | string
-) => {
+const setErrorStatus = (error: Error | ServerResponse | Response | string) => {
   console.error(error)
   if (typeof error === "string") return setStatus(error, true)
   if ("message" in error)

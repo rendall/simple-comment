@@ -7,7 +7,6 @@
   export let currentUser: User | undefined
 
   const onLoginMessage = event => {
-    console.log("loginEvent", { event })
     currentUser = event.detail.currentUser
   }
 </script>

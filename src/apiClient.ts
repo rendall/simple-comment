@@ -181,10 +181,7 @@ export const postAuth = (user: string, password: string) => {
  * @param {string} text - the comment copy
  * @returns {ServerResponse}
  */
-export const postComment = (
-  targetId,
-  text
-): Promise<ServerResponse<Comment>> =>
+export const postComment = (targetId, text): Promise<ServerResponse<Comment>> =>
   fetch(`${getSimpleCommentURL()}/comment/${targetId}`, {
     body: text,
     method: "POST",
@@ -288,9 +285,7 @@ export const isGuestId = (id: UserId) =>
 export const isValidEmail = (x: string) =>
   x.match(/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i)
 //  Return the response with the body field read and resolved
-const resolveBody = async <T>(
-  res: Response
-): Promise<ServerResponse<T>> => {
+const resolveBody = async <T>(res: Response): Promise<ServerResponse<T>> => {
   const textRes = res.clone()
   const body = await res.json().catch(() => textRes.text())
   const { status, ok, statusText } = res

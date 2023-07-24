@@ -20,9 +20,7 @@
 
   const { state, send } = useMachine(discussionMachine)
 
-  const updateStatusDisplay = (message = "", error = false) => {
-    console.log({ statusMessage: message, isError: error })
-  }
+  const updateStatusDisplay = (message = "", error = false) => {}
 
   const loadingStateHandler = () => {
     updateStatusDisplay("loading")
@@ -83,7 +81,6 @@
   }
 
   const creatingStateHandler = () => {
-    console.log("creatingStateHandler")
     createNewTopic(discussionId, title)
       .then(response => {
         if (isResponseOk(response)) send("SUCCESS")
@@ -94,6 +91,12 @@
 
   const loadedStateHandler = () => {
     updateStatusDisplay("loaded")
+  }
+
+  const onCommentPosted = commentPostedEvent => {
+    const { comment } = commentPostedEvent.detail
+    const replies = discussion.replies ?? []
+    discussion = { ...discussion, replies: [comment, ...replies] }
   }
 
   $: {
@@ -111,7 +114,11 @@
 </script>
 
 <section class="simple-comment-discussion">
-  <CommentInput {currentUser} commentId={discussionId} />
+  <CommentInput
+    {currentUser}
+    commentId={discussionId}
+    on:posted={onCommentPosted}
+  />
   {#if discussion?.replies}
     <CommentDisplay {currentUser} replies={discussion.replies} />
   {/if}
