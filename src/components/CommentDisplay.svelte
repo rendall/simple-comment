@@ -14,37 +14,17 @@
 
   const handleReplyEvent = event => {
     const { commentId } = event.detail
-    if (isRoot) showReply = commentId 
+    if (isRoot) showReply = commentId
     else dispatch("reply", { commentId })
   }
 
-  const onOpenCommentInput = (commentId) => () => {
-    if (isRoot) showReply = commentId 
+  const onOpenCommentInput = commentId => () => {
+    if (isRoot) showReply = commentId
     else dispatch("reply", { commentId })
   }
-  // const deletingStateHandler = async () => {
-  //   try {
-  //     const response = await deleteComment(commentId)
-  //     if (isResponseOk(response)) send({ type: "SUCCESS", response })
-  //     else send("ERROR", response)
-  //   } catch (error) {
-  //     send("ERROR", error)
-  //   }
-  // }
-  // const deletedStateHandler = () => {
-  //   const { response } = $state.context
-  //   if (!response) {
-  //     console.warn("'deleted' state reached without corresponding response")
-  //     return
-  //   }
-  //   const { body } = response as ServerResponse<string>
-  //   console.log({ body })
-  //   dispatch("deleted", { comment: body })
-  //   send({ type: "IDLE" })
-  // }
-  const onDeleteCommentClick = (commentId) => () => {
-    console.log("deleteClick", {commentId})
 
+  const onDeleteCommentClick = commentId => () => {
+     
   }
 
   const onCloseCommentInput = onOpenCommentInput("")
@@ -52,7 +32,7 @@
   const closeReply = () => onCloseCommentInput()
 
   const onCommentPosted = commentPostedEvent => {
-    closeReply();
+    closeReply()
     const { comment } = commentPostedEvent.detail
     const parentComment = replies.find(reply => reply.id === comment.parentId)
     if (parentComment) {
@@ -99,7 +79,8 @@
         {:else}
           <div class="button-row">
             {#if currentUser?.isAdmin || (currentUser && currentUser?.id === comment.user?.id)}
-            <button on:click={onDeleteCommentClick(comment.id)}>Delete</button>
+              <button on:click={onDeleteCommentClick(comment.id)}>Delete</button
+              >
             {/if}
             <button on:click={onOpenCommentInput(comment.id)}>Reply</button>
           </div>

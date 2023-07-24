@@ -6166,7 +6166,7 @@ eslint-watch@^8.0.0:
     lodash.unionwith "^4.6.0"
     optionator "^0.9.1"
 
-eslint@^8.14.0:
+eslint@^8.45.0:
   version "8.45.0"
   resolved "https://registry.yarnpkg.com/eslint/-/eslint-8.45.0.tgz#bab660f90d18e1364352c0a6b7c6db8edb458b78"
   integrity sha512-pd8KSxiQpdYRfYa9Wufvdoct3ZPQQuVuU5O6scNgMuOMYuxvH0IGaYK0wUFjo4UYYQQCUndlXiMbnxopwvvTiw==

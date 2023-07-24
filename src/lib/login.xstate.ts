@@ -19,6 +19,7 @@ export type LoginTypestate = {
 
 export type LoginMachineContext = {
   error?: ServerResponse | string
+  guest?: { name: string; email: string }
 }
 
 export type LoginMachineEvent =
@@ -26,6 +27,7 @@ export type LoginMachineEvent =
   | { type: "CONFIRM" }
   | { type: "ERROR"; error: ServerResponse | string }
   | { type: "FIRST_VISIT" }
+  | { type: "GUEST"; guest: { name: string; email: string } }
   | { type: "LOGIN" }
   | { type: "LOGOUT" }
   | { type: "SIGNUP" }
@@ -87,6 +89,13 @@ export const loginMachine = createMachine<
           'A "guest" account will permanently lose ability to edit its posts when logging out. For guests only, a confirm prompt gives the guest an opportunity to avoid this.',
       },
 
+      guestLoggingIn: {
+        on: {
+          SUCCESS: "verifying",
+          ERROR: { target: "error", actions: "assignErrorMessage" },
+        },
+      },
+
       loggingIn: {
         on: {
           SUCCESS: "verifying",
@@ -95,7 +104,12 @@ export const loginMachine = createMachine<
       },
 
       loggedOut: {
-        on: { LOGIN: "loggingIn", SIGNUP: "signingUp" },
+        on: {
+          LOGIN: "loggingIn",
+          SIGNUP: "signingUp",
+          GUEST: { target: "guestLoggingIn", actions: "assignGuest" },
+          ERROR: { target: "error", actions: "assignErrorMessage" },
+        },
       },
 
       error: {
@@ -116,6 +130,12 @@ export const loginMachine = createMachine<
             return event.error
           }
           return undefined
+        },
+      }),
+      assignGuest: assign({
+        guest: (_, event) => {
+          if (event.type === "GUEST") return event.guest
+          else return undefined
         },
       }),
     },

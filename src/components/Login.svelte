@@ -2,24 +2,31 @@
   import type {
     AdminSafeUser,
     ServerResponse,
+    ServerResponseSuccess,
+    TokenClaim,
   } from "../lib/simple-comment-types"
   import { useMachine } from "@xstate/svelte"
   import { loginMachine } from "../lib/login.xstate"
   import { createEventDispatcher } from "svelte"
   import {
+    createGuestUser,
     createUser,
     deleteAuth,
+    getGuestToken,
     getOneUser,
     isValidEmail,
     postAuth,
     verifySelf,
+    verifyUser,
   } from "../apiClient"
   import {
     validateUserName,
     debounceFunc,
     isValidationTrue,
+    isResponseOk,
   } from "../frontend-utilities"
   import InputField from "./low-level/InputField.svelte"
+  import { guestUserCreation } from "../lib/svelte-stores"
 
   let nextEvents = []
   let self: AdminSafeUser
@@ -287,9 +294,32 @@
     checkUserExists_debounced(loginUserName)
   }
 
+  const guestLoggingInStateHandler = () => {
+     
+    const { name, email } = $state.context.guest
+    getGuestToken()
+      .then(() => verifyUser())
+      .then((response: ServerResponseSuccess<TokenClaim>) => response.body.user)
+      .then(id => createGuestUser({ id, name, email }))
+      .then(response => {
+        if (isResponseOk(response)) send("SUCCESS")
+        else send("ERROR", response)
+      })
+      .catch(error => send("ERROR", error))
+  }
+
+  guestUserCreation.subscribe(({ name, email }) => {
+     
+    if (name && email) {
+      const guest = { name, email }
+      send({ type: "GUEST", guest })
+    }
+  })
+
   $: {
     const stateHandlers: [string, () => void][] = [
       ["verifying", verifyingStateHandler],
+      ["guestLoggingIn", guestLoggingInStateHandler],
       ["loggingIn", loggingInStateHandler],
       ["signingUp", signingUpStateHandler],
       ["loggedIn", loggedInStateHandler],

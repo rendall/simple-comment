@@ -1,14 +1,18 @@
 /** Comment state machine handles user submitting a comment */
 
 import { assign, createMachine } from "xstate"
-import type { Comment, ServerResponse, ServerResponseError, ServerResponseSuccess } from "./simple-comment-types"
+import type {
+  Comment,
+  ServerResponseError,
+  ServerResponseSuccess,
+} from "./simple-comment-types"
 
 export type CommentMachineState =
   | "idle"
   | "validating"
   | "validated"
   | "creatingGuestUser"
-  | "guestUserCreated"
+  | "createdGuestUser"
   | "posting"
   | "posted"
   | "deleting"
@@ -24,7 +28,6 @@ export type CommentMachineContext = {
   error?: ServerResponseError | string
   response?: ServerResponseSuccess<Comment>
 }
-
 export type CommentMachineEvent =
   | { type: "SUBMIT" }
   | { type: "CREATE_GUEST_USER" }
@@ -58,10 +61,10 @@ export const commentMachine = createMachine<
       creatingGuestUser: {
         on: {
           ERROR: { target: "error", actions: "assignErrorMessage" },
-          SUCCESS: "guestUserCreated",
+          SUCCESS: "createdGuestUser",
         },
       },
-      guestUserCreated: {
+      createdGuestUser: {
         always: "validating",
       },
       validated: {
@@ -80,7 +83,7 @@ export const commentMachine = createMachine<
       },
       error: {
         on: {
-          RESET: "idle"
+          RESET: "idle",
         },
       },
     },
@@ -104,7 +107,7 @@ export const commentMachine = createMachine<
           }
           return undefined
         },
-      })
+      }),
     },
   }
 )
