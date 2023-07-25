@@ -36,7 +36,7 @@ export type CommentMachineEvent =
   | { type: "ERROR"; error: ServerResponseError | string }
   | { type: "SUCCESS"; response?: ServerResponseSuccess<Comment> }
 
-export const commentMachine = createMachine<
+export const commentPostMachine = createMachine<
   CommentMachineContext,
   CommentMachineEvent,
   CommentTypestate
