@@ -3,22 +3,14 @@
     Comment,
     CommentId,
     ServerResponse,
-    ServerResponseSuccess,
-    TokenClaim,
     User,
   } from "../lib/simple-comment-types"
   import InputField from "./low-level/InputField.svelte"
-  import { commentMachine } from "../lib/commentPost.xstate"
+  import { commentPostMachine } from "../lib/commentPost.xstate"
   import { createEventDispatcher } from "svelte"
   import { isResponseOk } from "../frontend-utilities"
   import { guestUserCreation } from "../lib/svelte-stores"
-  import {
-    createGuestUser,
-    getGuestToken,
-    postComment,
-    verifySelf,
-    verifyUser,
-  } from "../apiClient"
+  import { postComment } from "../apiClient"
   import { useMachine } from "@xstate/svelte"
   export let currentUser: User | undefined
   export let commentId: CommentId
@@ -28,6 +20,7 @@
   let guestName = ""
   let guestEmail = ""
 
+  const { state, send } = useMachine(commentPostMachine)
   const dispatch = createEventDispatcher()
 
   const onSubmit = e => {
@@ -36,13 +29,14 @@
   }
 
   const validatingStateHandler = () => {
-    //TODO: validity checks
     if (currentUser) send({ type: "SUCCESS" })
     else send("CREATE_GUEST_USER")
   }
+
   const validatedStateHandler = () => {
     send({ type: "POST" })
   }
+
   const creatingGuestUserStateHandler = () => {
     guestUserCreation.set({ name: guestName, email: guestEmail })
   }
@@ -70,22 +64,33 @@
 
   const errorStateHandler = () => {
     const error = $state.context.error
-    const { status, statusText, ok, body } = error as ServerResponse
+    if (!error) {
+      console.error("Unknown error")
+      console.trace()
+      return
+    }
+
+    if (typeof error === "string") {
+      console.error(error)
+      return
+    }
+
+
+    const { ok } = error as ServerResponse
     if (ok) console.warn("Error handler caught an OK response", error)
 
     send({ type: "RESET" })
   }
 
-  const { state, send } = useMachine(commentMachine)
   $: {
-      if (
-        currentUser &&
-        $state.value === "creatingGuestUser" &&
-        currentUser.name === guestName &&
-        currentUser.email === guestEmail
-      ) {
-        send("SUCCESS")
-      }
+    if (
+      currentUser &&
+      $state.value === "creatingGuestUser" &&
+      currentUser.name === guestName &&
+      currentUser.email === guestEmail
+    ) {
+      send("SUCCESS")
+    }
   }
 
   $: {

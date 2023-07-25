@@ -16,6 +16,7 @@
   export let title: string
   export let currentUser: User | undefined
 
+  let repliesFlatArray: Comment[]
   let discussion: Discussion
 
   const { state, send } = useMachine(discussionMachine)
@@ -28,13 +29,7 @@
       .then(response => {
         if (isResponseOk(response)) {
           const topic = response.body as Discussion
-          discussion = threadComments(
-            topic,
-            topic.replies,
-            (a, b) =>
-              new Date(b.dateCreated).valueOf() -
-              new Date(a.dateCreated).valueOf()
-          )
+          updateDiscussionDisplay(topic, topic.replies)
           send({ type: "SUCCESS" })
         } else {
           send({ type: "ERROR", error: response })
@@ -45,8 +40,30 @@
       })
   }
 
+  const updateDiscussionDisplay = (topic:Discussion, topicReplies: Comment[]) => {
+    repliesFlatArray = topicReplies
+    discussion = threadComments(
+      topic,
+      topicReplies,
+      (a, b) =>
+        new Date(b.dateCreated).valueOf() - new Date(a.dateCreated).valueOf()
+    )
+  }
+
   const errorStateHandler = () => {
     const error = $state.context.error
+    if (!error) {
+      console.error("Unknown error")
+      console.trace()
+      return
+    }
+
+    if (typeof error === "string") {
+      console.error(error)
+      return
+    }
+
+
     const { status, statusText, ok, body } = error as ServerResponse
     if (ok) console.warn("Error handler caught an OK response", error)
 
@@ -93,10 +110,34 @@
     updateStatusDisplay("loaded")
   }
 
+  // Update the single source of truth
   const onCommentPosted = commentPostedEvent => {
     const { comment } = commentPostedEvent.detail
-    const replies = discussion.replies ?? []
-    discussion = { ...discussion, replies: [comment, ...replies] }
+    console.log("onCommentPosted", comment, commentPostedEvent)
+    repliesFlatArray = [comment, ...repliesFlatArray]
+    updateDiscussionDisplay(discussion, repliesFlatArray)
+  }
+
+  // Update the single source of truth
+  const onCommentDeleted = commentId => {
+    const comment = repliesFlatArray.find(comment => comment.id === commentId)
+    const hasReplies = repliesFlatArray.some(
+      comment => comment.parentId === commentId
+    )
+    // if comment has replies, it is a soft delete
+    if (hasReplies) {
+      const softDeletedComment:Comment = {
+        ...comment,
+        user: null,
+        userId: null,
+        text: null,
+        dateDeleted: new Date(),
+      }
+      repliesFlatArray = repliesFlatArray.map( comment => comment.id === commentId? softDeletedComment : comment)
+    }
+    // otherwise it is a hard delete
+    else repliesFlatArray = repliesFlatArray.filter( comment => comment.id !== commentId)
+    updateDiscussionDisplay(discussion, repliesFlatArray)
   }
 
   $: {
@@ -120,6 +161,10 @@
     on:posted={onCommentPosted}
   />
   {#if discussion?.replies}
-    <CommentDisplay {currentUser} replies={discussion.replies} />
+    <CommentDisplay
+      {currentUser}
+      replies={discussion.replies}
+      on:delete={onCommentDeleted}
+    />
   {/if}
 </section>

@@ -148,6 +148,13 @@
 
   const errorStateHandler = () => {
     const error = $state.context.error
+    if (!error) {
+      updateStatusDisplay("Apologies. An unknown error occurred. Please reload the page and try again. If the error continues, contact the site administrator", true)
+      console.error("Unknown error")
+      console.trace()
+      return
+    }
+
 
     if (typeof error === "string") {
       updateStatusDisplay(error, true)
