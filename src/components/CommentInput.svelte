@@ -15,6 +15,7 @@
   export let currentUser: User | undefined
   export let commentId: CommentId
   export let onCancel = null
+  export let autofocus = false
 
   let commentText = ""
   let guestName = ""
@@ -75,7 +76,6 @@
       return
     }
 
-
     const { ok } = error as ServerResponse
     if (ok) console.warn("Error handler caught an OK response", error)
 
@@ -109,10 +109,12 @@
   }
 </script>
 
-<form on:submit={onSubmit}>
+<form class="comment-form" on:submit={onSubmit}>
+  <!-- svelte-ignore a11y-autofocus -->
   <textarea
-    class="discussion-reply-field"
+    class="comment-field"
     placeholder="Your comment"
+    {autofocus}
     bind:value={commentText}
   />
   {#if !currentUser}
@@ -126,8 +128,8 @@
   {/if}
   <div class="button-row">
     {#if onCancel !== null}
-      <button on:click={onCancel}>cancel</button>
+      <button class="comment-cancel-button" on:click={onCancel}>cancel</button>
     {/if}
-    <button type="submit">submit</button>
+    <button class="comment-submit-button" type="submit">submit</button>
   </div>
 </form>
