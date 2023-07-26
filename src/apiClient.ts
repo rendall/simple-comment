@@ -284,10 +284,15 @@ export const isGuestId = (id: UserId) =>
 // Validate email
 export const isValidEmail = (x: string) =>
   x.match(/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i)
+
 //  Return the response with the body field read and resolved
 const resolveBody = async <T>(res: Response): Promise<ServerResponse<T>> => {
   const textRes = res.clone()
-  const body = await res.json().catch(() => textRes.text())
+  //TODO: return a "content-type" header from the server to obviate this check
+  const body = await res.json().catch(() => textRes.text()).catch(() => {
+    console.error("Unknown type in response body")
+    return ""
+  })
   const { status, ok, statusText } = res
   const resolvedRes = { status, ok, statusText, body }
 
