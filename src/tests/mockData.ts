@@ -49,8 +49,8 @@ export const mockUuid4 = () => {
 }
 
 export const mockPassword = () =>
-  randomString(passwordInput, randomNumber(10, 50))
-// Functions that generate fake data - these could be moved to a common file to help other Service tests
+  randomString(passwordInput, randomNumber(10, 50)).trim()
+
 const mockComment = (parentId: TopicId | CommentId, user: User): Comment => ({
   id: mockUuid4(),
   parentId,
