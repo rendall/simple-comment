@@ -25,16 +25,16 @@ type Method = "get" | "post" | "delete" | "put"
  **/
 describe("Ensures API specs match controller service", () => {
   // Does the OpenAPI 3 spec file exist?
-  test("simple-comment-api.json exists", () => {
+  test("simple-comment-openapi3.json exists", () => {
     const doesApiSpecExist = fs.existsSync(
-      `${process.cwd()}/src/schema/simple-comment-api.json`
+      `${process.cwd()}/src/schema/simple-comment-openapi3.json`
     )
     expect(doesApiSpecExist).toBe(true)
   })
 
   // Read the spec file
   const apiSpecText = fs.readFileSync(
-    `${process.cwd()}/src/schema/simple-comment-api.json`,
+    `${process.cwd()}/src/schema/simple-comment-openapi3.json`,
     "utf8"
   )
 
