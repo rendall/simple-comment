@@ -40,7 +40,10 @@
       })
   }
 
-  const updateDiscussionDisplay = (topic:Discussion, topicReplies: Comment[]) => {
+  const updateDiscussionDisplay = (
+    topic: Discussion,
+    topicReplies: Comment[]
+  ) => {
     repliesFlatArray = topicReplies
     discussion = threadComments(
       topic,
@@ -62,7 +65,6 @@
       console.error(error)
       return
     }
-
 
     const { status, statusText, ok, body } = error as ServerResponse
     if (ok) console.warn("Error handler caught an OK response", error)
@@ -113,30 +115,36 @@
   // Update the single source of truth
   const onCommentPosted = commentPostedEvent => {
     const { comment } = commentPostedEvent.detail
-    console.log("onCommentPosted", comment, commentPostedEvent)
     repliesFlatArray = [comment, ...repliesFlatArray]
     updateDiscussionDisplay(discussion, repliesFlatArray)
   }
 
   // Update the single source of truth
-  const onCommentDeleted = commentId => {
+  const onCommentDeleted = commentDeletedEvent => {
+    const { commentId } = commentDeletedEvent.detail
     const comment = repliesFlatArray.find(comment => comment.id === commentId)
     const hasReplies = repliesFlatArray.some(
       comment => comment.parentId === commentId
     )
     // if comment has replies, it is a soft delete
     if (hasReplies) {
-      const softDeletedComment:Comment = {
+      const softDeletedComment: Comment = {
         ...comment,
         user: null,
         userId: null,
         text: null,
         dateDeleted: new Date(),
       }
-      repliesFlatArray = repliesFlatArray.map( comment => comment.id === commentId? softDeletedComment : comment)
+      repliesFlatArray = repliesFlatArray.map(comment =>
+        comment.id === commentId ? softDeletedComment : comment
+      )
     }
     // otherwise it is a hard delete
-    else repliesFlatArray = repliesFlatArray.filter( comment => comment.id !== commentId)
+    else
+      repliesFlatArray = repliesFlatArray.filter(
+        comment => comment.id !== commentId
+      )
+
     updateDiscussionDisplay(discussion, repliesFlatArray)
   }
 
@@ -165,6 +173,7 @@
       {currentUser}
       replies={discussion.replies}
       on:delete={onCommentDeleted}
+      on:posted={onCommentPosted}
     />
   {/if}
 </section>

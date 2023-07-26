@@ -1,13 +1,26 @@
 <script lang="ts">
-  import { Comment, User } from "../lib/simple-comment-types"
+  import {
+    Comment,
+    ServerResponse,
+    User,
+  } from "../lib/simple-comment-types"
   import { createEventDispatcher } from "svelte"
   import CommentInput from "./CommentInput.svelte"
-  import { formatDate, idIconDataUrl } from "../frontend-utilities"
+  import {
+    formatDate,
+    idIconDataUrl,
+    isResponseOk,
+  } from "../frontend-utilities"
+  import { useMachine } from "@xstate/svelte"
+  import { commentDeleteMachine } from "../lib/commentDelete.xstate"
+  import { deleteComment } from "../apiClient"
 
   export let currentUser: User | undefined
   export let replies: Comment[] = []
   export let depth: number = 0
   export let showReply = ""
+
+  const { state, send } = useMachine(commentDeleteMachine)
 
   const dispatch = createEventDispatcher()
   const isRoot = depth === 0
@@ -24,7 +37,25 @@
   }
 
   const onDeleteCommentClick = commentId => () => {
-     
+    send({ type: "DELETE", commentId })
+  }
+
+  const onDeleteSuccess = commentDeletedEvent => {
+    const { commentId } = commentDeletedEvent.detail
+    dispatch("delete", { commentId })
+  }
+
+  const deletingStateHandler = async () => {
+    const commentId = $state.context.commentId
+    try {
+      const response = await deleteComment(commentId)
+      if (isResponseOk(response)) {
+        dispatch("delete", { commentId })
+        send("SUCCESS")
+      } else send({ type: "ERROR", error: response })
+    } catch (error) {
+      send({ type: "ERROR", error })
+    }
   }
 
   const onCloseCommentInput = onOpenCommentInput("")
@@ -34,65 +65,111 @@
   const onCommentPosted = commentPostedEvent => {
     closeReply()
     const { comment } = commentPostedEvent.detail
-    const parentComment = replies.find(reply => reply.id === comment.parentId)
-    if (parentComment) {
-      const hasSiblings = parentComment.replies?.length
-      const siblingReplies = hasSiblings
-        ? [comment, ...parentComment.replies]
-        : [comment]
-      const repliesWithInsertedComment = replies.map(reply =>
-        reply.id === comment.parentId
-          ? { ...parentComment, replies: siblingReplies }
-          : reply
-      )
-      replies = repliesWithInsertedComment
+    dispatch("posted", { comment })
+  }
+
+  const errorStateHandler = () => {
+    const error = $state.context.error
+    if (!error) {
+      console.error("Unknown error")
+      console.trace()
+      return
     }
+
+    if (typeof error === "string") {
+      console.error(error)
+      return
+    }
+
+    const { ok } = error as ServerResponse
+    if (ok) console.warn("Error handler caught an OK response", error)
+
+    send({ type: "RESET" })
+  }
+
+  $: {
+    const stateHandlers: [string, () => void][] = [
+      ["deleting", deletingStateHandler],
+      ["error", errorStateHandler],
+    ]
+
+    stateHandlers.forEach(([stateValue, stateHandler]) => {
+      if ($state.value === stateValue) stateHandler()
+    })
   }
 </script>
 
 <ul class="comment-replies" class:is-root={isRoot}>
-  {#each replies as comment, index}
-    <li class="comment" class:is-root={isRoot}>
-      <header class="comment-header">
-        <div class="user-avatar">
-          <img
-            src={idIconDataUrl(comment.user.id)}
-            alt={`${comment.user.name} avatar`}
-          />
-        </div>
-        <div class="comment-info">
-          <p class="user-name">
-            {comment.user.name ?? "Anonymous"}
-          </p>
-          <p class="comment-date">{formatDate(comment.dateCreated)}</p>
-        </div>
-      </header>
-      <article class="comment-body">
-        <p>{comment.text}</p>
-        {#if showReply === comment.id}
-          <CommentInput
-            commentId={comment.id}
-            {currentUser}
-            onCancel={onCloseCommentInput}
-            on:posted={onCommentPosted}
-          />
-        {:else}
-          <div class="button-row">
-            {#if currentUser?.isAdmin || (currentUser && currentUser?.id === comment.user?.id)}
-              <button on:click={onDeleteCommentClick(comment.id)}>Delete</button
-              >
-            {/if}
-            <button on:click={onOpenCommentInput(comment.id)}>Reply</button>
+  {#each replies as comment}
+    <li
+      class="comment"
+      class:is-root={isRoot}
+      class:is-deleted={comment.dateDeleted}
+    >
+      {#if comment.dateDeleted}
+        <header class="comment-header">
+          <div class="user-avatar" />
+          <div class="comment-info">
+            <p class="user-name" />
+            <p class="comment-date" />
           </div>
-        {/if}
-      </article>
+        </header>
+        <article class="comment-body">
+          <p>This comment was deleted {formatDate(comment.dateDeleted)}</p>
+          <div class="button-row">
+            {#if currentUser?.isAdmin && !comment.replies?.length}
+              <button on:click={onDeleteCommentClick(comment.id)}>
+                Delete
+              </button>
+            {/if}
+          </div>
+        </article>
+      {:else}
+        <header class="comment-header">
+          <div class="user-avatar">
+            <img
+              src={idIconDataUrl(comment.user.id)}
+              alt={`${comment.user.name} avatar`}
+            />
+          </div>
+          <div class="comment-info">
+            <p class="user-name">
+              {comment.user.name ?? "Anonymous"}
+            </p>
+            <p class="comment-date">{formatDate(comment.dateCreated)}</p>
+          </div>
+        </header>
+        <article class="comment-body">
+          <p>{comment.text}</p>
+          {#if showReply === comment.id}
+            <CommentInput
+              autofocus
+              commentId={comment.id}
+              {currentUser}
+              onCancel={onCloseCommentInput}
+              on:posted={onCommentPosted}
+            />
+          {:else}
+            <div class="button-row">
+              {#if currentUser?.isAdmin || (currentUser && currentUser?.id === comment.user?.id && !comment?.replies?.length)}
+                <button on:click={onDeleteCommentClick(comment.id)}
+                  >Delete</button
+                >
+              {/if}
+              <button on:click={onOpenCommentInput(comment.id)}>Reply</button>
+            </div>
+          {/if}
+        </article>
+      {/if}
       {#if comment.replies && comment.replies.length > 0}
         <svelte:self
+          depth={depth + 1}
+          on:delete={onDeleteSuccess}
+          on:reply={handleReplyEvent}
+          on:posted={onCommentPosted}
           replies={comment.replies}
           {currentUser}
           {showReply}
-          depth={depth + 1}
-          on:reply={handleReplyEvent}
         />
       {/if}
     </li>

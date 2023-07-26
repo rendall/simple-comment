@@ -27,6 +27,14 @@ export const threadComments = <T extends MinComment, U extends MinComment>(
   allComments: U[],
   sort: (a: U, b: U) => number = (a, b) => (b.id < a.id ? 0 : 1)
 ): T => {
+  // Make this robust but warn
+  allComments = allComments.filter(reply => {
+    if (reply && reply.id) return true
+    else {
+      console.warn(`Bad data in comment ${comment.id} replies:`, reply)
+      return false
+    }
+  })
   // Create a map of parent IDs to arrays of their child comments
   const parentToChildrenMap = allComments.reduce(
     (map, reply) =>
@@ -111,8 +119,7 @@ export const isResponseOk = <T>(
  *
  * @example
  * // Usage with a function that takes one string parameter
- * const logMessage = (message: string) => console.log(message);
- * const debouncedLogMessage = debounceFunc(logMessage, 300);
+ * const logMessage = (message: string) =>  * const debouncedLogMessage = debounceFunc(logMessage, 300);
  * debouncedLogMessage('Hello, world!');
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

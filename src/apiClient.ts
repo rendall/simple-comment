@@ -289,10 +289,13 @@ export const isValidEmail = (x: string) =>
 const resolveBody = async <T>(res: Response): Promise<ServerResponse<T>> => {
   const textRes = res.clone()
   //TODO: return a "content-type" header from the server to obviate this check
-  const body = await res.json().catch(() => textRes.text()).catch(() => {
-    console.error("Unknown type in response body")
-    return ""
-  })
+  const body = await res
+    .json()
+    .catch(() => textRes.text())
+    .catch(() => {
+      console.error("Unknown type in response body")
+      return ""
+    })
   const { status, ok, statusText } = res
   const resolvedRes = { status, ok, statusText, body }
 
