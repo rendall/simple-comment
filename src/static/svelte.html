@@ -165,7 +165,9 @@
     </main>
     <script type="module" src="./js/svelte.js" defer></script>
     <script type="module" defer>
-      setSimpleCommentDiscussion("http-localhost-7070")
+      var params = new URLSearchParams(window.location.search)
+      var topicId = params.get("topicId") || "http-localhost-7070"
+      setSimpleCommentDiscussion(topicId)
     </script>
   </body>
 </html>
