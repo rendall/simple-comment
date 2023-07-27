@@ -766,13 +766,13 @@ export const setup = async (
     <p id="login-pulser">Logging in... Please wait</p>
     <input type="hidden" id="claim-user">
     <p id="user-name">Logged in as: Rendall (guest)</p>
-    <button id="log-out-button">Log out</button>
+    <button id="log-out-button">log out</button>
     <div id="log-in-form">
       <label for="userid">Username:</label>
       <input id="userid" required="">
       <label for="password">Password:</label>
       <input id="password" type="password" required="">
-      <button id="log-in-button">Log in</button>
+      <button id="log-in-button">log in</button>
     </div>
     <div class="sign-up-form">
       <p>Sign up for Simple Comment</p>
@@ -787,7 +787,7 @@ export const setup = async (
       <input id="sign-up-email" required="">
       <label for="sign-up-display-name">Display Name:</label>
       <input id="sign-up-display-name" placeholder="How do you want to be known?">
-      <button id="sign-up-button">Sign up</button>
+      <button id="sign-up-button">sign up</button>
   </div>`
   simpleCommentArea.appendChild(userDisplay)
 

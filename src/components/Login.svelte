@@ -377,7 +377,7 @@
         <p id="self-email">{self.email}</p>
       </div>
       {#if nextEvents.includes("LOGOUT")}
-        <button id="log-out-button" on:click={onLogoutClick}>Log out</button>
+        <button id="log-out-button" on:click={onLogoutClick}>log out</button>
       {/if}
     </section>
   {/if}
@@ -415,7 +415,7 @@
           required
         />
         <div class="button-row">
-          <button type="submit">Log in</button>
+          <button type="submit">log in</button>
         </div>
       </form>
     {/if}
@@ -463,7 +463,7 @@
           type="password"
         />
         <div class="button-row">
-          <button type="submit">Sign up</button>
+          <button type="submit">sign up</button>
         </div>
       </form>
     {/if}

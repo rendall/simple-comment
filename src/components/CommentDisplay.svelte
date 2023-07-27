@@ -1,9 +1,5 @@
 <script lang="ts">
-  import {
-    Comment,
-    ServerResponse,
-    User,
-  } from "../lib/simple-comment-types"
+  import { Comment, ServerResponse, User } from "../lib/simple-comment-types"
   import { createEventDispatcher } from "svelte"
   import CommentInput from "./CommentInput.svelte"
   import {
@@ -156,7 +152,7 @@
                   >Delete</button
                 >
               {/if}
-              <button on:click={onOpenCommentInput(comment.id)}>Reply</button>
+              <button on:click={onOpenCommentInput(comment.id)}>reply</button>
             </div>
           {/if}
         </article>
