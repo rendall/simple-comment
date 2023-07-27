@@ -356,8 +356,7 @@
 <section class="simple-comment-login">
   <p
     id="status-display"
-    class:invisible={!statusMessage || statusMessage.length === 0}
-    class={isError ? "error" : ""}
+    class={isError ? "is-error" : ""}
   >
     {statusMessage}
   </p>
