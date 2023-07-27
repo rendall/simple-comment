@@ -2,7 +2,7 @@
 
 context("Essential actions", () => {
   before(() => {
-    cy.visit("http://localhost:7070")
+    cy.visit("http://localhost:7070/?topicId=cypress-tests")
   })
 
   beforeEach(() => {

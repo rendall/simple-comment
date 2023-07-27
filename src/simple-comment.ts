@@ -1,31 +1,66 @@
-/*
- * Simple Comment demo
+/// <reference types="svelte" />
+import { getDefaultDiscussionId } from "./apiClient"
+import SimpleComment from "./components/SimpleComment.svelte"
+
+declare global {
+  interface Window {
+    setSimpleCommentOptions: (setupOptions: { [key: string]: unknown }) => void
+    setSimpleCommentDiscussion: (discussionId: string) => void
+  }
+}
+
+let simpleComment
+
+let options = {
+  discussionId: getDefaultDiscussionId(),
+  title: document.title,
+  target: document.getElementById("simple-comment") ?? document.body,
+}
+
+/**
+ * Sets the options for the SimpleComment component.
+ * This function merges the provided options with the default options.
+ * If an option is not provided, the default value is used.
  *
- * This illustrates a prototypical user flow
- *
- * - Visitor visits page
- * - A request to `/verify` endpont returns a claim (status code 200  and login) or not (401)
- * - A request to `/topic/{id}` returns a topic (200) or not (404). A topic is a "root" comment, to which top-level comments are made
- *   - If 404, submit a POST (create) request
- *     - If the user has permissions OR policy allows, the topic is created
- *     - Typically, policy is allowed to be created by non-privs under specific situations
- *       - Designed so that admin does not have to create every topic
- *       - (Typically) Allowed only if the topic id is based on the URL and the Referer header is correct
- *     - If the create request is granted, continue:
- * - What is returned is a Discussion, which is a Topic (root comment) + all replies (child comments)
- *
- * If the user submits a comment and credentials do not exist:
- *   - Validate information client-side
- *   - Visit to `/gauth` acquires a guest credential
- *   - POST to /user with guest credential and user info creates a guest user
- *     - Validate information server-side
- *   - POST to /comment with guest credential
- *
- * This file relies on the apiClient library, which is a group of async functions that connect to the API
- *
+ * @param {Object} setupOptions - An object containing options for the SimpleComment component.
+ * @param {string} setupOptions.discussionId - The ID of the discussion to be displayed by the SimpleComment component.
+ * @param {string} setupOptions.title - The title of the discussion.
+ * @param {HTMLElement} setupOptions.target - The HTML element in which the SimpleComment component should be rendered.
  */
+window.setSimpleCommentOptions = setupOptions =>
+  (options = { ...options, ...setupOptions })
 
-import { setup } from "./ui"
+/**
+ * Sets the discussionId for the SimpleComment component.
+ * This function is a shorthand for calling setSimpleCommentOptions with an object that has a discussionId property.
+ *
+ * @param {string} discussionId - The ID of the discussion to be displayed by the SimpleComment component.
+ *
+ * @example
+ *
+ * ```html
+ * <!-- Include the SimpleComment script -->
+ * <script type="module" src="simple-comment.js" defer></script>
+ *
+ * <!-- Set the discussionId -->
+ * <script type="module">
+ *   window.setSimpleCommentDiscussion("http-localhost-7070");
+ * </script>
+ * ```
+ */
+window.setSimpleCommentDiscussion = (discussionId: string) =>
+  window.setSimpleCommentOptions({ discussionId })
 
-// setup("some-topic-id") will link this page to "some-topic-id"
-setup()
+// Wait for DOMContentLoaded event before initializing SimpleComment
+document.addEventListener("DOMContentLoaded", () => {
+  simpleComment = new SimpleComment({
+    target: options.target,
+    props: { discussionId: options.discussionId, title: options.title },
+  })
+})
+
+export default {
+  simpleComment,
+  setSimpleCommentOptions: window.setSimpleCommentOptions,
+  setSimpleCommentDiscussion: window.setSimpleCommentDiscussion,
+}

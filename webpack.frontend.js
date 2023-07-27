@@ -35,8 +35,8 @@ module.exports = {
   },
   devtool: "source-map",
   entry: {
+    "vanilla": path.resolve(__dirname, "src/vanilla.ts"),
     "simple-comment": path.resolve(__dirname, "src/simple-comment.ts"),
-    "svelte": path.resolve(__dirname, "src/svelte.ts"),
     "simple-comment-style": path.resolve(
       __dirname,
       "src/scss/simple-comment-style.scss"

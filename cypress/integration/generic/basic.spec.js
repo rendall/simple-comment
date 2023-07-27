@@ -1,7 +1,7 @@
 /// <reference types="cypress" />
 describe("Simple Comment frontend", () => {
   it("successfully loads", () => {
-    cy.visit("http://localhost:7070") // change URL to match your dev URL
+    cy.visit("http://localhost:7070/?topicId=cypress-tests") // change URL to match your dev URL
   })
 
   it("is a Simple Comment frontend", () => {
@@ -9,10 +9,10 @@ describe("Simple Comment frontend", () => {
   })
 
   it("has a comment reply field", () => {
-    cy.get("#reply-field")
+    cy.get("textarea.comment-field")
   })
 
   it("has a comment button", () => {
-    cy.get("#reply-submit-button")
+    cy.get("button.comment-submit-button")
   })
 })
