@@ -3,11 +3,10 @@ import {
   isAllowedReferer,
   isGuestId,
   parseQuery,
-  validateEmail,
-  validateUserId,
 } from "../../../src/lib/backend-utilities"
 import { v4 as uuidv4 } from "uuid"
 import type { Email } from "../../../src/lib/simple-comment-types"
+import { validateEmail, validateUserId } from "../../lib/shared-utilities"
 
 describe("test the `getAllowOriginHeaders` function", () => {
   it("should return {headers} if there is a header match", () => {

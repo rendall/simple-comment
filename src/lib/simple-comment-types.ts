@@ -62,7 +62,11 @@ export type ServerResponse<T = string> =
   | ServerResponseSuccess<T>
   | ServerResponseError
 
-export type Validation = { isValid: true } | { isValid: false; reason: string }
+export type InvalidResult = { isValid: false; reason: string }
+export type ValidResult = { isValid: true }
+
+export type ValidationResult = InvalidResult | ValidResult
+
 
 export type Discussion = {
   _id?: ObjectId
@@ -86,7 +90,7 @@ export type NewTopic = Pick<
 export type Comment = {
   _id?: ObjectId
   id: CommentId
-  userId: UserId
+  userId: UserId | null
   user?: PublicSafeUser | AdminSafeUser
   text: string | null
   parentId: TopicId | CommentId
@@ -95,14 +99,9 @@ export type Comment = {
   dateDeleted?: Date
 }
 
-export type DeletedComment = {
-  _id?: ObjectId
-  id: CommentId
+export type DeletedComment = Comment & {
   userId: null
   text: null
-  parentId: TopicId | CommentId
-  replies?: Comment[]
-  dateCreated: Date
   dateDeleted: Date
 }
 

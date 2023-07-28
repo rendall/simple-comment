@@ -39,7 +39,6 @@ import {
   getAllowedOrigins,
   isEmail,
   normalizeUrl,
-  isValidResult,
 } from "./backend-utilities"
 import policy from "../policy.json"
 import {
@@ -70,6 +69,7 @@ import {
 } from "./messages"
 import { comparePassword, getAuthToken, hashPassword, uuidv4 } from "./crypt"
 import * as jwt from "jsonwebtoken"
+import { isValidResult } from "./shared-utilities"
 export class MongodbService extends Service {
   private isCrossSite = process.env.IS_CROSS_SITE === "true"
   private _client: MongoClient
