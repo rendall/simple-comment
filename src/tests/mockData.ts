@@ -73,8 +73,8 @@ export const mockCommentTree = (
   return chain
 }
 
-export const chooseRandomElement = <T>(arr: T[]) =>
-  arr[Math.floor(Math.random() * arr.length)]
+export const chooseRandomElement = <T>(array: T[]) =>
+  array[Math.floor(Math.random() * array.length)]
 export const mockUsersArray = (
   population: number,
   users: User[] = []
@@ -111,8 +111,10 @@ export const mockUser = (prepend = ""): User => ({
   hash: randomString(alphaAscii, 32),
 })
 
+const capitalize = (word: string) => word.replace(/^\w/, c => c.toUpperCase())
+
 // Function to generate a random sentence
-const generateRandomSentence = (): string => {
+const generateRandomEnglishSentence = (): string => {
   const subjects = ["I", "You", "He", "She", "It", "They", "We"]
   const actions = [
     { verb: "add", objects: ["sugar", "flour", "salt", "pepper", "water"] },
@@ -599,17 +601,20 @@ const generateRandomSentence = (): string => {
     isThirdPerson(subject) ? thirdPersonSingular(action.verb) : action.verb
   } ${object}.`
 
-  // Capitalize the first letter of the sentence and return it
-  return sentence.charAt(0).toUpperCase() + sentence.slice(1)
+  return sentence
 }
 
 export const generateRandomCopy = (
+  sentenceFunc = chooseRandomElement([
+    generateRandomEnglishSentence,
+    generateRandomFinnishSentence,
+  ]),
   i: number = randomNumber(),
   copy: string = ""
 ): string =>
   i <= 0
-    ? copy
-    : generateRandomCopy(i - 1, `${copy} ${generateRandomSentence()}`)
+    ? copy.trim()
+    : generateRandomCopy(sentenceFunc, i - 1, `${copy} ${sentenceFunc()}`)
 
 const generateFinnishName = () => {
   const finnishFirstNames = [
@@ -767,9 +772,6 @@ const generateAmericanName = () => {
     "Robinson",
   ]
 
-  const chooseRandomElement = array =>
-    array[Math.floor(Math.random() * array.length)]
-
   return `${chooseRandomElement(americanFirstNames)} ${chooseRandomElement(
     americanLastNames
   )}`
@@ -777,3 +779,247 @@ const generateAmericanName = () => {
 
 export const generateRandomName = () =>
   chooseRandomElement([generateAmericanName, generateFinnishName])()
+
+export const generateRandomFinnishSentence = () => {
+  type Subject = "minä" | "sinä" | "hän" | "me" | "te" | "he"
+
+  const verbAssociationTuples: [string, string[]][] = [
+    [
+      "aloittaa",
+      [
+        "opinnot",
+        "projektin",
+        "työt",
+        "harjoituksen",
+        "kokouksen",
+        "urheiluharrastuksen",
+      ],
+    ],
+    [
+      "ampua",
+      [
+        "maalitauluun",
+        "riistaa",
+        "maaliin",
+        "jousella",
+        "haulikolla",
+        "ilmaan",
+        "pistoolilla",
+        "sotaharjoituksissa",
+        "metsästyksessä",
+        "varoituslaukauksen",
+        "savukranaatteja",
+        "nuolia",
+      ],
+    ],
+    ["antaa", ["lahjan", "neuvon", "vastauksen", "kommentin", "suosituksen"]],
+    [
+      "harjoittaa",
+      ["urheilua", "kuntoilua", "meditaatiota", "ammattia", "harrastusta"],
+    ],
+    ["järjestää", ["tapahtuman", "kokouksen", "juhlan", "matkan", "projektin"]],
+    ["kehittää", ["taitoja", "tuotteen", "palvelun", "ohjelman", "projektin"]],
+    [
+      "kertoa",
+      ["tarinan", "totuuden", "uutisen", "salaisuuden", "mielipiteen"],
+    ],
+    [
+      "kieltää",
+      ["väitteet", "osallistumisen", "puheen", "totuuden", "tunkeutumisen"],
+    ],
+    ["kiertää", ["kaupunkia", "museota", "kirkkoa", "näyttelyä", "järveä"]],
+    ["kiinnittää", ["huomiota", "kuvan", "merkin", "julisteen", "naulan"]],
+    [
+      "korostaa",
+      ["mielipidettä", "tärkeyttä", "asiaa", "yksityiskohtaa", "vaikutusta"],
+    ],
+    [
+      "kutsua",
+      ["ystävän", "vieraan", "työhaastatteluun", "juhliin", "kokoukseen"],
+    ],
+    ["kysyä", ["neuvoa", "ohjeita", "tietoa", "apua", "lupaa"]],
+    ["käyttää", ["työkalua", "ohjelmaa", "laitteita", "metodia", "resurssia"]],
+    ["lopettaa", ["työt", "opiskelun", "harrastuksen", "projektin", "suhteen"]],
+    ["lukea", ["kirjaa", "lehteä", "uutisia", "runoa", "tutkimusta"]],
+    [
+      "lähettää",
+      ["viestin", "paketin", "kirjeen", "sähköpostin", "hakemuksen"],
+    ],
+    [
+      "mainostaa",
+      ["tuotetta", "palvelua", "tapahtumaa", "kampanjaa", "yritystä"],
+    ],
+    [
+      "muistaa",
+      ["nimen", "osoitteen", "tapauksen", "yksityiskohdat", "päivämäärän"],
+    ],
+    ["muodostaa", ["ryhmän", "sopimuksen", "suunnitelman", "päätöksen"]],
+    ["nukkua", ["sängyssä", "teltassa", "sohvalla", "aamulla", "iltapäivällä"]],
+    [
+      "ohittaa",
+      [
+        "auton",
+        "vastustajan",
+        "esteen",
+        "rajoituksen",
+        "pysäkin",
+        "rajapyykin",
+        "kaupungin",
+        "jonon",
+        "kilpailijat",
+        "odotukset",
+      ],
+    ],
+    ["piirtää", ["kuvan", "kartan", "muotokuvan", "diagrammin", "luonnoksen"]],
+    [
+      "puhua",
+      ["kieltä", "totuutta", "mielipidettä", "politiikkaa", "tunteista"],
+    ],
+    [
+      "purkaa",
+      [
+        "ajatuksiaan",
+        "esteen",
+        "jännityksen",
+        "koneen",
+        "laatikon",
+        "leirin",
+        "rakennuksen",
+        "sopimuksen",
+        "tavaran",
+      ],
+    ],
+    ["pyytää", ["apua", "anteeksi", "lupaa", "neuvoa", "lainaa"]],
+    ["rahoittaa", ["projektin", "opinnot", "hankinnan", "yrityksen", "matkan"]],
+    ["soittaa", ["pianoa", "kitaraa", "viulua", "rummuja", "harmonikkaa"]],
+    [
+      "sopia",
+      [
+        "kokouksesta",
+        "tapaamisesta",
+        "kaupasta",
+        "sopimuksesta",
+        "yhteistyöstä",
+      ],
+    ],
+    ["sulkea", ["oven", "ikkunan", "kirjan", "laatikon", "säiliön"]],
+    [
+      "särkeä",
+      [
+        "lasin",
+        "peilin",
+        "ikkunan",
+        "astian",
+        "säännön",
+        "hiljaisuuden",
+        "sopimuksen",
+      ],
+    ],
+    [
+      "tappaa",
+      [
+        "aikaa",
+        "bakteereita",
+        "tuholaisia",
+        "viruksen",
+        "hyönteisiä",
+        "rikkakasveja",
+        "unelmia",
+      ],
+    ],
+    [
+      "tarkastaa",
+      [
+        "asiakirjat",
+        "tiedot",
+        "sähköpostin",
+        "auton",
+        "talon",
+        "koneen",
+        "rakennusprojektin",
+        "laitteet",
+        "turvatoimenpiteet",
+        "tuotantolinjan",
+        "ajoneuvon",
+        "työmaan",
+        "varaston",
+        "lentokoneen",
+      ],
+    ],
+    [
+      "tietää",
+      ["totuuden", "vastauksen", "ratkaisun", "menetelmän", "säännöt"],
+    ],
+    [
+      "tinkiä",
+      ["hinnasta", "palkasta", "korvauksesta", "maksusta", "vuokrasta"],
+    ],
+    ["tuottaa", ["tavaran", "palvelun", "elokuvan", "musiikin", "sisällön"]],
+    [
+      "unohtaa",
+      ["avaimet", "lompakon", "puhelimen", "tapaamisen", "syntymäpäivän"],
+    ],
+    ["uskoa", ["Jumalaan", "unelmiin", "tulevaisuuteen", "ystävään"]],
+    [
+      "valmistaa",
+      ["ruokaa", "raportin", "taideteoksen", "projektin", "juhlan"],
+    ],
+    ["valvoa", ["työtä", "lapsia", "projektia", "koetta", "ylläpidon"]],
+  ]
+
+  const conjugateFinnishType1Verb = (
+    subject: Subject,
+    verb: string
+  ): string => {
+    const stem = verb.slice(0, -1) // remove the last character
+
+    const degrade = (stem: string) => {
+      if (stem.match(/kk.$/)) return stem.replace(/kk(.)$/, "k$1")
+      if (stem.match(/pp.$/)) return stem.replace(/pp(.)$/, "p$1")
+      if (stem.match(/tt.$/)) return stem.replace(/tt(.)$/, "t$1")
+      if (stem.match(/nt.$/)) return stem.replace(/nt(.)$/, "nn$1")
+      if (stem.match(/nk.$/)) return stem.replace(/nk(.)$/, "ng$1")
+      if (stem.match(/mp.$/)) return stem.replace(/mp(.)$/, "mm$1")
+      if (stem.match(/lt.$/)) return stem.replace(/lt(.)$/, "ll$1")
+      if (stem.match(/rt.$/)) return stem.replace(/rt(.)$/, "rr$1")
+      if (stem.match(/tietä$/)) return stem.replace(/tietä$/, "tiedä")
+      if (stem.match(/luke$/)) return stem.replace(/luke$/, "lue")
+      if (stem.match(/p.$/)) return stem.replace(/p(.)$/, "v$1")
+      if (stem.match(/lke$/)) return stem.replace(/lke$/, "lje")
+      if (stem.match(/rke$/)) return stem.replace(/rke$/, "rje")
+
+      return stem
+    }
+
+    switch (subject) {
+      case "minä":
+        return degrade(stem) + "n"
+      case "sinä":
+        return degrade(stem) + "t"
+      case "hän":
+        return stem + stem.slice(-1) // replace last vowel with second to last
+      case "me":
+        return degrade(stem) + "mme"
+      case "te":
+        return degrade(stem) + "tte"
+      case "he":
+        return stem + (verb.match(/[aou]/) ? "vat" : "vät")
+      default:
+        throw `Unexpected subject '${subject}'`
+    }
+  }
+
+  const [infinitive, assocations] = chooseRandomElement(verbAssociationTuples)
+  const directObject = chooseRandomElement(assocations)
+  const subject = chooseRandomElement<Subject>([
+    "minä",
+    "sinä",
+    "hän",
+    "me",
+    "te",
+    "he",
+  ])
+  const verb = conjugateFinnishType1Verb(subject, infinitive)
+
+  return `${capitalize(subject)} ${verb} ${directObject}.`
+}
