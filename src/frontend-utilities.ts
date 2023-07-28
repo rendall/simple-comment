@@ -96,6 +96,30 @@ export const validateUserName = (username: string): Validation => {
   return { isValid: true }
 }
 
+export const validatePassword = (password: string): Validation => {
+  if (password.length === 0) {
+    return { isValid: false, reason: "Password cannot be empty." }
+  }
+
+  const isValid = password.trim() === password
+  if (!isValid) {
+    return {
+      isValid: false,
+      reason: "The password cannot begin or end with a space.",
+    }
+  }
+
+  const isTooShort = password.length < 4
+  if (isTooShort) {
+    return {
+      isValid: false,
+      reason: "The password must be at least 6 characters long",
+    }
+  }
+
+  return { isValid: true }
+}
+
 /** Serves as both a type guard and predicate for validation objects */
 export const isValidationTrue = (
   validation: Validation

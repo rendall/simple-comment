@@ -433,41 +433,77 @@ export class HeaderList {
   }
 }
 
-export type ValidResult = {
-  isValid: boolean
-  result?: RegExpMatchArray
-  reason?: string
+type InvalidResult = { isValid: false; reason: string }
+type ValidResult = { isValid: true }
+type Validation = [(userId: string) => boolean, (id?: string) => string]
+
+export type ValidationResult = InvalidResult | ValidResult
+
+export const isValidResult = (
+  validation: ValidationResult
+): validation is ValidResult => validation.isValid
+
+export const validateUserId = (userId: string): ValidationResult => {
+  if (typeof userId !== "string")
+    return {
+      isValid: false,
+      reason: `Invalid user id '${userId}'`,
+    } as InvalidResult
+
+  const validations: Validation[] = [
+    [
+      id => id.length < 5,
+      id =>
+        `'${id}' has only ${id?.length} characters, but it must be at least 5 characters long.`,
+    ],
+    [
+      id => id.length > 36,
+      id =>
+        `'${id}' has ${id?.length} characters, but it must be no more than 36 characters long.`,
+    ],
+    [
+      id => id.match(/[^a-z0-9-_]/g) !== null,
+      id =>
+        `'${id}' must have only lower-case letters, numbers and the characters - and _, but '${id}' contains ${id?.match(
+          /[^a-z0-9-_]/g
+        )}`,
+    ],
+  ]
+
+  const validation = validations.reduce<ValidationResult>(
+    (result: ValidationResult, [predicate, reason]: Validation) => {
+      if (predicate(userId)) {
+        if (isValidResult(result)) {
+          return { isValid: false, reason: reason(userId) } as InvalidResult
+        } else {
+          return {
+            isValid: false,
+            reason: `${result.reason} ${reason(userId)}`,
+          } as InvalidResult
+        }
+      }
+      return result
+    },
+    { isValid: true } as ValidResult
+  )
+
+  return validation
 }
 
-export const validateUserId = (
-  userId: string,
-  result?: RegExpMatchArray
-): ValidResult =>
-  userId.length < 5 || userId.length > 36
-    ? { isValid: false }
-    : result === undefined
-    ? validateUserId(userId, userId.match(/[^a-z0-9-_]/g)) // This match is designed to return invalid characters
-    : result === null
-    ? { isValid: true }
-    : { isValid: false, result }
-
-export const validateEmail = (
-  email: string,
-  result?: RegExpMatchArray | null
-): ValidResult =>
-  result === undefined
-    ? validateEmail(
-        email,
-        email.match(/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i)
-      )
-    : result === null
-    ? { isValid: false }
-    : { isValid: true, result }
+export const validateEmail = (email: string): ValidationResult => {
+  const isValid = email.match(/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i)
+  if (isValid) return { isValid: true }
+  else
+    return {
+      isValid: false,
+      reason: `'${email}' is not a valid email address.`,
+    }
+}
 
 // This validation is intended to be as broad as possible but
 // may still get it wrong in your use case
 // (q.v. https://www.kalzumeus.com/2010/06/17/falsehoods-programmers-believe-about-names/ )
-export const validateDisplayName = (name: string): ValidResult => {
+export const validateDisplayName = (name: string): ValidationResult => {
   if (name.length < 3)
     return { isValid: false, reason: "Display name is too short" }
   if (name.length > 100)
@@ -477,7 +513,7 @@ export const validateDisplayName = (name: string): ValidResult => {
 
 // Have a very loose password policy and encourage password complexity on the frontend.
 // Checking here only for length and common passwords
-export const validatePassword = (password: string): ValidResult => {
+export const validatePassword = (password: string): ValidationResult => {
   if (password !== password.trim())
     return {
       isValid: false,
@@ -495,33 +531,23 @@ export const validatePassword = (password: string): ValidResult => {
   return { isValid: true }
 }
 
-export const validateUser = (user: UpdateUser & User): ValidResult => {
-  if (!user.id || user.id === "" || typeof user.id !== "string")
-    return { isValid: false, reason: `Invalid user id '${user.id}'` }
-  if (user.id) {
-    const idCheck = validateUserId(user.id)
-    if (!idCheck.isValid) {
-      const badChars = idCheck.result?.join(", ")
-      return {
-        ...idCheck,
-        reason: `UserId '${user.id}' contains invalid characters '${badChars}'. Only lowercase letters, numbers, '-' and '_' are valid.`,
-      }
-    }
-  }
+export const validateUser = (user: UpdateUser & User): ValidationResult => {
+  const idCheck = validateUserId(user.id)
+  if (!isValidResult(idCheck)) return idCheck
+
   if (user.email) {
     const checkEmail = validateEmail(user.email)
-    if (!checkEmail.isValid)
-      return { ...checkEmail, reason: "Email is not valid" }
+    if (!isValidResult(checkEmail)) return checkEmail
   }
   if (user.name) {
     const checkName = validateDisplayName(user.name)
-    if (!checkName.isValid) return checkName
+    if (!isValidResult(checkName)) return checkName
   }
 
   // do not validate guest user passwords
   if (!isGuestId(user.id) && user.password) {
     const passwordCheck = validatePassword(user.password)
-    if (!passwordCheck.isValid) return passwordCheck
+    if (!isValidResult(passwordCheck)) return passwordCheck
   }
 
   return { isValid: true }

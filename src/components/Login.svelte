@@ -25,6 +25,7 @@
     isValidationTrue,
     isResponseOk,
     idIconDataUrl,
+    validatePassword,
   } from "../frontend-utilities"
   import InputField from "./low-level/InputField.svelte"
   import { guestUserCreation } from "../lib/svelte-stores"
@@ -43,6 +44,9 @@
   let userNameManuallyChanged = false
   let userNameMessage = undefined
   let userNameMessageStatus = undefined
+  let signupPasswordMessage = undefined
+  let signupPasswordStatus = undefined
+
   let selectedIndex = 0
 
   const { state, send } = useMachine(loginMachine)
@@ -66,6 +70,7 @@
           : { isValid: true },
       () => checkUserEmailValid(signupEmail),
       () => validateUserName(loginUserName),
+      () => validatePassword(loginPassword),
     ]
     validations.forEach(func => {
       const valid = func()
@@ -289,7 +294,6 @@
   }
 
   const checkUserEmailValid_debounced = debounceFunc(checkUserEmailValid, 50)
-
   const handleUserEmailInput = () => checkUserEmailValid_debounced(signupEmail)
 
   const handleUserNameInput = () => {
@@ -342,6 +346,25 @@
     nextEvents = $state.nextEvents
   }
 
+  const onInputValidatePassword = password => {
+    const validation = validatePassword(password)
+
+    if (isValidationTrue(validation)) {
+      signupPasswordMessage = "..."
+      signupPasswordStatus = undefined
+    } else {
+      signupPasswordStatus = "error"
+      signupPasswordMessage = validation.reason
+    }
+  }
+
+  const checkPasswordValid_debounced = debounceFunc(
+    onInputValidatePassword,
+    500
+  )
+  const handleSignupPasswordInput = () =>
+    checkPasswordValid_debounced(loginPassword)
+
   const dispatch = createEventDispatcher()
   $: {
     dispatch("userChange", { currentUser: self })
@@ -354,10 +377,7 @@
 </script>
 
 <section class="simple-comment-login">
-  <p
-    id="status-display"
-    class={isError ? "is-error" : ""}
-  >
+  <p id="status-display" class={isError ? "is-error" : ""}>
     {statusMessage}
   </p>
   {#if $state.value === "verifying" || $state.value === "loggingIn" || $state.value === "loggingOut"}
@@ -458,6 +478,9 @@
           bind:value={loginPassword}
           id="signup-password"
           labelText="Password"
+          helperText={signupPasswordMessage}
+          status={signupPasswordStatus}
+          onInput={handleSignupPasswordInput}
           required
           type="password"
         />

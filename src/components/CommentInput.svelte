@@ -114,16 +114,23 @@
   <textarea
     class="comment-field"
     placeholder="Your comment"
+    required
     {autofocus}
     bind:value={commentText}
   />
   {#if !currentUser}
-    <InputField labelText="Name" id="guest-name" bind:value={guestName} />
+    <InputField
+      labelText="Name"
+      id="guest-name"
+      bind:value={guestName}
+      required
+    />
     <InputField
       bind:value={guestEmail}
       labelText="Email"
       id="guest-email"
       helperText="Your email helps with moderation, but will never be shared or shown."
+      required
     />
   {/if}
   <div class="button-row">

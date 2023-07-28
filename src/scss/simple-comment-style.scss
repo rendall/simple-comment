@@ -159,6 +159,12 @@ h1.simple-comment-logotype {
   .simple-comment-login {
     margin-bottom: 3rem;
 
+    #status-display {
+      &.is-error {
+        color: $error-red;
+      }
+    }
+
     .selection-tabs {
       margin-bottom: 1rem;
 

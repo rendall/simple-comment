@@ -39,6 +39,7 @@ import {
   getAllowedOrigins,
   isEmail,
   normalizeUrl,
+  isValidResult,
 } from "./utilities"
 import policy from "../policy.json"
 import {
@@ -178,7 +179,7 @@ export class MongodbService extends Service {
     }
 
     const userCheck = validateUser(newUser)
-    if (!userCheck.isValid) {
+    if (!isValidResult(userCheck)) {
       return {
         ...error400BadRequest,
         body: userCheck.reason,
@@ -357,7 +358,7 @@ export class MongodbService extends Service {
     }
 
     const checkUser = validateUser(user as User)
-    if (!checkUser.isValid) {
+    if (!isValidResult(checkUser)) {
       return {
         ...error400BadRequest,
         body: checkUser.reason,
