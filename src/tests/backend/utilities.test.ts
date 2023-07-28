@@ -5,7 +5,7 @@ import {
   parseQuery,
   validateEmail,
   validateUserId,
-} from "../../../src/lib/utilities"
+} from "../../../src/lib/backend-utilities"
 import { v4 as uuidv4 } from "uuid"
 import type { Email } from "../../../src/lib/simple-comment-types"
 

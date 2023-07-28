@@ -13,7 +13,7 @@ import {
   getAllowOriginHeaders,
   getAllowedOrigins,
   addHeaders,
-} from "../lib/utilities"
+} from "../lib/backend-utilities"
 dotenv.config()
 
 const YEAR_SECONDS = 60 * 60 * 24 * 365 // 60s * 1 hour * 24 hours * 365 days

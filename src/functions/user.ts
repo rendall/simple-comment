@@ -21,7 +21,7 @@ import {
   getTargetId,
   getUpdatedUserInfo,
   getUserId,
-} from "../lib/utilities"
+} from "../lib/backend-utilities"
 dotenv.config()
 
 const service: MongodbService = new MongodbService(

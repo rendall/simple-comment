@@ -1,4 +1,4 @@
-import { normalizeUrl } from "../../lib/utilities"
+import { normalizeUrl } from "../../lib/backend-utilities"
 
 describe("normalizeUrl", () => {
   it("should handle URLs without any of the stripped elements", () => {

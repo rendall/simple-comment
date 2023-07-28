@@ -9,7 +9,7 @@ import {
   getCookieToken,
   hasBearerScheme,
   hasTokenCookie,
-} from "../lib/utilities"
+} from "../lib/backend-utilities"
 import type { Success, TokenClaim, Error } from "../lib/simple-comment-types"
 import {
   error401UserNotAuthenticated,

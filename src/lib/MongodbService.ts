@@ -40,7 +40,7 @@ import {
   isEmail,
   normalizeUrl,
   isValidResult,
-} from "./utilities"
+} from "./backend-utilities"
 import policy from "../policy.json"
 import {
   error400BadRequest,

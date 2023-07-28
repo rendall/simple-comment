@@ -37,7 +37,7 @@ import {
   isDeletedComment,
   isDiscussion,
   toAdminSafeUser,
-} from "../../../src/lib/utilities"
+} from "../../../src/lib/backend-utilities"
 import * as fs from "fs"
 import {
   alphaUserInput,

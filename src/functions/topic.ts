@@ -9,7 +9,7 @@ import {
   getTargetId,
   getUpdateTopicInfo,
   getUserId,
-} from "../lib/utilities"
+} from "../lib/backend-utilities"
 import type {
   Discussion,
   Error,
