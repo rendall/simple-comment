@@ -57,35 +57,36 @@ describe("Test guest id utility", () => {
 
 describe("Test validations", () => {
   test("good validateUserId", () => {
-    expect(validateUserId("rendall-775-id")).toEqual(
-      expect.objectContaining({ isValid: true })
-    )
+    expect(validateUserId("rendall-775-id")).toEqual({ isValid: true })
   })
 
   test("uuidv4 in validateUserId", () => {
-    expect(validateUserId(uuidv4())).toEqual(
-      expect.objectContaining({ isValid: true })
-    )
+    expect(validateUserId(uuidv4())).toEqual({ isValid: true })
   })
 
   test("incorrect characters in validateUserId", () => {
-    expect(validateUserId("A-rendall-775-id")).toEqual(
-      expect.objectContaining({ isValid: false })
-    )
+    expect(validateUserId("A-rendall-775-id")).toEqual({
+      isValid: false,
+      reason:
+        "'A-rendall-775-id' must have only lower-case letters, numbers and the characters - and _, but 'A-rendall-775-id' contains A",
+    })
   })
 
   test("not enough characters in validateUserId", () => {
-    expect(validateUserId("ad")).toEqual(
-      expect.objectContaining({ isValid: false })
-    )
+    expect(validateUserId("ad")).toEqual({
+      isValid: false,
+      reason:
+        "'ad' has only 2 characters, but it must be at least 5 characters long.",
+    })
   })
 
   test("too many  characters in validateUserId", () => {
     const tooMany = uuidv4() + "a"
     expect(tooMany.length).toBeGreaterThan(36)
-    expect(validateUserId(tooMany)).toEqual(
-      expect.objectContaining({ isValid: false })
-    )
+    expect(validateUserId(tooMany)).toEqual({
+      isValid: false,
+      reason: `'${tooMany}' has 37 characters, but it must be no more than 36 characters long.`,
+    })
   })
 
   const emailAscii = "abcdefghijklmnopqrstuvwxyz01234567890"
