@@ -1,4 +1,8 @@
-import type { InvalidResult, ValidResult, ValidationResult } from "./simple-comment-types"
+import type {
+  InvalidResult,
+  ValidResult,
+  ValidationResult,
+} from "./simple-comment-types"
 
 export const isValidResult = (
   validation: ValidationResult
@@ -11,7 +15,7 @@ export const validateUserId = (userId: string): ValidationResult => {
       reason: `Invalid user id '${userId}'`,
     } as InvalidResult
 
-type Validation = [(userId: string) => boolean, (id?: string) => string]
+  type Validation = [(userId: string) => boolean, (id?: string) => string]
   const validations: Validation[] = [
     [
       id => id.length < 5,
@@ -53,6 +57,8 @@ type Validation = [(userId: string) => boolean, (id?: string) => string]
 }
 
 export const validateEmail = (email: string): ValidationResult => {
+  if (!email || email.length === 0)
+    return { isValid: false, reason: "Email is required." }
   const isValid = email.match(/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i)
   if (isValid) return { isValid: true }
   else
@@ -66,10 +72,11 @@ export const validateEmail = (email: string): ValidationResult => {
 // may still get it wrong in your use case
 // (q.v. https://www.kalzumeus.com/2010/06/17/falsehoods-programmers-believe-about-names/ )
 export const validateDisplayName = (name: string): ValidationResult => {
-  if (name.length < 3)
-    return { isValid: false, reason: "Display name is too short" }
+  if (name.length === 0)
+    return { isValid: false, reason: "Display name is necessary." }
+  if (name.length < 2)
+    return { isValid: false, reason: "Display name is too short." }
   if (name.length > 100)
-    return { isValid: false, reason: "Display name is too long" }
+    return { isValid: false, reason: "Display name is too long." }
   return { isValid: true }
 }
-

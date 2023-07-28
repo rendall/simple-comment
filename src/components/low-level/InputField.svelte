@@ -31,6 +31,8 @@
     bind:value
     on:input={onInput}
     on:blur={onBlur}
+    autocomplete="off"
+    autocapitalize="off"
   />
   {#if helperText?.length > 0}
     <p class="helper-text">{helperText}</p>

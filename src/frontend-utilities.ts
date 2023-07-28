@@ -2,7 +2,8 @@ import { blockiesMemoized } from "./lib/blockies"
 import type {
   ServerResponse,
   ServerResponseSuccess,
-  Validation,
+  UserId,
+  ValidationResult,
 } from "./lib/simple-comment-types"
 
 type MinComment = {
@@ -65,38 +66,38 @@ export const threadComments = <T extends MinComment, U extends MinComment>(
   return threadCommentsWithMap(comment)
 }
 
-export const validateUserName = (username: string): Validation => {
-  if (username.length === 0) {
-    return { isValid: false, reason: "Username cannot be empty." }
+export const validateUserId = (userId: UserId): ValidationResult => {
+  if (userId.length === 0) {
+    return { isValid: false, reason: "User handle cannot be empty." }
   }
 
-  const isValid = /^[a-z0-9-]*$/.test(username)
+  const isValid = /^[a-z0-9-]*$/.test(userId)
   if (!isValid) {
     return {
       isValid: false,
       reason:
-        "Username is not valid. Please use only lowercase letters (a-z), numbers (0-9), and hyphens (-).",
+        "User handle is not valid. Please use only lowercase letters (a-z), numbers (0-9), and hyphens (-).",
     }
   }
 
-  const isTooShort = username.length < 4
+  const isTooShort = userId.length < 4
   if (isTooShort) {
     return {
       isValid: false,
       reason:
-        "Username is too short. The username must be at least 4 characters.",
+        "User handle is too short. The username must be at least 4 characters.",
     }
   }
 
-  const isTooLong = username.length > 30
+  const isTooLong = userId.length > 30
   if (isTooLong) {
-    return { isValid: false, reason: "Username is too long." }
+    return { isValid: false, reason: "User handle is too long." }
   }
 
   return { isValid: true }
 }
 
-export const validatePassword = (password: string): Validation => {
+export const validatePassword = (password: string): ValidationResult => {
   if (password.length === 0) {
     return { isValid: false, reason: "Password cannot be empty." }
   }
@@ -122,7 +123,7 @@ export const validatePassword = (password: string): Validation => {
 
 /** Serves as both a type guard and predicate for validation objects */
 export const isValidationTrue = (
-  validation: Validation
+  validation: ValidationResult
 ): validation is { isValid: true } => validation.isValid === true
 
 /** Type guard for success vs error responses */
@@ -149,10 +150,12 @@ export const isResponseOk = <T>(
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const debounceFunc = <T extends (...args: any[]) => void>(
   func: T,
-  wait = 250
+  wait = 250,
+  invoke?: T
 ) => {
   let debounceTimeout: number | null = null
   return (...args: Parameters<T>): void => {
+    if (invoke) invoke(...args)
     if (debounceTimeout) {
       window.clearTimeout(debounceTimeout)
     }

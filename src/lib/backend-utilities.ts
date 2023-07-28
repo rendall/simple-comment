@@ -22,7 +22,12 @@ import type {
 } from "./simple-comment-types"
 import { uuidv4 } from "./crypt"
 import urlNormalizer from "normalize-url"
-import { isValidResult, validateDisplayName, validateEmail, validateUserId } from "./shared-utilities"
+import {
+  isValidResult,
+  validateDisplayName,
+  validateEmail,
+  validateUserId,
+} from "./shared-utilities"
 
 dotenv.config()
 

@@ -20,12 +20,12 @@
     verifyUser,
   } from "../apiClient"
   import {
-    validateUserName,
     debounceFunc,
     isValidationTrue,
     isResponseOk,
     idIconDataUrl,
     validatePassword,
+    validateUserId,
   } from "../frontend-utilities"
   import InputField from "./low-level/InputField.svelte"
   import { guestUserCreation } from "../lib/svelte-stores"
@@ -34,7 +34,7 @@
   let self: AdminSafeUser
   let isError = false
   let loginPassword = ""
-  let loginUserName = ""
+  let loginUserId = ""
   let signupEmail = ""
   let signupEmailStatus = ""
   let signupEmailHelperText =
@@ -69,7 +69,7 @@
           ? { isValid: false, reason: userNameMessage }
           : { isValid: true },
       () => checkUserEmailValid(signupEmail),
-      () => validateUserName(loginUserName),
+      () => validateUserId(loginUserId),
       () => validatePassword(loginPassword),
     ]
     validations.forEach(func => {
@@ -115,7 +115,7 @@
   const loggingInStateHandler = () => {
     updateStatusDisplay()
 
-    postAuth(loginUserName, loginPassword)
+    postAuth(loginUserId, loginPassword)
       .then(() => send("SUCCESS"))
       .catch(error => {
         send({ type: "ERROR", error })
@@ -125,7 +125,7 @@
   const signingUpStateHandler = () => {
     updateStatusDisplay()
     const userInfo = {
-      id: loginUserName,
+      id: loginUserId,
       name: signupDisplayName,
       email: signupEmail,
       password: loginPassword,
@@ -237,7 +237,7 @@
   const checkUserExists_debounced = debounceFunc(checkUserNameExists, 300)
 
   const onSubmitCheckUserNameValid = username => {
-    const validation = validateUserName(username)
+    const validation = validateUserId(username)
 
     if (isValidationTrue(validation)) {
       userNameMessage = "..."
@@ -250,7 +250,7 @@
   }
 
   const onInputCheckUserNameValid = username => {
-    const validation = validateUserName(username)
+    const validation = validateUserId(username)
     const ignoreReasons = ["Username is too short.", "Username cannot be empty"]
     const isIgnore = validation =>
       ignoreReasons.some(ignoreReason =>
@@ -276,7 +276,7 @@
       const formattedUserName = formatUserName(signupDisplayName)
       checkUserNameValid_debounced(formattedUserName)
       checkUserExists_debounced(formattedUserName)
-      loginUserName = formattedUserName
+      loginUserId = formattedUserName
     }
   }
 
@@ -298,13 +298,13 @@
 
   const handleUserNameInput = () => {
     userNameManuallyChanged = true
-    checkUserNameValid_debounced(loginUserName)
-    checkUserExists_debounced(loginUserName)
+    checkUserNameValid_debounced(loginUserId)
+    checkUserExists_debounced(loginUserId)
   }
 
   const handleUserNameBlur = () => {
-    checkUserNameValid_debounced(loginUserName)
-    checkUserExists_debounced(loginUserName)
+    checkUserNameValid_debounced(loginUserId)
+    checkUserExists_debounced(loginUserId)
   }
 
   const guestLoggingInStateHandler = () => {
@@ -371,7 +371,7 @@
   }
 
   $: {
-    if (loginUserName.length < 3 && !userNameMessageStatus)
+    if (loginUserId.length < 3 && !userNameMessageStatus)
       userNameMessage = "This is the name that uniquely identifies you"
   }
 </script>
@@ -423,7 +423,7 @@
         <InputField
           id="login-user-name"
           labelText="User handle"
-          bind:value={loginUserName}
+          bind:value={loginUserId}
           required
         />
         <InputField
@@ -455,7 +455,7 @@
           required
         />
         <InputField
-          bind:value={loginUserName}
+          bind:value={loginUserId}
           status={userNameMessageStatus}
           helperText={userNameMessage}
           id="signup-user-name"

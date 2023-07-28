@@ -148,11 +148,15 @@
           {:else}
             <div class="button-row">
               {#if currentUser?.isAdmin || (currentUser && currentUser?.id === comment.user?.id && !comment?.replies?.length)}
-                <button on:click={onDeleteCommentClick(comment.id)}
-                  >Delete</button
+                <button
+                  on:click={onDeleteCommentClick(comment.id)}
+                  class="comment-delete-button">Delete</button
                 >
               {/if}
-              <button on:click={onOpenCommentInput(comment.id)}>reply</button>
+              <button
+                on:click={onOpenCommentInput(comment.id)}
+                class="comment-reply-button">reply</button
+              >
             </div>
           {/if}
         </article>

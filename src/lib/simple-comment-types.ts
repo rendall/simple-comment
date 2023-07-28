@@ -67,7 +67,6 @@ export type ValidResult = { isValid: true }
 
 export type ValidationResult = InvalidResult | ValidResult
 
-
 export type Discussion = {
   _id?: ObjectId
   id: TopicId
