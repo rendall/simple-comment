@@ -1,10 +1,12 @@
 .env
 /.git
 /.netlify
+/dist
 /docs
 /functions
 /lib
 /node_modules
+/src/policy.ts
 LICENSE
 RAW
 example.env
