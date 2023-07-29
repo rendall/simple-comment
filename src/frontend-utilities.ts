@@ -175,6 +175,7 @@ export const formatDate = (date: Date | string | undefined, locale?: string) =>
       })
     : "unknown"
 
+// TODO: consider instead https://github.com/dmester/jdenticon
 const idIconDataUrlFunc = blockiesMemoized()
 export const idIconDataUrl = (userId: string) =>
   idIconDataUrlFunc({
