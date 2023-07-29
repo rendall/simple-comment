@@ -1,11 +1,11 @@
 // const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin
 const CopyWebpackPlugin = require("copy-webpack-plugin")
+const LicensePlugin = require('webpack-license-plugin')
 const MiniCssExtractPlugin = require("mini-css-extract-plugin")
 const TerserPlugin = require("terser-webpack-plugin")
 const path = require("path")
 const sveltePreprocess = require("svelte-preprocess")
 const webpack = require("webpack")
-// const LicensePlugin = require('webpack-license-plugin')
 
 const dotenv = require("dotenv")
 
@@ -95,19 +95,20 @@ module.exports = {
   },
   output: { filename: "js/[name].js", path: path.resolve(__dirname, "dist") },
   optimization: {
-    minimize: false,
+    minimize: isProduction,
     minimizer: [
       new TerserPlugin({
         terserOptions: {
-          mangle: false, // Note `mangle: false`
+          mangle: isProduction,
+          compress: isProduction
         },
       }),
     ],
   },
   plugins: [
-    // new LicensePlugin(),
-    // new BundleAnalyzerPlugin({ generateStatsFile: true }),
+    // new BundleAnalyzerPlugin({ generateStatsFile: true, mode: "json", openAnalyzer:false }),
     new CopyWebpackPlugin({ patterns: [{ from: "src/static", to: "." }] }),
+    new LicensePlugin(),
     new MiniCssExtractPlugin({ filename: "css/[name].css" }),
     new webpack.EnvironmentPlugin(["SIMPLE_COMMENT_API_URL"]),
   ],

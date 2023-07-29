@@ -1,7 +1,9 @@
 const path = require("path")
 const fs = require("fs")
 
-const mode = process.env.nodeEnv ?? "development"
+const mode = process.env.NODE_ENV ?? "development"
+const isProduction = mode === "production"
+
 const entry = fs
   .readdirSync("./src/functions")
   .filter(filename => filename.endsWith(".ts"))
@@ -16,6 +18,9 @@ const entry = fs
 const config = {
   mode,
   entry,
+  performance: {
+    hints: isProduction ? "warning" : false,
+  },
   resolve: {
     extensions: [".ts", ".js"],
   },
