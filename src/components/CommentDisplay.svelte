@@ -155,7 +155,7 @@
               {/if}
               <button
                 on:click={onOpenCommentInput(comment.id)}
-                class="comment-reply-button">reply</button
+                class="comment-reply-button">Reply</button
               >
             </div>
           {/if}

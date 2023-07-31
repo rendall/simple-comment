@@ -11,8 +11,8 @@ export type CommentMachineState =
   | "idle"
   | "validating"
   | "validated"
-  | "creatingGuestUser"
-  | "createdGuestUser"
+  | "loggingIn"
+  | "loggedIn"
   | "posting"
   | "posted"
   | "deleting"
@@ -30,7 +30,7 @@ export type CommentMachineContext = {
 }
 export type CommentMachineEvent =
   | { type: "SUBMIT" }
-  | { type: "CREATE_GUEST_USER" }
+  | { type: "LOG_IN" }
   | { type: "POST" }
   | { type: "RESET" }
   | { type: "ERROR"; error: ServerResponseError | string }
@@ -42,7 +42,7 @@ export const commentPostMachine = createMachine<
   CommentTypestate
 >(
   {
-    /** @xstate-layout N4IgpgJg5mDOIC5QGMD2BbdYB2AXAtAA6qwEBmANqgO4B0AlhBWAMQDKAqgEICyAkgBUA2gAYAuolDFY9XPVTZJIAB6IAjAA4ATLQAsAZgBsAdg0BWLSONnDZuwBoQAT0T6NtM-oCcx-VZFqulpeamoAvmGOaJg4BNLkVHQAbgCGFIwpcthQLACiAEr5APL5ohJIINKy8ooVqgi6uiK0aiJeWsZeXt5qRoaOLgj4gV60AVpB+sYTNtYaEVEYWHhEJAk0tKnpEJn02ewcAMKHuWxsZUpVcgpK9X6GtPq6dmZeIrYinhr9zupa+rQOsZWl4NMYTLovAsQNFlnE1vhKBsthksjlDvlcgBBAS5AD6AHEOKcBHiOGwChcKlcardEGZ3mM3ho1O0LJ9dOCBogJh4wRoNM9pr1TIZobDYqtSIjErRkAAnMC7bIEgCucFwHFgYHleUKJSpUhI1RudXU7zUgLUWhtNieHU03IQ7g6+lCGh6n0MnyhkRhS0l8RlGwVSrRao1Wp1B2Op3O4kuxuutVA9W0Oi0tkhIhzQLUxidmgBPsFajM1jdunCfolKyDSLoocykAjpCjusNlSTtLNDW8TK0ApCnQtBd+CFZloMArMYJtNt033FAbrCIbmzSqMgLAACkU2MIE9Tu6bU64tJbgQEq9bDNpAronYPLZpApoqwLBfplzFV9L1-Eew5AUxSlEeRoyMmdIIHYAKDmYzwiPodiQoYWhOsh7jer0rIXqySG6D+cJSusdCAfsnCxmcnY0qeKg8mhLTTG4+haJ4g6GPoTrPA8oRvJCkKhIubFEYGa6yvE26YhSh7lBBJopvRE5grQ0w+J4XjljYLxOuW7iNJoxjTAYthdKJf6kbQOryqgurSbksmJpBPZnhO+hPICnSsSEoLetMTqGN6jw+JpIiCv8bRmBEfrYKgEBwEotbwv+iROQp0HDLoejuSIkLfGC4ysU6+D-A8gmzpp3qLt6Yo1iuyWWYwzBpVBvbuR4gWhThwRgmOgxuB4mbGG0-z-NaGheLViy-g1wbJJuOxoi1LlKchZiAiNhi9G0IgdI+44DRYJgjaxbqDr603EfWspNuG6pttq8rLXR9SmFl7SmPhnIaGFZhPll5bVW6SG7WohiEXVM0kXNcqKs2ECtpqj3PYp9TlsYYwdCynzuZp-njkWYy6HelitFtPgCuZs3riii2QCj0HAy0CFls+DJfD8gwXg8CHE70+UGGdVPQwBaxAQzbWtMzVYWCy7NuJzrgso8vWfdjrJTf6UPXRskkQBLrlM2WMtszj3y6eY2U+LtLN7d+kNXeJGzWbZBtKdaRm0AKb52udbjFb060WNMQ1upNgvRWEQA */
+    /** @xstate-layout N4IgpgJg5mDOIC5QGMD2BbdYB2AXAtAA6qwEBmANqgO4B0AlhBWAMQDKAqgEICyAkgBUA2gAYAuolDFY9XPVTZJIAB6J8AJgCsAFlo6RANgDsRgIwGDAZgAc1kdoA0IAJ5rT2y7XWmR1o9fNLEUsjAE5LAF8IpzRMHAJpcio6ADcAQwpGNLlsKBYAUQAlQoB5QtEJJBBpWXlFKtUEH11LC191A3VQ9WDTJ1cEDU1rWmsgrs1-Lo9NTSiYjCw8IhIkmlp0zIhs+lz2DgBhA-y2NgqlGrkFJUb8P1ptA1DtI20PA2tQ02sDfrUDPRvIwGbRfV6WZ4GWbzECxJYJVb4SjrTZZHJ5AAyJQA4gB9PgAOXOVUudRuiFMplCgI8zWeoU06n8f0GpnU6lolgh1g6fnM-gCMLh8RWpCRyVoVCgUF2UD42AKxTKxKkJFq1waiBBIlobO0WhMIhE-kcLjc2k0uohQSMQVCXzZBiFixFiXF6ylMty8v2RxOZ3EFzVV3qoEallBuvZ1m0tgM3yhRhZ+BstA+InUP1CATCIWdcWWbuRdE9kB9KuqwbJmqa31o-h0sdmRgzvhZlg5Rm8lO8wJe33U+fhorWqQyaMgLAACiU2MJAySqxqw2ou7r7J91CFNHrMyz2UY9N4PqF7MbJpmh67EcXaIlZYrSuUF6qZCHybWdVod1yuj4Qq87ZdLqVhbvYmjpj8V6FjeEr3nsnB+qcFaksuKhuJYphpvqUIZrGULPKaAwWjq3Txq8oLhHYRjQQiYq3okk6FCc+TzpUr7qqG6GDEYlqPDhtq8bu1gssYlpPNmzyYf+0LRLCLowfREpgAATipqAqSwzFsKxKFLlxjTdJaPJPH4YFPBaLKvACpgmnqOidJooRRHJ2CoBAcBKMKimjkGb7ViugyPJ4EGUjoW5AsmEYAnaHi2qYlg6GYtEju6dCMMwfmcR++DaKYlqhfl+oRi8ybuJ47I2PaoFFe4KVFhKqLbOiWXvjWuUArGLY9D2fh2L8ZqskEuqaCIEEQb4DIxvVsEeqg0qyvKrUBdxIQhX4jxQsMDKUmV7KcoyMZjNoxoMhmM1KXN0pllxqEGYg7IAt1hjGr4o2GJo7ZYT0eUxhatqzPGF2jhs47NZAy1obcYxpgYvj9T8nwJiyPg6pM9gvKE-gfF0Tpyd5dEg-BUCQ-dgww20tiGIjXw-O2EKjECUyPH44TA2ld6rBDi7+VDagU3DVMfCeyODU5OqgZMvFcvYVLs7eqnqSppMfn4lpdv9PIiN8EGWHtHKJZmjL5To3RdC5ERAA */
     id: "comment-post-flow",
     initial: "idle",
     context: {},
@@ -56,16 +56,16 @@ export const commentPostMachine = createMachine<
         on: {
           ERROR: { target: "error", actions: "assignErrorMessage" },
           SUCCESS: "validated",
-          CREATE_GUEST_USER: "creatingGuestUser",
+          LOG_IN: "loggingIn",
         },
       },
-      creatingGuestUser: {
+      loggingIn: {
         on: {
           ERROR: { target: "error", actions: "assignErrorMessage" },
-          SUCCESS: "createdGuestUser",
+          SUCCESS: "loggedIn",
         },
       },
-      createdGuestUser: {
+      loggedIn: {
         always: "validating",
       },
       validated: {
