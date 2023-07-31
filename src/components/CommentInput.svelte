@@ -18,7 +18,6 @@
   import { guestUserCreation } from "../lib/svelte-stores"
   import { postComment } from "../apiClient"
   import { useMachine } from "@xstate/svelte"
-  import type { StateValue } from "xstate/lib/types"
   export let currentUser: User | undefined
   export let commentId: CommentId
   export let onCancel = null
@@ -69,14 +68,14 @@
 
   const validatingStateHandler = () => {
     if (currentUser) send({ type: "SUCCESS" })
-    else send("CREATE_GUEST_USER")
+    else send("LOG_IN")
   }
 
   const validatedStateHandler = () => {
     send({ type: "POST" })
   }
 
-  const creatingGuestUserStateHandler = () => {
+  const loggingInStateHandler = () => {
     const formValidationResult = checkGuestForm()
 
     // User creation and login is handled inside of Login.svelte
@@ -171,7 +170,7 @@
   $: {
     if (
       currentUser &&
-      $state.value === "creatingGuestUser" &&
+      $state.value === "loggingIn" &&
       currentUser.name === guestName &&
       currentUser.email === guestEmail
     ) {
@@ -183,7 +182,7 @@
     const stateHandlers: [string, () => void][] = [
       ["validating", validatingStateHandler],
       ["validated", validatedStateHandler],
-      ["creatingGuestUser", creatingGuestUserStateHandler],
+      ["loggingIn", loggingInStateHandler],
       ["posting", postingStateHandler],
       ["posted", postedStateHandler],
       ["error", errorStateHandler],
