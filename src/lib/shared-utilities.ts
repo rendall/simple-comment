@@ -36,25 +36,34 @@ export const validateUserId = (userId: string): ValidationResult => {
     ],
   ]
 
-  const validation = validations.reduce<ValidationResult>(
-    (result: ValidationResult, [predicate, reason]: Validation) => {
-      if (predicate(userId)) {
-        if (isValidResult(result)) {
-          return { isValid: false, reason: reason(userId) } as InvalidResult
-        } else {
-          return {
-            isValid: false,
-            reason: `${result.reason} ${reason(userId)}`,
-          } as InvalidResult
-        }
-      }
-      return result
-    },
+  const results = validations.map(([predicate, reason]) =>
+    predicate(userId)
+      ? { isValid: false, reason: reason(userId) }
+      : { isValid: true }
+  ) as ValidationResult[]
+
+  return joinValidations(results)
+}
+
+/**
+ * Takes an array of validation results and returns a single validation result.
+ * If all validation results are valid, returns a valid result.
+ * If any validation results are invalid, returns an invalid result with a reason that is a combination of the reasons for all invalid results.
+ *
+ * @param {ValidationResult[]} validations - An array of validation results to join.
+ * @returns {ValidationResult} - A single validation result that is either valid (if all input results are valid) or invalid (if any input results are invalid). If the result is invalid, the reason is a combination of the reasons for all invalid input results.
+ */ export const joinValidations = (
+  validations: ValidationResult[]
+): ValidationResult =>
+  validations.reduce<ValidationResult>(
+    (joinedResult: ValidationResult, result: ValidationResult) =>
+      isValidResult(result)
+        ? joinedResult
+        : isValidResult(joinedResult)
+        ? result
+        : { isValid: false, reason: `${joinedResult.reason} ${result.reason}` },
     { isValid: true } as ValidResult
   )
-
-  return validation
-}
 
 export const validateEmail = (email: string): ValidationResult => {
   if (!email || email.length === 0)
