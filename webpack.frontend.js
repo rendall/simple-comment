@@ -1,6 +1,6 @@
 // const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin
 const CopyWebpackPlugin = require("copy-webpack-plugin")
-const LicensePlugin = require('webpack-license-plugin')
+const LicensePlugin = require("webpack-license-plugin")
 const MiniCssExtractPlugin = require("mini-css-extract-plugin")
 const TerserPlugin = require("terser-webpack-plugin")
 const path = require("path")
@@ -50,7 +50,7 @@ module.exports = {
           loader: "svelte-loader",
           options: {
             compilerOptions: { dev: !isProduction },
-            emitCss: true,
+            emitCss: isProduction,
             hotReload: false,
             preprocess: [sveltePreprocess()],
           },
@@ -100,7 +100,7 @@ module.exports = {
       new TerserPlugin({
         terserOptions: {
           mangle: isProduction,
-          compress: isProduction
+          compress: isProduction,
         },
       }),
     ],
