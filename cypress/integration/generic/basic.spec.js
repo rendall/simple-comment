@@ -1,7 +1,7 @@
 /// <reference types="cypress" />
 describe("Simple Comment frontend", () => {
   it("successfully loads", () => {
-    cy.visit("http://localhost:7070/") // change URL to match your dev URL
+    cy.visit("http://localhost:7070/")
   })
 
   it("is a Simple Comment frontend", () => {

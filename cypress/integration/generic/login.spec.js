@@ -127,3 +127,5 @@ describe(`User Authentication Flow`, () => {
     cy.get("#login-form").should("exist")
   })
 })
+
+//TODO: test auto login
