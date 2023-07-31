@@ -10,6 +10,7 @@
   import { createEventDispatcher } from "svelte"
   import {
     isValidResult,
+    joinValidations,
     validateDisplayName,
     validateEmail,
   } from "../lib/shared-utilities"
@@ -17,6 +18,7 @@
   import { guestUserCreation } from "../lib/svelte-stores"
   import { postComment } from "../apiClient"
   import { useMachine } from "@xstate/svelte"
+  import type { StateValue } from "xstate/lib/types"
   export let currentUser: User | undefined
   export let commentId: CommentId
   export let onCancel = null
@@ -38,11 +40,31 @@
 
   const onSubmit = e => {
     e.preventDefault()
-    guestNameHelperText = "..."
-    guestNameStatus = ""
-    guestEmailHelperText = "..."
-    guestEmailStatus = ""
-    send({ type: "SUBMIT" })
+    const formValidationResult = checkGuestForm()
+    if (isValidResult(formValidationResult)) send({ type: "SUBMIT" })
+    else send({ type: "ERROR", error: formValidationResult.reason })
+  }
+
+  const checkGuestForm = () => {
+    const checkEmail = validateEmail(guestEmail)
+    if (!isValidResult(checkEmail)) {
+      guestEmailHelperText = checkEmail.reason
+      guestEmailStatus = "error"
+    } else {
+      guestEmailHelperText = GUEST_EMAIL_HELPER_TEXT
+      guestEmailStatus = undefined
+    }
+
+    const checkName = validateDisplayName(guestName)
+    if (!isValidResult(checkName)) {
+      guestNameHelperText = checkName.reason
+      guestNameStatus = "error"
+    } else {
+      guestNameHelperText = GUEST_NAME_HELPER_TEXT
+      guestNameStatus = undefined
+    }
+
+    return joinValidations([checkEmail, checkName])
   }
 
   const validatingStateHandler = () => {
@@ -55,21 +77,12 @@
   }
 
   const creatingGuestUserStateHandler = () => {
-    const checkEmail = validateEmail(guestEmail)
-    if (!isValidResult(checkEmail)) {
-      guestEmailHelperText = checkEmail.reason
-      guestEmailStatus = "error"
-    }
-
-    const checkName = validateDisplayName(guestName)
-    if (!isValidResult(checkName)) {
-      guestNameHelperText = checkName.reason
-      guestNameStatus = "error"
-    }
+    const formValidationResult = checkGuestForm()
 
     // User creation and login is handled inside of Login.svelte
-    if ([checkName, checkEmail].every(check => check.isValid))
+    if (isValidResult(formValidationResult))
       guestUserCreation.set({ name: guestName, email: guestEmail })
+    else send({ type: "ERROR", error: formValidationResult.reason })
   }
 
   const postingStateHandler = async () => {
@@ -89,9 +102,9 @@
       return
     }
     const { body } = response as ServerResponse<Comment>
-
     dispatch("posted", { comment: body })
     send({ type: "RESET" })
+    commentText = ""
   }
 
   const errorStateHandler = () => {
@@ -110,11 +123,12 @@
     const { ok } = error as ServerResponse
     if (ok) console.warn("Error handler caught an OK response", error)
 
+    // At this stage the error messages should already be present on the page
+
     send({ type: "RESET" })
   }
 
   const validateGuestName = () => {
-    console.log("validateGuestName")
     const result = validateDisplayName(guestName)
     if (isValidResult(result)) {
       guestNameHelperText = GUEST_NAME_HELPER_TEXT
@@ -214,8 +228,8 @@
   {/if}
   <div class="button-row">
     {#if onCancel !== null}
-      <button class="comment-cancel-button" on:click={onCancel}>cancel</button>
+      <button class="comment-cancel-button" on:click={onCancel}>Cancel</button>
     {/if}
-    <button class="comment-submit-button" type="submit">submit</button>
+    <button class="comment-submit-button" type="submit">Add comment</button>
   </div>
 </form>
