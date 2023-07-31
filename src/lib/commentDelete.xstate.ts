@@ -30,7 +30,7 @@ export const commentDeleteMachine = createMachine<
   CommentDeleteTypestate
 >(
   {
-    id: "comment-edit-flow",
+    id: "comment-delete-flow",
     initial: "idle",
     context: {},
     states: {
