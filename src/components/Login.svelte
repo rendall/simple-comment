@@ -72,9 +72,6 @@
       () => validateUserId(loginUserId),
       () => validatePassword(loginPassword),
     ]
-    validations.forEach(func => {
-      const valid = func()
-    })
 
     const allValid =
       validations.reduce(
@@ -396,7 +393,7 @@
         <p id="self-email">{self.email}</p>
       </div>
       {#if nextEvents.includes("LOGOUT")}
-        <button id="log-out-button" on:click={onLogoutClick}>log out</button>
+        <button id="log-out-button" on:click={onLogoutClick}>Log out</button>
       {/if}
     </section>
   {/if}
@@ -406,14 +403,14 @@
       <button
         class="selection-tab selection-tab-login"
         class:selected={selectedIndex === 0}
-        on:click={() => (selectedIndex = 0)}>login</button
+        on:click={() => (selectedIndex = 0)}>Login</button
       >
     {/if}
     {#if nextEvents.includes("SIGNUP")}
       <button
         class="selection-tab selection-tab-signup"
         class:selected={selectedIndex === 1}
-        on:click={() => (selectedIndex = 1)}>signup</button
+        on:click={() => (selectedIndex = 1)}>Signup</button
       >
     {/if}
   </div>
@@ -434,7 +431,7 @@
           required
         />
         <div class="button-row">
-          <button type="submit">log in</button>
+          <button type="submit">Log in</button>
         </div>
       </form>
     {/if}
@@ -485,7 +482,7 @@
           type="password"
         />
         <div class="button-row">
-          <button type="submit">sign up</button>
+          <button type="submit">Sign up</button>
         </div>
       </form>
     {/if}
