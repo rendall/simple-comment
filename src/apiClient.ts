@@ -282,8 +282,11 @@ export const isGuestId = (id: UserId) =>
   )
 
 // Validate email
-export const isValidEmail = (x: string) =>
-  x.match(/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i)
+export const isValidEmail = (email: string) => {
+  if (!email || typeof email !== "string") return false
+  const match = email.match(/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i)
+  return match !== null
+}
 
 //  Return the response with the body field read and resolved
 const resolveBody = async <T>(res: Response): Promise<ServerResponse<T>> => {

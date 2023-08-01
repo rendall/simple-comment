@@ -923,4 +923,25 @@ var generateRandomFinnishSentence = function () {
     return "".concat(capitalize(subject), " ").concat(verb, " ").concat(directObject, ".");
 };
 
-console.log({name:generateRandomName(), copy:generateRandomCopy()})
+function toEmail(name) {
+  // Normalize the name to its base form (NFD)
+  const normalized = name.normalize("NFD");
+
+  // Replace special characters like ä and ö with their English equivalents
+  const replacedSpecialChars = normalized.replace(/[\u0300-\u036f]/g, "");
+
+  // Convert the name to lowercase
+  const lowercaseName = replacedSpecialChars.toLowerCase();
+
+  // Remove non-alphanumeric characters and replace spaces with dots
+  const formattedName = lowercaseName.replace(/[^a-z0-9 ]/g, "").replace(/\s+/g, ".");
+
+  return formattedName + "@example.com";
+}
+
+const randomName = generateRandomName()
+
+
+console.log(randomName)
+console.log(toEmail(randomName))
+console.log(generateRandomCopy())

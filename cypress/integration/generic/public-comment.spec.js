@@ -21,10 +21,10 @@ context("Essential actions", () => {
   it("Submit a comment as a public / unknown user", () => {
     // https://on.cypress.io/type
     cy.intercept("POST", ".netlify/functions/comment/*").as("postComment")
-    cy.get("#guest-email").type("fake@email.com")
-    cy.get("#guest-name").type(generateRandomName())
-    cy.get(".comment-field").type(commentText)
-    cy.get(".comment-submit-button").click()
+    cy.get("form.comment-form #guest-email").type("fake@email.com")
+    cy.get("form.comment-form #guest-name").type(generateRandomName())
+    cy.get("form.comment-form .comment-field").type(commentText)
+    cy.get("form.comment-form .comment-submit-button").click()
     cy.wait("@postComment").its("response.statusCode").should("eq", 201) // 201 Created
     cy.get("ul.comment-replies.is-root").should("contain", commentText)
   })

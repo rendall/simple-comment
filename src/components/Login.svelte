@@ -32,6 +32,7 @@
     guestUserCreation,
     loginState,
   } from "../lib/svelte-stores"
+  import { isValidResult, joinValidations, validateDisplayName, validateEmail } from "../lib/shared-utilities"
 
   let nextEvents = []
   let self: AdminSafeUser
@@ -43,6 +44,10 @@
   let signupEmailHelperText =
     "Used only for verification and approved notifications. We never show or share your email."
   let signupDisplayName = ""
+  const DISPLAY_NAME_HELPER_TEXT = "This is the name that others will see"
+  let displayNameHelperText = DISPLAY_NAME_HELPER_TEXT
+  let displayNameStatus: "error" | "success" | undefined = undefined
+
   let statusMessage = ""
   let userNameManuallyChanged = false
   let userNameMessage = undefined
@@ -50,12 +55,29 @@
   let signupPasswordMessage = undefined
   let signupPasswordStatus = undefined
 
-  let selectedIndex = 0
+  enum Tab {
+    guest,
+    login,
+    signup,
+  }
+
+  let selectedIndex = Tab.guest
 
   const { state, send } = useMachine(loginMachine)
   const updateStatusDisplay = (message = "", error = false) => {
     statusMessage = message
     isError = error
+  }
+
+  const onGuestClick = async (e:Event) => {
+
+    e.preventDefault()
+
+    const validations = [() => validateDisplayName(signupDisplayName), () => validateEmail(signupEmail)].map(validation => validation())
+    const result = joinValidations(validations)
+
+    if (isValidResult(result)) send({type:"GUEST", guest:{name:signupDisplayName, email:signupEmail}})
+    else send({type:"ERROR", error:result.reason })
   }
 
   const onLoginClick = async (e: Event) => {
@@ -234,14 +256,14 @@
     }
   }
 
-  const checkUserExists_debounced = debounceFunc(checkUserNameExists, 300)
+  const checkUserIdExists_debounced = debounceFunc(checkUserNameExists, 300)
 
   const onSubmitCheckUserNameValid = username => {
     const validation = validateUserId(username)
 
     if (isValidationTrue(validation)) {
       userNameMessage = "..."
-      userNameMessageStatus = "valid"
+      userNameMessageStatus = "success"
     } else {
       userNameMessageStatus = "error"
       userNameMessage = validation.reason
@@ -266,45 +288,70 @@
     }
   }
 
-  const checkUserNameValid_debounced = debounceFunc(
+  const checkUserIdValid_debounced = debounceFunc(
     onInputCheckUserNameValid,
     50
   )
 
+  const checkDisplayName = () => {
+    if (signupDisplayName.length === 0) {
+      displayNameHelperText = DISPLAY_NAME_HELPER_TEXT
+      displayNameStatus = undefined
+      return
+    }
+    const result = validateDisplayName(signupDisplayName)
+    if (isValidResult(result)) {
+      displayNameHelperText = "     "
+      displayNameStatus = "success"
+    } else {
+      displayNameHelperText = result.reason
+      displayNameStatus = "error"
+    }
+  }
+  const checkDisplayName_debounced = debounceFunc(checkDisplayName, 1000)
+
   const handleDisplayNameInput = () => {
+    displayNameHelperText = "..."
+    displayNameStatus = undefined
+    checkDisplayName_debounced()
     if (!userNameManuallyChanged) {
       const formattedUserName = formatUserName(signupDisplayName)
-      checkUserNameValid_debounced(formattedUserName)
-      checkUserExists_debounced(formattedUserName)
+      checkUserIdValid_debounced(formattedUserName)
+      checkUserIdExists_debounced(formattedUserName)
       loginUserId = formattedUserName
     }
   }
 
-  const checkUserEmailValid = email => {
-    if (isValidEmail(email)) {
-      signupEmailHelperText = "This email address is valid."
-      signupEmailStatus = "valid"
+  const checkUserEmailValid = () => {
+    if (isValidEmail(signupEmail)) {
+      signupEmailHelperText = " "
+      signupEmailStatus = "success"
       return { isValid: true }
     } else {
       signupEmailStatus = "error"
       signupEmailHelperText =
-        "This email address appears to be invalid. Please check."
+        "This email address is invalid."
       return { isValid: false, reason: signupEmailHelperText }
     }
   }
 
-  const checkUserEmailValid_debounced = debounceFunc(checkUserEmailValid, 50)
-  const handleUserEmailInput = () => checkUserEmailValid_debounced(signupEmail)
+  const checkUserEmailValid_debounced = debounceFunc(checkUserEmailValid, 1000)
+  const handleUserEmailInput = () => {
+    signupEmailHelperText = "..."
+    signupEmailStatus = undefined
+
+    checkUserEmailValid_debounced()
+  }
 
   const handleUserNameInput = () => {
     userNameManuallyChanged = true
-    checkUserNameValid_debounced(loginUserId)
-    checkUserExists_debounced(loginUserId)
+    checkUserIdValid_debounced(loginUserId)
+    checkUserIdExists_debounced(loginUserId)
   }
 
   const handleUserNameBlur = () => {
-    checkUserNameValid_debounced(loginUserId)
-    checkUserExists_debounced(loginUserId)
+    checkUserIdValid_debounced(loginUserId)
+    checkUserIdExists_debounced(loginUserId)
   }
 
   const guestLoggingInStateHandler = () => {
@@ -398,21 +445,65 @@
     {#if nextEvents.includes("LOGIN")}
       <button
         class="selection-tab selection-tab-login"
-        class:selected={selectedIndex === 0}
-        on:click={() => (selectedIndex = 0)}>Login</button
+        class:selected={selectedIndex === Tab.login}
+        on:click={() => (selectedIndex = Tab.login)}>Login</button
       >
     {/if}
     {#if nextEvents.includes("SIGNUP")}
       <button
         class="selection-tab selection-tab-signup"
-        class:selected={selectedIndex === 1}
-        on:click={() => (selectedIndex = 1)}>Signup</button
+        class:selected={selectedIndex === Tab.signup}
+        on:click={() => (selectedIndex = Tab.signup)}>Signup</button
+      >
+    {/if}
+    {#if !self}
+      <button
+        class="selection-tab selection-tab-guest"
+        class:selected={selectedIndex === Tab.guest}
+        on:click={() => (selectedIndex = Tab.guest)}>Guest</button
       >
     {/if}
   </div>
   {#if nextEvents.includes("LOGIN") || nextEvents.includes("SIGNUP")}
-    {#if selectedIndex === 0}
-      <form class="login-form" id="login-form" on:submit={onLoginClick}>
+    {#if selectedIndex === Tab.guest}
+      <form
+        class="guest-login-form"
+        id="guest-login-form"
+        on:submit={onGuestClick}
+      >
+        <InputField
+          bind:value={signupDisplayName}
+          helperText={displayNameHelperText}
+          id="guest-name"
+          labelText="Display Name"
+          onInput={handleDisplayNameInput}
+          onBlur={checkDisplayName}
+          status={displayNameStatus}
+          required
+        />
+        <InputField
+          bind:value={signupEmail}
+          helperText={signupEmailHelperText}
+          id="guest-email"
+          labelText="Email"
+          onInput={handleUserEmailInput}
+          onBlur={checkUserEmailValid}
+          status={signupEmailStatus}
+          required
+        />
+
+        <div class="button-row">
+          <button class="guest-login-button" type="submit">Log in as guest</button>
+        </div>
+      </form>
+    {/if}
+
+    {#if selectedIndex === Tab.login}
+      <form
+        class="login-form"
+        id="login-form"
+        on:submit={onLoginClick}
+      >
         <InputField
           id="login-user-name"
           labelText="User handle"
@@ -432,7 +523,7 @@
       </form>
     {/if}
 
-    {#if selectedIndex === 1}
+    {#if selectedIndex === Tab.signup}
       <form class="signup-form" id="signup-form" on:submit={onSignupClick}>
         <p>
           Unlock the full power of our platform with a quick sign-up. Secure
@@ -445,6 +536,7 @@
           id="signup-name"
           labelText="Display name"
           onInput={handleDisplayNameInput}
+          onBlur={checkDisplayName}
           required
         />
         <InputField

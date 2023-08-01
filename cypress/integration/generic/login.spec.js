@@ -3,6 +3,7 @@
 describe(`User Authentication Flow`, () => {
   beforeEach(() => {
     cy.visit("http://localhost:7070/")
+    cy.get("button.selection-tab-login").click()
   })
 
   it("should handle incorrect credentials", () => {
