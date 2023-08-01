@@ -7,7 +7,6 @@
   } from "../lib/simple-comment-types"
   import { useMachine } from "@xstate/svelte"
   import { loginMachine } from "../lib/login.xstate"
-  import { createEventDispatcher } from "svelte"
   import {
     createGuestUser,
     createUser,
@@ -23,12 +22,11 @@
     debounceFunc,
     isValidationTrue,
     isResponseOk,
-    idIconDataUrl,
     validatePassword,
     validateUserId,
   } from "../frontend-utilities"
   import InputField from "./low-level/InputField.svelte"
-  import { guestUserCreation } from "../lib/svelte-stores"
+  import { currentUserStore, guestUserCreation, loginState } from "../lib/svelte-stores"
 
   let nextEvents = []
   let self: AdminSafeUser
@@ -336,11 +334,13 @@
       ["error", errorStateHandler],
     ]
 
+    nextEvents = $state.nextEvents
+
+    loginState.set({ value: $state.value, nextEvents })
+
     stateHandlers.forEach(([stateValue, stateHandler]) => {
       if ($state.value === stateValue) stateHandler()
     })
-
-    nextEvents = $state.nextEvents
   }
 
   const onInputValidatePassword = password => {
@@ -362,9 +362,8 @@
   const handleSignupPasswordInput = () =>
     checkPasswordValid_debounced(loginPassword)
 
-  const dispatch = createEventDispatcher()
   $: {
-    dispatch("userChange", { currentUser: self })
+    currentUserStore.set(self)
   }
 
   $: {
@@ -377,26 +376,6 @@
   <p id="status-display" class={isError ? "is-error" : ""}>
     {statusMessage}
   </p>
-  {#if $state.value === "verifying" || $state.value === "loggingIn" || $state.value === "loggingOut"}
-    <section class="self-display">
-      <div class="self-avatar skeleton" />
-      <div class="self-info skeleton" />
-    </section>
-  {:else if self}
-    <section class="self-display" id="self-display">
-      <div class="self-avatar">
-        <img src={idIconDataUrl(self.id)} alt="" />
-      </div>
-      <div class="self-info">
-        <h2 id="self-user-name">{self.name}</h2>
-        <p id="self-name">@{self.id} {self.isAdmin ? "(admin)" : ""}</p>
-        <p id="self-email">{self.email}</p>
-      </div>
-      {#if nextEvents.includes("LOGOUT")}
-        <button id="log-out-button" on:click={onLogoutClick}>Log out</button>
-      {/if}
-    </section>
-  {/if}
 
   <div class="selection-tabs button-row">
     {#if nextEvents.includes("LOGIN")}
