@@ -1,7 +1,7 @@
 <script lang="ts">
   import { idIconDataUrl } from "../frontend-utilities"
   import type { User } from "../lib/simple-comment-types"
-  import { loginState } from "../lib/svelte-stores"
+  import { dispatchableStore, loginState } from "../lib/svelte-stores"
 
   export let currentUser: User | undefined
   let loginStateValue
@@ -13,7 +13,10 @@
     loginStateNextEvents = nextEvents
   })
 
-  const onLogoutClick = (e: Event) => console.log("Logout")
+  const onLogoutClick = (e: Event) => {
+    e.preventDefault()
+    dispatchableStore.dispatch("logoutIntent")
+  }
 </script>
 
 {#if loginStateValue === "verifying" || loginStateValue === "loggingIn" || loginStateValue === "loggingOut"}

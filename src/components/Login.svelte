@@ -26,7 +26,12 @@
     validateUserId,
   } from "../frontend-utilities"
   import InputField from "./low-level/InputField.svelte"
-  import { currentUserStore, guestUserCreation, loginState } from "../lib/svelte-stores"
+  import {
+    currentUserStore,
+    dispatchableStore,
+    guestUserCreation,
+    loginState,
+  } from "../lib/svelte-stores"
 
   let nextEvents = []
   let self: AdminSafeUser
@@ -314,6 +319,18 @@
       })
       .catch(error => send("ERROR", error))
   }
+
+  dispatchableStore.subscribe(event => {
+    switch (event.name) {
+      case "logoutIntent":
+        if (nextEvents.includes("LOGOUT")) send("LOGOUT")
+        break
+
+      default:
+        // Intentionally left blank.  Do not respond to other events.
+        break
+    }
+  })
 
   guestUserCreation.subscribe(({ name, email }) => {
     if (name && email) {
