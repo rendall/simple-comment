@@ -1,4 +1,5 @@
 import {
+  addHeaders,
   getAllowOriginHeaders,
   isAllowedReferer,
   isGuestId,
@@ -230,6 +231,62 @@ describe("parseQuery()", () => {
   it("should throw an error for malformed URI sequences", () => {
     const query = "key1=%C0%C1"
     expect(() => parseQuery(query)).toThrow()
+  })
+})
+
+describe("addHeaders", () => {
+  it("should add headers to a response without a body", () => {
+    const res = {
+      statusCode: 200,
+    }
+    const headers = {
+      "Custom-Header": "CustomValue",
+    }
+    const result = addHeaders(res, headers)
+    expect(result).toEqual({
+      statusCode: 200,
+      headers: {
+        "Custom-Header": "CustomValue",
+      },
+    })
+  })
+
+  it("should add headers and stringify a JSON body", () => {
+    const res = {
+      statusCode: 200,
+      body: { key: "value" },
+    }
+    const headers = {
+      "Custom-Header": "CustomValue",
+    }
+    const result = addHeaders(res, headers)
+    expect(result).toEqual({
+      statusCode: 200,
+      body: JSON.stringify({ key: "value" }),
+      headers: {
+        "Custom-Header": "CustomValue",
+        "Content-Type": "application/json",
+      },
+    })
+  })
+
+  it("should add headers and leave a string body as is", () => {
+    const res = {
+      statusCode: 200,
+      body: "Hello, world!",
+    }
+    const headers = {
+      "Custom-Header": "CustomValue",
+    }
+    const result = addHeaders(res, headers)
+    expect(result).toEqual({
+      statusCode: 200,
+      body: "Hello, world!",
+      headers: {
+        "Custom-Header": "CustomValue",
+        "Content-Type": "text/plain",
+      },
+    })
   })
 })
 

@@ -128,23 +128,28 @@ export const getHeaderValue = (
 export const addHeaders = (
   res: {
     statusCode: number
-    body: unknown
+    body?: unknown
     headers?: Record<string, string>
   },
   headers
 ) => {
   const resHeaders = res?.headers ?? {}
 
-  return res?.body
-    ? {
-        ...res,
-        body: JSON.stringify(res.body),
-        headers: { ...resHeaders, ...headers },
-      }
-    : {
-        ...res,
-        headers: { ...resHeaders, ...headers },
-      }
+  if (res?.body) {
+    const isJSON = typeof res.body === "object"
+    const contentType = isJSON ? "application/json" : "text/plain"
+    const body = isJSON ? JSON.stringify(res.body) : res.body
+
+    return {
+      ...res,
+      body,
+      headers: { ...resHeaders, ...headers, "Content-Type": contentType },
+    }
+  } else
+    return {
+      ...res,
+      headers: { ...resHeaders, ...headers },
+    }
 }
 
 const getOrigin = (headers: { [header: string]: string }) =>
