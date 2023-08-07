@@ -16,7 +16,9 @@ dotenv.config({
 const mode = process.env.NODE_ENV ?? "development"
 const isProduction = mode === "production"
 
-console.info(`frontend bundled in '${mode}' mode. isProduction: ${isProduction}`)
+console.info(
+  `frontend bundled in '${mode}' mode. isProduction: ${isProduction}`
+)
 
 module.exports = {
   mode,

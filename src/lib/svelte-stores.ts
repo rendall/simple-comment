@@ -20,8 +20,9 @@ const createDispatchableStore = () => {
 
 export const dispatchableStore = createDispatchableStore()
 
-export const guestUserCreation = writable({ name: undefined, email: undefined })
-
-export const loginState = writable({ value: undefined, nextEvents: undefined })
+export const loginStateStore = writable({
+  value: undefined,
+  nextEvents: undefined,
+})
 
 export const currentUserStore = writable<User | undefined>(undefined)

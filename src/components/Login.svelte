@@ -30,10 +30,14 @@
   import {
     currentUserStore,
     dispatchableStore,
-    guestUserCreation,
-    loginState,
+    loginStateStore,
   } from "../lib/svelte-stores"
-  import { isValidResult, joinValidations, validateDisplayName, validateEmail } from "../lib/shared-utilities"
+  import {
+    isValidResult,
+    joinValidations,
+    validateDisplayName,
+    validateEmail,
+  } from "../lib/shared-utilities"
 
   let nextEvents = []
   let self: AdminSafeUser
@@ -70,15 +74,18 @@
     isError = error
   }
 
-  const onGuestClick = async (e:Event) => {
-
+  const onGuestClick = async (e: Event) => {
     e.preventDefault()
 
-    const validations = [() => validateDisplayName(displayName), () => validateEmail(signupEmail)].map(validation => validation())
+    const validations = [
+      () => validateDisplayName(displayName),
+      () => validateEmail(signupEmail),
+    ].map(validation => validation())
     const result = joinValidations(validations)
 
-    if (isValidResult(result)) send({type:"GUEST", guest:{name:displayName, email:signupEmail}})
-    else send({type:"ERROR", error:result.reason })
+    if (isValidResult(result))
+      send({ type: "GUEST", guest: { name: displayName, email: signupEmail } })
+    else send({ type: "ERROR", error: result.reason })
   }
 
   const onLoginClick = async (e: Event) => {
@@ -94,7 +101,7 @@
         userNameMessageStatus === "error"
           ? { isValid: false, reason: userNameMessage }
           : { isValid: true },
-      () => checkUserEmailValid(signupEmail),
+      () => checkUserEmailValid(),
       () => validateUserId(loginUserId),
       () => validatePassword(loginPassword),
     ]
@@ -125,8 +132,7 @@
       })
       .catch(error => {
         const { status } = error
-        if (status === 401)
-          send({ type: "FIRST_VISIT" })
+        if (status === 401) send({ type: "FIRST_VISIT" })
         else send({ type: "ERROR", error })
       })
   }
@@ -286,17 +292,14 @@
     }
   }
 
-  const checkUserIdValid_debounced = debounceFunc(
-    onInputCheckUserNameValid,
-    50
-  )
+  const checkUserIdValid_debounced = debounceFunc(onInputCheckUserNameValid, 50)
 
-  const checkDisplayNameValid = ():ValidationResult => {
+  const checkDisplayNameValid = (): ValidationResult => {
     const result = validateDisplayName(displayName)
     if (isValidResult(result)) {
       displayNameHelperText = "     "
       displayNameStatus = "success"
-      return {isValid:true}
+      return { isValid: true }
     } else {
       displayNameHelperText = result.reason
       displayNameStatus = "error"
@@ -324,8 +327,7 @@
       return { isValid: true }
     } else {
       signupEmailStatus = "error"
-      signupEmailHelperText =
-        "This email address is invalid."
+      signupEmailHelperText = "This email address is invalid."
       return { isValid: false, reason: signupEmailHelperText }
     }
   }
@@ -350,7 +352,8 @@
   }
 
   const guestLoggingInStateHandler = () => {
-    const { name, email } = $state.context.guest
+    const name = displayName
+    const email = signupEmail
     getGuestToken()
       .then(() => verifyUser())
       .then((response: ServerResponseSuccess<TokenClaim>) => response.body.user)
@@ -366,20 +369,37 @@
     switch (event.name) {
       case "logoutIntent":
         const canLogout = nextEvents.includes("LOGOUT")
-        console.log("dispatchableStore", {event, nextEvents, stateValue: $state.value, canLogout})
         if (canLogout) send("LOGOUT")
+        else send({ type: "ERROR", error: "Unable to log out. Please reload." })
         break
+
+      case "loginIntent":
+        const canLogin = nextEvents.some(event =>
+          ["LOGIN", "GUEST", "SIGNUP"].includes(event)
+        )
+        if (canLogin) {
+          switch (selectedIndex) {
+            case Tab.guest:
+              send("GUEST")
+              break
+            case Tab.signup:
+              send("SIGNUP")
+              break
+            case Tab.login:
+              send("LOGIN")
+              break
+            default:
+              send({
+                type: "ERROR",
+                error: `Unknown selectedTabIndex ${selectedIndex}`,
+              })
+              break
+          }
+        } else send({ type: "ERROR", error: "Unable to login" })
 
       default:
         // Intentionally left blank.  Do not respond to other events.
         break
-    }
-  })
-
-  guestUserCreation.subscribe(({ name, email }) => {
-    if (name && email) {
-      const guest = { name, email }
-      send({ type: "GUEST", guest })
     }
   })
 
@@ -397,7 +417,7 @@
 
     nextEvents = $state.nextEvents
 
-    loginState.set({ value: $state.value, nextEvents })
+    loginStateStore.set({ value: $state.value, nextEvents })
 
     stateHandlers.forEach(([stateValue, stateHandler]) => {
       if ($state.value === stateValue) stateHandler()
@@ -435,133 +455,129 @@
 
 <section class="simple-comment-login">
   {#if !self}
-  <p id="status-display" class={isError ? "is-error" : ""}>
-    {statusMessage}
-  </p>
+    <p id="status-display" class={isError ? "is-error" : ""}>
+      {statusMessage}
+    </p>
 
-  <div class="selection-tabs button-row">
-    {#if nextEvents.includes("LOGIN")}
-      <button
-        class="selection-tab selection-tab-login"
-        class:selected={selectedIndex === Tab.login}
-        on:click={() => (selectedIndex = Tab.login)}>Login</button
-      >
-    {/if}
-    {#if nextEvents.includes("SIGNUP")}
-      <button
-        class="selection-tab selection-tab-signup"
-        class:selected={selectedIndex === Tab.signup}
-        on:click={() => (selectedIndex = Tab.signup)}>Signup</button
-      >
-    {/if}
-    {#if !self}
-      <button
-        class="selection-tab selection-tab-guest"
-        class:selected={selectedIndex === Tab.guest}
-        on:click={() => (selectedIndex = Tab.guest)}>Guest</button
-      >
-    {/if}
-  </div>
-  {#if nextEvents.includes("LOGIN") || nextEvents.includes("SIGNUP")}
-    {#if selectedIndex === Tab.guest}
-      <form
-        class="guest-login-form"
-        id="guest-login-form"
-        on:submit={onGuestClick}
-      >
-        <InputField
-          bind:value={displayName}
-          helperText={displayNameHelperText}
-          id="guest-name"
-          labelText="Display Name"
-          onInput={handleDisplayNameInput}
-          onBlur={checkDisplayNameValid}
-          status={displayNameStatus}
-          required
-        />
-        <InputField
-          bind:value={signupEmail}
-          helperText={signupEmailHelperText}
-          id="guest-email"
-          labelText="Email"
-          onInput={handleUserEmailInput}
-          onBlur={checkUserEmailValid}
-          status={signupEmailStatus}
-          required
-        />
-      </form>
-    {/if}
+    <div class="selection-tabs button-row">
+      {#if nextEvents.includes("LOGIN")}
+        <button
+          class="selection-tab selection-tab-login"
+          class:selected={selectedIndex === Tab.login}
+          on:click={() => (selectedIndex = Tab.login)}>Login</button
+        >
+      {/if}
+      {#if nextEvents.includes("SIGNUP")}
+        <button
+          class="selection-tab selection-tab-signup"
+          class:selected={selectedIndex === Tab.signup}
+          on:click={() => (selectedIndex = Tab.signup)}>Signup</button
+        >
+      {/if}
+      {#if !self}
+        <button
+          class="selection-tab selection-tab-guest"
+          class:selected={selectedIndex === Tab.guest}
+          on:click={() => (selectedIndex = Tab.guest)}>Guest</button
+        >
+      {/if}
+    </div>
+    {#if nextEvents.includes("LOGIN") || nextEvents.includes("SIGNUP")}
+      {#if selectedIndex === Tab.guest}
+        <form
+          class="guest-login-form"
+          id="guest-login-form"
+          on:submit={onGuestClick}
+        >
+          <InputField
+            bind:value={displayName}
+            helperText={displayNameHelperText}
+            id="guest-name"
+            labelText="Display Name"
+            onInput={handleDisplayNameInput}
+            onBlur={checkDisplayNameValid}
+            status={displayNameStatus}
+            required
+          />
+          <InputField
+            bind:value={signupEmail}
+            helperText={signupEmailHelperText}
+            id="guest-email"
+            labelText="Email"
+            onInput={handleUserEmailInput}
+            onBlur={checkUserEmailValid}
+            status={signupEmailStatus}
+            required
+          />
+        </form>
+      {/if}
 
-    {#if selectedIndex === Tab.login}
-      <form
-        class="login-form"
-        id="login-form"
-        on:submit={onLoginClick}
-      >
-        <InputField
-          id="login-user-name"
-          labelText="User handle"
-          bind:value={loginUserId}
-          required
-        />
-        <InputField
-          type="password"
-          labelText="Password"
-          id="login-password"
-          bind:value={loginPassword}
-          required
-        />
-      </form>
-    {/if}
+      {#if selectedIndex === Tab.login}
+        <form class="login-form" id="login-form" on:submit={onLoginClick}>
+          <InputField
+            id="login-user-name"
+            labelText="User handle"
+            bind:value={loginUserId}
+            required
+          />
+          <InputField
+            type="password"
+            labelText="Password"
+            id="login-password"
+            bind:value={loginPassword}
+            required
+          />
+        </form>
+      {/if}
 
-    {#if selectedIndex === Tab.signup}
-      <form class="signup-form" id="signup-form" on:submit={onSignupClick}>
-        <p>
-          Unlock the full power of our platform with a quick sign-up. Secure
-          your ability to edit and manage your posts from any device, anytime.
-          Don't just join the conversation, own it. Sign up today!
-        </p>
-        <InputField
-          bind:value={displayName}
-          helperText="This is the name that others will see"
-          id="signup-name"
-          labelText="Display name"
-          onInput={handleDisplayNameInput}
-          onBlur={checkDisplayNameValid}
-          required
-        />
-        <InputField
-          bind:value={loginUserId}
-          status={userNameMessageStatus}
-          helperText={userNameMessage}
-          id="signup-user-name"
-          labelText="User handle"
-          onBlur={handleUserNameBlur}
-          onInput={handleUserNameInput}
-        />
+      {#if selectedIndex === Tab.signup}
+        <form class="signup-form" id="signup-form" on:submit={onSignupClick}>
+          <p>
+            Unlock the full power of our platform with a quick sign-up. Secure
+            your ability to edit and manage your posts from any device, anytime.
+            Don't just join the conversation, own it. Sign up today!
+          </p>
+          <InputField
+            bind:value={displayName}
+            helperText="This is the name that others will see"
+            id="signup-name"
+            labelText="Display name"
+            onInput={handleDisplayNameInput}
+            onBlur={checkDisplayNameValid}
+            required
+          />
+          <InputField
+            bind:value={loginUserId}
+            status={userNameMessageStatus}
+            helperText={userNameMessage}
+            id="signup-user-name"
+            labelText="User handle"
+            onBlur={handleUserNameBlur}
+            onInput={handleUserNameInput}
+          />
 
-        <InputField
-          bind:value={signupEmail}
-          helperText={signupEmailHelperText}
-          status={signupEmailStatus}
-          id="signup-email"
-          labelText="Email"
-          required
-          type="email"
-          onInput={handleUserEmailInput}
-        />
-        <InputField
-          bind:value={loginPassword}
-          id="signup-password"
-          labelText="Password"
-          helperText={signupPasswordMessage}
-          status={signupPasswordStatus}
-          onInput={handleSignupPasswordInput}
-          required
-          type="password"
-        />
-      </form>
+          <InputField
+            bind:value={signupEmail}
+            helperText={signupEmailHelperText}
+            status={signupEmailStatus}
+            id="signup-email"
+            labelText="Email"
+            required
+            type="email"
+            onInput={handleUserEmailInput}
+          />
+          <InputField
+            bind:value={loginPassword}
+            id="signup-password"
+            labelText="Password"
+            helperText={signupPasswordMessage}
+            status={signupPasswordStatus}
+            onInput={handleSignupPasswordInput}
+            required
+            type="password"
+          />
+        </form>
+      {/if}
     {/if}
   {/if}
-{/if}
 </section>

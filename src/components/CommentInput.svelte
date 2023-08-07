@@ -5,17 +5,10 @@
     ServerResponse,
     User,
   } from "../lib/simple-comment-types"
-  import InputField from "./low-level/InputField.svelte"
   import { commentPostMachine } from "../lib/commentPost.xstate"
-  import { createEventDispatcher } from "svelte"
-  import {
-    isValidResult,
-    joinValidations,
-    validateDisplayName,
-    validateEmail,
-  } from "../lib/shared-utilities"
-  import { debounceFunc, isResponseOk } from "../frontend-utilities"
-  import { guestUserCreation } from "../lib/svelte-stores"
+  import { createEventDispatcher, onDestroy } from "svelte"
+  import { isResponseOk } from "../frontend-utilities"
+  import { dispatchableStore, loginStateStore } from "../lib/svelte-stores"
   import { postComment } from "../apiClient"
   import { useMachine } from "@xstate/svelte"
   import Login from "./Login.svelte"
@@ -26,45 +19,13 @@
 
   let commentText = ""
   let guestName = ""
-  const GUEST_NAME_HELPER_TEXT =
-    "This name will be displayed next to your comment."
-  let guestNameHelperText = GUEST_NAME_HELPER_TEXT
-  let guestNameStatus = ""
-  let guestEmail = ""
-  const GUEST_EMAIL_HELPER_TEXT = "Your email will never be shared or shown."
-  let guestEmailHelperText = GUEST_EMAIL_HELPER_TEXT
-  let guestEmailStatus = ""
 
   const { state, send } = useMachine(commentPostMachine)
   const dispatch = createEventDispatcher()
 
   const onSubmit = e => {
     e.preventDefault()
-    const formValidationResult = checkGuestForm()
-    if (isValidResult(formValidationResult)) send({ type: "SUBMIT" })
-    else send({ type: "ERROR", error: formValidationResult.reason })
-  }
-
-  const checkGuestForm = () => {
-    const checkEmail = validateEmail(guestEmail)
-    if (!isValidResult(checkEmail)) {
-      guestEmailHelperText = checkEmail.reason
-      guestEmailStatus = "error"
-    } else {
-      guestEmailHelperText = GUEST_EMAIL_HELPER_TEXT
-      guestEmailStatus = undefined
-    }
-
-    const checkName = validateDisplayName(guestName)
-    if (!isValidResult(checkName)) {
-      guestNameHelperText = checkName.reason
-      guestNameStatus = "error"
-    } else {
-      guestNameHelperText = GUEST_NAME_HELPER_TEXT
-      guestNameStatus = undefined
-    }
-
-    return joinValidations([checkEmail, checkName])
+    send({ type: "SUBMIT" })
   }
 
   const validatingStateHandler = () => {
@@ -77,15 +38,28 @@
   }
 
   const loggingInStateHandler = () => {
-    const formValidationResult = checkGuestForm()
-
-    // User creation and login is handled inside of Login.svelte
-    if (isValidResult(formValidationResult))
-      guestUserCreation.set({ name: guestName, email: guestEmail })
-    else send({ type: "ERROR", error: formValidationResult.reason })
+    dispatchableStore.dispatch("loginIntent")
   }
 
+  const unsubscribeLoginState = loginStateStore.subscribe(loginState => {
+    const { value: loginStateValue, nextEvents: loginStateNextEvents } =
+      loginState
+    const continueToPostComment =
+      loginStateValue === "loggedIn" && $state.value === "loggingIn"
+
+    console.log({
+      loginStateValue,
+      commentInputStateValue: $state.value,
+      continueToPostComment,
+      loginStateNextEvents,
+      nextEvents: $state.nextEvents,
+    })
+
+    if (continueToPostComment) setTimeout(() => send("SUCCESS"), 1)
+  })
+
   const postingStateHandler = async () => {
+    console.log("postingStateHandler")
     try {
       const response = await postComment(commentId, commentText)
       if (isResponseOk(response)) send({ type: "SUCCESS", response })
@@ -128,56 +102,9 @@
     send({ type: "RESET" })
   }
 
-  const validateGuestName = () => {
-    const result = validateDisplayName(guestName)
-    if (isValidResult(result)) {
-      guestNameHelperText = GUEST_NAME_HELPER_TEXT
-      guestNameStatus = "success"
-    } else {
-      guestNameHelperText = result.reason
-      guestNameStatus = "error"
-    }
-  }
-
-  const validateGuestName_debounce = debounceFunc(
-    validateGuestName,
-    500,
-    () => {
-      guestNameHelperText = "..."
-      guestNameStatus = ""
-    }
-  )
-
-  const validateGuestEmail = () => {
-    const result = validateEmail(guestEmail)
-    if (isValidResult(result)) {
-      guestEmailHelperText = GUEST_EMAIL_HELPER_TEXT
-      guestEmailStatus = "success"
-    } else {
-      guestEmailHelperText = result.reason
-      guestEmailStatus = "error"
-    }
-  }
-
-  const validateGuestEmail_debounce = debounceFunc(
-    validateGuestEmail,
-    500,
-    () => {
-      guestEmailHelperText = "..."
-      guestEmailStatus = ""
-    }
-  )
-
-  $: {
-    if (
-      currentUser &&
-      $state.value === "loggingIn" &&
-      currentUser.name === guestName &&
-      currentUser.email === guestEmail
-    ) {
-      send("SUCCESS")
-    }
-  }
+  onDestroy(() => {
+    unsubscribeLoginState()
+  })
 
   $: {
     const stateHandlers: [string, () => void][] = [
@@ -205,7 +132,7 @@
     bind:value={commentText}
   />
   <!-- {#if !currentUser} -->
-    <Login {currentUser} />
+  <Login />
   <!-- {/if} -->
   <div class="button-row">
     {#if onCancel !== null}

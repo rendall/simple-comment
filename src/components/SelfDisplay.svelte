@@ -1,13 +1,13 @@
 <script lang="ts">
   import { idIconDataUrl } from "../frontend-utilities"
   import type { User } from "../lib/simple-comment-types"
-  import { dispatchableStore, loginState } from "../lib/svelte-stores"
+  import { dispatchableStore, loginStateStore } from "../lib/svelte-stores"
 
   export let currentUser: User | undefined
   let loginStateValue
   let loginStateNextEvents
 
-  loginState.subscribe(state => {
+  loginStateStore.subscribe(state => {
     const { value, nextEvents } = state
     loginStateValue = value
     loginStateNextEvents = nextEvents

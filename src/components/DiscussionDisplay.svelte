@@ -125,8 +125,6 @@
   const onReply = event => {
     const { commentId } = event.detail
     showReply = commentId === "" ? discussionId : commentId
-
-    console.log({event, commentId, showReply})
   }
 
   const onReplyClick = event => {
@@ -186,9 +184,7 @@
     />
   {:else}
     <div class="button-row">
-      <button
-        on:click={onReplyClick}
-        class="comment-reply-button">Reply</button
+      <button on:click={onReplyClick} class="comment-reply-button">Reply</button
       >
     </div>
   {/if}

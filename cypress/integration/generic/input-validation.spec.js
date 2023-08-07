@@ -26,7 +26,9 @@ context("Input invalid data", () => {
   })
 
   it("Submit a comment without adding email or name", () => {
-    cy.get("form.comment-form textarea.comment-field").type(generateRandomCopy())
+    cy.get("form.comment-form textarea.comment-field").type(
+      generateRandomCopy()
+    )
     cy.get("form.comment-form").submit()
     cy.get("form.comment-form #guest-name")
       .parents(".input-field")
@@ -38,7 +40,9 @@ context("Input invalid data", () => {
 
   it("Submit a comment only adding name", () => {
     cy.get("form.comment-form #guest-name").type(generateRandomName())
-    cy.get("form.comment-form textarea.comment-field").type(generateRandomCopy())
+    cy.get("form.comment-form textarea.comment-field").type(
+      generateRandomCopy()
+    )
     cy.get("form.comment-form").submit()
     cy.get("form.comment-form #guest-email")
       .parents(".input-field")
@@ -47,7 +51,9 @@ context("Input invalid data", () => {
 
   it("Submit a comment only adding email", () => {
     cy.get("form.comment-form #guest-email").type("fake@email.com")
-    cy.get("form.comment-form textarea.comment-field").type(generateRandomCopy())
+    cy.get("form.comment-form textarea.comment-field").type(
+      generateRandomCopy()
+    )
     cy.get("form.comment-form").submit()
     cy.get("form.comment-form #guest-name")
       .parents(".input-field")
@@ -57,7 +63,9 @@ context("Input invalid data", () => {
   it("Submit a comment adding invalid email", () => {
     cy.get("form.comment-form #guest-email").type("invalid@emailcom")
     cy.get("form.comment-form #guest-name").type(generateRandomName())
-    cy.get("form.comment-form textarea.comment-field").type(generateRandomCopy())
+    cy.get("form.comment-form textarea.comment-field").type(
+      generateRandomCopy()
+    )
     cy.get("form.comment-form").submit()
     cy.get("form.comment-form #guest-email")
       .parents(".input-field")
