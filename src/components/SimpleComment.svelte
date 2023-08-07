@@ -2,7 +2,6 @@
   import type { User } from "../lib/simple-comment-types"
   import { currentUserStore } from "../lib/svelte-stores"
   import DiscussionDisplay from "./DiscussionDisplay.svelte"
-  import Login from "./Login.svelte"
   import SelfDisplay from "./SelfDisplay.svelte"
   export let discussionId
   export let title
@@ -13,6 +12,5 @@
 
 <section class="simple-comment">
   <SelfDisplay {currentUser} />
-  <Login />
   <DiscussionDisplay {currentUser} {discussionId} {title} />
 </section>

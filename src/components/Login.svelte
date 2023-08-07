@@ -4,6 +4,7 @@
     ServerResponse,
     ServerResponseSuccess,
     TokenClaim,
+    ValidationResult,
   } from "../lib/simple-comment-types"
   import { useMachine } from "@xstate/svelte"
   import { loginMachine } from "../lib/login.xstate"
@@ -43,7 +44,7 @@
   let signupEmailStatus = ""
   let signupEmailHelperText =
     "Used only for verification and approved notifications. We never show or share your email."
-  let signupDisplayName = ""
+  let displayName = ""
   const DISPLAY_NAME_HELPER_TEXT = "This is the name that others will see"
   let displayNameHelperText = DISPLAY_NAME_HELPER_TEXT
   let displayNameStatus: "error" | "success" | undefined = undefined
@@ -73,10 +74,10 @@
 
     e.preventDefault()
 
-    const validations = [() => validateDisplayName(signupDisplayName), () => validateEmail(signupEmail)].map(validation => validation())
+    const validations = [() => validateDisplayName(displayName), () => validateEmail(signupEmail)].map(validation => validation())
     const result = joinValidations(validations)
 
-    if (isValidResult(result)) send({type:"GUEST", guest:{name:signupDisplayName, email:signupEmail}})
+    if (isValidResult(result)) send({type:"GUEST", guest:{name:displayName, email:signupEmail}})
     else send({type:"ERROR", error:result.reason })
   }
 
@@ -113,10 +114,6 @@
       })
   }
 
-  const onLogoutClick = async () => {
-    send({ type: "LOGOUT" })
-  }
-
   /** Handler for XState "verifying" state */
   const verifyingStateHandler = () => {
     updateStatusDisplay()
@@ -127,8 +124,8 @@
         send({ type: "SUCCESS" })
       })
       .catch(error => {
-        const { body } = error
-        if (body === "No Cookie header 'simple-comment-token' value")
+        const { status } = error
+        if (status === 401)
           send({ type: "FIRST_VISIT" })
         else send({ type: "ERROR", error })
       })
@@ -148,7 +145,7 @@
     updateStatusDisplay()
     const userInfo = {
       id: loginUserId,
-      name: signupDisplayName,
+      name: displayName,
       email: signupEmail,
       password: loginPassword,
     }
@@ -162,6 +159,7 @@
   }
 
   const loggingOutStateHandler = () => {
+    console.log("loggingOutStateHndler")
     updateStatusDisplay()
     deleteAuth()
       .then(() => send("SUCCESS"))
@@ -293,29 +291,26 @@
     50
   )
 
-  const checkDisplayName = () => {
-    if (signupDisplayName.length === 0) {
-      displayNameHelperText = DISPLAY_NAME_HELPER_TEXT
-      displayNameStatus = undefined
-      return
-    }
-    const result = validateDisplayName(signupDisplayName)
+  const checkDisplayNameValid = ():ValidationResult => {
+    const result = validateDisplayName(displayName)
     if (isValidResult(result)) {
       displayNameHelperText = "     "
       displayNameStatus = "success"
+      return {isValid:true}
     } else {
       displayNameHelperText = result.reason
       displayNameStatus = "error"
+      return result
     }
   }
-  const checkDisplayName_debounced = debounceFunc(checkDisplayName, 1000)
+  const checkDisplayName_debounced = debounceFunc(checkDisplayNameValid, 1000)
 
   const handleDisplayNameInput = () => {
     displayNameHelperText = "..."
     displayNameStatus = undefined
     checkDisplayName_debounced()
     if (!userNameManuallyChanged) {
-      const formattedUserName = formatUserName(signupDisplayName)
+      const formattedUserName = formatUserName(displayName)
       checkUserIdValid_debounced(formattedUserName)
       checkUserIdExists_debounced(formattedUserName)
       loginUserId = formattedUserName
@@ -370,7 +365,9 @@
   dispatchableStore.subscribe(event => {
     switch (event.name) {
       case "logoutIntent":
-        if (nextEvents.includes("LOGOUT")) send("LOGOUT")
+        const canLogout = nextEvents.includes("LOGOUT")
+        console.log("dispatchableStore", {event, nextEvents, stateValue: $state.value, canLogout})
+        if (canLogout) send("LOGOUT")
         break
 
       default:
@@ -437,6 +434,7 @@
 </script>
 
 <section class="simple-comment-login">
+  {#if !self}
   <p id="status-display" class={isError ? "is-error" : ""}>
     {statusMessage}
   </p>
@@ -472,12 +470,12 @@
         on:submit={onGuestClick}
       >
         <InputField
-          bind:value={signupDisplayName}
+          bind:value={displayName}
           helperText={displayNameHelperText}
           id="guest-name"
           labelText="Display Name"
           onInput={handleDisplayNameInput}
-          onBlur={checkDisplayName}
+          onBlur={checkDisplayNameValid}
           status={displayNameStatus}
           required
         />
@@ -491,10 +489,6 @@
           status={signupEmailStatus}
           required
         />
-
-        <div class="button-row">
-          <button class="guest-login-button" type="submit">Log in as guest</button>
-        </div>
       </form>
     {/if}
 
@@ -517,9 +511,6 @@
           bind:value={loginPassword}
           required
         />
-        <div class="button-row">
-          <button type="submit">Log in</button>
-        </div>
       </form>
     {/if}
 
@@ -531,12 +522,12 @@
           Don't just join the conversation, own it. Sign up today!
         </p>
         <InputField
-          bind:value={signupDisplayName}
+          bind:value={displayName}
           helperText="This is the name that others will see"
           id="signup-name"
           labelText="Display name"
           onInput={handleDisplayNameInput}
-          onBlur={checkDisplayName}
+          onBlur={checkDisplayNameValid}
           required
         />
         <InputField
@@ -569,10 +560,8 @@
           required
           type="password"
         />
-        <div class="button-row">
-          <button type="submit">Sign up</button>
-        </div>
       </form>
     {/if}
   {/if}
+{/if}
 </section>

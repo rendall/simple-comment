@@ -11,6 +11,7 @@
   import { discussionMachine } from "../lib/discussion.xstate"
   import { isResponseOk, threadComments } from "../frontend-utilities"
   import CommentInput from "./CommentInput.svelte"
+  import { comment } from "svelte/internal"
 
   export let discussionId: string
   export let title: string
@@ -18,6 +19,8 @@
 
   let repliesFlatArray: Comment[]
   let discussion: Discussion
+  let showRootCommentInput = true
+  let showReply = discussionId
 
   const { state, send } = useMachine(discussionMachine)
 
@@ -119,6 +122,17 @@
     updateDiscussionDisplay(discussion, repliesFlatArray)
   }
 
+  const onReply = event => {
+    const { commentId } = event.detail
+    showReply = commentId === "" ? discussionId : commentId
+
+    console.log({event, commentId, showReply})
+  }
+
+  const onReplyClick = event => {
+    showRootCommentInput = true
+    showReply = discussionId
+  }
   // Update the single source of truth
   const onCommentDeleted = commentDeletedEvent => {
     const { commentId } = commentDeletedEvent.detail
@@ -163,15 +177,28 @@
 </script>
 
 <section class="simple-comment-discussion">
-  <CommentInput
-    {currentUser}
-    commentId={discussionId}
-    on:posted={onCommentPosted}
-  />
+  {#if showReply === discussionId}
+    <CommentInput
+      autofocus
+      commentId={discussionId}
+      {currentUser}
+      on:posted={onCommentPosted}
+    />
+  {:else}
+    <div class="button-row">
+      <button
+        on:click={onReplyClick}
+        class="comment-reply-button">Reply</button
+      >
+    </div>
+  {/if}
+
   {#if discussion?.replies}
     <CommentDisplay
       {currentUser}
+      {showReply}
       replies={discussion.replies}
+      on:reply={onReply}
       on:delete={onCommentDeleted}
       on:posted={onCommentPosted}
     />

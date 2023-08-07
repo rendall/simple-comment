@@ -24,12 +24,12 @@
   const handleReplyEvent = event => {
     const { commentId } = event.detail
     if (isRoot) showReply = commentId
-    else dispatch("reply", { commentId })
+    dispatch("reply", { commentId })
   }
 
   const onOpenCommentInput = commentId => () => {
-    if (isRoot) showReply = commentId
-    else dispatch("reply", { commentId })
+    // if (isRoot) showReply = commentId
+    dispatch("reply", { commentId })
   }
 
   const onDeleteCommentClick = commentId => () => {

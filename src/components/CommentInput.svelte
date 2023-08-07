@@ -18,6 +18,7 @@
   import { guestUserCreation } from "../lib/svelte-stores"
   import { postComment } from "../apiClient"
   import { useMachine } from "@xstate/svelte"
+  import Login from "./Login.svelte"
   export let currentUser: User | undefined
   export let commentId: CommentId
   export let onCancel = null
@@ -203,28 +204,9 @@
     {autofocus}
     bind:value={commentText}
   />
-  {#if !currentUser}
-    <InputField
-      bind:value={guestName}
-      helperText={guestNameHelperText}
-      id="guest-name"
-      labelText="Display Name"
-      onInput={validateGuestName_debounce}
-      onBlur={validateGuestName}
-      status={guestNameStatus}
-      required
-    />
-    <InputField
-      bind:value={guestEmail}
-      helperText={guestEmailHelperText}
-      id="guest-email"
-      labelText="Email"
-      onInput={validateGuestEmail_debounce}
-      onBlur={validateGuestEmail}
-      status={guestEmailStatus}
-      required
-    />
-  {/if}
+  <!-- {#if !currentUser} -->
+    <Login {currentUser} />
+  <!-- {/if} -->
   <div class="button-row">
     {#if onCancel !== null}
       <button class="comment-cancel-button" on:click={onCancel}>Cancel</button>
