@@ -11,7 +11,6 @@
   import { discussionMachine } from "../lib/discussion.xstate"
   import { isResponseOk, threadComments } from "../frontend-utilities"
   import CommentInput from "./CommentInput.svelte"
-  import { comment } from "svelte/internal"
 
   export let discussionId: string
   export let title: string
@@ -19,12 +18,13 @@
 
   let repliesFlatArray: Comment[]
   let discussion: Discussion
-  let showRootCommentInput = true
   let showReply = discussionId
 
   const { state, send } = useMachine(discussionMachine)
 
-  const updateStatusDisplay = (message = "", error = false) => {}
+  const updateStatusDisplay = (message = "", error = false) => {
+    console.info({ message, error })
+  }
 
   const loadingStateHandler = () => {
     updateStatusDisplay("loading")
@@ -128,7 +128,7 @@
   }
 
   const onReplyClick = event => {
-    showRootCommentInput = true
+    event.preventDefault()
     showReply = discussionId
   }
   // Update the single source of truth

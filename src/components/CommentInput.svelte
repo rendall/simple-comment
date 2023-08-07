@@ -18,7 +18,6 @@
   export let autofocus = false
 
   let commentText = ""
-  let guestName = ""
 
   const { state, send } = useMachine(commentPostMachine)
   const dispatch = createEventDispatcher()
@@ -42,24 +41,13 @@
   }
 
   const unsubscribeLoginState = loginStateStore.subscribe(loginState => {
-    const { value: loginStateValue, nextEvents: loginStateNextEvents } =
-      loginState
+    const { value: loginStateValue } = loginState
     const continueToPostComment =
       loginStateValue === "loggedIn" && $state.value === "loggingIn"
-
-    console.log({
-      loginStateValue,
-      commentInputStateValue: $state.value,
-      continueToPostComment,
-      loginStateNextEvents,
-      nextEvents: $state.nextEvents,
-    })
-
     if (continueToPostComment) setTimeout(() => send("SUCCESS"), 1)
   })
 
   const postingStateHandler = async () => {
-    console.log("postingStateHandler")
     try {
       const response = await postComment(commentId, commentText)
       if (isResponseOk(response)) send({ type: "SUCCESS", response })

@@ -165,7 +165,6 @@
   }
 
   const loggingOutStateHandler = () => {
-    console.log("loggingOutStateHndler")
     updateStatusDisplay()
     deleteAuth()
       .then(() => send("SUCCESS"))
@@ -367,13 +366,14 @@
 
   dispatchableStore.subscribe(event => {
     switch (event.name) {
-      case "logoutIntent":
+      case "logoutIntent": {
         const canLogout = nextEvents.includes("LOGOUT")
         if (canLogout) send("LOGOUT")
         else send({ type: "ERROR", error: "Unable to log out. Please reload." })
         break
+      }
 
-      case "loginIntent":
+      case "loginIntent": {
         const canLogin = nextEvents.some(event =>
           ["LOGIN", "GUEST", "SIGNUP"].includes(event)
         )
@@ -396,6 +396,8 @@
               break
           }
         } else send({ type: "ERROR", error: "Unable to login" })
+        break
+      }
 
       default:
         // Intentionally left blank.  Do not respond to other events.

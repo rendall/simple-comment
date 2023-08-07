@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   export let labelText = ""
   export let helperText = ""
   export let labelFor = ""
