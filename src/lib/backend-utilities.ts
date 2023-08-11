@@ -465,27 +465,28 @@ export const validatePassword = (password: string): ValidationResult => {
   return { isValid: true }
 }
 
-export const validateUser = (user: UpdateUser & User): ValidationResult => {
-  const idCheck = validateUserId(user.id)
-  if (!isValidResult(idCheck)) return idCheck
+export const validateGuestUser = (guest: {id:UserId, name:string, email:string}, authId:UserId):ValidationResult => {
 
-  if (user.email) {
-    const checkEmail = validateEmail(user.email)
-    if (!isValidResult(checkEmail)) return checkEmail
-  }
-  if (user.name) {
-    const checkName = validateDisplayName(user.name)
-    if (!isValidResult(checkName)) return checkName
-  }
-
-  // do not validate guest user passwords
-  if (!isGuestId(user.id) && user.password) {
-    const passwordCheck = validatePassword(user.password)
-    if (!isValidResult(passwordCheck)) return passwordCheck
-  }
-
-  return { isValid: true }
+  const authCheck:ValidationResult = guest.id === authId ? { isValid: true } : { isValid: false, reason: `Guest id '${guest.id}' does not match authorization id '${authId}'.` }
+  const idCheck = validateUserId(guest.id)
+  const guestIdCheck: ValidationResult = isGuestId(guest.id) ? { isValid: true } : { isValid: false, reason: `Guest user id '${guest.id}' must be in guest id format.` }
+  const emailCheck = validateEmail(guest.email)
+  const nameCheck = validateDisplayName(guest.name)
+  const result = joinValidations([authCheck, idCheck, guestIdCheck, emailCheck, nameCheck])
+  return result
 }
+
+export const validateUser = (user: User & { password?: string }): ValidationResult => {
+  const idCheck = validateUserId(user.id)
+  const notGuestIdCheck: ValidationResult = isGuestId(user.id) ? { isValid: false, reason: `User id '${user.id}' must not be a guest id.` } : { isValid: true }
+  const emailCheck = validateEmail(user.email)
+  const nameCheck = validateDisplayName(user.name)
+  const passwordCheck:ValidationResult = user.hash ? { isValid: true } : validatePassword(user.password)
+
+  return joinValidations([idCheck, notGuestIdCheck, emailCheck, nameCheck, passwordCheck])
+}
+
+
 
 const commonPasswords = [
   "000000",

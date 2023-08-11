@@ -178,7 +178,7 @@ export class MongodbService extends Service {
       }
     }
 
-    const userCheck = validateUser(newUser)
+    const userCheck = isGuestId(newUser.id) ? validateGuestUser(newUser, authUserId) : validateUser(newUser)
     if (!isValidResult(userCheck)) {
       return {
         ...error400BadRequest,
