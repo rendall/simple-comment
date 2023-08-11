@@ -21,7 +21,6 @@ describe("reply", () => {
   const signupEmail = `${signupUserId}@example.com`
 
   beforeEach(() => {
-    cy.clearCookie("simple_comment_token");  // clear the authentication/session cookie
     cy.intercept("POST", ".netlify/functions/comment/*").as("postComment")
 
     cy.visit("http://localhost:7070")
@@ -29,6 +28,11 @@ describe("reply", () => {
     cy.get("@replyButton").closest("article.comment-body").as("commentBody")
     cy.get("@replyButton").click()
   })
+
+  afterEach(() => {
+    cy.clearCookie("simple_comment_token") // clear the authentication/session cookie
+  })
+
   it("it should reply to a comment as a guest", () => {
     cy.get("@commentBody").find(".selection-tab-guest").click()
 

@@ -5,7 +5,9 @@ describe(`User Authentication Flow`, () => {
     cy.visit("http://localhost:7070/")
     cy.get("button.selection-tab-login").click()
   })
-
+  after(() => {
+    cy.clearCookie("simple_comment_token") // clear the authentication/session cookie
+  })
   it("should handle incorrect credentials", () => {
     // Check that #status-display does not have class is-error nor any message
     cy.get("#status-display").should("not.have.class", "is-error")

@@ -5,7 +5,7 @@ import {
   generateRandomName,
 } from "../../../src/tests/mockData"
 
-context("Essential actions", () => {
+context("Error recovery", () => {
   const commentText = generateRandomCopy()
 
   before(() => {
@@ -22,21 +22,25 @@ context("Essential actions", () => {
     cy.clearCookie("simple_comment_token") // clear the authentication/session cookie
   })
 
-  it("Submit a comment as a public / unknown user", () => {
+  it("Submit a comment after error", () => {
+    cy.get("form.comment-form .comment-field").type(commentText)
+    cy.get("form.comment-form .comment-submit-button").click()
+
+    cy.get("form.comment-form #guest-name")
+      .parents(".input-field")
+      .should("have.class", "is-error")
+    cy.get("form.comment-form #guest-email")
+      .parents(".input-field")
+      .should("have.class", "is-error")
+
     // https://on.cypress.io/type
     cy.intercept("POST", ".netlify/functions/comment/*").as("postComment")
     cy.get("form.comment-form #guest-email").type("fake@email.com")
     cy.get("form.comment-form #guest-name").type(generateRandomName())
-    cy.get("form.comment-form .comment-field").type(commentText)
+
     cy.get("form.comment-form .comment-submit-button").click()
+
     cy.wait("@postComment").its("response.statusCode").should("eq", 201) // 201 Created
     cy.get("ul.comment-replies.is-root").should("contain", commentText)
-  })
-
-  it("Delete a comment as a public / unknown user", () => {
-    cy.intercept("DELETE", ".netlify/functions/comment/*").as("deleteComment")
-    cy.get(".comment-delete-button").click()
-    cy.wait("@deleteComment").its("response.statusCode").should("eq", 202) // 202 Accepted
-    cy.get("ul.comment-replies.is-root").should("not.contain", commentText)
   })
 })
