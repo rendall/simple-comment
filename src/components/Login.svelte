@@ -522,7 +522,7 @@
     {#if selectedIndex === Tab.login}
       <form class="login-form" id="login-form" on:submit={onLoginClick}>
         <InputField
-          id="login-user-name"
+          id="login-user-id"
           labelText="User handle"
           bind:value={loginUserId}
           required
@@ -557,7 +557,7 @@
           bind:value={loginUserId}
           status={userNameMessageStatus}
           helperText={userNameMessage}
-          id="signup-user-name"
+          id="signup-user-id"
           labelText="User handle"
           onBlur={handleUserNameBlur}
           onInput={handleUserNameInput}
