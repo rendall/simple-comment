@@ -23,7 +23,7 @@ import type {
 import { uuidv4 } from "./crypt"
 import urlNormalizer from "normalize-url"
 import {
-  isValidResult,
+  joinValidations,
   validateDisplayName,
   validateEmail,
   validateUserId,
@@ -447,7 +447,8 @@ export class HeaderList {
 
 // Have a very loose password policy and encourage password complexity on the frontend.
 // Checking here only for length and common passwords
-export const validatePassword = (password: string): ValidationResult => {
+export const validatePassword = (password?: string): ValidationResult => {
+  if (!password) return { isValid: false, reason: "Password is missing." }
   if (password !== password.trim())
     return {
       isValid: false,
@@ -465,28 +466,62 @@ export const validatePassword = (password: string): ValidationResult => {
   return { isValid: true }
 }
 
-export const validateGuestUser = (guest: {id:UserId, name:string, email:string}, authId:UserId):ValidationResult => {
-
-  const authCheck:ValidationResult = guest.id === authId ? { isValid: true } : { isValid: false, reason: `Guest id '${guest.id}' does not match authorization id '${authId}'.` }
+export const validateGuestUser = (
+  guest: { id: UserId; name: string; email: string },
+  authId?: UserId,
+  isAdmin = false
+): ValidationResult => {
+  if (!authId) return { isValid: false, reason: "Authorization ID is missing" }
+  const authCheck: ValidationResult =
+    isAdmin || guest.id === authId
+      ? { isValid: true }
+      : {
+          isValid: false,
+          reason: `Guest id '${guest.id}' does not match authorization id '${authId}'.`,
+        }
   const idCheck = validateUserId(guest.id)
-  const guestIdCheck: ValidationResult = isGuestId(guest.id) ? { isValid: true } : { isValid: false, reason: `Guest user id '${guest.id}' must be in guest id format.` }
+  const guestIdCheck: ValidationResult = isGuestId(guest.id)
+    ? { isValid: true }
+    : {
+        isValid: false,
+        reason: `Guest user id '${guest.id}' must be in guest id format.`,
+      }
   const emailCheck = validateEmail(guest.email)
   const nameCheck = validateDisplayName(guest.name)
-  const result = joinValidations([authCheck, idCheck, guestIdCheck, emailCheck, nameCheck])
+  const result = joinValidations([
+    authCheck,
+    idCheck,
+    guestIdCheck,
+    emailCheck,
+    nameCheck,
+  ])
   return result
 }
 
-export const validateUser = (user: User & { password?: string }): ValidationResult => {
+export const validateUser = (
+  user: User & { password?: string }
+): ValidationResult => {
+  // Note: If validation criteria changes, it is possible that current
+  // users who do not match the new criteria would be stuck unable
+  // to update their user information
   const idCheck = validateUserId(user.id)
-  const notGuestIdCheck: ValidationResult = isGuestId(user.id) ? { isValid: false, reason: `User id '${user.id}' must not be a guest id.` } : { isValid: true }
+  const notGuestIdCheck: ValidationResult = isGuestId(user.id)
+    ? { isValid: false, reason: `User id '${user.id}' must not be a guest id.` }
+    : { isValid: true }
   const emailCheck = validateEmail(user.email)
   const nameCheck = validateDisplayName(user.name)
-  const passwordCheck:ValidationResult = user.hash ? { isValid: true } : validatePassword(user.password)
+  const passwordCheck: ValidationResult = user.hash
+    ? { isValid: true }
+    : validatePassword(user.password)
 
-  return joinValidations([idCheck, notGuestIdCheck, emailCheck, nameCheck, passwordCheck])
+  return joinValidations([
+    idCheck,
+    notGuestIdCheck,
+    emailCheck,
+    nameCheck,
+    passwordCheck,
+  ])
 }
-
-
 
 const commonPasswords = [
   "000000",

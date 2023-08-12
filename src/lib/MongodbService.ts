@@ -39,6 +39,7 @@ import {
   getAllowedOrigins,
   isEmail,
   normalizeUrl,
+  validateGuestUser,
 } from "./backend-utilities"
 import policy from "../policy.json"
 import {
@@ -178,16 +179,6 @@ export class MongodbService extends Service {
       }
     }
 
-    const userCheck = isGuestId(newUser.id) ? validateGuestUser(newUser, authUserId) : validateUser(newUser)
-    if (!isValidResult(userCheck)) {
-      return {
-        ...error400BadRequest,
-        body: userCheck.reason,
-      }
-    }
-
-    const db = await this.getDb()
-
     if (newUser.id === process.env.SIMPLE_COMMENT_MODERATOR_ID) {
       return {
         ...error403ForbiddenToModify,
@@ -198,7 +189,7 @@ export class MongodbService extends Service {
     if (isGuestId(newUser.id) && authUserId !== newUser.id) {
       return {
         ...error403Forbidden,
-        body: "New user id must not be in a uuid format",
+        body: "New user id must not be in a guest id format",
       }
     }
 
@@ -206,6 +197,18 @@ export class MongodbService extends Service {
       return error400PasswordMissing
     }
 
+    // const userCheck = validateUser(newUser)
+    const userCheck = isGuestId(newUser.id)
+      ? validateGuestUser(newUser, authUserId)
+      : validateUser(newUser)
+    if (!isValidResult(userCheck)) {
+      return {
+        ...error400BadRequest,
+        body: userCheck.reason,
+      }
+    }
+
+    const db = await this.getDb()
     const users: Collection<User> = db.collection("users")
     const authUser = await users.find({ id: authUserId }).limit(1).next()
 
@@ -357,14 +360,6 @@ export class MongodbService extends Service {
       return error401UserNotAuthenticated
     }
 
-    const checkUser = validateUser(user as User)
-    if (!isValidResult(checkUser)) {
-      return {
-        ...error400BadRequest,
-        body: checkUser.reason,
-      }
-    }
-
     if (isGuestId(targetId)) {
       const hasAdminProps = (Object.keys(user) as (keyof User)[]).some(key =>
         adminOnlyModifiableUserProperties.includes(key)
@@ -380,6 +375,11 @@ export class MongodbService extends Service {
 
     const users: Collection<User> = (await this.getDb()).collection("users")
     const authUser = await users.findOne({ id: authUserId })
+    if (!authUser)
+      return {
+        ...error404UserUnknown,
+        body: "Authenticating user not found",
+      }
 
     if (targetId !== authUser.id && !authUser.isAdmin) {
       return {
@@ -422,6 +422,17 @@ export class MongodbService extends Service {
 
     const newProps = toUpdatedUser(user)
     const updatedUser = { ...foundUser, ...newProps }
+
+    const checkUser = isGuestId(targetId)
+      ? validateGuestUser(updatedUser, authUserId, authUser.isAdmin)
+      : validateUser(updatedUser)
+
+    if (!isValidResult(checkUser)) {
+      return {
+        ...error400BadRequest,
+        body: checkUser.reason,
+      }
+    }
 
     const modifyResult = await users.findOneAndUpdate(
       { id: updatedUser.id },
