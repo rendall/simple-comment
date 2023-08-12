@@ -4,6 +4,7 @@
     ServerResponse,
     ServerResponseSuccess,
     TokenClaim,
+    UserId,
     ValidationResult,
   } from "../lib/simple-comment-types"
   import { useMachine } from "@xstate/svelte"
@@ -41,23 +42,27 @@
   let nextEvents = []
   let self: AdminSafeUser
   let isError = false
-  let loginPassword = ""
-  let loginUserId = ""
-  let signupEmail = ""
-  let signupEmailStatus = ""
-  let signupEmailHelperText =
-    "Used only for verification and approved notifications. We never show or share your email."
-  let displayName = ""
+  let statusMessage = ""
+
   const DISPLAY_NAME_HELPER_TEXT = "This is the name that others will see"
+
+  let displayName = ""
   let displayNameHelperText = DISPLAY_NAME_HELPER_TEXT
   let displayNameStatus: "error" | "success" | undefined = undefined
 
-  let statusMessage = ""
-  let userNameManuallyChanged = false
-  let userNameMessage = undefined
-  let userNameMessageStatus = undefined
-  let signupPasswordMessage = undefined
-  let signupPasswordStatus = undefined
+  let userEmail = ""
+  let userEmailHelperText =
+    "Used only for verification and approved notifications. We never show or share your email."
+  let userEmailStatus = ""
+
+  let userId = ""
+  let userIdMessage = undefined
+  let userIdStatus = undefined
+  let userIdManuallyChanged = false
+
+  let userPassword = ""
+  let userPasswordMessage = undefined
+  let userPasswordStatus = undefined
 
   enum Tab {
     guest,
@@ -78,45 +83,43 @@
 
     const validations = [
       () => validateDisplayName(displayName),
-      () => validateEmail(signupEmail),
+      () => validateEmail(userEmail),
     ].map(validation => validation())
     const result = joinValidations(validations)
 
     if (isValidResult(result))
-      send({ type: "GUEST", guest: { name: displayName, email: signupEmail } })
+      send({ type: "GUEST", guest: { name: displayName, email: userEmail } })
     else send({ type: "ERROR", error: result.reason })
   }
 
   const onLoginClick = async (e: Event) => {
     e.preventDefault()
-    send({ type: "LOGIN" })
+
+    const result = checkLoginValid()
+
+    if (isValidResult(result)) send({ type: "LOGIN" })
+    else
+      send({
+        type: "ERROR",
+        error: result.reason,
+      })
   }
 
   const onSignupClick = async (e: Event) => {
     e.preventDefault()
 
-    const validations = [
-      () =>
-        userNameMessageStatus === "error"
-          ? { isValid: false, reason: userNameMessage }
-          : { isValid: true },
-      () => checkUserEmailValid(),
-      () => validateUserId(loginUserId),
-      () => validatePassword(loginPassword),
-    ]
+    const result = joinValidations([
+      checkDisplayNameValid(),
+      checkUserIdValid(),
+      checkUserEmailValid(),
+      checkPasswordValid(),
+    ])
 
-    const allValid =
-      validations.reduce(
-        (isValid, func) => (func().isValid ? isValid : false),
-        true
-      ) && userNameMessageStatus !== "error"
-
-    if (allValid) send({ type: "SIGNUP" })
+    if (isValidResult(result)) send({ type: "SIGNUP" })
     else
       send({
         type: "ERROR",
-        error:
-          "The signup form has errors. Please correct them and click submit again.",
+        error: result.reason,
       })
   }
 
@@ -139,7 +142,15 @@
   const loggingInStateHandler = () => {
     updateStatusDisplay()
 
-    postAuth(loginUserId, loginPassword)
+    const result = checkLoginValid()
+
+    if (!isValidResult(result)) {
+      send({type:"ERROR", error:result.reason})
+      return
+    }
+
+
+    postAuth(userId, userPassword)
       .then(() => send("SUCCESS"))
       .catch(error => {
         send({ type: "ERROR", error })
@@ -148,11 +159,22 @@
 
   const signingUpStateHandler = () => {
     updateStatusDisplay()
+    const result = joinValidations([
+      checkDisplayNameValid(),
+      checkUserIdValid(),
+      checkUserEmailValid(),
+      checkPasswordValid(),
+    ])
+    if (!isValidResult(result)) {
+      send({ type: "ERROR", error: result.reason })
+      return
+    }
+
     const userInfo = {
-      id: loginUserId,
+      id: userId,
       name: displayName,
-      email: signupEmail,
-      password: loginPassword,
+      email: userEmail,
+      password: userPassword,
     }
     createUser(userInfo)
       .then(() => send("SUCCESS"))
@@ -247,14 +269,14 @@
   const checkUserNameExists = async username => {
     if (!onSubmitCheckUserNameValid(username).isValid) return
 
-    userNameMessage = "..."
+    userIdMessage = "..."
     try {
       await getOneUser(username)
-      userNameMessage = `The username '${username}' is already taken. Please try another one.`
-      userNameMessageStatus = "error"
+      userIdMessage = `The username '${username}' is already taken. Please try another one.`
+      userIdStatus = "error"
     } catch (error) {
-      userNameMessage = "This username is available."
-      userNameMessageStatus = "success"
+      userIdMessage = "This username is available."
+      userIdStatus = "success"
     }
   }
 
@@ -264,45 +286,72 @@
     const validation = validateUserId(username)
 
     if (isValidationTrue(validation)) {
-      userNameMessage = "..."
-      userNameMessageStatus = "success"
+      userIdMessage = "..."
+      userIdStatus = "success"
     } else {
-      userNameMessageStatus = "error"
-      userNameMessage = validation.reason
+      userIdStatus = "error"
+      userIdMessage = validation.reason
     }
     return validation
   }
 
-  const onInputCheckUserNameValid = username => {
-    const validation = validateUserId(username)
-    const ignoreReasons = ["Username is too short.", "Username cannot be empty"]
-    const isIgnore = validation =>
-      ignoreReasons.some(ignoreReason =>
-        validation.reason?.startsWith(ignoreReason)
-      )
+  const checkUserIdValid = (idToCheck?: UserId) => {
+    const id = idToCheck ?? userId
+    const result = validateUserId(id)
 
-    if (isValidationTrue(validation) || isIgnore(validation)) {
-      userNameMessage = "..."
-      userNameMessageStatus = undefined
+    if (isValidResult(result)) {
+      userIdMessage = "..."
+      userIdStatus = undefined
     } else {
-      userNameMessageStatus = "error"
-      userNameMessage = validation.reason
+      userIdStatus = "error"
+      userIdMessage = result.reason
     }
+
+    return result
   }
 
-  const checkUserIdValid_debounced = debounceFunc(onInputCheckUserNameValid, 50)
+  const checkUserIdValid_debounced = debounceFunc(checkUserIdValid, 50)
+
+  const checkLoginValid = (): ValidationResult => {
+    const userIdResult: ValidationResult =
+      userId && userId.length
+        ? { isValid: true }
+        : { isValid: false, reason: "User handle is required." }
+
+    if (isValidResult(userIdResult)) {
+      userIdMessage = "   "
+      userIdStatus = "success"
+    } else {
+      userIdMessage = userIdResult.reason
+      userIdStatus = "error"
+    }
+
+    const userPasswordResult: ValidationResult =
+      userPassword && userPassword.length
+        ? { isValid: true }
+        : { isValid: false, reason: "Password is required." }
+    if (isValidResult(userPasswordResult)) {
+      userPasswordMessage = "   "
+      userPasswordStatus = "success"
+    } else {
+      userPasswordMessage = userPasswordResult.reason
+      userPasswordStatus = "error"
+    }
+
+    const result = joinValidations([userIdResult, userPasswordResult])
+    return result
+  }
 
   const checkDisplayNameValid = (): ValidationResult => {
     const result = validateDisplayName(displayName)
     if (isValidResult(result)) {
       displayNameHelperText = "     "
       displayNameStatus = "success"
-      return { isValid: true }
     } else {
       displayNameHelperText = result.reason
       displayNameStatus = "error"
-      return result
     }
+    return result
   }
   const checkDisplayName_debounced = debounceFunc(checkDisplayNameValid, 1000)
 
@@ -310,52 +359,55 @@
     displayNameHelperText = "..."
     displayNameStatus = undefined
     checkDisplayName_debounced()
-    if (!userNameManuallyChanged) {
+    if (!userIdManuallyChanged) {
       const formattedUserName = formatUserName(displayName)
       checkUserIdValid_debounced(formattedUserName)
       checkUserIdExists_debounced(formattedUserName)
-      loginUserId = formattedUserName
+      userId = formattedUserName
     }
   }
 
-  const checkUserEmailValid = ():ValidationResult => {
-    const result = validateEmail(signupEmail)
+  const checkUserEmailValid = (): ValidationResult => {
+    const result = validateEmail(userEmail)
     if (isValidResult(result)) {
-      signupEmailHelperText = " "
-      signupEmailStatus = "success"
+      userEmailHelperText = " "
+      userEmailStatus = "success"
       return { isValid: true }
     } else {
-      signupEmailStatus = "error"
-      signupEmailHelperText = result.reason
+      userEmailStatus = "error"
+      userEmailHelperText = result.reason
       return result
     }
   }
 
   const checkUserEmailValid_debounced = debounceFunc(checkUserEmailValid, 1000)
   const handleUserEmailInput = () => {
-    signupEmailHelperText = "..."
-    signupEmailStatus = undefined
+    userEmailHelperText = "..."
+    userEmailStatus = undefined
     checkUserEmailValid_debounced()
   }
 
   const handleUserNameInput = () => {
-    userNameManuallyChanged = true
-    checkUserIdValid_debounced(loginUserId)
-    checkUserIdExists_debounced(loginUserId)
+    userIdManuallyChanged = true
+    checkUserIdValid_debounced(userId)
+    checkUserIdExists_debounced(userId)
   }
 
   const handleUserNameBlur = () => {
-    checkUserIdValid_debounced(loginUserId)
-    checkUserIdExists_debounced(loginUserId)
+    checkUserIdValid_debounced(userId)
+    checkUserIdExists_debounced(userId)
   }
 
   const guestLoggingInStateHandler = () => {
     const name = displayName
-    const email = signupEmail
+    const email = userEmail
 
-    const guestValidationResult = joinValidations([ checkDisplayNameValid(), checkUserEmailValid()])
+    const guestValidationResult = joinValidations([
+      checkDisplayNameValid(),
+      checkUserEmailValid(),
+    ])
     if (!isValidResult(guestValidationResult)) {
-      send({type:"ERROR", error:guestValidationResult.reason})
+      send({ type: "ERROR", error: guestValidationResult.reason })
       return
     }
 
@@ -364,13 +416,14 @@
       .then((response: ServerResponseSuccess<TokenClaim>) => response.body.user)
       .then(id => createGuestUser({ id, name, email }))
       .then(response => {
-        console.log({response})
+        console.log({ response })
         if (isResponseOk(response)) send("SUCCESS")
-        else send({type:"ERROR", error:response})
+        else send({ type: "ERROR", error: response })
       })
       .catch(error => {
         console.error(error)
-        send({type:"ERROR", error})})
+        send({ type: "ERROR", error })
+      })
   }
 
   dispatchableStore.subscribe(event => {
@@ -435,32 +488,30 @@
     })
   }
 
-  const onInputValidatePassword = password => {
-    const validation = validatePassword(password)
+  const checkPasswordValid = () => {
+    const result = validatePassword(userPassword)
 
-    if (isValidationTrue(validation)) {
-      signupPasswordMessage = "..."
-      signupPasswordStatus = undefined
+    if (isValidResult(result)) {
+      userPasswordMessage = "..."
+      userPasswordStatus = undefined
     } else {
-      signupPasswordStatus = "error"
-      signupPasswordMessage = validation.reason
+      userPasswordStatus = "error"
+      userPasswordMessage = result.reason
     }
+
+    return result
   }
 
-  const checkPasswordValid_debounced = debounceFunc(
-    onInputValidatePassword,
-    500
-  )
-  const handleSignupPasswordInput = () =>
-    checkPasswordValid_debounced(loginPassword)
+  const checkPasswordValid_debounced = debounceFunc(checkPasswordValid, 500)
+  const handleSignupPasswordInput = () => checkPasswordValid_debounced()
 
   $: {
     currentUserStore.set(self)
   }
 
   $: {
-    if (loginUserId.length < 3 && !userNameMessageStatus)
-      userNameMessage = "This is the name that uniquely identifies you"
+    if (userId.length < 3 && !userIdStatus)
+      userIdMessage = "This is the name that uniquely identifies you"
   }
 </script>
 
@@ -507,13 +558,13 @@
           required
         />
         <InputField
-          bind:value={signupEmail}
-          helperText={signupEmailHelperText}
+          bind:value={userEmail}
+          helperText={userEmailHelperText}
           id="guest-email"
           labelText="Email"
           onInput={handleUserEmailInput}
           onBlur={checkUserEmailValid}
-          status={signupEmailStatus}
+          status={userEmailStatus}
           required
         />
       </form>
@@ -524,14 +575,18 @@
         <InputField
           id="login-user-id"
           labelText="User handle"
-          bind:value={loginUserId}
+          helperText={userIdMessage}
+          status={userIdStatus}
+          bind:value={userId}
           required
         />
         <InputField
           type="password"
           labelText="Password"
+          helperText={userPasswordMessage}
+          status={userPasswordStatus}
           id="login-password"
-          bind:value={loginPassword}
+          bind:value={userPassword}
           required
         />
       </form>
@@ -546,7 +601,8 @@
         </p>
         <InputField
           bind:value={displayName}
-          helperText="This is the name that others will see"
+          helperText={displayNameHelperText}
+          status={displayNameStatus}
           id="signup-name"
           labelText="Display name"
           onInput={handleDisplayNameInput}
@@ -554,9 +610,9 @@
           required
         />
         <InputField
-          bind:value={loginUserId}
-          status={userNameMessageStatus}
-          helperText={userNameMessage}
+          bind:value={userId}
+          status={userIdStatus}
+          helperText={userIdMessage}
           id="signup-user-id"
           labelText="User handle"
           onBlur={handleUserNameBlur}
@@ -564,9 +620,9 @@
         />
 
         <InputField
-          bind:value={signupEmail}
-          helperText={signupEmailHelperText}
-          status={signupEmailStatus}
+          bind:value={userEmail}
+          helperText={userEmailHelperText}
+          status={userEmailStatus}
           id="signup-email"
           labelText="Email"
           required
@@ -574,11 +630,11 @@
           onInput={handleUserEmailInput}
         />
         <InputField
-          bind:value={loginPassword}
+          bind:value={userPassword}
           id="signup-password"
           labelText="Password"
-          helperText={signupPasswordMessage}
-          status={signupPasswordStatus}
+          helperText={userPasswordMessage}
+          status={userPasswordStatus}
           onInput={handleSignupPasswordInput}
           required
           type="password"

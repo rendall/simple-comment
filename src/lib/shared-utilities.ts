@@ -82,7 +82,7 @@ export const validateEmail = (email: string): ValidationResult => {
 // (q.v. https://www.kalzumeus.com/2010/06/17/falsehoods-programmers-believe-about-names/ )
 export const validateDisplayName = (name: string): ValidationResult => {
   if (name.length === 0)
-    return { isValid: false, reason: "Display name is necessary." }
+    return { isValid: false, reason: "Display name is required." }
   if (name.length < 2)
     return { isValid: false, reason: "Display name is too short." }
   if (name.length > 100)

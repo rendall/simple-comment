@@ -68,7 +68,7 @@ export const threadComments = <T extends MinComment, U extends MinComment>(
 
 export const validateUserId = (userId: UserId): ValidationResult => {
   if (userId.length === 0) {
-    return { isValid: false, reason: "User handle cannot be empty." }
+    return { isValid: false, reason: "User handle is required." }
   }
 
   const isValid = /^[a-z0-9-]*$/.test(userId)
@@ -99,7 +99,7 @@ export const validateUserId = (userId: UserId): ValidationResult => {
 
 export const validatePassword = (password: string): ValidationResult => {
   if (password.length === 0) {
-    return { isValid: false, reason: "Password cannot be empty." }
+    return { isValid: false, reason: "Password is required." }
   }
 
   const isValid = password.trim() === password
