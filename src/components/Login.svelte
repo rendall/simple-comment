@@ -14,7 +14,6 @@
     deleteAuth,
     getGuestToken,
     getOneUser,
-    isValidEmail,
     postAuth,
     verifySelf,
     verifyUser,
@@ -319,15 +318,16 @@
     }
   }
 
-  const checkUserEmailValid = () => {
-    if (isValidEmail(signupEmail)) {
+  const checkUserEmailValid = ():ValidationResult => {
+    const result = validateEmail(signupEmail)
+    if (isValidResult(result)) {
       signupEmailHelperText = " "
       signupEmailStatus = "success"
       return { isValid: true }
     } else {
       signupEmailStatus = "error"
-      signupEmailHelperText = "This email address is invalid."
-      return { isValid: false, reason: signupEmailHelperText }
+      signupEmailHelperText = result.reason
+      return result
     }
   }
 
@@ -335,7 +335,6 @@
   const handleUserEmailInput = () => {
     signupEmailHelperText = "..."
     signupEmailStatus = undefined
-
     checkUserEmailValid_debounced()
   }
 
@@ -353,15 +352,25 @@
   const guestLoggingInStateHandler = () => {
     const name = displayName
     const email = signupEmail
+
+    const guestValidationResult = joinValidations([ checkDisplayNameValid(), checkUserEmailValid()])
+    if (!isValidResult(guestValidationResult)) {
+      send({type:"ERROR", error:guestValidationResult.reason})
+      return
+    }
+
     getGuestToken()
       .then(() => verifyUser())
       .then((response: ServerResponseSuccess<TokenClaim>) => response.body.user)
       .then(id => createGuestUser({ id, name, email }))
       .then(response => {
+        console.log({response})
         if (isResponseOk(response)) send("SUCCESS")
-        else send("ERROR", response)
+        else send({type:"ERROR", error:response})
       })
-      .catch(error => send("ERROR", error))
+      .catch(error => {
+        console.error(error)
+        send({type:"ERROR", error})})
   }
 
   dispatchableStore.subscribe(event => {

@@ -20,11 +20,25 @@ context("Input invalid data", () => {
 
     cy.visit("http://localhost:7070/")
 
+  })
+
+  afterEach(() => {
     cy.get("form.comment-form #guest-email").clear()
     cy.get("form.comment-form #guest-name").clear()
     cy.get("form.comment-form textarea.comment-field").clear()
   })
 
+  it("Press add comment without entering any information", () => {
+    cy.get("form.comment-form textarea.comment-field").type(
+      generateRandomCopy()
+    )
+
+    cy.get(".comment-submit-button").click()
+
+    cy.get("form.comment-form #guest-email")
+      .parents(".input-field")
+      .should("have.class", "is-error")
+  })
   it("Submit a comment without adding email or name", () => {
     cy.get("form.comment-form textarea.comment-field").type(
       generateRandomCopy()
