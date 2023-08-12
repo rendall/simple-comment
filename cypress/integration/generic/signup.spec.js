@@ -34,12 +34,12 @@ describe("Signup Functionality", () => {
         body: '{"id":"existinguser","name":"Test User","isAdmin":false,"email":"existinguser@example.com"}',
       })
     })
-    cy.get("#signup-user-name")
+    cy.get("#signup-user-id")
       .parents(".input-field")
       .should("not.have.class", "is-error")
     cy.get("#signup-name").clear()
-    cy.get("#signup-user-name").type("existinguser")
-    cy.get(".input-field.is-error #signup-user-name + .helper-text").should(
+    cy.get("#signup-user-id").type("existinguser")
+    cy.get(".input-field.is-error #signup-user-id + .helper-text").should(
       "contain",
       "The username 'existinguser' is already taken. Please try another one."
     )
@@ -51,7 +51,7 @@ describe("Signup Functionality", () => {
     })
 
     cy.get("#signup-name").clear().type("Test User")
-    cy.get("#signup-user-name").clear().type("newuser")
+    cy.get("#signup-user-id").clear().type("newuser")
     cy.get("#signup-email").clear().type("newuser@example.com")
     cy.get("#signup-password").clear().type("password123")
     cy.get("#signup-form").submit()
@@ -78,7 +78,7 @@ describe("Signup Functionality", () => {
     })
 
     cy.get("#signup-name").clear().type(newUserInfo.name)
-    cy.get("#signup-user-name").clear().type(newUserInfo.id)
+    cy.get("#signup-user-id").clear().type(newUserInfo.id)
     cy.get("#signup-email").clear().type(newUserInfo.email)
     cy.get("#signup-password").clear().type("crankyB@biesMeikTroobl")
     cy.get("#signup-form").submit()

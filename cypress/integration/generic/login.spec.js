@@ -14,7 +14,7 @@ describe(`User Authentication Flow`, () => {
     cy.get("#status-display").should("not.have.text")
 
     // Enter username and password
-    cy.get("#login-user-name").type("wronguser")
+    cy.get("#login-user-id").type("wronguser")
     cy.get("#login-password").type("wrongpassword")
 
     // Click the log in button
@@ -65,7 +65,7 @@ describe(`User Authentication Flow`, () => {
     })
 
     // Perform the login action
-    cy.get("#login-user-name").type("testuser")
+    cy.get("#login-user-id").type("testuser")
     cy.get("#login-password").type("testpassword")
     cy.get("#login-form").submit()
 
@@ -116,7 +116,7 @@ describe(`User Authentication Flow`, () => {
     })
 
     // First log in
-    cy.get("#login-user-name").type("testuser")
+    cy.get("#login-user-id").type("testuser")
     cy.get("#login-password").type("testpassword")
     cy.get("#login-form").submit()
 

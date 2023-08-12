@@ -60,7 +60,6 @@ describe("reply", () => {
 
     cy.get("@commentBody").find(".comment-field").type(commentText)
     cy.get("@commentBody").find("#signup-name").type(signupName)
-    // cy.get("@commentBody").find("#signup-user-name").type(signupUserId)
     cy.get("@commentBody").find("#signup-email").type(signupEmail)
     cy.get("@commentBody").find("#signup-password").type(signupPassword)
     cy.get("@commentBody").find(".comment-submit-button").click()
@@ -82,7 +81,7 @@ describe("reply", () => {
     const commentText = generateRandomCopy()
 
     cy.get("@commentBody").find(".comment-field").type(commentText)
-    cy.get("@commentBody").find("#login-user-name").type(signupUserId)
+    cy.get("@commentBody").find("#login-user-id").type(signupUserId)
     cy.get("@commentBody").find("#login-password").type(signupPassword)
     cy.get("@commentBody").find(".comment-submit-button").click()
 
