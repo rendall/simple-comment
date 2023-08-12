@@ -30,9 +30,10 @@ import {
   success202TopicDeleted,
   success202UserDeleted,
 } from "../../../src/lib/messages"
-import { getAuthToken, hashPassword, uuidv4 } from "../../../src/lib/crypt"
+import { getAuthToken, hashPassword } from "../../../src/lib/crypt"
 import policy from "../../policy.json"
 import {
+  createGuestId,
   isComment,
   isDeletedComment,
   isDiscussion,
@@ -245,15 +246,15 @@ describe("Full API service test", () => {
     })
   })
 
-  test("POST to /user with id uuid with admin credentials should fail", async () => {
-    const guestUser = { ...testNewUser, id: uuidv4() }
+  test("POST to /user with guest id and admin credentials should fail", async () => {
+    const guestUser = { ...testNewUser, id: createGuestId() }
     const authUser = getAuthUser(u => u.isAdmin!)
     expect.assertions(1)
     const e = await service.userPOST(guestUser, authUser.id)
     expect(e).toHaveProperty("statusCode", 403)
   })
-  test("POST to /user with id uuid with same credentials should succeed", () => {
-    const id = uuidv4()
+  test("POST to /user with guest id and same credentials should succeed", () => {
+    const id = createGuestId()
     const guestUser = {
       id,
       name: randomString(alphaUserInput),
@@ -340,7 +341,7 @@ describe("Full API service test", () => {
   test("POST to /user with a guestUserId as targetId should fail", async () => {
     const newUser = {
       ...mockUser(),
-      id: uuidv4(),
+      id: createGuestId(),
       password: mockPassword(),
       email: mockEmail(),
       isAdmin: false,
@@ -563,8 +564,10 @@ describe("Full API service test", () => {
         expect(res.body).toHaveProperty("isVerified", true)
       })
   })
-  test("PUT to /user/{userId} with userId as uuid should succeed", async () => {
-    const id = uuidv4()
+
+  test("Admins should be able to modify guest users", async () => {
+    // PUT to /user/{userId} with userId as guestId should succeed
+    const id = createGuestId()
     const guestUser = {
       id,
       name: randomString(alphaUserInput),
@@ -579,19 +582,20 @@ describe("Full API service test", () => {
 
     await service.userPOST(guestUser, id)
 
-    expect.assertions(3)
+    expect.assertions(1)
     return service
       .userPUT(updatedGuestUser.id, updatedGuestUser, adminAuthUser.id)
       .then((res: Success<AdminSafeUser> | Error) => {
-        const resbody = res.body as { name: string }
-        expect(res).toHaveProperty("statusCode", 204)
-        expect(res).toHaveProperty("body", toAdminSafeUser(updatedGuestUser))
-        expect(resbody.name).toBe(updatedGuestUser.name)
+        expect(res).toEqual({
+          statusCode: 204,
+          body: toAdminSafeUser(updatedGuestUser),
+        })
       })
   })
 
-  test("PUT to /user/{userId} with guestUser  changing isAdmin should fail", async () => {
-    const id = uuidv4()
+  test("Guest users should never be made into admins", async () => {
+    // PUT to /user/{userId} with guestUser  changing isAdmin should fail
+    const id = createGuestId()
     const guestUser = {
       id,
       name: randomString(alphaUserInput),
@@ -613,7 +617,10 @@ describe("Full API service test", () => {
       adminAuthUser.id
     )
 
-    expect(e).toHaveProperty("statusCode", 403)
+    expect(e).toEqual({
+      statusCode: 403,
+      body: "Attempt to modify guest user forbidden property",
+    })
   })
   test("PUT to /user/{userId} where userId does not exist (and admin credentials) should return 404", async () => {
     const targetUser = mockUser()
@@ -730,7 +737,7 @@ describe("Full API service test", () => {
 
   // Comment Read
   test("GET comment to /comment/{commentId} where commentId does not exist should return 404", async () => {
-    const parentCommentId = uuidv4()
+    const parentCommentId = createGuestId()
     const user = getAuthUser()
     expect.assertions(1)
     const e = await service.commentGET(parentCommentId, user.id)
@@ -810,7 +817,7 @@ describe("Full API service test", () => {
     expect(e).toBe(error403UserNotAuthorized)
   })
   test("PUT comment to /comment/{commentId} where Id does not exist should return 404", async () => {
-    const unknownComment = { text: randomString(), id: uuidv4() }
+    const unknownComment = { text: randomString(), id: createGuestId() }
     const adminUserTest = authUserTest
     expect.assertions(1)
     const e = await service.commentPUT(
@@ -1028,7 +1035,7 @@ describe("Full API service test", () => {
       .catch(e => expect(e).toBe(error403UserNotAuthorized))
   })
   test("DELETE to /topic/{topicId} where Id does not exist should return 404", () => {
-    const deleteTopicId = uuidv4()
+    const deleteTopicId = createGuestId()
     const adminUserTest = getAuthUser(u => u.isAdmin!)
     return service
       .topicDELETE(deleteTopicId, adminUserTest.id)
