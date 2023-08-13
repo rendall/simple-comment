@@ -1,6 +1,6 @@
 /** Comment state machine handles user submitting a comment */
 
-import { assign, createMachine } from "xstate"
+import { assign, createMachine, raise } from "xstate"
 import type {
   Comment,
   ServerResponseError,
@@ -85,6 +85,10 @@ export const commentPostMachine = createMachine<
       error: {
         on: {
           RESET: "idle",
+          SUBMIT: {
+            target: "idle",
+            actions: raise("SUBMIT"),
+          },
         },
       },
     },

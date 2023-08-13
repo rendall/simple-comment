@@ -48,9 +48,9 @@ describe("Login flow state machine", () => {
     expect(loggedOutActions).toEqual(["LOGIN", "SIGNUP", "GUEST", "ERROR"])
   })
 
-  test("error state should allow only actions LOGIN or SIGNUP", () => {
+  test("error state should allow only actions '*' and LOGOUT", () => {
     const errorActions = Object.keys(loginMachine.definition.states.error.on)
-    expect(errorActions).toEqual(["LOGIN", "SIGNUP", "LOGOUT"])
+    expect(errorActions).toEqual(["LOGOUT", "*"])
   })
 
   test("verifying state should allow only actions SUCCESS, ERROR or FIRST_VISIT", () => {

@@ -48,7 +48,7 @@
     "prebuild": "rimraf ./functions && rimraf ./dist/js && mkdir -p ./dist/js",
     "start:backend": "netlify dev --port 7070",
     "start:frontend": "webpack-dev-server --config ./webpack.frontend.js",
-    "start": "netlify dev --port 7070 --command \"yarn run start:frontend\"",
+    "start": "NODE_ENV=\"development\" NODE_OPTIONS=\"--max-old-space-size=4096\" netlify dev --port 7070 --command \"yarn run start:frontend\"",
     "test": "yarn test:backend && yarn test:frontend",
     "test:backend": "jest --config jest.backend.config.ts",
     "test:e2e": "concurrently  \"netlify dev --port 7070\" \"cypress run\" --kill-others",

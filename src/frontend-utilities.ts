@@ -66,6 +66,15 @@ export const threadComments = <T extends MinComment, U extends MinComment>(
   return threadCommentsWithMap(comment)
 }
 
+/** Convert a display name to a default user id */
+export const formatUserName = displayName => {
+  return displayName
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "-")
+}
+
 export const validateUserId = (userId: UserId): ValidationResult => {
   if (userId.length === 0) {
     return { isValid: false, reason: "User handle is required." }

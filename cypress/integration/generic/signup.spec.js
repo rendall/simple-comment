@@ -27,7 +27,7 @@ describe("Signup Functionality", () => {
     )
   })
 
-  it("Displays error when trying to sign up with a username that is already taken", () => {
+  it("Displays error when trying to sign up with a user handle that is already taken", () => {
     cy.intercept("GET", "/.netlify/functions/user/existinguser", req => {
       req.reply({
         statusCode: 200,
@@ -41,7 +41,7 @@ describe("Signup Functionality", () => {
     cy.get("#signup-user-id").type("existinguser")
     cy.get(".input-field.is-error #signup-user-id + .helper-text").should(
       "contain",
-      "The username 'existinguser' is already taken. Please try another one."
+      "'existinguser' is already taken. Please try another one."
     )
   })
 

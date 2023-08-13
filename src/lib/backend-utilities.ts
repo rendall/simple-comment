@@ -248,7 +248,7 @@ export const hasBasicScheme = (
       : false
     : parse.scheme.toLowerCase() === BASIC_SCHEME.toLowerCase()
 
-/** Checks the Set-Cookie header for "simple_comment_token" and returns true if found, false otherwise */
+/** Checks the Cookie header for "simple_comment_token" and returns true if found, false otherwise */
 export const hasTokenCookie = (headers: { [header: string]: string }) =>
   hasHeader(headers, "Cookie") &&
   getHeaderValue(headers, "Cookie").indexOf("simple_comment_token=") >= 0

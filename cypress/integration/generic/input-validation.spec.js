@@ -19,20 +19,19 @@ context("Input invalid data", () => {
     )
 
     cy.visit("http://localhost:7070/")
-
   })
 
   afterEach(() => {
-    cy.get('form.comment-form').within(() => {
-      cy.get('input, textarea').clear()
+    cy.get("form.comment-form").within(() => {
+      cy.get("input, textarea").clear()
     })
-
   })
 
   it("Press signup then add comment without entering any information", () => {
-
     // Set up the interception
-    cy.intercept("POST", ".netlify/functions/user", () => { throw "POST to /user should not happen" })
+    cy.intercept("POST", ".netlify/functions/user", () => {
+      throw "POST to /user should not happen"
+    })
 
     cy.get("button.selection-tab-signup").click()
 
@@ -40,30 +39,40 @@ context("Input invalid data", () => {
       generateRandomCopy()
     )
 
-
     cy.get(".comment-submit-button").click()
 
-
-    cy.get("form.comment-form #signup-name").parents(".input-field").should("have.class", "is-error")
-    cy.get("form.comment-form #signup-user-id").parents(".input-field").should("have.class", "is-error")
-    cy.get("form.comment-form #signup-email").parents(".input-field").should("have.class", "is-error")
-    cy.get("form.comment-form #signup-password").parents(".input-field").should("have.class", "is-error")
-
+    cy.get("form.comment-form #signup-name")
+      .parents(".input-field")
+      .should("have.class", "is-error")
+    cy.get("form.comment-form #signup-user-id")
+      .parents(".input-field")
+      .should("have.class", "is-error")
+    cy.get("form.comment-form #signup-email")
+      .parents(".input-field")
+      .should("have.class", "is-error")
+    cy.get("form.comment-form #signup-password")
+      .parents(".input-field")
+      .should("have.class", "is-error")
   })
 
   it("Press login then add comment without entering any information", () => {
-    cy.intercept("POST", ".netlify/functions/auth", () => { throw "POST to /auth should not happen" })
+    cy.intercept("POST", ".netlify/functions/auth", () => {
+      throw "POST to /auth should not happen"
+    })
     cy.get("button.selection-tab-login").click()
 
     cy.get("form.comment-form textarea.comment-field").type(
       generateRandomCopy()
     )
 
-
     cy.get(".comment-submit-button").click()
 
-    cy.get("form.comment-form #login-user-id").parents(".input-field").should("have.class", "is-error")
-    cy.get("form.comment-form #login-password").parents(".input-field").should("have.class", "is-error")
+    cy.get("form.comment-form #login-user-id")
+      .parents(".input-field")
+      .should("have.class", "is-error")
+    cy.get("form.comment-form #login-password")
+      .parents(".input-field")
+      .should("have.class", "is-error")
   })
   it("Press add comment without entering any information", () => {
     cy.get("form.comment-form textarea.comment-field").type(
@@ -123,8 +132,4 @@ context("Input invalid data", () => {
       .parents(".input-field")
       .should("have.class", "is-error")
   })
-
-
 })
-
-

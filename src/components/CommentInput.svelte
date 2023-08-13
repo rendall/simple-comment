@@ -18,6 +18,7 @@
   export let autofocus = false
 
   let commentText = ""
+  let loginStateValue
 
   const { state, send } = useMachine(commentPostMachine)
   const dispatch = createEventDispatcher()
@@ -41,10 +42,36 @@
   }
 
   const unsubscribeLoginState = loginStateStore.subscribe(loginState => {
-    const { value: loginStateValue } = loginState
-    const continueToPostComment =
-      loginStateValue === "loggedIn" && $state.value === "loggingIn"
-    if (continueToPostComment) setTimeout(() => send("SUCCESS"), 1)
+    const { value } = loginState
+    loginStateValue = value
+    const commentInputStateValue = $state.value
+
+    //TODO: This state handling should be done via XState, probably by combining these state machines
+    switch (commentInputStateValue) {
+      case "loggingIn":
+        switch (loginStateValue) {
+          case "loggedIn":
+            setTimeout(() => send("SUCCESS"), 1)
+            break
+          case "error":
+            setTimeout(() => send({ type: "ERROR", error: "Login error" }))
+            break
+          case "loggedOut":
+            dispatchableStore.dispatch("loginIntent")
+            break
+
+          default:
+            console.warn(
+              `Unhandled loginState '${loginStateValue}' in CommentInput`
+            )
+            break
+        }
+
+        break
+
+      default:
+        break
+    }
   })
 
   const postingStateHandler = async () => {

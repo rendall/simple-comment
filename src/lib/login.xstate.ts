@@ -114,8 +114,7 @@ export const loginMachine = createMachine<
 
       error: {
         on: {
-          LOGIN: "loggingIn",
-          SIGNUP: "signingUp",
+          "*": "idle",
           LOGOUT: "loggingOut",
         },
       },

@@ -25,6 +25,7 @@
     isResponseOk,
     validatePassword,
     validateUserId,
+    formatUserName,
   } from "../frontend-utilities"
   import InputField from "./low-level/InputField.svelte"
   import {
@@ -78,8 +79,10 @@
     isError = error
   }
 
+  /** Note that usually these onClick events will not be used. Rather, "loginIntent" will be sent.*/
   const onGuestClick = async (e: Event) => {
     e.preventDefault()
+    updateStatusDisplay()
 
     const validations = [
       () => validateDisplayName(displayName),
@@ -94,6 +97,7 @@
 
   const onLoginClick = async (e: Event) => {
     e.preventDefault()
+    updateStatusDisplay()
 
     const result = checkLoginValid()
 
@@ -107,6 +111,7 @@
 
   const onSignupClick = async (e: Event) => {
     e.preventDefault()
+    updateStatusDisplay()
 
     const result = joinValidations([
       checkDisplayNameValid(),
@@ -141,17 +146,19 @@
 
   const loggingInStateHandler = () => {
     updateStatusDisplay()
-
     const result = checkLoginValid()
-
     if (!isValidResult(result)) {
-      send({type:"ERROR", error:result.reason})
+      send({ type: "ERROR", error: result.reason })
       return
     }
-
-
     postAuth(userId, userPassword)
-      .then(() => send("SUCCESS"))
+      .then(response => {
+        if (isResponseOk(response)) {
+          send("SUCCESS")
+        } else {
+          send({ type: "ERROR", error: response })
+        }
+      })
       .catch(error => {
         send({ type: "ERROR", error })
       })
@@ -198,6 +205,8 @@
   }
 
   const errorStateHandler = () => {
+    updateStatusDisplay()
+
     const error = $state.context.error
     if (!error) {
       updateStatusDisplay(
@@ -206,73 +215,62 @@
       )
       console.error("Unknown error")
       console.trace()
-      return
-    }
-
-    if (typeof error === "string") {
+    } else if (typeof error === "string") {
       updateStatusDisplay(error, true)
-      return
+    } else {
+      const { status, statusText, ok, body } = error as ServerResponse
+      if (ok) console.warn("Error handler caught an OK response", error)
+
+      const errorMessages = [
+        [
+          401,
+          "Policy violation: no authentication and canPublicCreateUser is false",
+          "Sorry, new user registration is currently closed. Please contact the site administrator for assistance.",
+        ],
+        [
+          401,
+          "Bad credentials",
+          "Oops! The password you entered is incorrect. Please try again. If you've forgotten your password, you can reset it.",
+        ],
+        [
+          403,
+          "Cannot modify root credentials",
+          "Sorry, but the changes you're trying to make are not allowed. The administrator credentials you're attempting to modify are secured and can only be updated through the appropriate channels. If you need to make changes, please contact your system administrator or refer to your system documentation for the correct procedure.",
+        ],
+        [
+          404,
+          "Unknown user",
+          "It seems we couldn't find an account associated with the provided username or email. Please double-check your input for any typos. If you don't have an account yet, feel free to create one. We'd love to have you join our community!",
+        ],
+        [
+          404,
+          "Authenticating user is unknown",
+          "It seems there's an issue with your current session. Please log out and log back in again. If the problem persists, contact the site administrator for assistance.",
+        ],
+      ]
+
+      const messageTuple = errorMessages.find(
+        ([_code, text, _friendly]) => text === body
+      )
+      if (messageTuple) {
+        const [code, _text, friendly] = messageTuple as [number, string, string]
+        if (code !== status)
+          console.warn(
+            `Error response code ${status} does not match error message code ${code}`
+          )
+        updateStatusDisplay(friendly, true)
+      } else updateStatusDisplay(`${status}:${statusText} ${body}`, true)
     }
-
-    const { status, statusText, ok, body } = error as ServerResponse
-    if (ok) console.warn("Error handler caught an OK response", error)
-
-    const errorMessages = [
-      [
-        401,
-        "Policy violation: no authentication and canPublicCreateUser is false",
-        "Sorry, new user registration is currently closed. Please contact the site administrator for assistance.",
-      ],
-      [
-        401,
-        "Bad credentials",
-        "Oops! The password you entered is incorrect. Please try again. If you've forgotten your password, you can reset it.",
-      ],
-      [
-        403,
-        "Cannot modify root credentials",
-        "Sorry, but the changes you're trying to make are not allowed. The administrator credentials you're attempting to modify are secured and can only be updated through the appropriate channels. If you need to make changes, please contact your system administrator or refer to your system documentation for the correct procedure.",
-      ],
-      [
-        404,
-        "Unknown user",
-        "It seems we couldn't find an account associated with the provided username or email. Please double-check your input for any typos. If you don't have an account yet, feel free to create one. We'd love to have you join our community!",
-      ],
-      [
-        404,
-        "Authenticating user is unknown",
-        "It seems there's an issue with your current session. Please log out and log back in again. If the problem persists, contact the site administrator for assistance.",
-      ],
-    ]
-
-    const messageTuple = errorMessages.find(
-      ([_code, text, _friendly]) => text === body
-    )
-    if (messageTuple) {
-      const [code, _text, friendly] = messageTuple as [number, string, string]
-      if (code !== status)
-        console.warn(
-          `Error response code ${status} does not match error message code ${code}`
-        )
-      updateStatusDisplay(friendly, true)
-    } else updateStatusDisplay(`${status}:${statusText} ${body}`, true)
+    // send("RESET")
   }
 
-  const formatUserName = displayName => {
-    return displayName
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, "-")
-      .replace(/[^a-z0-9-]/g, "-")
-  }
-
-  const checkUserNameExists = async username => {
-    if (!onSubmitCheckUserNameValid(username).isValid) return
+  const checkUserNameExists = async id => {
+    if (!onSubmitCheckUserNameValid(id).isValid) return
 
     userIdMessage = "..."
     try {
-      await getOneUser(username)
-      userIdMessage = `The username '${username}' is already taken. Please try another one.`
+      await getOneUser(id)
+      userIdMessage = `The handle '${id}' is already taken. Please try another one.`
       userIdStatus = "error"
     } catch (error) {
       userIdMessage = "This username is available."
@@ -355,16 +353,19 @@
   }
   const checkDisplayName_debounced = debounceFunc(checkDisplayNameValid, 1000)
 
-  const handleDisplayNameInput = () => {
-    displayNameHelperText = "..."
-    displayNameStatus = undefined
-    checkDisplayName_debounced()
+  const handleDisplayNameSignupInput = () => {
+    handleDisplayNameInput()
     if (!userIdManuallyChanged) {
       const formattedUserName = formatUserName(displayName)
       checkUserIdValid_debounced(formattedUserName)
       checkUserIdExists_debounced(formattedUserName)
       userId = formattedUserName
     }
+  }
+  const handleDisplayNameInput = () => {
+    displayNameHelperText = "..."
+    displayNameStatus = undefined
+    checkDisplayName_debounced()
   }
 
   const checkUserEmailValid = (): ValidationResult => {
@@ -406,6 +407,7 @@
       checkDisplayNameValid(),
       checkUserEmailValid(),
     ])
+
     if (!isValidResult(guestValidationResult)) {
       send({ type: "ERROR", error: guestValidationResult.reason })
       return
@@ -416,7 +418,6 @@
       .then((response: ServerResponseSuccess<TokenClaim>) => response.body.user)
       .then(id => createGuestUser({ id, name, email }))
       .then(response => {
-        console.log({ response })
         if (isResponseOk(response)) send("SUCCESS")
         else send({ type: "ERROR", error: response })
       })
@@ -480,11 +481,9 @@
     ]
 
     nextEvents = $state.nextEvents
-
     loginStateStore.set({ value: $state.value, nextEvents })
-
     stateHandlers.forEach(([stateValue, stateHandler]) => {
-      if ($state.value === stateValue) stateHandler()
+      if ($state.value === stateValue) setTimeout(stateHandler, 1)
     })
   }
 
@@ -605,7 +604,7 @@
           status={displayNameStatus}
           id="signup-name"
           labelText="Display name"
-          onInput={handleDisplayNameInput}
+          onInput={handleDisplayNameSignupInput}
           onBlur={checkDisplayNameValid}
           required
         />
