@@ -217,20 +217,26 @@ h1.simple-comment-logotype {
       .selection-tab {
         border: 0;
         margin: 0;
-        border-bottom: 1px solid lightgray;
+        border-bottom: 1px solid $corporate-blue;
         border-radius: 0;
+        color: $corporate-blue;
 
         &:hover:not(.selected) {
-          border-bottom-color: gray;
+          color: inherit;
           font-weight: normal;
+          border: $corporate-blue 1px solid;
+          border-top-left-radius: 5px;
+          border-top-right-radius: 5px;
+          border-bottom-style: dashed;
         }
 
         &.selected {
           font-weight: bold;
-          color: $corporate-blue;
-          border-bottom-color: $corporate-blue;
+          border: $corporate-blue 2px solid;
+          border-top-left-radius: 5px;
+          border-top-right-radius: 5px;
           cursor: pointer;
-          border-bottom-width: 2px;
+          border-bottom: none;
         }
       }
     }
