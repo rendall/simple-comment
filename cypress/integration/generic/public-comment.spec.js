@@ -5,7 +5,7 @@ import {
   generateRandomName,
 } from "../../../src/tests/mockData"
 
-context("Essential actions", () => {
+context("Guest comment", () => {
   const commentText = generateRandomCopy()
 
   before(() => {
@@ -22,7 +22,7 @@ context("Essential actions", () => {
     cy.clearCookie("simple_comment_token") // clear the authentication/session cookie
   })
 
-  it("Submit a comment as a public / unknown user", () => {
+  it("Submit a comment as a guest user", () => {
     // https://on.cypress.io/type
     cy.intercept("POST", ".netlify/functions/comment/*").as("postComment")
     cy.get("form.comment-form #guest-email").type("fake@email.com")
@@ -30,13 +30,21 @@ context("Essential actions", () => {
     cy.get("form.comment-form .comment-field").type(commentText)
     cy.get("form.comment-form .comment-submit-button").click()
     cy.wait("@postComment").its("response.statusCode").should("eq", 201) // 201 Created
-    cy.get("ul.comment-replies.is-root").should("contain", commentText)
+    cy.contains("article.comment-body p", commentText).should("exist")
   })
 
-  it("Delete a comment as a public / unknown user", () => {
+  it("Delete a comment as a logged-in guest user", () => {
     cy.intercept("DELETE", ".netlify/functions/comment/*").as("deleteComment")
     cy.get(".comment-delete-button").click()
     cy.wait("@deleteComment").its("response.statusCode").should("eq", 202) // 202 Accepted
-    cy.get("ul.comment-replies.is-root").should("not.contain", commentText)
+    cy.contains("article.comment-body p", commentText).should("not.exist")
+  })
+
+  it("Reply to a comment as a logged-in guest", () => {
+    cy.get("button.comment-reply-button").first().as("replyButton")
+    cy.get("@replyButton").closest("article.comment-body").as("commentBody")
+    cy.get("@replyButton").click()
+
+    cy.get("form.guest-login-form").should("not.exist")
   })
 })

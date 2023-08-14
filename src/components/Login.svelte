@@ -4,6 +4,7 @@
     ServerResponse,
     ServerResponseSuccess,
     TokenClaim,
+    User,
     UserId,
     ValidationResult,
   } from "../lib/simple-comment-types"
@@ -39,13 +40,16 @@
     validateDisplayName,
     validateEmail,
   } from "../lib/shared-utilities"
-
-  let nextEvents = []
-  let self: AdminSafeUser
-  let isError = false
-  let statusMessage = ""
+  import { onDestroy, onMount } from "svelte"
 
   const DISPLAY_NAME_HELPER_TEXT = "This is the name that others will see"
+
+  export let currentUser: User | undefined
+
+  let self: User = currentUser
+  let isError = false
+  let nextEvents = []
+  let statusMessage = ""
 
   let displayName = ""
   let displayNameHelperText = DISPLAY_NAME_HELPER_TEXT
@@ -132,16 +136,18 @@
   const verifyingStateHandler = () => {
     updateStatusDisplay()
 
-    verifySelf()
-      .then((user: AdminSafeUser) => {
-        self = user
-        send({ type: "SUCCESS" })
-      })
-      .catch(error => {
-        const { status } = error
-        if (status === 401) send({ type: "FIRST_VISIT" })
-        else send({ type: "ERROR", error })
-      })
+    if (self || currentUser) send({ type: "SUCCESS" })
+    else
+      verifySelf()
+        .then((user: AdminSafeUser) => {
+          self = user
+          send({ type: "SUCCESS" })
+        })
+        .catch(error => {
+          const { status } = error
+          if (status === 401) send({ type: "FIRST_VISIT" })
+          else send({ type: "ERROR", error })
+        })
   }
 
   const loggingInStateHandler = () => {
@@ -427,12 +433,12 @@
       })
   }
 
-  dispatchableStore.subscribe(event => {
+  const unsubscribeDispatchableStore = dispatchableStore.subscribe(event => {
     switch (event.name) {
       case "logoutIntent": {
         const canLogout = nextEvents.includes("LOGOUT")
         if (canLogout) send("LOGOUT")
-        else send({ type: "ERROR", error: "Unable to log out. Please reload." })
+        else console.warn("Received logoutIntent at state", $state.value)
         break
       }
 
@@ -458,7 +464,8 @@
               })
               break
           }
-        } else send({ type: "ERROR", error: "Unable to login" })
+        } else if ($state.value === "error") send("RESET")
+        else console.warn("Received loginIntent at state", $state.value)
         break
       }
 
@@ -467,6 +474,23 @@
         break
     }
   })
+
+  const checkPasswordValid = () => {
+    const result = validatePassword(userPassword)
+
+    if (isValidResult(result)) {
+      userPasswordMessage = "..."
+      userPasswordStatus = undefined
+    } else {
+      userPasswordStatus = "error"
+      userPasswordMessage = result.reason
+    }
+
+    return result
+  }
+
+  const checkPasswordValid_debounced = debounceFunc(checkPasswordValid, 500)
+  const handleSignupPasswordInput = () => checkPasswordValid_debounced()
 
   $: {
     const stateHandlers: [string, () => void][] = [
@@ -487,27 +511,18 @@
     })
   }
 
-  const checkPasswordValid = () => {
-    const result = validatePassword(userPassword)
-
-    if (isValidResult(result)) {
-      userPasswordMessage = "..."
-      userPasswordStatus = undefined
-    } else {
-      userPasswordStatus = "error"
-      userPasswordMessage = result.reason
-    }
-
-    return result
-  }
-
-  const checkPasswordValid_debounced = debounceFunc(checkPasswordValid, 500)
-  const handleSignupPasswordInput = () => checkPasswordValid_debounced()
-
   $: {
     currentUserStore.set(self)
   }
 
+  onMount(() => {
+    self = currentUser
+  })
+
+  onDestroy(() => {
+    currentUserStore.set(self)
+    unsubscribeDispatchableStore()
+  })
   $: {
     if (userId.length < 3 && !userIdStatus)
       userIdMessage = "This is the name that uniquely identifies you"

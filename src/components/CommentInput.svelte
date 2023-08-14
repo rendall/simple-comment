@@ -29,7 +29,8 @@
   }
 
   const validatingStateHandler = () => {
-    if (currentUser) send({ type: "SUCCESS" })
+    const hasCurrentUser = currentUser !== undefined
+    if (hasCurrentUser) send({ type: "SUCCESS" })
     else send("LOG_IN")
   }
 
@@ -147,7 +148,7 @@
     bind:value={commentText}
   />
   <!-- {#if !currentUser} -->
-  <Login />
+  <Login {currentUser} />
   <!-- {/if} -->
   <div class="button-row">
     {#if onCancel !== null}

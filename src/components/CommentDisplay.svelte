@@ -99,6 +99,7 @@
   {#each replies as comment}
     <li
       class="comment"
+      id={comment.id}
       class:is-root={isRoot}
       class:is-deleted={comment.dateDeleted}
     >

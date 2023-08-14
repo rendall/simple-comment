@@ -1,11 +1,30 @@
 /// <reference types="cypress" />
-
-import { formatUserName } from "../../../src/frontend-utilities"
 import {
   generateRandomCopy,
   generateRandomName,
-  randomString,
 } from "../../../src/tests/mockData"
+
+const formatUserName = displayName => {
+  return displayName
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "-")
+}
+const randomString = (
+  alpha = "abcdefghijklmnopqrstuvwxyz-0123456789",
+  len = randomNumber(10, 50),
+  str = ""
+) =>
+  len === 0
+    ? str
+    : randomString(
+        alpha,
+        len - 1,
+        `${str}${alpha.charAt(Math.floor(Math.random() * alpha.length))}`
+      )
+const randomNumber = (min = 1, max = 10) =>
+  Math.floor(Math.random() * (max - min)) + min
 
 context("Error recovery", () => {
   const commentText = generateRandomCopy()
@@ -87,6 +106,9 @@ context("Error recovery", () => {
 
     cy.get("form.comment-form #signup-email").type("fake@email.com")
     cy.get("form.comment-form #signup-name").type(generateRandomName())
+    cy.get("form.comment-form #signup-user-id").type(
+      `-${randomString("abcdefghijklmnopqrstuvwxyz0123456789-", 10)}`
+    )
     cy.get("form.comment-form #signup-password").type(randomString())
 
     cy.get("form.comment-form #signup-name")
