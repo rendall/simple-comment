@@ -532,6 +532,8 @@ var generateRandomCopy = function (sentenceFunc, i, copy) {
     sentenceFunc = chooseRandomElement([
       generateRandomEnglishSentence,
       generateRandomFinnishSentence,
+      generateRandomJapaneseSentence,
+      generateRandomGreekSentence,
     ])
   }
   if (i === void 0) {
@@ -940,6 +942,402 @@ var generateRandomFinnishSentence = function () {
     .concat(directObject, ".")
 }
 
+var generateRandomJapaneseSentence = function () {
+  var subjects = [
+    "私",
+    "僕",
+    "俺",
+    "私たち",
+    "僕たち",
+    "俺たち",
+    "あなた",
+    "あなたたち",
+    "あなた方",
+    "彼",
+    "彼女",
+    "彼ら",
+    "彼女ら",
+  ]
+  var actions = [
+    { verb: "する", objects: ["仕事", "勉強", "結婚", "練習"] },
+    { verb: "仕事する" },
+    {
+      verb: "作る",
+      objects: [
+        "料理",
+        "絵",
+        "プログラム",
+        "家",
+        "服",
+        "音楽",
+        "映画",
+        "ケーキ",
+        "アート",
+        "デザイン",
+      ],
+    },
+    { verb: "出る", objects: ["家", "店", "学校", "オフィス", "部屋"] },
+    { verb: "勉強する" },
+    { verb: "動く" },
+    { verb: "始まる" },
+    { verb: "寝る" },
+    { verb: "帰る" },
+    { verb: "旅行する" },
+    { verb: "書く" },
+    { verb: "歌う", objects: ["歌", "曲", "メロディー"] },
+    { verb: "止まる" },
+    { verb: "泳ぐ" },
+    {
+      verb: "着る",
+      objects: ["服", "ジャケット", "コート", "ドレス", "ズボン"],
+    },
+    { verb: "知る", objects: ["事実", "情報", "答え", "場所", "人"] },
+    { verb: "笑う" },
+    { verb: "終わる" },
+    { verb: "結婚する" },
+    { verb: "練習する" },
+    { verb: "聞く", objects: ["音楽", "話", "ラジオ", "ニュース"] },
+    {
+      verb: "行く",
+      objects: ["学校", "レストラン", "公園", "映画館", "海", "街"],
+    },
+    { verb: "見る", objects: ["映画", "本", "景色", "テレビ", "絵"] },
+    { verb: "読む", objects: ["新聞", "小説", "詩", "雑誌", "本"] },
+    { verb: "買う", objects: ["服", "本", "食べ物", "商品", "ギフト"] },
+    { verb: "走る", objects: ["マラソン", "コース", "距離", "レース"] },
+    { verb: "起きる" },
+    { verb: "運転する", objects: ["車", "バス", "自動車"] },
+    { verb: "食べる", objects: ["食事", "ご飯", "料理", "フルーツ", "野菜"] },
+    { verb: "飲む", objects: ["水", "お茶", "コーヒー", "ジュース", "酒"] },
+  ]
+
+  var subject = chooseRandomElement(subjects)
+  var action = chooseRandomElement(actions)
+  const { objects, verb } = action
+
+  // Generate the sentence
+  var sentence = objects
+    ? `${subject} は ${chooseRandomElement(objects)} を ${verb}。`
+    : `${subject} は ${verb}。`
+
+  return sentence
+}
+
+const generateRandomGreekSentence = () => {
+  const subjects = [
+    "Εγώ",
+    "Εσύ",
+    "Αυτός",
+    "Αυτή",
+    "Αυτό",
+    "Εμείς",
+    "Εσείς",
+    "Αυτοί",
+    "Αυτές",
+  ]
+  const subject = chooseRandomElement(subjects)
+  const actions = [
+    {
+      verb: "αγαπώ",
+      objects: [
+        "την οικογένεια",
+        "τους φίλους",
+        "τον σύντροφο",
+        "την τέχνη",
+        "τη μουσική",
+        "τον χορό",
+        "τη ζωή",
+        "τη φύση",
+        "τα ζώα",
+        "την αγάπη",
+      ],
+    },
+    {
+      verb: "ακούω",
+      objects: [
+        "μουσική",
+        "ένα τραγούδι",
+        "μια φωνή",
+        "το ραδιόφωνο",
+        "τα νέα",
+        "μια συνέντευξη",
+        "τον ήχο",
+        "ένα ποίημα",
+        "μια ιστορία",
+        "τη φύση",
+      ],
+    },
+    {
+      verb: "βάφω",
+      objects: [
+        "τον τοίχο",
+        "τα νύχια",
+        "το ξύλο",
+        "τα μαλλιά",
+        "την πόρτα",
+        "τον πίνακα",
+        "τα ρούχα",
+        "το αυτοκίνητο",
+        "την εικόνα",
+        "την τοιχογραφία",
+      ],
+    },
+    {
+      verb: "βλέπω",
+      objects: [
+        "τηλεόραση",
+        "μια ταινία",
+        "μια εικόνα",
+        "τη θάλασσα",
+        "την πόλη",
+        "μια εκπομπή",
+        "το φεγγάρι",
+        "τον ήλιο",
+        "τον κόσμο",
+        "τον ουρανό",
+      ],
+    },
+    {
+      verb: "γράφω",
+      objects: [
+        "ένα μήνυμα",
+        "μια επιστολή",
+        "ένα άρθρο",
+        "ένα διήγημα",
+        "μια αναφορά",
+        "ένα ποίημα",
+        "ένα ημερολόγιο",
+        "ένα μυθιστόρημα",
+        "μια συνέντευξη",
+        "ένα σενάριο",
+      ],
+    },
+    {
+      verb: "διαβάζω",
+      objects: [
+        "ένα βιβλίο",
+        "μια εφημερίδα",
+        "ένα άρθρο",
+        "μια ιστορία",
+        "μια περιγραφή",
+        "ένα μυθιστόρημα",
+        "μια αναφορά",
+        "ένα ποίημα",
+        "μια συνέντευξη",
+        "ένα ημερολόγιο",
+      ],
+    },
+    {
+      verb: "καθαρίζω",
+      objects: [
+        "το δωμάτιο",
+        "τα πιάτα",
+        "το αυτοκίνητο",
+        "το μπάνιο",
+        "το παράθυρο",
+        "το ρούχο",
+        "το τραπέζι",
+        "το πάτωμα",
+        "την κουζίνα",
+        "το πλυντήριο",
+      ],
+    },
+    {
+      verb: "πίνω",
+      objects: [
+        "νερό",
+        "καφέ",
+        "τσάι",
+        "χυμό",
+        "κρασί",
+        "μπίρα",
+        "γάλα",
+        "σοκολάτα",
+        "αναψυκτικό",
+        "ποτό",
+      ],
+    },
+    {
+      verb: "πλένω",
+      objects: [
+        "τα ρούχα",
+        "τα πιάτα",
+        "τα μαλλιά",
+        "το αυτοκίνητο",
+        "τα παράθυρα",
+        "τα ποτήρια",
+        "τα χέρια",
+        "το πατάρι",
+        "τα μαξιλάρια",
+        "το πάτωμα",
+      ],
+    },
+    {
+      verb: "τρώω",
+      objects: [
+        "το φαγητό",
+        "τα φρούτα",
+        "τα λαχανικά",
+        "το ψωμί",
+        "την πίτσα",
+        "το κρέας",
+        "το γλυκό",
+        "τα σνακ",
+        "το γιαούρτι",
+        "τα ζυμαρικά",
+      ],
+    },
+    {
+      verb: "πηγαίνω",
+      objects: [
+        "σχολείο",
+        "δουλειά",
+        "σπίτι",
+        "κατάστημα",
+        "θέατρο",
+        "εστιατόριο",
+        "γυμναστήριο",
+        "πάρκο",
+        "παραλία",
+        "βιβλιοθήκη",
+      ],
+    },
+    {
+      verb: "μιλάω",
+      objects: [
+        "Αγγλικά",
+        "Ελληνικά",
+        "Ισπανικά",
+        "Γαλλικά",
+        "Γερμανικά",
+        "Ιταλικά",
+        "Ρωσικά",
+        "Κινέζικα",
+        "Ιαπωνικά",
+        "Αραβικά",
+      ],
+    },
+    {
+      verb: "κοιτάζω",
+      objects: [
+        "τον ουρανό",
+        "το τοπίο",
+        "την τηλεόραση",
+        "την τέχνη",
+        "τα αστέρια",
+        "τα νέα",
+        "τη φύση",
+        "τις φωτογραφίες μου",
+        "τα βιβλία",
+        "τα παιδιά",
+      ],
+    },
+    {
+      verb: "ακολουθώ",
+      objects: [
+        "τον ρυθμό",
+        "τις οδηγίες",
+        "το όνειρό μου",
+        "τη μόδα",
+        "τον κόσμο",
+        "τα αστέρια",
+        "τα αθλήματα",
+        "τις τάσεις",
+        "το παρελθόν",
+        "τη διαδρομή",
+      ],
+    },
+    {
+      verb: "παίζω",
+      objects: [
+        "ποδόσφαιρο",
+        "μπάσκετ",
+        "τένις",
+        "βόλεϊ",
+        "πιάνο",
+        "κιθάρα",
+        "παιχνίδια",
+        "κάρτες",
+        "παιχνίδια ρόλων",
+        "βιντεοπαιχνίδια",
+      ],
+    },
+    {
+      verb: "αγοράζω",
+      objects: [
+        "ρούχα",
+        "παπούτσια",
+        "αξεσουάρ",
+        "κοσμήματα",
+        "ηλεκτρονικά",
+        "βιβλία",
+        "τρόφιμα",
+        "αυτοκίνητα",
+        "κινητά τηλέφωνα",
+        "είδη προσωπικής φροντίδας",
+      ],
+    },
+    {
+      verb: "προσπαθώ",
+      objects: [
+        "να μάθω",
+        "να καταλάβω",
+        "να βελτιωθώ",
+        "να εξελιχθώ",
+        "να επιτύχω",
+        "να ανακαλύψω",
+        "να αντιμετωπίσω",
+        "να ξεπεράσω",
+        "να διαχειριστώ",
+        "να αναπτύξω",
+      ],
+    },
+    {
+      verb: "μαθαίνω",
+      objects: [
+        "γλώσσες",
+        "νέες δεξιότητες",
+        "τεχνικές",
+        "σχολικά μαθήματα",
+        "επιστημονικά θέματα",
+        "επαγγελματικά πράγματα",
+        "νέες τεχνολογίες",
+        "μουσική",
+        "τέχνη",
+        "ιστορία",
+      ],
+    },
+  ]
+
+  const { objects, verb } = chooseRandomElement(actions)
+  const object = chooseRandomElement(objects)
+
+  const conjugate = (subject, verb) => {
+    switch (subject) {
+      case "Εγώ":
+        return verb.slice(0, -2) + "ω"
+      case "Εσύ":
+        return verb.slice(0, -1) + "εις"
+      case "Αυτός":
+      case "Αυτή":
+      case "Αυτό":
+        return verb.slice(0, -1) + "ει"
+      case "Εμείς":
+        return verb.slice(0, -1) + "ουμε"
+      case "Εσείς":
+        return verb.slice(0, -1) + "ετε"
+      case "Αυτοί":
+      case "Αυτές":
+        return verb.slice(0, -1) + "ουν"
+      default:
+        return "Unknown subject"
+    }
+  }
+
+  const sentence = `${subject} ${conjugate(subject, verb)} ${object}.`
+  return sentence
+}
+
 function toEmail(name) {
   // Normalize the name to its base form (NFD)
   const normalized = name.normalize("NFD")
@@ -963,3 +1361,96 @@ const randomName = generateRandomName()
 console.log(randomName)
 console.log(toEmail(randomName))
 console.log(generateRandomCopy())
+
+/**
+する (suru) - to do
+仕事する (shigoto suru) (しごとする) - to work
+作る (tsukuru) (つくる) - to make, to create
+出る (deru) (でる) - to go out, to leave
+勉強する (benkyou suru) (べんきょうする) - to study
+動く (ugoku) (うごく) - to move
+始まる (hajimaru) (はじまる) - to begin, to start
+寝る (neru) (ねる) - to sleep
+帰る (kaeru) (かえる) - to go back, to return
+旅行する (ryokou suru) (りょこうする) - to travel
+書く (kaku) (かく) - to write
+来る (kuru) (くる) - to come
+歌う (utau) (うたう) - to sing
+止まる (tomaru) (とまる) - to stop
+泳ぐ (oyogu) (およぐ) - to swim
+着る (kiru) (きる) - to wear
+知る (shiru) (しる) - to know
+笑う (warau) (わらう) - to laugh
+終わる (owaru) (おわる) - to end, to finish
+結婚する (kekkon suru) (けっこんする) - to get married
+練習する (renshuu suru) (れんしゅうする) - to practice
+聞く (kiku) (きく) - to listen, to ask
+行く (iku) (いく) - to go
+見る (miru) (みる) - to see, to look at
+読む (yomu) (よむ) - to read
+買う (kau) (かう) - to buy
+走る (hashiru) (はしる) - to run
+起きる (okiru) (おきる) - to wake up, to get up
+運転する (unten suru) (うんてんする) - to drive
+食べる (たべる) - to eat
+飲む (nomu) (のむ) - to drink
+
+const actions = [
+{ verb: "する", objects: ["仕事", "勉強", "結婚", "練習"] },
+{ verb: "仕事する"},
+{ verb: "作る", objects: ["料理", "絵", "プログラム", "家", "服", "音楽", "映画", "ケーキ", "アート", "デザイン"] },
+{ verb: "出る", objects: ["家", "店", "学校", "オフィス", "部屋"] },
+{ verb: "勉強する"},
+{ verb: "動く"},
+{ verb: "始まる"},
+{ verb: "寝る"},
+{ verb: "帰る"},
+{ verb: "旅行する"},
+{ verb: "書く"},
+{ verb: "歌う", objects: ["歌", "曲", "メロディー"] },
+{ verb: "止まる"},
+{ verb: "泳ぐ"},
+{ verb: "着る", objects: ["服", "ジャケット", "コート", "ドレス", "ズボン"] },
+{ verb: "知る", objects: ["事実", "情報", "答え", "場所", "人"] },
+{ verb: "笑う"},
+{ verb: "終わる"},
+{ verb: "結婚する"},
+{ verb: "練習する"},
+{ verb: "聞く", objects: ["音楽", "話", "ラジオ", "ニュース"] },
+{ verb: "行く", objects: ["学校", "レストラン", "公園", "映画館", "海", "街"] },
+{ verb: "見る", objects: ["映画", "本", "景色", "テレビ", "絵"] },
+{ verb: "読む", objects: ["新聞", "小説", "詩", "雑誌", "本"] },
+{ verb: "買う", objects: ["服", "本", "食べ物", "商品", "ギフト"] },
+{ verb: "走る", objects: ["マラソン", "コース", "距離", "レース"] },
+{ verb: "起きる"},
+{ verb: "運転する", objects: ["車", "バス", "自動車"] },
+{ verb: "食べる", objects: ["食事", "ご飯", "料理", "フルーツ", "野菜"] },
+{ verb: "飲む", objects: ["水", "お茶", "コーヒー", "ジュース", "酒"] },
+]
+
+    Singular: 私 (わたし) - I (neutral), 僕 (ぼく) - I (masculine), 俺 (おれ) - I (casual masculine)
+    Plural: 私たち (わたしたち) - we, 僕たち (ぼくたち) - we, 俺たち (おれたち) - we
+
+Second Person:
+
+    Singular: あなた - you (neutral, can be used formally or informally)
+    Plural: あなたたち - you all, あなた方 (あなたかた) - you all (more formal)
+
+Third Person:
+
+    Singular: 彼 (かれ) - he, 彼女 (かのじょ) - she
+    Plural: 彼ら (かれら) - they (masculine), 彼女ら (かのじょら) - they (feminine)
+    
+
+const subjects = ["私", "僕", "俺", "私たち", "僕たち", "俺たち", "あなた", "あなたたち", "あなた方", "彼", "彼女", "彼ら", "彼女ら"]
+
+
+    あなた方 は 帰る。 (Incorrect)
+    あなたたち は 帰る。
+
+    彼女ら は 止まる。 (Incorrect)
+    彼女たち は 止まる。
+
+    彼女ら は 仕事する。 (Incorrect)
+    彼女たち は 仕事する。
+ */
