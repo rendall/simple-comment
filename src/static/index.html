@@ -31,6 +31,82 @@
     <link rel="stylesheet" type="text/css" href="./css/simple-comment.css" />
   </head>
   <style>
+    @font-face {
+      font-family: "Comfortaa";
+      font-style: normal;
+      font-weight: 500;
+      font-display: block;
+      src: url(../font/simple-comment.woff2) format("woff2");
+    }
+
+    @font-face {
+      font-family: "SimpleComment interface";
+      font-style: normal;
+      font-weight: normal;
+      font-display: swap;
+      src: url(../font/IBMPlexSans-Text.woff2) format("woff2");
+    }
+
+    @font-face {
+      font-family: "SimpleComment input";
+      font-style: normal;
+      font-weight: normal;
+      font-display: swap;
+      src: url(../font/IBMPlexMono-Text.woff2) format("woff2");
+    }
+
+    @font-face {
+      font-family: "SimpleComment comment";
+      font-style: normal;
+      font-weight: normal;
+      font-display: swap;
+      src: url(../font/IBMPlexSans-Regular.woff2) format("woff2");
+    }
+
+    @font-face {
+      font-family: "SimpleComment comment";
+      font-style: normal;
+      font-weight: bold;
+      font-display: swap;
+      src: url(../font/IBMPlexSans-Bold.woff2) format("woff2");
+    }
+
+    @font-face {
+      font-family: "SimpleComment comment";
+      font-style: italic;
+      font-weight: normal;
+      font-display: swap;
+      src: url(../font/IBMPlexSans-Italic.woff2) format("woff2");
+    }
+
+    @font-face {
+      font-family: "SimpleComment comment";
+      font-style: italic;
+      font-weight: bold;
+      font-display: swap;
+      src: url(../font/IBMPlexSans-BoldItalic.woff2) format("woff2");
+    }
+
+    :root {
+      --comment-font-family: "SimpleComment comment";
+      --interface-font-family: "SimpleComment interface";
+      --input-font-family: "SimpleComment input";
+    }
+
+    h1,
+    h2 {
+      color: #3287e6;
+    }
+
+    h1.simple-comment-logotype {
+      font-family: "Comfortaa", sans-serif;
+      font-size: 3.4rem;
+      font-weight: 500;
+      line-height: 4rem;
+      margin-left: 1rem;
+      color: $corporate-blue;
+    }
+
     body {
       -moz-osx-font-smoothing: grayscale;
       -webkit-font-smoothing: antialiased;
