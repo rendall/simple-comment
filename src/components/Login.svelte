@@ -27,7 +27,7 @@
     isResponseOk,
     validatePassword,
     validateUserId,
-    formatUserName,
+    formatUserId,
   } from "../frontend-utilities"
   import InputField from "./low-level/InputField.svelte"
   import {
@@ -249,7 +249,7 @@
         [
           404,
           "Unknown user",
-          "It seems we couldn't find an account associated with the provided username or email. Please double-check your input for any typos. If you don't have an account yet, feel free to create one. We'd love to have you join our community!",
+          "It seems we couldn't find an account associated with the provided user id. Please double-check your input for any typos. If you don't have an account yet, feel free to create one. We'd love to have you join our community!",
         ],
         [
           404,
@@ -273,8 +273,8 @@
     // send("RESET")
   }
 
-  const checkUserNameExists = async id => {
-    if (!onSubmitCheckUserNameValid(id).isValid) return
+  const checkUserIdExists = async id => {
+    if (!onSubmitCheckUserIdValid(id).isValid) return
 
     userIdMessage = "..."
     try {
@@ -282,15 +282,15 @@
       userIdMessage = `The handle '${id}' is already taken. Please try another one.`
       userIdStatus = "error"
     } catch (error) {
-      userIdMessage = "This username is available."
+      userIdMessage = "This handle is available."
       userIdStatus = "success"
     }
   }
 
-  const checkUserIdExists_debounced = debounceFunc(checkUserNameExists, 300)
+  const checkUserIdExists_debounced = debounceFunc(checkUserIdExists, 300)
 
-  const onSubmitCheckUserNameValid = username => {
-    const validation = validateUserId(username)
+  const onSubmitCheckUserIdValid = userId => {
+    const validation = validateUserId(userId)
 
     if (isValidationTrue(validation)) {
       userIdMessage = "..."
@@ -365,10 +365,10 @@
   const handleDisplayNameSignupInput = () => {
     handleDisplayNameInput()
     if (!userIdManuallyChanged) {
-      const formattedUserName = formatUserName(displayName)
-      checkUserIdValid_debounced(formattedUserName)
-      checkUserIdExists_debounced(formattedUserName)
-      userId = formattedUserName
+      const formattedUserId = formatUserId(displayName)
+      checkUserIdValid_debounced(formattedUserId)
+      checkUserIdExists_debounced(formattedUserId)
+      userId = formattedUserId
     }
   }
   const handleDisplayNameInput = () => {
@@ -397,13 +397,13 @@
     checkUserEmailValid_debounced()
   }
 
-  const handleUserNameInput = () => {
+  const onUserIdInput = () => {
     userIdManuallyChanged = true
     checkUserIdValid_debounced(userId)
     checkUserIdExists_debounced(userId)
   }
 
-  const handleUserNameBlur = () => {
+  const onUserIdBlur = () => {
     checkUserIdValid_debounced(userId)
     checkUserIdExists_debounced(userId)
   }
@@ -528,7 +528,7 @@
   })
   $: {
     if (userId.length < 3 && !userIdStatus)
-      userIdMessage = "This is the name that uniquely identifies you"
+      userIdMessage = "This is the user id that uniquely identifies you"
   }
 </script>
 
@@ -623,7 +623,7 @@
           in:fly={{ y: 0, duration: 250 }}
           on:submit={onSignupClick}
         >
-          <p>
+          <p class="call-to-action">
             Unlock the full power of our platform with a quick sign-up. Secure
             your ability to edit and manage your posts from any device, anytime.
             Don't just join the conversation, own it. Sign up today!
@@ -644,8 +644,8 @@
             helperText={userIdMessage}
             id="signup-user-id"
             labelText="User handle"
-            onBlur={handleUserNameBlur}
-            onInput={handleUserNameInput}
+            onBlur={onUserIdBlur}
+            onInput={onUserIdInput}
           />
 
           <InputField

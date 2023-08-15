@@ -100,7 +100,7 @@ const transliterate = (char: string = ""): string =>
   ) ?? [char, undefined])[0]
 
 /** Convert a display name to a default user id */
-export const formatUserName = displayName => {
+export const formatUserId = displayName => {
   return displayName
     .trim()
     .toLowerCase()
@@ -128,7 +128,7 @@ export const validateUserId = (userId: UserId): ValidationResult => {
     return {
       isValid: false,
       reason:
-        "User handle is too short. The username must be at least 4 characters.",
+        "User handle is too short. This id must be at least 4 characters.",
     }
   }
 
@@ -226,35 +226,3 @@ export const idIconDataUrl = (userId: string) =>
     size: 8,
     scale: 6,
   })
-/**
- * 
-{
-  "a": "aaàáâäãāα",
-  "b": "bβвб",
-  "c": "cçčć",
-  "d": "dδд",
-  "e": "eeèéêëēėεеё",
-  "f": "fφф",
-  "g": "gγг",
-  "h": "hηхх",
-  "i": "iiìíîïīιиії",
-  "j": "jй",
-  "k": "kκк",
-  "l": "llłλл",
-  "m": "mμм",
-  "n": "nñńн",
-  "o": "ooòóôõöøōο",
-  "p": "pπп",
-  "q": "q",
-  "r": "rр",
-  "s": "sßšś",
-  "t": "tτт",
-  "u": "uùúûüūυ",
-  "v": "vν",
-  "w": "wω",
-  "x": "xχ",
-  "y": "yγу",
-  "z": "zžźżз"
-}
-
- */

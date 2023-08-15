@@ -153,7 +153,7 @@ const errorStateHandler = loginService => {
     [
       404,
       "Unknown user",
-      "It seems we couldn't find an account associated with the provided username or email. Please double-check your input for any typos. If you don't have an account yet, feel free to create one. We'd love to have you join our community!",
+      "It seems we couldn't find an account associated with the provided user id. Please double-check your input for any typos. If you don't have an account yet, feel free to create one. We'd love to have you join our community!",
     ],
     [
       404,
