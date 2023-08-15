@@ -177,7 +177,6 @@
 <section class="simple-comment-discussion">
   {#if showReply === discussionId}
     <CommentInput
-      autofocus
       commentId={discussionId}
       {currentUser}
       on:posted={onCommentPosted}

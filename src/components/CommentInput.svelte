@@ -16,6 +16,7 @@
   export let commentId: CommentId
   export let onCancel = null
   export let autofocus = false
+  export let placeholder = "Your comment"
 
   let commentText = ""
   let loginStateValue
@@ -142,7 +143,7 @@
   <!-- svelte-ignore a11y-autofocus -->
   <textarea
     class="comment-field"
-    placeholder="Your comment"
+    {placeholder}
     required
     {autofocus}
     bind:value={commentText}

@@ -25,6 +25,11 @@ $inset-shadow-color: color.change($corporate-blue, $alpha: 0.5);
     box-sizing: border-box;
   }
 
+  p {
+    padding: 0;
+    margin: 0;
+  }
+
   input,
   textarea {
     border: 1px solid $corporate-blue;
@@ -50,7 +55,10 @@ $inset-shadow-color: color.change($corporate-blue, $alpha: 0.5);
 
   textarea {
     display: block;
-    height: 7rem;
+    height: 17rem;
+    margin-bottom: 1rem;
+    max-width: 100%;
+    min-width: 100%;
   }
 
   button {
@@ -60,9 +68,10 @@ $inset-shadow-color: color.change($corporate-blue, $alpha: 0.5);
     border: 1px solid $corporate-blue;
     cursor: pointer;
     font-size: inherit;
-    width: 7rem;
-    padding: 0.5rem 1rem;
+    height: 2rem;
+    padding: 0 1rem;
     text-align: center;
+    width: 7rem;
 
     &:hover {
       font-weight: bold;
@@ -97,6 +106,11 @@ $inset-shadow-color: color.change($corporate-blue, $alpha: 0.5);
     display: flex;
     direction: row;
     justify-content: flex-end;
+    position: relative;
+
+    button {
+      margin-right: 1rem;
+    }
 
     :last-child {
       margin-right: 0;
@@ -181,7 +195,7 @@ $inset-shadow-color: color.change($corporate-blue, $alpha: 0.5);
   }
 
   .simple-comment-login {
-    margin-bottom: 3rem;
+    margin-bottom: 0;
 
     #status-display {
       &.is-error {
@@ -190,8 +204,6 @@ $inset-shadow-color: color.change($corporate-blue, $alpha: 0.5);
     }
 
     .selection-tabs {
-      margin-bottom: 1rem;
-
       .selection-tab {
         border: 0;
         margin: 0;
@@ -218,10 +230,25 @@ $inset-shadow-color: color.change($corporate-blue, $alpha: 0.5);
         }
       }
     }
+
+    p.call-to-action {
+      margin-top: 1rem;
+      font-style: italic;
+      margin-bottom: 1rem;
+      padding: 1rem;
+    }
+
+    form.login-form {
+      .input-field:last-of-type {
+        margin-bottom: 1rem;
+      }
+    }
   }
 
   .simple-comment-discussion {
     form.comment-form {
+      margin-bottom: 3rem;
+
       .comment-submit-button {
         width: 10rem;
       }
@@ -233,7 +260,7 @@ $inset-shadow-color: color.change($corporate-blue, $alpha: 0.5);
       margin: 0;
 
       &:not(.is-root) {
-        margin-left: 1rem;
+        margin-left: 2rem;
       }
 
       li.comment {
@@ -255,8 +282,9 @@ $inset-shadow-color: color.change($corporate-blue, $alpha: 0.5);
 
           .user-avatar {
             flex: 0 0 3rem;
-            margin-right: 1.3rem;
+            margin-right: 0.9rem;
             display: inline-flex;
+            max-width: 2.5rem;
 
             img {
               background-color: gray;
@@ -264,8 +292,8 @@ $inset-shadow-color: color.change($corporate-blue, $alpha: 0.5);
             }
 
             > :first-child {
-              width: 3rem;
-              height: 3rem;
+              width: 2.5rem;
+              height: 2.5rem;
               border-radius: 50%;
             }
           }
@@ -294,21 +322,38 @@ $inset-shadow-color: color.change($corporate-blue, $alpha: 0.5);
         }
 
         .comment-body {
-          margin-left: 0.5rem;
-          position: relative;
           font-family: var(--comment-font-family), -apple-system,
             BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+          margin-left: 0.5rem;
+          padding-left: 2rem;
+
+          p:last-of-type {
+            margin-bottom: 1rem;
+          }
+        }
+
+        &.is-open,
+        &.has-replies {
+          position: relative;
 
           &::before {
+            border-left: 1px solid #3287e6;
+            bottom: -0.5rem;
             content: "";
+            left: 1.2rem;
             position: absolute;
-            top: 0;
-            bottom: 0;
-            left: -10px;
-            /* Adjust as needed */
-            border-left: 1px solid $corporate-blue;
-            /* Adjust as needed */
+            top: 2.5rem;
           }
+        }
+
+        &.has-replies {
+          form.comment-form {
+            margin-left: 0.5rem;
+          }
+        }
+
+        .comment-footer {
+          margin-bottom: 1rem;
         }
       }
     }

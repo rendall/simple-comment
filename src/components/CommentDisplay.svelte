@@ -102,6 +102,8 @@
       id={comment.id}
       class:is-root={isRoot}
       class:is-deleted={comment.dateDeleted}
+      class:has-replies={comment.replies?.length > 0}
+      class:is-open={showReply === comment.id}
     >
       {#if comment.dateDeleted}
         <header class="comment-header">
@@ -140,14 +142,15 @@
           <p>{comment.text}</p>
           {#if showReply === comment.id}
             <CommentInput
-              autofocus
+              placeholder="Your reply"
+              autofocus={isRoot ? true : false}
               commentId={comment.id}
               {currentUser}
               onCancel={onCloseCommentInput}
               on:posted={onCommentPosted}
             />
           {:else}
-            <div class="button-row">
+            <div class="button-row comment-footer">
               {#if currentUser?.isAdmin || (currentUser && currentUser?.id === comment.user?.id && !comment?.replies?.length)}
                 <button
                   on:click={onDeleteCommentClick(comment.id)}
