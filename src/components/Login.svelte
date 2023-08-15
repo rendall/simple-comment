@@ -65,6 +65,8 @@
   let userIdStatus = undefined
   let userIdManuallyChanged = false
 
+  let loginUserIdHelperText = " "
+
   let userPassword = ""
   let userPasswordMessage = undefined
   let userPasswordStatus = undefined
@@ -323,10 +325,10 @@
         : { isValid: false, reason: "User handle is required." }
 
     if (isValidResult(userIdResult)) {
-      userIdMessage = "   "
+      loginUserIdHelperText = "   "
       userIdStatus = "success"
     } else {
-      userIdMessage = userIdResult.reason
+      loginUserIdHelperText = userIdResult.reason
       userIdStatus = "error"
     }
 
@@ -555,9 +557,10 @@
         type="button">Guest</button
       >
     </div>
+    <div class="form-container">
     {#if selectedIndex === Tab.guest}
       <form
-        class="guest-login-form"
+        class="guest-login-form login-form"
         id="guest-login-form"
         on:submit={onGuestClick}
       >
@@ -585,11 +588,15 @@
     {/if}
 
     {#if selectedIndex === Tab.login}
-      <form class="login-form" id="login-form" on:submit={onLoginClick}>
+      <form
+        class="user-login-form login-form"
+        id="user-login-form"
+        on:submit={onLoginClick}
+      >
         <InputField
           id="login-user-id"
           labelText="User handle"
-          helperText={userIdMessage}
+          helperText={loginUserIdHelperText}
           status={userIdStatus}
           bind:value={userId}
           required
@@ -607,7 +614,11 @@
     {/if}
 
     {#if selectedIndex === Tab.signup}
-      <form class="signup-form" id="signup-form" on:submit={onSignupClick}>
+      <form
+        class="signup-form login-form"
+        id="signup-form"
+        on:submit={onSignupClick}
+      >
         <p>
           Unlock the full power of our platform with a quick sign-up. Secure
           your ability to edit and manage your posts from any device, anytime.
@@ -655,5 +666,6 @@
         />
       </form>
     {/if}
+    </div>
   {/if}
 </section>

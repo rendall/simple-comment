@@ -18,7 +18,7 @@ describe(`User Authentication Flow`, () => {
     cy.get("#login-password").type("wrongpassword")
 
     // Click the log in button
-    cy.get("#login-form").submit()
+    cy.get("#user-login-form").submit()
 
     // Intercept the /auth request and return a 401 error
     cy.intercept("POST", "/.netlify/functions/auth", req => {
@@ -67,7 +67,7 @@ describe(`User Authentication Flow`, () => {
     // Perform the login action
     cy.get("#login-user-id").type("testuser")
     cy.get("#login-password").type("testpassword")
-    cy.get("#login-form").submit()
+    cy.get("#user-login-form").submit()
 
     // Check the user details
     cy.get("#status-display").should("not.have.class", "is-error")
@@ -118,16 +118,16 @@ describe(`User Authentication Flow`, () => {
     // First log in
     cy.get("#login-user-id").type("testuser")
     cy.get("#login-password").type("testpassword")
-    cy.get("#login-form").submit()
+    cy.get("#user-login-form").submit()
 
-    cy.get("#login-form").should("not.exist")
+    cy.get("#user-login-form").should("not.exist")
 
     // Then test the log out
     cy.get("#log-out-button").click()
 
     // Check that the user is logged out
     cy.get("#self-display").should("not.exist")
-    cy.get("#login-form").should("exist")
+    cy.get("#user-login-form").should("exist")
   })
 })
 
