@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { fly } from "svelte/transition"
   import type {
     AdminSafeUser,
     ServerResponse,
@@ -359,7 +360,7 @@
     }
     return result
   }
-  const checkDisplayName_debounced = debounceFunc(checkDisplayNameValid, 1000)
+  const checkDisplayName_debounced = debounceFunc(checkDisplayNameValid, 250)
 
   const handleDisplayNameSignupInput = () => {
     handleDisplayNameInput()
@@ -389,7 +390,7 @@
     }
   }
 
-  const checkUserEmailValid_debounced = debounceFunc(checkUserEmailValid, 1000)
+  const checkUserEmailValid_debounced = debounceFunc(checkUserEmailValid, 250)
   const handleUserEmailInput = () => {
     userEmailHelperText = "..."
     userEmailStatus = undefined
@@ -558,114 +559,117 @@
       >
     </div>
     <div class="form-container">
-    {#if selectedIndex === Tab.guest}
-      <form
-        class="guest-login-form login-form"
-        id="guest-login-form"
-        on:submit={onGuestClick}
-      >
-        <InputField
-          bind:value={displayName}
-          helperText={displayNameHelperText}
-          id="guest-name"
-          labelText="Display Name"
-          onInput={handleDisplayNameInput}
-          onBlur={checkDisplayNameValid}
-          status={displayNameStatus}
-          required
-        />
-        <InputField
-          bind:value={userEmail}
-          helperText={userEmailHelperText}
-          id="guest-email"
-          labelText="Email"
-          onInput={handleUserEmailInput}
-          onBlur={checkUserEmailValid}
-          status={userEmailStatus}
-          required
-        />
-      </form>
-    {/if}
+      {#if selectedIndex === Tab.guest}
+        <form
+          class="guest-login-form login-form"
+          id="guest-login-form"
+          in:fly={{ y: 0, duration: 250 }}
+          on:submit={onGuestClick}
+        >
+          <InputField
+            bind:value={displayName}
+            helperText={displayNameHelperText}
+            id="guest-name"
+            labelText="Display Name"
+            onInput={handleDisplayNameInput}
+            onBlur={checkDisplayNameValid}
+            status={displayNameStatus}
+            required
+          />
+          <InputField
+            bind:value={userEmail}
+            helperText={userEmailHelperText}
+            id="guest-email"
+            labelText="Email"
+            onInput={handleUserEmailInput}
+            onBlur={checkUserEmailValid}
+            status={userEmailStatus}
+            required
+          />
+        </form>
+      {/if}
 
-    {#if selectedIndex === Tab.login}
-      <form
-        class="user-login-form login-form"
-        id="user-login-form"
-        on:submit={onLoginClick}
-      >
-        <InputField
-          id="login-user-id"
-          labelText="User handle"
-          helperText={loginUserIdHelperText}
-          status={userIdStatus}
-          bind:value={userId}
-          required
-        />
-        <InputField
-          type="password"
-          labelText="Password"
-          helperText={userPasswordMessage}
-          status={userPasswordStatus}
-          id="login-password"
-          bind:value={userPassword}
-          required
-        />
-      </form>
-    {/if}
+      {#if selectedIndex === Tab.login}
+        <form
+          class="user-login-form login-form"
+          id="user-login-form"
+          in:fly={{ y: 0, duration: 250 }}
+          on:submit={onLoginClick}
+        >
+          <InputField
+            id="login-user-id"
+            labelText="User handle"
+            helperText={loginUserIdHelperText}
+            status={userIdStatus}
+            bind:value={userId}
+            required
+          />
+          <InputField
+            type="password"
+            labelText="Password"
+            helperText={userPasswordMessage}
+            status={userPasswordStatus}
+            id="login-password"
+            bind:value={userPassword}
+            required
+          />
+        </form>
+      {/if}
 
-    {#if selectedIndex === Tab.signup}
-      <form
-        class="signup-form login-form"
-        id="signup-form"
-        on:submit={onSignupClick}
-      >
-        <p>
-          Unlock the full power of our platform with a quick sign-up. Secure
-          your ability to edit and manage your posts from any device, anytime.
-          Don't just join the conversation, own it. Sign up today!
-        </p>
-        <InputField
-          bind:value={displayName}
-          helperText={displayNameHelperText}
-          status={displayNameStatus}
-          id="signup-name"
-          labelText="Display name"
-          onInput={handleDisplayNameSignupInput}
-          onBlur={checkDisplayNameValid}
-          required
-        />
-        <InputField
-          bind:value={userId}
-          status={userIdStatus}
-          helperText={userIdMessage}
-          id="signup-user-id"
-          labelText="User handle"
-          onBlur={handleUserNameBlur}
-          onInput={handleUserNameInput}
-        />
+      {#if selectedIndex === Tab.signup}
+        <form
+          class="signup-form login-form"
+          id="signup-form"
+          in:fly={{ y: 0, duration: 250 }}
+          on:submit={onSignupClick}
+        >
+          <p>
+            Unlock the full power of our platform with a quick sign-up. Secure
+            your ability to edit and manage your posts from any device, anytime.
+            Don't just join the conversation, own it. Sign up today!
+          </p>
+          <InputField
+            bind:value={displayName}
+            helperText={displayNameHelperText}
+            status={displayNameStatus}
+            id="signup-name"
+            labelText="Display name"
+            onInput={handleDisplayNameSignupInput}
+            onBlur={checkDisplayNameValid}
+            required
+          />
+          <InputField
+            bind:value={userId}
+            status={userIdStatus}
+            helperText={userIdMessage}
+            id="signup-user-id"
+            labelText="User handle"
+            onBlur={handleUserNameBlur}
+            onInput={handleUserNameInput}
+          />
 
-        <InputField
-          bind:value={userEmail}
-          helperText={userEmailHelperText}
-          status={userEmailStatus}
-          id="signup-email"
-          labelText="Email"
-          required
-          type="email"
-          onInput={handleUserEmailInput}
-        />
-        <InputField
-          bind:value={userPassword}
-          id="signup-password"
-          labelText="Password"
-          helperText={userPasswordMessage}
-          status={userPasswordStatus}
-          onInput={handleSignupPasswordInput}
-          required
-          type="password"
-        />
-      </form>
-    {/if}
+          <InputField
+            bind:value={userEmail}
+            helperText={userEmailHelperText}
+            status={userEmailStatus}
+            id="signup-email"
+            labelText="Email"
+            required
+            type="email"
+            onInput={handleUserEmailInput}
+          />
+          <InputField
+            bind:value={userPassword}
+            id="signup-password"
+            labelText="Password"
+            helperText={userPasswordMessage}
+            status={userPasswordStatus}
+            onInput={handleSignupPasswordInput}
+            required
+            type="password"
+          />
+        </form>
+      {/if}
     </div>
   {/if}
 </section>
