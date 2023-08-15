@@ -1,6 +1,9 @@
+@use "sass:color";
+
 $corporate-blue: #3287e6;
-$error-red: red;
+$error-red: #d9534f;
 $success-green: #28a745;
+$inset-shadow-color: color.change($corporate-blue, $alpha: 0.5);
 
 .simple-comment {
   // resets
@@ -11,41 +14,43 @@ $success-green: #28a745;
   color: #33475c;
   font-family: var(--interface-font-family), -apple-system, BlinkMacSystemFont,
     "Segoe UI", Helvetica, Arial, sans-serif;
-  font-size: 1.125rem;
+  font-size: 1rem;
   line-height: 1.61111rem;
   margin-bottom: 1rem;
   margin-top: 1rem;
   margin: 0 auto;
   width: 38rem;
 
-  input,
-  textarea,
-  button {
+  * {
     box-sizing: border-box;
   }
 
-  section {
-    padding: 0;
-    margin: 0;
+  input,
+  textarea {
+    border: 1px solid $corporate-blue;
+    font-family: var(--input-font-family), monospace;
+    font-size: 1.2rem;
+    padding: 0.5rem;
+    width: 100%;
+
+    box-shadow: 0 0 0.3rem 0 $inset-shadow-color inset;
+
+    &:focus-visible {
+      outline: 1px solid $corporate-blue;
+
+      &.is-error {
+        border: 1px solid $corporate-blue;
+      }
+    }
   }
 
   input {
     height: 3rem;
-    width: 100%;
-    font-size: 1.35rem;
-    padding: 0.5rem;
-    border: 1px solid $corporate-blue;
-    font-family: monospace;
   }
 
   textarea {
     display: block;
     height: 7rem;
-    width: 100%;
-    border: 1px solid $corporate-blue;
-    font-size: 1.35rem;
-    padding: 0.5rem;
-    font-family: monospace;
   }
 
   button {
@@ -102,6 +107,8 @@ $success-green: #28a745;
     margin-bottom: 0.5rem;
 
     .helper-text {
+      color: #7f8893;
+      font-style: italic;
       margin: 0;
       min-height: 1.5rem;
     }
@@ -249,6 +256,7 @@ $success-green: #28a745;
           .user-avatar {
             flex: 0 0 3rem;
             margin-right: 1.3rem;
+            display: inline-flex;
 
             img {
               background-color: gray;
@@ -264,7 +272,8 @@ $success-green: #28a745;
 
           .comment-info {
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
+            justify-content: space-between;
             width: calc(
               100% - 3rem - 1.3rem
             ); // Subtract the width and margin of the .user-avatar
@@ -275,11 +284,17 @@ $success-green: #28a745;
               text-overflow: ellipsis;
               color: $corporate-blue;
               font-weight: bold;
+              margin-right: 1rem;
+            }
+
+            .comment-date {
+              white-space: nowrap;
             }
           }
         }
 
         .comment-body {
+          margin-left: 0.5rem;
           position: relative;
           font-family: var(--comment-font-family), -apple-system,
             BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
@@ -294,8 +309,6 @@ $success-green: #28a745;
             border-left: 1px solid $corporate-blue;
             /* Adjust as needed */
           }
-
-          margin-left: 0.5rem;
         }
       }
     }
