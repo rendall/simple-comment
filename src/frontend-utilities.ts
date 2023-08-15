@@ -65,6 +65,39 @@ export const threadComments = <T extends MinComment, U extends MinComment>(
 
   return threadCommentsWithMap(comment)
 }
+const transliterationMap = {
+  "a": "aaàáâäãāαå",
+  "b": "bβвб",
+  "c": "cçčć",
+  "d": "dδд",
+  "e": "eeèéêëēėεеё€",
+  "f": "fφф",
+  "g": "gγг",
+  "h": "hηхх",
+  "i": "iiìíîïīιиії",
+  "j": "jй",
+  "k": "kκк",
+  "l": "llłλл",
+  "m": "mμм",
+  "n": "nñńн",
+  "o": "ooòóôõöøōο",
+  "p": "pπп",
+  "q": "q",
+  "r": "rр",
+  "s": "sßšś",
+  "t": "tτт",
+  "u": "uùúûüūυ",
+  "v": "vν",
+  "w": "wω",
+  "x": "xχ",
+  "y": "yγу",
+  "z": "zžźżз",
+}
+
+const transliterate = (char: string = ""): string =>
+  (Object.entries(transliterationMap).find(([key, value]) =>
+    value.includes(char)
+  ) ?? [char, undefined])[0]
 
 /** Convert a display name to a default user id */
 export const formatUserName = displayName => {
@@ -72,6 +105,7 @@ export const formatUserName = displayName => {
     .trim()
     .toLowerCase()
     .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, (match: string) => transliterate(match))
     .replace(/[^a-z0-9-]/g, "-")
 }
 
@@ -192,3 +226,35 @@ export const idIconDataUrl = (userId: string) =>
     size: 8,
     scale: 6,
   })
+/**
+ * 
+{
+  "a": "aaàáâäãāα",
+  "b": "bβвб",
+  "c": "cçčć",
+  "d": "dδд",
+  "e": "eeèéêëēėεеё",
+  "f": "fφф",
+  "g": "gγг",
+  "h": "hηхх",
+  "i": "iiìíîïīιиії",
+  "j": "jй",
+  "k": "kκк",
+  "l": "llłλл",
+  "m": "mμм",
+  "n": "nñńн",
+  "o": "ooòóôõöøōο",
+  "p": "pπп",
+  "q": "q",
+  "r": "rр",
+  "s": "sßšś",
+  "t": "tτт",
+  "u": "uùúûüūυ",
+  "v": "vν",
+  "w": "wω",
+  "x": "xχ",
+  "y": "yγу",
+  "z": "zžźżз"
+}
+
+ */
