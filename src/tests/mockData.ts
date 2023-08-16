@@ -608,6 +608,7 @@ export const generateRandomCopy = (
   sentenceFunc = chooseRandomElement([
     generateRandomEnglishSentence,
     generateRandomFinnishSentence,
+    generateRandomGreekSentence,
     generateRandomJapaneseSentence,
   ]),
   i: number = randomNumber(),
