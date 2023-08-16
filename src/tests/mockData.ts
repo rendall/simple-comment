@@ -186,7 +186,7 @@ const generateRandomEnglishSentence = (): string => {
     },
     {
       verb: "contain",
-      objects: ["water", "food", "letters", "people", "books"],
+      objects: ["water", "food", "letters", "people", "books", "multitudes"],
     },
     {
       verb: "continue",
