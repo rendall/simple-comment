@@ -1,6 +1,6 @@
 # Security Policy
 
-Security is paramount at Simple Comment. I will respond to security disclosures immediately and with gratitude.
+Security is paramount at Simple Comment. We will respond to security disclosures immediately and with gratitude; fees will be negotiated in generosity and good faith.
 
 ## Supported Versions
 

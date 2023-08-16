@@ -13,8 +13,8 @@ import type {
   PublicSafeUser,
   UpdateUser,
   NewUser,
-  TokenClaim
-} from "./simple-comment"
+  TokenClaim,
+} from "./simple-comment-types"
 
 export abstract class Service {
   /**
@@ -23,16 +23,6 @@ export abstract class Service {
    * returns AuthToken
    **/
   abstract authPOST: (
-    username: string,
-    password: string
-  ) => Promise<AuthToken | Error>
-
-  /**
-   * Accept a user name and password, return authentication token
-   *
-   * returns AuthToken
-   **/
-  abstract authGET: (
     username: string,
     password: string
   ) => Promise<AuthToken | Error>

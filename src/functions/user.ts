@@ -1,18 +1,18 @@
 import * as dotenv from "dotenv"
 import type { APIGatewayEvent } from "aws-lambda"
 import {
-  error404CommentNotFound,
   error405MethodNotAllowed,
-  success200OK
+  error500InternalServerError,
+  success200OK,
 } from "../lib/messages"
 import { MongodbService } from "../lib/MongodbService"
-import {
+import type {
   AdminSafeUser,
   PublicSafeUser,
   Success,
   UserId,
-  Error
-} from "../lib/simple-comment"
+  Error,
+} from "../lib/simple-comment-types"
 import {
   addHeaders,
   getAllowedOrigins,
@@ -20,8 +20,8 @@ import {
   getNewUserInfo,
   getTargetId,
   getUpdatedUserInfo,
-  getUserId
-} from "../lib/utilities"
+  getUserId,
+} from "../lib/backend-utilities"
 dotenv.config()
 
 const service: MongodbService = new MongodbService(
@@ -33,7 +33,7 @@ const getAllowHeaders = (event: APIGatewayEvent) => {
   const allowedMethods = {
     "Access-Control-Allow-Methods": "POST,GET,PUT,DELETE,OPTIONS",
     "Access-Control-Allow-Credentials": "true",
-    "Access-Control-Allow-Headers": "Cookie"
+    "Access-Control-Allow-Headers": "Cookie",
   }
   const allowedOriginHeaders = getAllowOriginHeaders(
     event.headers,
@@ -44,20 +44,8 @@ const getAllowHeaders = (event: APIGatewayEvent) => {
 }
 
 export const handler = async (event: APIGatewayEvent) => {
-  const dirs = event.path.split("/")
-  const isValidPath = dirs.length <= 5
   const headers = getAllowHeaders(event)
-
-  if (!isValidPath)
-    return addHeaders(
-      {
-        ...error404CommentNotFound,
-        body: `${event.path} is not valid`
-      },
-      headers
-    )
-
-  const authUserId = getUserId(event.headers)
+  const authUserId = getUserId(event.headers) ?? undefined
   const targetId = getTargetId(event.path, "user") as UserId
 
   const handleMethod = (
@@ -68,6 +56,7 @@ export const handler = async (event: APIGatewayEvent) => {
       >
     | Error
   > => {
+    // TODO: create an identicon for users based on their username. consider https://github.com/dmester/jdenticon
     switch (method) {
       case "GET": {
         if (targetId) return service.userGET(targetId, authUserId)
@@ -96,6 +85,7 @@ export const handler = async (event: APIGatewayEvent) => {
     const response = await handleMethod(event.httpMethod)
     return addHeaders(response, headers)
   } catch (error) {
-    return addHeaders(error, headers)
+    console.error({ error })
+    return addHeaders(error500InternalServerError, headers)
   }
 }

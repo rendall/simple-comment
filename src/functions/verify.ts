@@ -1,4 +1,4 @@
-import { Handler, APIGatewayEvent } from "aws-lambda"
+import type { Handler, APIGatewayEvent } from "aws-lambda"
 import * as dotenv from "dotenv"
 import {
   addHeaders,
@@ -8,14 +8,14 @@ import {
   getAuthHeaderValue,
   getCookieToken,
   hasBearerScheme,
-  hasTokenCookie
-} from "../lib/utilities"
-import { Success, TokenClaim, Error } from "../lib/simple-comment"
+  hasTokenCookie,
+} from "../lib/backend-utilities"
+import type { Success, TokenClaim, Error } from "../lib/simple-comment-types"
 import {
   error401UserNotAuthenticated,
   error404NotFound,
   error405MethodNotAllowed,
-  success200OK
+  success200OK,
 } from "../lib/messages"
 import { MongodbService } from "../lib/MongodbService"
 
@@ -29,7 +29,7 @@ const service: MongodbService = new MongodbService(
 const getAllowHeaders = (event: APIGatewayEvent) => {
   const allowedHeaders = {
     "Access-Control-Allow-Methods": "GET,OPTIONS",
-    "Access-Control-Allow-Credentials": "true"
+    "Access-Control-Allow-Credentials": "true",
   }
   const allowedOriginHeaders = getAllowOriginHeaders(
     event.headers,
@@ -57,7 +57,7 @@ export const handler: Handler = async (event: APIGatewayEvent) => {
     return addHeaders(
       {
         ...error401UserNotAuthenticated,
-        body: "No Cookie header 'simple-comment-token' value"
+        body: "No Cookie header 'simple-comment-token' value",
       },
       headers
     )

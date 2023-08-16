@@ -1,5 +1,8 @@
 {
-  "baseUrl": "http://localhost:8080",
+  "baseUrl": "http://localhost:7070",
   "defaultCommandTimeout": 15000,
-  "ignoreTestFiles": "**/examples/*.spec.js"
+  "ignoreTestFiles": "**/examples/*.spec.js",
+  "video": false,
+  "viewportHeight": 1024,
+  "viewportWidth": 1536
 }

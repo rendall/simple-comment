@@ -2,3 +2,4 @@
   command = "yarn run build"
   functions = "functions"
   publish = "dist"
+  

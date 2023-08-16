@@ -12,12 +12,16 @@ import type {
   AdminSafeUser,
   DeletedComment,
   PublicSafeUser,
-  NewUser,
   UpdateUser,
   TokenClaim,
-  NewTopic
-} from "./simple-comment"
-import { Collection, Db, MongoClient, WithId } from "mongodb"
+  NewTopic,
+  Email,
+  CreateUserPayload,
+} from "./simple-comment-types"
+import { Action } from "./simple-comment-types"
+import { isUserAllowedTo } from "./policyEnforcement"
+import type { Collection, Db, WithId } from "mongodb"
+import { MongoClient } from "mongodb"
 import { Service } from "./Service"
 import {
   adminOnlyModifiableUserProperties,
@@ -32,14 +36,16 @@ import {
   toUpdatedUser,
   validateUser,
   isAllowedReferer,
-  getAllowedOrigins
-} from "./utilities"
-import { policy } from "../policy"
+  getAllowedOrigins,
+  isEmail,
+  normalizeUrl,
+  validateGuestUser,
+} from "./backend-utilities"
+import policy from "../policy.json"
 import {
   error400BadRequest,
   error400NoUpdate,
   error400PasswordMissing,
-  error400UserIdMissing,
   error401BadCredentials,
   error401UserNotAuthenticated,
   error403Forbidden,
@@ -60,10 +66,11 @@ import {
   success202TopicDeleted,
   success202UserDeleted,
   success204CommentUpdated,
-  success204UserUpdated
+  success204UserUpdated,
 } from "./messages"
 import { comparePassword, getAuthToken, hashPassword, uuidv4 } from "./crypt"
 import * as jwt from "jsonwebtoken"
+import { isValidResult } from "./shared-utilities"
 export class MongodbService extends Service {
   private isCrossSite = process.env.IS_CROSS_SITE === "true"
   private _client: MongoClient
@@ -98,15 +105,19 @@ export class MongodbService extends Service {
    *
    * returns AuthToken
    **/
-  authPOST = (userid: string, password: string) =>
+  authPOST = (identification: string | Email, password: string) =>
     new Promise<Success<AuthToken> | Error>((resolve, reject) =>
       this.getDb()
         .then(db => db.collection("users"))
-        .then(users => users.findOne({ id: userid }))
+        .then(users =>
+          isEmail(identification)
+            ? users.findOne({ email: identification })
+            : users.findOne({ id: identification })
+        )
         .then(async user => {
           if (user === null) {
             // User is unknown. Reject them unless they claim to be Big Moderator
-            if (userid !== process.env.SIMPLE_COMMENT_MODERATOR_ID) {
+            if (identification !== process.env.SIMPLE_COMMENT_MODERATOR_ID) {
               reject(error404UserUnknown)
               return
             }
@@ -127,7 +138,7 @@ export class MongodbService extends Service {
             // Done.
 
             // Let's authenticate, and let the user endpoint handle this
-            const adminAuthToken = getAuthToken(userid)
+            const adminAuthToken = getAuthToken(identification)
             resolve({ ...success200OK, body: adminAuthToken })
 
             // At this point Big Moderator is authenticated but has no user object in the database
@@ -142,134 +153,113 @@ export class MongodbService extends Service {
         })
     )
 
-  authGET = this.authPOST
-
   /**
    * User created
    * returns User
    **/
-  userPOST = (newUser: NewUser, authUserId?: UserId) =>
-    new Promise<Success<AdminSafeUser> | Error>(async (resolve, reject) => {
-      if (!authUserId && !policy.canPublicCreateUser) {
-        reject({
-          ...error401UserNotAuthenticated,
-          body: "Policy violation: no authentication and canPublicCreateUser is false"
-        })
-        return
+  userPOST = async (
+    newUser: CreateUserPayload,
+    authUserId?: UserId
+  ): Promise<Success<AdminSafeUser> | Error> => {
+    if (!authUserId && !policy.canPublicCreateUser) {
+      return {
+        ...error401UserNotAuthenticated,
+        body: "Policy violation: no authentication and canPublicCreateUser is false",
       }
+    }
 
-      if (
-        !policy.canPublicCreateUser &&
-        isGuestId(authUserId) &&
-        !policy.canGuestCreateUser
-      ) {
-        reject({
-          ...error401UserNotAuthenticated,
-          body: "Policy violation: guest authentication and both canGuestCreateUsercan and PublicCreateUser is false"
-        })
-        return
+    if (
+      !policy.canPublicCreateUser &&
+      isGuestId(authUserId) &&
+      !policy.canGuestCreateUser
+    ) {
+      return {
+        ...error401UserNotAuthenticated,
+        body: "Policy violation: guest authentication and both canGuestCreateUsercan and PublicCreateUser is false",
       }
+    }
 
-      if (!newUser.id) {
-        reject(error400UserIdMissing)
-        return
+    if (newUser.id === process.env.SIMPLE_COMMENT_MODERATOR_ID) {
+      return {
+        ...error403ForbiddenToModify,
+        body: "Cannot modify root credentials",
       }
+    }
 
-      const userCheck = validateUser(newUser)
-      if (!userCheck.isValid) {
-        reject({
-          ...error400BadRequest,
-          body: userCheck.reason
-        })
-        return
+    if (isGuestId(newUser.id) && authUserId !== newUser.id) {
+      return {
+        ...error403Forbidden,
+        body: "New user id must not be in a guest id format",
       }
+    }
 
-      // This is a necessary check because the moderator creation
-      // flow is outside of the normal user creation flow
-      if (newUser.id === process.env.SIMPLE_COMMENT_MODERATOR_ID) {
-        // moderator username and password are changed by .env
-        // to create this user, log in with those credentials
-        reject({
-          ...error403ForbiddenToModify,
-          body: "Cannot modify root credentials"
-        })
-        return
+    if (!isGuestId(newUser.id) && !newUser.password) {
+      return error400PasswordMissing
+    }
+
+    // const userCheck = validateUser(newUser)
+    const userCheck = isGuestId(newUser.id)
+      ? validateGuestUser(newUser, authUserId)
+      : validateUser(newUser)
+    if (!isValidResult(userCheck)) {
+      return {
+        ...error400BadRequest,
+        body: userCheck.reason,
       }
+    }
 
-      // Only the guest id with the same credential can create a guest user
-      if (isGuestId(newUser.id) && authUserId !== newUser.id) {
-        reject({
-          ...error403Forbidden,
-          body: "New user id must not be in a uuid format"
-        })
-        return
+    const db = await this.getDb()
+    const users: Collection<User> = db.collection("users")
+    const authUser = await users.find({ id: authUserId }).limit(1).next()
+
+    const isValidGuest = isGuestId(authUserId) && policy.canGuestCreateUser
+    const isUnknownUser = !isValidGuest && authUserId && !authUser
+
+    if (isUnknownUser) {
+      return {
+        ...error404UserUnknown,
+        body: "Authenticating user is unknown",
       }
+    }
 
-      // Guests do not need and cannot have a password, because they are identified only by credentials
-      if (!isGuestId(newUser.id) && !newUser.password) {
-        reject(error400PasswordMissing)
-        return
-      }
+    const hasAdminOnlyProps = adminOnlyModifiableUserProperties.some(
+      prop => prop in newUser
+    )
 
-      const users: Collection<User> = (await this.getDb()).collection("users")
-      const authUser = await users.find({ id: authUserId }).limit(1).next()
-
-      const isValidGuest = isGuestId(authUserId) && policy.canGuestCreateUser
-      const isUnknownUser = !isValidGuest && authUserId && !authUser
-
-      if (isUnknownUser) {
-        reject({
-          ...error404UserUnknown,
-          body: "Authenticating user is unknown"
-        })
-        return
-      }
-
-      const hasAdminOnlyProps = adminOnlyModifiableUserProperties.some(
-        prop => prop in newUser
+    if (hasAdminOnlyProps && (!authUser || !authUser.isAdmin)) {
+      const adminOnlyProp = Object.keys(newUser).find(prop =>
+        adminOnlyModifiableUserProperties.includes(prop as keyof User)
       )
-
-      if (hasAdminOnlyProps && (!authUser || !authUser.isAdmin)) {
-        const adminOnlyProp = Object.keys(newUser).find(prop =>
-          adminOnlyModifiableUserProperties.includes(prop as keyof User)
-        )
-        // It's possible that revealing which props are admin-only is a security risk,
-        // but on the other hand, the code is open-source so it probably makes no difference
-        reject({
-          ...error403ForbiddenToModify,
-          body: `Forbidden to modify ${adminOnlyProp}`
-        })
-        return
+      return {
+        ...error403ForbiddenToModify,
+        body: `Forbidden to modify ${adminOnlyProp}`,
       }
+    }
 
-      const oldUser = await users.find({ id: newUser.id }).limit(1).next()
+    const oldUser = await users.find({ id: newUser.id }).limit(1).next()
 
-      if (oldUser) {
-        reject(error409UserExists)
-        return
-      }
+    if (oldUser) {
+      return { ...error409UserExists, body: `UserId '${newUser.id}' exists` }
+    }
 
-      // A guest user can never log in, so do not have hash
-      const hash = isGuestId(newUser.id)
-        ? ""
-        : await hashPassword(newUser.password)
-      const adminSafeUser = {
-        ...toAdminSafeUser(newUser),
-        name: newUser.name.trim()
-      }
-      const user: User = isGuestId(newUser.id)
-        ? adminSafeUser
-        : ({ ...adminSafeUser, hash } as User)
+    const hash = isGuestId(newUser.id)
+      ? ""
+      : await hashPassword(newUser.password)
+    const adminSafeUser = {
+      ...toAdminSafeUser(newUser),
+      name: newUser.name.trim(),
+    }
+    const user: User = isGuestId(newUser.id)
+      ? adminSafeUser
+      : ({ ...adminSafeUser, hash } as User)
 
-      users.insertOne(user).then(result => {
-        if (!result.acknowledged) {
-          reject(error500UpdateError)
-          return
-        }
-        const body = toAdminSafeUser(user)
-        resolve({ ...success201UserCreated, body })
-      })
-    })
+    const result = await users.insertOne(user)
+    if (!result.acknowledged) {
+      return error500UpdateError
+    }
+    const body = toAdminSafeUser(user)
+    return { ...success201UserCreated, body }
+  }
 
   /**
    * Read user
@@ -277,85 +267,83 @@ export class MongodbService extends Service {
    * userId byte[]
    * returns User
    **/
-  userGET = (targetUserId?: UserId, authUserId?: UserId) =>
-    new Promise<Success<PublicSafeUser | AdminSafeUser> | Error>(
-      async (resolve, reject) => {
-        if (!authUserId && !policy.canPublicReadUser) {
-          reject(error401UserNotAuthenticated)
-          return
+  userGET = async (
+    targetUserId?: UserId,
+    authUserId?: UserId
+  ): Promise<Success<PublicSafeUser | AdminSafeUser> | Error> => {
+    if (!authUserId && !policy.canPublicReadUser) {
+      return error401UserNotAuthenticated
+    }
+
+    if (
+      isGuestId(authUserId) &&
+      !policy.canGuestReadUser &&
+      !policy.canPublicReadUser
+    ) {
+      return error403UserNotAuthorized
+    }
+
+    const users: Collection<User> = (await this.getDb()).collection("users")
+    const foundUser = await users.find({ id: targetUserId }).limit(1).next()
+
+    if (!foundUser) {
+      const isModerator =
+        authUserId === targetUserId &&
+        authUserId === process.env.SIMPLE_COMMENT_MODERATOR_ID
+
+      if (!isModerator) {
+        return {
+          ...error404UserUnknown,
+          body: "Authenticating user is unknown",
         }
-
-        if (
-          isGuestId(authUserId) &&
-          !policy.canGuestReadUser &&
-          !policy.canPublicReadUser
-        ) {
-          reject(error403UserNotAuthorized)
-          return
-        }
-
-        const users: Collection<User> = (await this.getDb()).collection("users")
-        const foundUser = await users.find({ id: targetUserId }).limit(1).next()
-
-        if (!foundUser) {
-          const isModerator =
-            authUserId === targetUserId &&
-            authUserId === process.env.SIMPLE_COMMENT_MODERATOR_ID
-
-          if (!isModerator) {
-            reject(error404UserUnknown)
-            return
-          }
-
-          // The Big Moderator is authenticated but has no user object in the database
-          // We shall create it now
-          const hash = await hashPassword(
-            process.env.SIMPLE_COMMENT_MODERATOR_PASSWORD
-          )
-          const adminUser: User = {
-            id: targetUserId,
-            name: "Simple Comment Moderator",
-            isAdmin: true,
-            hash,
-            email: process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL
-          }
-          await users.insertOne(adminUser)
-
-          // Big Moderator is created, let's return it
-          const outUser = toAdminSafeUser(adminUser)
-          resolve({ ...success200OK, body: outUser })
-          return
-        }
-
-        const authUser = await users.findOne({ id: authUserId })
-        const isAdmin = authUser ? authUser.isAdmin : false
-        const isSelf = authUser && targetUserId === authUser.id
-        const outUser = toSafeUser(foundUser, isSelf || isAdmin)
-        resolve({ ...success200OK, body: outUser })
       }
-    )
+
+      // The Big Moderator is authenticated but has no user object in the database
+      // We shall create it now
+      const hash = await hashPassword(
+        process.env.SIMPLE_COMMENT_MODERATOR_PASSWORD
+      )
+      const adminUser: User = {
+        id: targetUserId,
+        name: "Simple Comment Moderator",
+        isAdmin: true,
+        hash,
+        email: process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL,
+      }
+      await users.insertOne(adminUser)
+
+      // Big Moderator is created, let's return it
+      const outUser = toAdminSafeUser(adminUser)
+      return { ...success200OK, body: outUser }
+    }
+
+    const authUser = await users.findOne({ id: authUserId })
+    const isAdmin = authUser ? authUser.isAdmin : false
+    const isSelf = authUser && targetUserId === authUser.id
+    const outUser = toSafeUser(foundUser, isSelf || isAdmin)
+    return { ...success200OK, body: outUser }
+  }
 
   /**
    * List users
    *
    * returns List
    **/
-  userListGET = (authUserId?: UserId) =>
-    new Promise<Success<AdminSafeUser[] | PublicSafeUser[]> | Error>(
-      async resolve => {
-        const usersCollection: Collection<User> = (
-          await this.getDb()
-        ).collection("users")
-        const users = await usersCollection.find({}).toArray()
-        const authUser = users.find(u => u.id === authUserId)
-        const isAdmin = authUser ? authUser.isAdmin : false
-        const outUsers = isAdmin
-          ? users.map(toAdminSafeUser)
-          : users.map(toPublicSafeUser)
-
-        resolve({ ...success200OK, body: outUsers })
-      }
+  userListGET = async (
+    authUserId?: UserId
+  ): Promise<Success<AdminSafeUser[] | PublicSafeUser[]> | Error> => {
+    const usersCollection: Collection<User> = (await this.getDb()).collection(
+      "users"
     )
+    const users = await usersCollection.find({}).toArray()
+    const authUser = users.find(u => u.id === authUserId)
+    const isAdmin = authUser ? authUser.isAdmin : false
+    const outUsers = isAdmin
+      ? users.map(toAdminSafeUser)
+      : users.map(toPublicSafeUser)
+
+    return { ...success200OK, body: outUsers }
+  }
 
   /**
    * Update a user
@@ -363,105 +351,101 @@ export class MongodbService extends Service {
    * userId byte[]
    * returns Success<AdminSafeUser>
    **/
-  userPUT = (targetId: UserId, user: UpdateUser, authUserId?: UserId) =>
-    new Promise<Success<AdminSafeUser> | Error>(async (resolve, reject) => {
-      if (!authUserId) {
-        reject(error401UserNotAuthenticated)
-        return
-      }
+  userPUT = async (
+    targetId: UserId,
+    user: UpdateUser,
+    authUserId?: UserId
+  ): Promise<Success<AdminSafeUser> | Error> => {
+    if (!authUserId) {
+      return error401UserNotAuthenticated
+    }
 
-      const checkUser = validateUser(user as User)
-      if (!checkUser.isValid) {
-        reject({
-          ...error400BadRequest,
-          body: checkUser.reason
-        })
-      }
+    if (isGuestId(targetId)) {
+      const hasAdminProps = (Object.keys(user) as (keyof User)[]).some(key =>
+        adminOnlyModifiableUserProperties.includes(key)
+      )
 
-      if (isGuestId(targetId)) {
-        const hasAdminProps = (Object.keys(user) as (keyof User)[]).some(key =>
-          adminOnlyModifiableUserProperties.includes(key)
-        )
-
-        if (hasAdminProps) {
-          reject({
-            ...error403Forbidden,
-            body: "Attempt to modify guest user forbidden property"
-          })
-          return
+      if (hasAdminProps) {
+        return {
+          ...error403Forbidden,
+          body: "Attempt to modify guest user forbidden property",
         }
       }
-      // Allow guest users to change their name and email
-      // but not admin traits
+    }
 
-      const users: Collection<User> = (await this.getDb()).collection("users")
-      const authUser = await users.findOne({ id: authUserId })
-
-      if (targetId !== authUser.id && !authUser.isAdmin) {
-        reject({
-          ...error403UserNotAuthorized,
-          body: `id of user ${targetId} does not match id of credentials ${authUser.id} and credentialed user is not admin`
-        })
-        return
+    const users: Collection<User> = (await this.getDb()).collection("users")
+    const authUser = await users.findOne({ id: authUserId })
+    if (!authUser)
+      return {
+        ...error404UserUnknown,
+        body: "Authenticating user not found",
       }
 
-      if (
-        !authUser.isAdmin &&
-        (Object.keys(user) as (keyof User)[]).some(key =>
-          adminOnlyModifiableUserProperties.includes(key)
-        )
-      ) {
-        reject(error403ForbiddenToModify)
-        return
+    if (targetId !== authUser.id && !authUser.isAdmin) {
+      return {
+        ...error403UserNotAuthorized,
+        body: `id of user ${targetId} does not match id of credentials ${authUser.id} and credentialed user is not admin`,
       }
+    }
 
-      if (authUserId === process.env.SIMPLE_COMMENT_MODERATOR_ID) {
-        // the user cannot modify the authuser password or other properties
-        const cannotModify: (keyof UpdateUser)[] = [
-          "password",
-          "isAdmin",
-          "email"
-        ]
-        const isForbidden = (Object.keys(user) as (keyof UpdateUser)[]).some(
-          key => cannotModify.includes(key)
-        )
-        if (isForbidden) {
-          reject({
-            ...error403ForbiddenToModify,
-            body: `Modify properties ${cannotModify.join(", ")} via .env file`
-          })
-          return
+    if (
+      !authUser.isAdmin &&
+      (Object.keys(user) as (keyof User)[]).some(key =>
+        adminOnlyModifiableUserProperties.includes(key)
+      )
+    ) {
+      return error403ForbiddenToModify
+    }
+
+    if (authUserId === process.env.SIMPLE_COMMENT_MODERATOR_ID) {
+      const cannotModify: (keyof UpdateUser)[] = [
+        "password",
+        "isAdmin",
+        "email",
+      ]
+      const isForbidden = (Object.keys(user) as (keyof UpdateUser)[]).some(
+        key => cannotModify.includes(key)
+      )
+      if (isForbidden) {
+        return {
+          ...error403ForbiddenToModify,
+          body: `Modify properties ${cannotModify.join(", ")} via .env file`,
         }
       }
+    }
 
-      // At this point, user.id exists and authUser can alter it
+    const foundUser = await users.find({ id: targetId }).limit(1).next()
 
-      const foundUser = await users.find({ id: targetId }).limit(1).next()
+    if (!foundUser) {
+      return error404UserUnknown
+    }
 
-      if (!foundUser) {
-        reject(error404UserUnknown)
-        return
+    const newProps = toUpdatedUser(user)
+    const updatedUser = { ...foundUser, ...newProps }
+
+    const checkUser = isGuestId(targetId)
+      ? validateGuestUser(updatedUser, authUserId, authUser.isAdmin)
+      : validateUser(updatedUser)
+
+    if (!isValidResult(checkUser)) {
+      return {
+        ...error400BadRequest,
+        body: checkUser.reason,
       }
+    }
 
-      // strip extraneous properties from the user, like "id"
-      const newProps = toUpdatedUser(user)
+    const modifyResult = await users.findOneAndUpdate(
+      { id: updatedUser.id },
+      { $set: updatedUser }
+    )
 
-      const updatedUser = { ...foundUser, ...newProps }
-
-      // one final check for validity
-
-      /* NB: It is always safe to return AdminSafeUser because
-       * authUser is always an admin or the user themself */
-      users
-        .findOneAndUpdate({ id: updatedUser.id }, { $set: updatedUser })
-        .then(modifyResult => {
-          if (modifyResult.ok) {
-            const safeUser = toAdminSafeUser(updatedUser)
-            resolve({ ...success204UserUpdated, body: safeUser })
-          } else reject(error500UpdateError)
-        })
-        .catch(() => reject(error500UpdateError))
-    })
+    if (modifyResult.ok) {
+      const safeUser = toAdminSafeUser(updatedUser)
+      return { ...success204UserUpdated, body: safeUser }
+    } else {
+      return error500UpdateError
+    }
+  }
 
   /**
    * Delete a user
@@ -469,53 +453,48 @@ export class MongodbService extends Service {
    * userId byte[]
    * returns Success
    **/
-  userDELETE = (userId: UserId, authUserId?: UserId) =>
-    new Promise<Success | Error>(async (resolve, reject) => {
-      if (!authUserId || isGuestId(authUserId)) {
-        reject(error401UserNotAuthenticated)
-        return
-      }
+  userDELETE = async (
+    userId: UserId,
+    authUserId?: UserId
+  ): Promise<Success | Error> => {
+    if (!authUserId || isGuestId(authUserId)) {
+      return error401UserNotAuthenticated
+    }
 
-      const users: Collection<User> = (await this.getDb()).collection("users")
+    const users: Collection<User> = (await this.getDb()).collection("users")
 
-      //TODO: username admin as .env variable
-      if (userId === process.env.SIMPLE_COMMENT_MODERATOR_ID) {
-        reject(error403Forbidden)
-        return
-      }
+    if (userId === process.env.SIMPLE_COMMENT_MODERATOR_ID) {
+      return error403Forbidden
+    }
 
-      const foundUser = await users.findOne({ id: userId })
+    const foundUser = await users.findOne({ id: userId })
 
-      if (!foundUser) {
-        reject(error404UserUnknown)
-        return
-      }
+    if (!foundUser) {
+      return error404UserUnknown
+    }
 
-      const authUser = await users.findOne({ id: authUserId })
+    const authUser = await users.findOne({ id: authUserId })
 
-      if (!authUser) {
-        reject(error401UserNotAuthenticated)
-        return
-      }
+    if (!authUser) {
+      return error401UserNotAuthenticated
+    }
 
-      const canDelete =
-        authUser.isAdmin || (authUserId === userId && policy.canUserDeleteSelf)
+    const canDelete =
+      authUser.isAdmin || (authUserId === userId && policy.canUserDeleteSelf)
 
-      if (!canDelete) {
-        reject(error403UserNotAuthorized)
-        return
-      }
+    if (!canDelete) {
+      return error403UserNotAuthorized
+    }
 
-      //TODO: delete all of the user's comments, too!
-      users
-        .deleteOne({ id: userId })
-        .then(() => resolve(success202UserDeleted))
-        .catch(e =>
-          authUser.isAdmin
-            ? reject({ ...error500UpdateError, body: e })
-            : reject(error500UpdateError)
-        )
-    })
+    try {
+      await users.deleteOne({ id: userId })
+      return success202UserDeleted
+    } catch (e) {
+      return authUser.isAdmin
+        ? { ...error500UpdateError, body: e }
+        : error500UpdateError
+    }
+  }
 
   /**
    * Create a comment
@@ -523,95 +502,86 @@ export class MongodbService extends Service {
    * parentId byte[]
    * returns Comment
    **/
-  commentPOST = (
+  commentPOST = async (
     parentId: TopicId | CommentId,
     text: string,
     authUserId?: UserId
-  ) =>
-    new Promise<Success<Comment> | Error>(async (resolve, reject) => {
-      if (!authUserId) {
-        reject(error401UserNotAuthenticated)
-        return
+  ): Promise<Success<Comment> | Error> => {
+    if (!authUserId) {
+      return error401UserNotAuthenticated
+    }
+
+    const policyCheck = isUserAllowedTo(authUserId, Action.postComment)
+
+    if (policyCheck !== true) {
+      return { ...error403Forbidden, body: policyCheck }
+    }
+
+    if (text.length > policy.maxCommentLengthChars) {
+      return error413CommentTooLong
+    }
+
+    const users: Collection<User> = (await this.getDb()).collection("users")
+    const authUser = authUserId ? await users.findOne({ id: authUserId }) : null
+
+    if (authUserId && !authUser) {
+      return error404UserUnknown
+    }
+
+    const comments: Collection<Comment | DeletedComment | Discussion> = (
+      await this.getDb()
+    ).collection("comments")
+    const parent = await comments.findOne({ id: parentId })
+
+    if (!parent || isDeleted(parent)) {
+      return {
+        ...error404CommentNotFound,
+        body: `Discussion '${parentId}' not found`,
       }
+    }
 
-      if (text.length > policy.maxCommentLengthChars) {
-        reject(error413CommentTooLong)
-        return
+    const lastComment = (await comments.findOne(
+      { "userId": authUserId },
+      { sort: { dateCreated: -1 } }
+    )) as Comment
+
+    if (
+      lastComment &&
+      lastComment.text === text &&
+      lastComment.parentId === parentId
+    ) {
+      return error409DuplicateComment
+    }
+
+    const adminSafeUser = toAdminSafeUser(authUser)
+    const id = uuidv4()
+    const insertComment: Comment = {
+      id,
+      text,
+      dateCreated: new Date(),
+      parentId,
+      userId: authUserId,
+    } as Comment
+
+    try {
+      const result = await comments.insertOne(insertComment)
+      if (!result.acknowledged) {
+        return {
+          statusCode: 500,
+          body: "Database insertion error",
+        }
       }
-
-      const users: Collection<User> = (await this.getDb()).collection("users")
-      const authUser = authUserId
-        ? await users.findOne({ id: authUserId })
-        : null
-
-      if (authUserId && !authUser) {
-        reject(error404UserUnknown)
-        return
+      return {
+        statusCode: 201,
+        body: { ...insertComment, user: adminSafeUser },
       }
-
-      const comments: Collection<Comment | DeletedComment | Discussion> = (
-        await this.getDb()
-      ).collection("comments")
-      const parent = await comments.findOne({ id: parentId })
-
-      if (!parent || isDeleted(parent)) {
-        reject({
-          ...error404CommentNotFound,
-          body: `Discussion '${parentId}' not found`
-        })
-        return
-      }
-
-      // Prevent duplicate comments
-
-      // We don't want to search for the exact comment {userId, text, parentId}
-      // because we only want to prevent accidental duplications
-      const lastComment = (await comments.findOne(
-        { "userId": authUserId },
-        { sort: { dateCreated: -1 } }
-      )) as Comment
-
-      if (
-        lastComment &&
-        lastComment.text === text &&
-        lastComment.parentId === parentId
-      ) {
-        reject(error409DuplicateComment)
-        return
-      }
-
-      const adminSafeUser = toAdminSafeUser(authUser)
-      const id = uuidv4()
-      const insertComment: Comment = {
-        id,
-        text,
-        dateCreated: new Date(),
-        parentId,
-        userId: authUserId
-      } as Comment
-
-      comments
-        .insertOne(insertComment)
-        .then(result => {
-          if (!result.acknowledged) {
-            reject({
-              statusCode: 500,
-              body: "Database insertion error"
-            })
-            return
-          }
-          resolve({
-            statusCode: 201,
-            body: { ...insertComment, user: adminSafeUser }
-          })
-        })
-        .catch(e => {
-          console.error(e)
-          authUser.isAdmin
-            ? reject({ ...error500UpdateError, body: e })
-            : reject(error500UpdateError)
-        })
-    })
+    } catch (e) {
+      console.error(e)
+      return authUser.isAdmin
+        ? { ...error500UpdateError, body: e }
+        : error500UpdateError
+    }
+  }
 
   /**
    * Read a comment
@@ -620,219 +590,211 @@ export class MongodbService extends Service {
    * commentId byte[]
    * returns Comment
    **/
-  commentGET = (targetId: TopicId | CommentId, authUserId?: UserId) =>
-    new Promise<Success<Comment>>(async (resolve, reject) => {
-      if (!targetId) {
-        reject(error404CommentNotFound)
-        return
+  commentGET = async (
+    targetId: TopicId | CommentId,
+    authUserId?: UserId
+  ): Promise<Success<Comment> | Error> => {
+    if (!targetId) {
+      return error404CommentNotFound
+    }
+
+    if (!authUserId && !policy.canPublicReadDiscussion) {
+      return error401UserNotAuthenticated
+    }
+
+    const users: Collection<User> = (await this.getDb()).collection("users")
+    const authUser = authUserId ? await users.findOne({ id: authUserId }) : null
+
+    if (!authUser && !policy.canPublicReadDiscussion) {
+      return error401UserNotAuthenticated
+    }
+
+    if (
+      isGuestId(authUserId) &&
+      !policy.canPublicReadDiscussion &&
+      !policy.canGuestReadDiscussion
+    ) {
+      return error401UserNotAuthenticated
+    }
+
+    const isAdmin = authUser ? authUser.isAdmin : false
+    const comments: Collection<Comment | DeletedComment | Discussion> = (
+      await this.getDb()
+    ).collection("comments")
+    const cursor = await comments.find({ id: targetId }).limit(1)
+
+    if (!cursor) {
+      return {
+        ...error404CommentNotFound,
+        body: `Comment '${targetId}' not found`,
       }
+    }
 
-      if (!authUserId && !policy.canPublicReadDiscussion) {
-        reject(error401UserNotAuthenticated)
-        return
+    const foundComment = await cursor.next()
+    if (!isComment(foundComment) || isDeletedComment(foundComment)) {
+      return {
+        ...error404CommentNotFound,
+        body: `Comment '${targetId}' not found`,
       }
+    }
 
-      const users: Collection<User> = (await this.getDb()).collection("users")
-      const authUser = authUserId
-        ? await users.findOne({ id: authUserId })
-        : null
+    const fullCommentPipeline = (id: CommentId, isAdminSafe: boolean) => [
+      {
+        $match: {
+          id,
+        },
+      },
+      {
+        $addFields: {
+          isAdminSafe,
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "userId",
+          foreignField: "id",
+          as: "userarr",
+        },
+      },
+      {
+        $addFields: {
+          user: {
+            $arrayElemAt: ["$userarr", 0],
+          },
+        },
+      },
+      {
+        $graphLookup: {
+          from: "comments",
+          startWith: "$id",
+          connectFromField: "id",
+          connectToField: "parentId",
+          as: "replies",
+        },
+      },
+      {
+        $unwind: {
+          path: "$replies",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "replies.userId",
+          foreignField: "id",
+          as: "replies.userarr",
+        },
+      },
+      {
+        $addFields: {
+          "replies.user": {
+            $arrayElemAt: ["$replies.userarr", 0],
+          },
+        },
+      },
+      {
+        $project: {
+          parentId: 1,
+          id: 1,
+          title: 1,
+          text: 1,
+          dateCreated: 1,
+          "user.id": 1,
+          "user.email": {
+            $cond: {
+              "if": {
+                $eq: ["$isAdminSafe", true],
+              },
+              then: "$user.email",
+              "else": "$$REMOVE",
+            },
+          },
+          "user.name": 1,
+          "user.isVerified": {
+            $cond: {
+              "if": {
+                $eq: ["$isAdminSafe", true],
+              },
+              then: "$user.isVerified",
+              "else": "$$REMOVE",
+            },
+          },
+          "user.isAdmin": 1,
+          "replies.parentId": 1,
+          "replies.id": 1,
+          "replies.text": 1,
+          "replies.dateCreated": 1,
+          "replies.dateDeleted": 1,
+          "replies.user.id": 1,
+          "replies.user.name": 1,
+          "replies.user.isAdmin": 1,
+          "replies.user.isVerified": {
+            $cond: {
+              "if": {
+                $eq: ["$isAdminSafe", true],
+              },
+              then: "$replies.user.isVerified",
+              "else": "$$REMOVE",
+            },
+          },
+          "replies.user.email": {
+            $cond: {
+              "if": {
+                $eq: ["$isAdminSafe", true],
+              },
+              then: "$replies.user.email",
+              "else": "$$REMOVE",
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          "replies.userarr": 0,
+          "replies.userId": 0,
+          "replies.user.hash": 0,
+          "user.hash": 0,
+        },
+      },
+      {
+        $group: {
+          _id: "$_id",
+          id: {
+            $first: "$id",
+          },
+          parentId: {
+            $first: "$parentId",
+          },
+          text: {
+            $first: "$text",
+          },
+          title: {
+            $first: "$title",
+          },
+          user: {
+            $first: "$user",
+          },
+          replies: {
+            $push: "$replies",
+          },
+          dateCreated: {
+            $first: "$dateCreated",
+          },
+          dateDeleted: {
+            $first: "$dateDeleted",
+          },
+        },
+      },
+    ]
 
-      if (!authUser && !policy.canPublicReadDiscussion) {
-        reject(error401UserNotAuthenticated)
-        return
-      }
-
-      if (
-        isGuestId(authUserId) &&
-        !policy.canPublicReadDiscussion &&
-        !policy.canGuestReadDiscussion
-      ) {
-        reject(error401UserNotAuthenticated)
-        return
-      }
-
-      const isAdmin = authUser ? authUser.isAdmin : false
-      const comments: Collection<Comment | DeletedComment | Discussion> = (
-        await this.getDb()
-      ).collection("comments")
-      const cursor = await comments.find({ id: targetId }).limit(1)
-
-      // just check to see if comment exists, without retrieving everything
-      if (!cursor) {
-        reject({
-          ...error404CommentNotFound,
-          body: `Comment '${targetId}' not found`
-        })
-        return
-      }
-
-      // if it does exist, check if it's correct without retrieving everything
-      const foundComment = await cursor.next()
-      if (!isComment(foundComment) || isDeletedComment(foundComment)) {
-        reject({
-          ...error404CommentNotFound,
-          body: `Comment '${targetId}' not found`
-        })
-        return
-      }
-
-      const fullCommentPipeline = (id: CommentId, isAdminSafe: boolean) => [
-        {
-          $match: {
-            id
-          }
-        },
-        {
-          $addFields: {
-            isAdminSafe
-          }
-        },
-        {
-          $lookup: {
-            from: "users",
-            localField: "userId",
-            foreignField: "id",
-            as: "userarr"
-          }
-        },
-        {
-          $addFields: {
-            user: {
-              $arrayElemAt: ["$userarr", 0]
-            }
-          }
-        },
-        {
-          $graphLookup: {
-            from: "comments",
-            startWith: "$id",
-            connectFromField: "id",
-            connectToField: "parentId",
-            as: "replies"
-          }
-        },
-        {
-          $unwind: {
-            path: "$replies",
-            preserveNullAndEmptyArrays: true
-          }
-        },
-        {
-          $lookup: {
-            from: "users",
-            localField: "replies.userId",
-            foreignField: "id",
-            as: "replies.userarr"
-          }
-        },
-        {
-          $addFields: {
-            "replies.user": {
-              $arrayElemAt: ["$replies.userarr", 0]
-            }
-          }
-        },
-        {
-          $project: {
-            parentId: 1,
-            id: 1,
-            title: 1,
-            text: 1,
-            dateCreated: 1,
-            "user.id": 1,
-            "user.email": {
-              $cond: {
-                "if": {
-                  $eq: ["$isAdminSafe", true]
-                },
-                then: "$user.email",
-                "else": "$$REMOVE"
-              }
-            },
-            "user.name": 1,
-            "user.isVerified": {
-              $cond: {
-                "if": {
-                  $eq: ["$isAdminSafe", true]
-                },
-                then: "$user.isVerified",
-                "else": "$$REMOVE"
-              }
-            },
-            "user.isAdmin": 1,
-            "replies.parentId": 1,
-            "replies.id": 1,
-            "replies.text": 1,
-            "replies.dateCreated": 1,
-            "replies.dateDeleted": 1,
-            "replies.user.id": 1,
-            "replies.user.name": 1,
-            "replies.user.isAdmin": 1,
-            "replies.user.isVerified": {
-              $cond: {
-                "if": {
-                  $eq: ["$isAdminSafe", true]
-                },
-                then: "$replies.user.isVerified",
-                "else": "$$REMOVE"
-              }
-            },
-            "replies.user.email": {
-              $cond: {
-                "if": {
-                  $eq: ["$isAdminSafe", true]
-                },
-                then: "$replies.user.email",
-                "else": "$$REMOVE"
-              }
-            }
-          }
-        },
-        {
-          $project: {
-            "replies.userarr": 0,
-            "replies.userId": 0,
-            "replies.user.hash": 0,
-            "user.hash": 0
-          }
-        },
-        {
-          $group: {
-            _id: "$_id",
-            id: {
-              $first: "$id"
-            },
-            parentId: {
-              $first: "$parentId"
-            },
-            text: {
-              $first: "$text"
-            },
-            title: {
-              $first: "$title"
-            },
-            user: {
-              $first: "$user"
-            },
-            replies: {
-              $push: "$replies"
-            },
-            dateCreated: {
-              $first: "$dateCreated"
-            },
-            dateDeleted: {
-              $first: "$dateDeleted"
-            }
-          }
-        }
-      ]
-
-      const comment = (await comments
-        .aggregate(fullCommentPipeline(targetId, isAdmin))
-        .next()) as Comment
-      const body = comment
-      resolve({ ...success200OK, body })
-    })
+    const comment = (await comments
+      .aggregate(fullCommentPipeline(targetId, isAdmin))
+      .next()) as Comment
+    const body = comment
+    return { ...success200OK, body }
+  }
 
   /**
    * Update a comment
@@ -841,68 +803,69 @@ export class MongodbService extends Service {
    * commentId byte[]
    * returns Comment
    **/
-  commentPUT = (targetId: CommentId, text: string, authUserId?: UserId) =>
-    new Promise<Success<Comment> | Error>(async (resolve, reject) => {
-      const users: Collection<User> = (await this.getDb()).collection("users")
-      const authUser = await users.find({ id: authUserId }).limit(1).next()
+  commentPUT = async (
+    targetId: CommentId,
+    text: string,
+    authUserId?: UserId
+  ): Promise<Success<Comment> | Error> => {
+    const users: Collection<User> = (await this.getDb()).collection("users")
+    const authUser = await users.find({ id: authUserId }).limit(1).next()
 
-      if (!authUser) {
-        reject(error401UserNotAuthenticated)
-        return
+    if (!authUser) {
+      return error401UserNotAuthenticated
+    }
+
+    const comments: Collection<Comment | Discussion> = (
+      await this.getDb()
+    ).collection("comments")
+    const foundComment = (await comments
+      .find({ id: targetId })
+      .limit(1)
+      .next()) as Comment
+
+    if (
+      !foundComment ||
+      !isComment(foundComment) ||
+      isDeletedComment(foundComment)
+    ) {
+      return {
+        ...error404CommentNotFound,
+        body: `Comment '${targetId}' not found`,
       }
+    }
 
-      const comments: Collection<Comment | Discussion> = (
-        await this.getDb()
-      ).collection("comments")
-      const foundComment = (await comments
-        .find({ id: targetId })
-        .limit(1)
-        .next()) as Comment
+    if (foundComment.text === text) {
+      return error400NoUpdate
+    }
 
-      if (
-        !foundComment ||
-        !isComment(foundComment) ||
-        isDeletedComment(foundComment)
-      ) {
-        reject({
-          ...error404CommentNotFound,
-          body: `Comment '${targetId}' not found`
-        })
-        return
+    const canEdit = authUser.isAdmin || authUser.id === foundComment.userId
+
+    if (!canEdit) {
+      return error403UserNotAuthorized
+    }
+
+    const user = toSafeUser(foundComment.user as User, authUser.isAdmin)
+    const returnComment = { ...foundComment, text, user }
+
+    const modifyResult = await comments.findOneAndUpdate(
+      { id: foundComment.id },
+      { $set: returnComment }
+    )
+
+    if (modifyResult.ok) {
+      return {
+        ...success204CommentUpdated,
+        body: returnComment,
       }
-
-      if (foundComment.text === text) {
-        reject(error400NoUpdate)
-        return
-      }
-
-      const canEdit = authUser.isAdmin || authUser.id === foundComment.userId
-
-      if (!canEdit) {
-        reject(error403UserNotAuthorized)
-        return
-      }
-
-      // can only edit text
-      const user = toSafeUser(foundComment.user as User, authUser.isAdmin)
-      const returnComment = { ...foundComment, text, user }
-
-      comments
-        .findOneAndUpdate({ id: foundComment.id }, { $set: returnComment })
-        .then(modifyResult => {
-          if (modifyResult.ok)
-            resolve({
-              ...success204CommentUpdated,
-              body: returnComment
-            })
-          else reject(error500UpdateError)
-        })
-        .catch(e =>
-          authUser.isAdmin
-            ? reject({ ...error500UpdateError, body: e })
-            : reject(error500UpdateError)
-        )
-    })
+    } else {
+      if (authUser.isAdmin) {
+        const errorMessage = modifyResult.lastErrorObject
+          ? JSON.stringify(modifyResult.lastErrorObject)
+          : "Unknown error"
+        return { ...error500UpdateError, body: errorMessage }
+      } else return error500UpdateError
+    }
+  }
 
   /**
    * Delete a comment
@@ -911,87 +874,89 @@ export class MongodbService extends Service {
    * commentId byte[]
    * returns Success
    **/
-  commentDELETE = (targetId: CommentId, authUserId?: UserId) =>
-    new Promise<Success | Error>(async (resolve, reject) => {
-      if (!authUserId) {
-        reject(error401UserNotAuthenticated)
-        return
+  commentDELETE = async (
+    targetId: CommentId,
+    authUserId?: UserId
+  ): Promise<Success | Error> => {
+    if (!authUserId) {
+      return error401UserNotAuthenticated
+    }
+
+    const users: Collection<User> = (await this.getDb()).collection("users")
+    const authUser = await users.find({ id: authUserId }).limit(1).next()
+
+    if (!authUser) {
+      return error404UserUnknown
+    }
+
+    const comments: Collection<Comment | Discussion> = (
+      await this.getDb()
+    ).collection("comments")
+    const foundComment = await comments.find({ id: targetId }).limit(1).next()
+
+    if (
+      !foundComment ||
+      !isComment(foundComment) ||
+      (isDeletedComment(foundComment) && !authUser.isAdmin)
+    ) {
+      return {
+        ...error404CommentNotFound,
+        body: `Comment '${targetId}' not found`,
+      }
+    }
+
+    const canDelete = authUser.isAdmin || authUser.id === foundComment.userId
+
+    if (!canDelete) {
+      return error403UserNotAuthorized
+    }
+
+    const reply = await comments.findOne({ parentId: targetId })
+
+    if (reply) {
+      const deletedComment = {
+        ...foundComment,
+        userId: null,
+        text: null,
+        dateDeleted: new Date(),
       }
 
-      const users: Collection<User> = (await this.getDb()).collection("users")
-      const authUser = await users.find({ id: authUserId }).limit(1).next()
-
-      if (!authUser) {
-        reject(error404UserUnknown)
-        return
+      try {
+        await comments.updateOne(
+          { id: foundComment.id },
+          { $set: deletedComment }
+        )
+        return { ...success202CommentDeleted }
+      } catch (e) {
+        return authUser.isAdmin
+          ? { ...error500UpdateError, body: e }
+          : error500UpdateError
       }
-
-      const comments: Collection<Comment | Discussion> = (
-        await this.getDb()
-      ).collection("comments")
-      const foundComment = await comments.find({ id: targetId }).limit(1).next()
-
-      if (
-        !foundComment ||
-        !isComment(foundComment) ||
-        isDeletedComment(foundComment)
-      ) {
-        reject({
-          ...error404CommentNotFound,
-          body: `Comment '${targetId}' not found`
-        })
-        return
+    } else {
+      try {
+        await comments.findOneAndDelete({ id: foundComment.id })
+        return success202CommentDeleted
+      } catch (e) {
+        return authUser.isAdmin
+          ? { ...error500UpdateError, body: e }
+          : error500UpdateError
       }
-
-      const canDelete = authUser.isAdmin || authUser.id === foundComment.userId
-
-      if (!canDelete) {
-        reject(error403UserNotAuthorized)
-        return
-      }
-
-      // If we delete a comment that has replies it will orphan
-      // them, so first check for even one
-      const reply = await comments.findOne({ parentId: targetId })
-
-      if (reply) {
-        // it cannot be deleted, but set user and text to null
-        const deletedComment = {
-          ...foundComment,
-          userId: null,
-          text: null,
-          dateDeleted: new Date()
-        }
-
-        comments
-          .updateOne({ id: foundComment.id }, { $set: deletedComment })
-          .then(() => resolve({ ...success202CommentDeleted }))
-          .catch(e =>
-            authUser.isAdmin
-              ? reject({ ...error500UpdateError, body: e })
-              : reject(error500UpdateError)
-          )
-      } else {
-        // entire comment can be deleted without trouble
-        // but we don't want anyone to reply in the meantime, so lock it
-        // using findOneAndDelete
-        comments
-          .findOneAndDelete({ id: foundComment.id })
-          .then(() => resolve(success202CommentDeleted))
-          .catch(e =>
-            authUser.isAdmin
-              ? reject({ ...error500UpdateError, body: e })
-              : reject(error500UpdateError)
-          )
-      }
-    })
+    }
+  }
 
   /**
    * returns AuthToken with a guest id
    *
    **/
   gauthGET = () =>
-    new Promise<Success<AuthToken> | Error>(resolve => {
+    new Promise<Success<AuthToken> | Error>((resolve, reject) => {
+      if (!policy.isGuestAccountAllowed) {
+        reject({
+          ...error403Forbidden,
+          body: "Guest accounts are forbidden according to policy `isGuestAccountAllowed:false`",
+        })
+        return
+      }
       const guestUserId = uuidv4()
       const gauthToken = getAuthToken(guestUserId)
       resolve({ ...success200OK, body: gauthToken })
@@ -1006,281 +971,297 @@ export class MongodbService extends Service {
    * authUserId
    * returns Success 201
    **/
-  topicPOST = (newTopic: NewTopic, authUserId?: UserId) =>
-    new Promise<Success<Topic> | Error>(async (resolve, reject) => {
-      if (!policy.canFirstVisitCreateTopic && !authUserId) {
-        reject(error401UserNotAuthenticated)
-        return
+  topicPOST = async (
+    newTopic: NewTopic,
+    authUserId?: UserId
+  ): Promise<Success<Topic> | Error> => {
+    if (!policy.canFirstVisitCreateTopic && !authUserId) {
+      return error401UserNotAuthenticated
+    }
+
+    const users: Collection<User> = (await this.getDb()).collection("users")
+    const authUser = await users.findOne({ id: authUserId })
+
+    if (authUserId && !authUser && !policy.canFirstVisitCreateTopic) {
+      return error404UserUnknown
+    }
+
+    if (!policy.canFirstVisitCreateTopic && (!authUser || !authUser.isAdmin)) {
+      return error403UserNotAuthorized
+    }
+
+    if (!authUserId || !authUser || !authUser.isAdmin) {
+      // User is anonymous, public can create topics, and referrer restrictions are true
+      // Let's validate the topic. We do that by comparing the proposed topicId with the `referer` header
+      // They should be the same. If not, reject it
+
+      if (!newTopic.referer) {
+        return error403UserNotAuthorized
       }
 
-      const users: Collection<User> = (await this.getDb()).collection("users")
-      const authUser = await users.findOne({ id: authUserId })
+      const isAllowed = isAllowedReferer(newTopic.referer, getAllowedOrigins())
 
-      if (authUserId && !authUser && !policy.canFirstVisitCreateTopic) {
-        reject(error404UserUnknown)
-        return
-      }
+      if (!isAllowed) {
+        const normalizedReferer = normalizeUrl(newTopic.referer)
 
-      if (
-        !policy.canFirstVisitCreateTopic &&
-        (!authUser || !authUser.isAdmin)
-      ) {
-        reject(error403UserNotAuthorized)
-        return
-      }
-
-      if (!authUserId || !authUser || !authUser.isAdmin) {
-        // User is anonymous, public can create topics, and referrer restrictions are true
-        // Let's validate the topic. We do that by comparing the proposed topicId with the `referer` header
-        // They should be the same. If not, reject it
-
-        if (!newTopic.referer) {
-          reject(error403UserNotAuthorized)
-          return
-        }
-
-        const isAllowed = isAllowedReferer(
-          newTopic.referer,
-          getAllowedOrigins()
-        )
-
-        if (!isAllowed) {
-          reject({
-            ...error403Forbidden,
-            body: `Unknown referer ${
-              newTopic.referer
-            }. Allowed: ${getAllowedOrigins().join(" or ")}`
-          })
-          return
+        if (getAllowedOrigins().length > 1) {
+          const body = `The referer '${normalizedReferer}' does not match any of the expected patterns. Allowed patterns: '${getAllowedOrigins().join(
+            " or "
+          )}'. Please ensure the referer matches one of the allowed patterns.`
+          return { ...error403Forbidden, body }
+        } else {
+          const body = `The referer '${normalizedReferer}' does not match the expected pattern: '${getAllowedOrigins().join()}'. Please ensure the referer matches the allowed pattern.`
+          return { ...error403Forbidden, body }
         }
       }
+    }
 
-      const hasInvalidCharacters = newTopic.id.match(/[^a-z0-9-]/)
-      if (hasInvalidCharacters) {
-        const invalidChar = hasInvalidCharacters ? hasInvalidCharacters[0] : ""
-        reject({
-          ...error400BadRequest,
-          body: `Invalid character '${invalidChar}' in topicId`
-        })
-        return
+    const hasInvalidCharacters = newTopic.id.match(/[^a-z0-9-]/)
+    if (hasInvalidCharacters) {
+      const invalidChar = hasInvalidCharacters ? hasInvalidCharacters[0] : ""
+      return {
+        ...error400BadRequest,
+        body: `Invalid character '${invalidChar}' in topicId`,
       }
+    }
 
-      // remove extraneous information like 'referer'
-      const topic: Topic = { ...toTopic(newTopic), dateCreated: new Date() }
+    // remove extraneous information like 'referer'
+    const topic: Topic = { ...toTopic(newTopic), dateCreated: new Date() }
 
-      const discussions: Collection<Discussion> = (
-        await this.getDb()
-      ).collection("comments")
-      const oldDiscussion = await discussions.findOne({ id: topic.id })
+    const discussions: Collection<Discussion> = (await this.getDb()).collection(
+      "comments"
+    )
+    const oldDiscussion = await discussions.findOne({ id: topic.id })
 
-      if (oldDiscussion) {
-        reject(error409DuplicateTopic)
-        return
-      }
+    if (oldDiscussion) {
+      return error409DuplicateTopic
+    }
 
-      discussions
-        .insertOne(topic)
-        .then(response => {
-          if (response.acknowledged)
-            resolve({
-              statusCode: 201,
-              body: `Topic ${topic.id}:'${topic.title}' created`
-            })
-          else
-            reject({
-              statusCode: 500,
-              body: "Database insertion error"
-            })
-        })
-        .catch(e => {
-          console.error(e)
-          reject({ statusCode: 500, body: "Server error" })
-        })
-    })
+    return discussions
+      .insertOne(topic)
+      .then(response => {
+        if (response.acknowledged)
+          return {
+            statusCode: 201,
+            body: `Topic ${topic.id}:'${topic.title}' created`,
+          }
+        else
+          return {
+            statusCode: 500,
+            body: "Database insertion error",
+          }
+      })
+      .catch(e => {
+        console.error(e)
+        return { statusCode: 500, body: "Server error" }
+      })
+  }
 
   /**
    * Read a discussion
    *
    * discussionId byte[]
-   * returns Discussion
    **/
-  topicGET = (targetId: TopicId, authUserId?: UserId) =>
-    new Promise<Success<Discussion> | Error>(async (resolve, reject) => {
-      if (!authUserId && !policy.canPublicReadDiscussion) {
-        reject(error401UserNotAuthenticated)
-        return
+  topicGET = async (
+    targetId: TopicId,
+    authUserId?: UserId
+  ): Promise<Success<Discussion> | Error> => {
+    if (!authUserId && !policy.canPublicReadDiscussion) {
+      return error401UserNotAuthenticated
+    }
+
+    const users: Collection<User> = (await this.getDb()).collection("users")
+    const authUser = await users.findOne({ id: authUserId })
+
+    if (!authUser && !policy.canPublicReadDiscussion) {
+      return error404UserUnknown
+    }
+
+    const isAdmin = authUser ? authUser.isAdmin : false
+    const comments: Collection<Comment | DeletedComment | Discussion> = (
+      await this.getDb()
+    ).collection("comments")
+
+    const discussion = await comments.findOne({ id: targetId })
+
+    if (!discussion || isComment(discussion)) {
+      return {
+        ...error404CommentNotFound,
+        body: `Topic '${targetId}' not found`,
       }
+    }
 
-      const users: Collection<User> = (await this.getDb()).collection("users")
-      const authUser = await users.findOne({ id: authUserId })
+    const fullTopicPipeline = (id: CommentId, isAdminSafe: boolean) => [
+      {
+        $match: { id },
+      },
+      {
+        $addFields: { isAdminSafe },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "userId",
+          foreignField: "id",
+          as: "userarr",
+        },
+      },
+      {
+        $addFields: {
+          user: {
+            $arrayElemAt: ["$userarr", 0],
+          },
+        },
+      },
+      {
+        $graphLookup: {
+          from: "comments",
+          startWith: "$id",
+          connectFromField: "id",
+          connectToField: "parentId",
+          as: "replies",
+        },
+      },
+      {
+        $unwind: {
+          path: "$replies",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "replies.userId",
+          foreignField: "id",
+          as: "replies.userarr",
+        },
+      },
+      {
+        $addFields: {
+          "replies.user": {
+            $arrayElemAt: ["$replies.userarr", 0],
+          },
+        },
+      },
+      {
+        $project: {
+          "parentId": 1,
+          "id": 1,
+          "title": 1,
+          "text": 1,
+          "dateCreated": 1,
+          "dateDeleted": 1,
+          "user.id": 1,
+          "user.email": {
+            $cond: {
+              if: { $eq: ["$isAdminSafe", true] },
+              then: "$user.email",
+              else: "$$REMOVE",
+            },
+          },
+          "user.name": 1,
+          "user.isVerified": {
+            $cond: {
+              if: { $eq: ["$isAdminSafe", true] },
+              then: "$user.isVerified",
+              else: "$$REMOVE",
+            },
+          },
+          "user.isAdmin": 1,
+          "replies.parentId": 1,
+          "replies.id": 1,
+          "replies.text": 1,
+          "replies.dateCreated": 1,
+          "replies.dateDeleted": 1,
+          "replies.user.id": 1,
+          "replies.user.name": 1,
+          "replies.user.isAdmin": 1,
+          "replies.user.isVerified": {
+            $cond: {
+              if: { $eq: ["$isAdminSafe", true] },
+              then: "$replies.user.isVerified",
+              else: "$$REMOVE",
+            },
+          },
+          "replies.user.email": {
+            $cond: {
+              if: { $eq: ["$isAdminSafe", true] },
+              then: "$replies.user.email",
+              else: "$$REMOVE",
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          "replies.userarr": 0,
+          "replies.userId": 0,
+          "replies.user.hash": 0,
+          "user.hash": 0,
+        },
+      },
+      {
+        $group: {
+          _id: "$_id",
+          id: {
+            $first: "$id",
+          },
+          parentId: {
+            $first: "$parentId",
+          },
+          text: {
+            $first: "$text",
+          },
+          title: {
+            $first: "$title",
+          },
+          user: {
+            $first: "$user",
+          },
+          replies: {
+            $push: "$replies",
+          },
+          dateCreated: {
+            $first: "$dateCreated",
+          },
+          dateDeleted: {
+            $first: "$dateDeleted",
+          },
+        },
+      },
+      {
+        $project: {
+          id: 1,
+          parentId: 1,
+          text: 1,
+          title: 1,
+          user: 1,
+          dateCreated: 1,
+          dateDeleted: 1,
+          replies: {
+            $cond: {
+              if: { $eq: [{ $size: "$replies" }, 1] },
+              then: {
+                $cond: {
+                  if: { $eq: [{ $arrayElemAt: ["$replies.user", 0] }, {}] },
+                  then: "$$REMOVE",
+                  else: "$replies",
+                },
+              },
+              else: "$replies",
+            },
+          },
+        },
+      },
+    ]
 
-      if (!authUser && !policy.canPublicReadDiscussion) {
-        reject(error404UserUnknown)
-        return
-      }
+    const comment = (await comments
+      .aggregate(fullTopicPipeline(targetId, isAdmin))
+      .next()) as Discussion
+    const body = comment
 
-      const isAdmin = authUser ? authUser.isAdmin : false
-      const comments: Collection<Comment | DeletedComment | Discussion> = (
-        await this.getDb()
-      ).collection("comments")
-
-      const discussion = await comments.findOne({ id: targetId })
-
-      if (!discussion || isComment(discussion)) {
-        reject({
-          ...error404CommentNotFound,
-          body: `Topic '${targetId}' not found`
-        })
-        return
-      }
-
-      const fullTopicPipeline = (id: CommentId, isAdminSafe: boolean) => [
-        {
-          $match: { id }
-        },
-        {
-          $addFields: { isAdminSafe }
-        },
-        {
-          $lookup: {
-            from: "users",
-            localField: "userId",
-            foreignField: "id",
-            as: "userarr"
-          }
-        },
-        {
-          $addFields: {
-            user: {
-              $arrayElemAt: ["$userarr", 0]
-            }
-          }
-        },
-        {
-          $graphLookup: {
-            from: "comments",
-            startWith: "$id",
-            connectFromField: "id",
-            connectToField: "parentId",
-            as: "replies"
-          }
-        },
-        {
-          $unwind: {
-            path: "$replies",
-            preserveNullAndEmptyArrays: true
-          }
-        },
-        {
-          $lookup: {
-            from: "users",
-            localField: "replies.userId",
-            foreignField: "id",
-            as: "replies.userarr"
-          }
-        },
-        {
-          $addFields: {
-            "replies.user": {
-              $arrayElemAt: ["$replies.userarr", 0]
-            }
-          }
-        },
-        {
-          $project: {
-            "parentId": 1,
-            "id": 1,
-            "title": 1,
-            "text": 1,
-            "dateCreated": 1,
-            "dateDeleted": 1,
-            "user.id": 1,
-            "user.email": {
-              $cond: {
-                if: { $eq: ["$isAdminSafe", true] },
-                then: "$user.email",
-                else: "$$REMOVE"
-              }
-            },
-            "user.name": 1,
-            "user.isVerified": {
-              $cond: {
-                if: { $eq: ["$isAdminSafe", true] },
-                then: "$user.isVerified",
-                else: "$$REMOVE"
-              }
-            },
-            "user.isAdmin": 1,
-            "replies.parentId": 1,
-            "replies.id": 1,
-            "replies.text": 1,
-            "replies.dateCreated": 1,
-            "replies.dateDeleted": 1,
-            "replies.user.id": 1,
-            "replies.user.name": 1,
-            "replies.user.isAdmin": 1,
-            "replies.user.isVerified": {
-              $cond: {
-                if: { $eq: ["$isAdminSafe", true] },
-                then: "$replies.user.isVerified",
-                else: "$$REMOVE"
-              }
-            },
-            "replies.user.email": {
-              $cond: {
-                if: { $eq: ["$isAdminSafe", true] },
-                then: "$replies.user.email",
-                else: "$$REMOVE"
-              }
-            }
-          }
-        },
-        {
-          $project: {
-            "replies.userarr": 0,
-            "replies.userId": 0,
-            "replies.user.hash": 0,
-            "user.hash": 0
-          }
-        },
-        {
-          $group: {
-            _id: "$_id",
-            id: {
-              $first: "$id"
-            },
-            parentId: {
-              $first: "$parentId"
-            },
-            text: {
-              $first: "$text"
-            },
-            title: {
-              $first: "$title"
-            },
-            user: {
-              $first: "$user"
-            },
-            replies: {
-              $push: "$replies"
-            },
-            dateCreated: {
-              $first: "$dateCreated"
-            },
-            dateDeleted: {
-              $first: "$dateDeleted"
-            }
-          }
-        }
-      ]
-
-      const comment = (await comments
-        .aggregate(fullTopicPipeline(targetId, isAdmin))
-        .next()) as Discussion
-      const body = comment
-
-      resolve({ ...success200OK, body })
-    })
+    return { ...success200OK, body }
+  }
 
   /**
    * Read the list of discussions
@@ -1289,33 +1270,32 @@ export class MongodbService extends Service {
    * mme
    * returns List
    **/
-  topicListGET = (authUserId?: UserId) =>
-    new Promise<Success<Topic[]> | Error>(async (resolve, reject) => {
-      if (!authUserId && !policy.canPublicReadDiscussion) {
-        reject(error401UserNotAuthenticated)
-        return
-      }
+  topicListGET = async (
+    authUserId?: UserId
+  ): Promise<Success<Topic[]> | Error> => {
+    if (!authUserId && !policy.canPublicReadDiscussion) {
+      return error401UserNotAuthenticated
+    }
 
-      const users: Collection<User> = (await this.getDb()).collection("users")
-      const authUser = await users.find({ id: authUserId }).limit(1)
+    const users: Collection<User> = (await this.getDb()).collection("users")
+    const authUser = await users.find({ id: authUserId }).limit(1)
 
-      if (!authUser && !policy.canPublicReadDiscussion) {
-        reject(error404UserUnknown)
-        return
-      }
+    if (!authUser && !policy.canPublicReadDiscussion) {
+      return error404UserUnknown
+    }
 
-      const db = await this.getDb()
+    const db = await this.getDb()
 
-      const comments = db.collection("comments")
+    const comments = db.collection("comments")
 
-      const topicsCursor = await comments.find<WithId<Topic>>({
-        parentId: null
-      })
-
-      const topics = await topicsCursor.toArray()
-
-      resolve({ ...success200OK, body: topics })
+    const topicsCursor = await comments.find<WithId<Topic>>({
+      parentId: null,
     })
+
+    const topics = await topicsCursor.toArray()
+
+    return { ...success200OK, body: topics }
+  }
 
   /**
    * Update a discussion (lock it)
@@ -1323,180 +1303,171 @@ export class MongodbService extends Service {
    * discussionId byte[]
    * returns Success
    **/
-  topicPUT = (
+  topicPUT = async (
     topicId: TopicId,
     topic: Pick<Topic, "title" | "isLocked">,
     authUserId?: UserId
-  ) =>
-    new Promise<Success<Topic> | Error>(async (resolve, reject) => {
-      if (!authUserId) {
-        reject(error401UserNotAuthenticated)
-        return
+  ): Promise<Success<Topic> | Error> => {
+    if (!authUserId) {
+      return error401UserNotAuthenticated
+    }
+
+    const users: Collection<User> = (await this.getDb()).collection("users")
+    const authUser = await users.findOne({ id: authUserId })
+
+    if (!authUser) {
+      return error404UserUnknown
+    }
+
+    const targetId = topicId
+    const comments: Collection<Comment | Topic> = (
+      await this.getDb()
+    ).collection("comments")
+    const foundTopic = await comments.findOne({ id: targetId })
+
+    if (!foundTopic || isComment(foundTopic)) {
+      return {
+        ...error404CommentNotFound,
+        body: `Topic '${targetId}' not found`,
       }
+    }
 
-      const users: Collection<User> = (await this.getDb()).collection("users")
-      const authUser = await users.findOne({ id: authUserId })
+    if (!authUser.isAdmin) {
+      return error403UserNotAuthorized
+    }
 
-      if (!authUser) {
-        reject(error404UserUnknown)
-        return
-      }
+    const { title, isLocked } = topic
+    const updateTopic = { ...foundTopic, title, isLocked }
 
-      const targetId = topicId
-      const comments: Collection<Comment | Topic> = (
-        await this.getDb()
-      ).collection("comments")
-      const foundTopic = await comments.findOne({ id: targetId })
-
-      if (!foundTopic || isComment(foundTopic)) {
-        reject({
-          ...error404CommentNotFound,
-          body: `Topic '${targetId}' not found`
-        })
-        return
-      }
-
-      if (!authUser.isAdmin) {
-        reject(error403UserNotAuthorized)
-        return
-      }
-
-      const { title, isLocked } = topic
-      const updateTopic = { ...foundTopic, title, isLocked }
-
-      comments
-        .findOneAndUpdate({ id: foundTopic.id }, { $set: updateTopic })
-        .then(modifyResult => {
-          if (modifyResult.ok)
-            resolve({ ...success204CommentUpdated, body: updateTopic })
-          else
-            reject({
-              statusCode: 500,
-              body: authUser.isAdmin
-                ? modifyResult.lastErrorObject
-                : error500UpdateError.body
-            })
-        })
-        .catch(e =>
-          authUser.isAdmin
-            ? reject({ ...error500UpdateError, body: e })
-            : reject(error500UpdateError)
-        )
-    })
+    return comments
+      .findOneAndUpdate({ id: foundTopic.id }, { $set: updateTopic })
+      .then(modifyResult => {
+        if (modifyResult.ok)
+          return { ...success204CommentUpdated, body: updateTopic }
+        else
+          return {
+            statusCode: 500,
+            body: authUser.isAdmin
+              ? modifyResult.lastErrorObject
+              : error500UpdateError.body,
+          } as Error
+      })
+      .catch(e => {
+        if (authUser.isAdmin) {
+          const errorMessage = e ? JSON.stringify(e) : "Unknown error"
+          return { ...error500UpdateError, body: errorMessage } as Error
+        } else return error500UpdateError
+      })
+  }
 
   /**
    * Delete a discussion
    *
    * discussionId byte[]
-   * returns Success
    **/
-  topicDELETE = (topicId: TopicId, authUserId?: UserId) =>
-    new Promise<Success | Error>(async (resolve, reject) => {
-      if (!authUserId) {
-        reject(error401UserNotAuthenticated)
-        return
+  topicDELETE = async (
+    topicId: TopicId,
+    authUserId?: UserId
+  ): Promise<Success | Error> => {
+    if (!authUserId) {
+      return error401UserNotAuthenticated
+    }
+
+    const users: Collection<User> = (await this.getDb()).collection("users")
+    const authUser = await users.findOne({ id: authUserId })
+
+    if (!authUser) {
+      return error404UserUnknown
+    }
+
+    const discussions: Collection<Comment | Topic> = (
+      await this.getDb()
+    ).collection("comments")
+    const cursor = await discussions.find({ id: topicId }).limit(1)
+
+    const foundTopic = await cursor.next()
+
+    if (!foundTopic || isComment(foundTopic)) {
+      return {
+        ...error404TopicNotFound,
+        body: `Topic '${topicId}' not found`,
       }
+    }
 
-      const users: Collection<User> = (await this.getDb()).collection("users")
-      const authUser = await users.findOne({ id: authUserId })
+    if (!authUser.isAdmin) {
+      return error403UserNotAuthorized
+    }
 
-      if (!authUser) {
-        reject(error404UserUnknown)
-        return
-      }
+    // If we delete a topic that has replies it will orphan
+    // them, so first check for even one
+    const replyCursor = await discussions.find({ parentId: topicId }).limit(1)
 
-      const discussions: Collection<Comment | Topic> = (
-        await this.getDb()
-      ).collection("comments")
-      const cursor = await discussions.find({ id: topicId }).limit(1)
+    if (replyCursor) {
+      // well, shit. delete all of the replies
+      const getReplies = id => [
+        { $match: { id } },
+        {
+          $graphLookup: {
+            from: "comments",
+            startWith: "$id",
+            connectFromField: "id",
+            connectToField: "parentId",
+            as: "replies",
+          },
+        },
+      ]
 
-      const foundTopic = await cursor.next()
+      const rawReplies = await discussions
+        .aggregate(getReplies(topicId))
+        .toArray()
+      const commentIds = rawReplies.map(c => c.id)
 
-      if (!foundTopic || isComment(foundTopic)) {
-        reject({
-          ...error404TopicNotFound,
-          body: `Topic '${topicId}' not found`
-        })
-      }
+      await discussions.deleteMany({ id: { $in: commentIds } })
+    }
 
-      if (!authUser.isAdmin) {
-        reject(error403UserNotAuthorized)
-        return
-      }
+    // entire comment can be deleted without trouble
+    // but we don't want anyone to reply in the meantime, so lock it:
+    return discussions
+      .findOneAndDelete({ id: topicId })
+      .then(() => success202TopicDeleted)
+      .catch(e => {
+        return authUser.isAdmin
+          ? { ...error500UpdateError, body: e }
+          : error500UpdateError
+      })
+  }
 
-      // If we delete a topic that has replies it will orphan
-      // them, so first check for even one
-      const replyCursor = await discussions.find({ parentId: topicId }).limit(1)
+  authDELETE = (): Promise<Success> => {
+    const pastDate = new Date(0).toUTCString()
+    const COOKIE_HEADER = {
+      "Set-Cookie": `simple_comment_token=logged-out; path=/; SameSite=${
+        this.isCrossSite ? "None; Secure; " : "Strict; "
+      }HttpOnly; Expires=${pastDate};`,
+    }
+    return Promise.resolve({ ...success202LoggedOut, headers: COOKIE_HEADER })
+  }
 
-      if (replyCursor) {
-        // well, shit. delete all of the replies
-        const getReplies = id => [
-          { $match: { id } },
-          {
-            $graphLookup: {
-              from: "comments",
-              startWith: "$id",
-              connectFromField: "id",
-              connectToField: "parentId",
-              as: "replies"
-            }
+  verifyGET = async (
+    token?: AuthToken
+  ): Promise<Success<TokenClaim> | Error> => {
+    try {
+      const claim: TokenClaim = jwt.verify(token, process.env.JWT_SECRET, {
+        ignoreExpiration: false,
+      }) as TokenClaim
+      return { ...success200OK, body: claim }
+    } catch (error) {
+      console.error(error)
+      switch (error.name) {
+        case "TokenExpiredError":
+          return {
+            ...error403Forbidden,
+            body: `token expired at ${error.expiredAt}`,
           }
-        ]
-
-        const rawReplies = await discussions
-          .aggregate(getReplies(topicId))
-          .toArray()
-        const commentIds = rawReplies.map(c => c.id)
-
-        await discussions.deleteMany({ id: { $in: commentIds } })
+        default:
+          return error400BadRequest
       }
-
-      // entire comment can be deleted without trouble
-      // but we don't want anyone to reply in the meantime, so lock it:
-      discussions
-        .findOneAndDelete({ id: topicId })
-        .then(() => resolve(success202TopicDeleted))
-        .catch(e =>
-          authUser.isAdmin
-            ? reject({ ...error500UpdateError, body: e })
-            : reject(error500UpdateError)
-        )
-    })
-
-  authDELETE = () =>
-    new Promise<Success>(resolve => {
-      const pastDate = new Date(0).toUTCString()
-      const COOKIE_HEADER = {
-        "Set-Cookie": `simple_comment_token=logged-out; path=/; SameSite=${
-          this.isCrossSite ? "None; Secure; " : "Strict; "
-        }HttpOnly; Expires=${pastDate};`
-      }
-      resolve({ ...success202LoggedOut, headers: COOKIE_HEADER })
-    })
-
-  verifyGET = (token?: AuthToken) =>
-    new Promise<Success<TokenClaim> | Error>(resolve => {
-      try {
-        const claim: TokenClaim = jwt.verify(token, process.env.JWT_SECRET, {
-          ignoreExpiration: false
-        }) as TokenClaim
-        return resolve({ ...success200OK, body: claim })
-      } catch (error) {
-        console.error(error)
-        switch (error.name) {
-          case "TokenExpiredError":
-            resolve({
-              ...error403Forbidden,
-              body: `token expired at ${error.expiredAt}`
-            })
-            break
-
-          default:
-            resolve(error400BadRequest)
-            break
-        }
-      }
-    })
+    }
+  }
 
   close = async () => {
     await this.getClient().then(client => client.close())

@@ -1,0 +1,20 @@
+{
+  "include": ["./src"],
+  "exclude": ["./src/lib/*.ts", "./src/tests/**/*.ts", "node_modules"],
+  "extends": "@tsconfig/svelte/tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "*": ["types/*"]
+    },
+    "target": "es6",
+    "module": "ESNext",
+    "lib": ["es6", "dom"],
+    "skipLibCheck": true,
+    "outDir": "./",
+    "rootDir": "./src/",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "resolveJsonModule": true
+  }
+}

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Simple Comment</title>
+    <meta name="viewport" content="width=device-width" />
+    <meta
+      name="description"
+      content="Simple Comment is a commenting platform for any website. Free, flexible, open-source, private, and scalable."
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:url" content="http://simple-comment.netlify.app" />
+    <meta name="twitter:title" content="Simple Comment" />
+    <meta
+      name="twitter:description"
+      content="Simple Comment is a free, self-hosted, open-source commenting system"
+    />
+    <meta
+      name="twitter:image"
+      content="https://simple-comment.netlify.app/img/twitter-card-logo.png"
+    />
+    <meta
+      name="twitter:image:alt"
+      content="Simple Comment logo: thought bubble with a slight smile"
+    />
+    <meta name="twitter:site" content="@rendall" />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="./css/simple-comment-style.css"
+    />
+    <link rel="stylesheet" type="text/css" href="./css/simple-comment.css" />
+  </head>
+  <style>
+    @font-face {
+      font-family: "Comfortaa";
+      font-style: normal;
+      font-weight: 500;
+      font-display: block;
+      src: url(../font/simple-comment.woff2) format("woff2");
+    }
+
+    @font-face {
+      font-family: "SimpleComment interface";
+      font-style: normal;
+      font-weight: normal;
+      font-display: swap;
+      src: url(../font/IBMPlexSans-Text.woff2) format("woff2");
+    }
+
+    @font-face {
+      font-family: "SimpleComment input";
+      font-style: normal;
+      font-weight: normal;
+      font-display: swap;
+      src: url(../font/IBMPlexMono-Text.woff2) format("woff2");
+    }
+
+    @font-face {
+      font-family: "SimpleComment comment";
+      font-style: normal;
+      font-weight: normal;
+      font-display: swap;
+      src: url(../font/IBMPlexSans-Regular.woff2) format("woff2");
+    }
+
+    @font-face {
+      font-family: "SimpleComment comment";
+      font-style: normal;
+      font-weight: bold;
+      font-display: swap;
+      src: url(../font/IBMPlexSans-Bold.woff2) format("woff2");
+    }
+
+    @font-face {
+      font-family: "SimpleComment comment";
+      font-style: italic;
+      font-weight: normal;
+      font-display: swap;
+      src: url(../font/IBMPlexSans-Italic.woff2) format("woff2");
+    }
+
+    @font-face {
+      font-family: "SimpleComment comment";
+      font-style: italic;
+      font-weight: bold;
+      font-display: swap;
+      src: url(../font/IBMPlexSans-BoldItalic.woff2) format("woff2");
+    }
+
+    :root {
+      --comment-font-family: "SimpleComment comment";
+      --interface-font-family: "SimpleComment interface";
+      --input-font-family: "SimpleComment input";
+    }
+
+    h1,
+    h2,
+    hr {
+      color: #3287e6;
+    }
+
+    .simple-comment-logotype {
+      font-family: "Comfortaa", sans-serif;
+      font-weight: 500;
+    }
+
+    h1 {
+      font-size: 3.4rem;
+      line-height: 4rem;
+      margin-left: 1rem;
+    }
+
+    body {
+      -moz-osx-font-smoothing: grayscale;
+      -webkit-font-smoothing: antialiased;
+      background-color: #f8fcff;
+      color: #33475c;
+      font-family: "SimpleComment comment", -apple-system, BlinkMacSystemFont,
+        "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 1.125rem;
+      line-height: 1.61111em;
+      margin-bottom: 1em;
+      margin-top: 1em;
+      margin: 0 auto;
+      padding: 0 1rem;
+    }
+
+    p.instructions {
+      color: #33475c;
+      font-family: "SimpleComment comment", -apple-system, BlinkMacSystemFont,
+        "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 1.125rem;
+      line-height: 1.61111em;
+    }
+
+    a:hover {
+      color: #007b8c;
+      text-decoration: underline;
+    }
+
+    a {
+      color: #3287e6;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    header {
+      display: flex;
+      margin: 0 auto;
+      max-width: 59rem;
+      min-height: 10rem;
+      align-items: center;
+    }
+
+    .simple-comment-logo {
+      max-width: 9.1rem;
+      min-width: 9.1rem;
+      fill: #3287e6;
+    }
+
+    main {
+      max-width: 38rem;
+      margin: 0 auto;
+    }
+
+    p > span {
+      color: #3287e6;
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+
+    section.intro {
+      margin-bottom: 3rem;
+    }
+
+    form.contact-form {
+      border: 1px solid #3287e6;
+      padding: 1rem;
+      margin: 2rem 1rem;
+    }
+
+    .contact-form label {
+      text-transform: capitalize;
+    }
+    .contact-form .hide {
+      display: none;
+    }
+  </style>
+
+  <body>
+    <header>
+      <svg
+        class="simple-comment-logo"
+        version="1.1"
+        viewBox="0 0 100 100"
+        alt="thought bubble with a slight smile"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <g>
+          <path
+            d="m46 85c21.5 0 39-17.5 39-39s-17.5-39-39-39-39 17.5-39 39 17.5 39 39 39zm0-72c18.2 0 33 14.8 33 33s-14.8 33-33 33-33-14.8-33-33 14.8-33 33-33z"
+          />
+          <path
+            d="m85 70c-6.1 0-11 4.9-11 11s4.9 11 11 11 11-4.9 11-11-4.9-11-11-11zm0 16c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5z"
+          />
+          <path
+            d="m56.556 64.256c0.35703 0.5068 0.52028 1.2218 0.45101 1.9172-0.06927 0.6954-0.37105 1.3712-0.7996 1.7998-0.54481 0.54481-0.64263 0.58032-1.7353 1.024-0.68257 0.27717-1.403 0.49272-1.9625 0.65426-3.5641 1.0291-7.8801 1.2642-12.291 0.17319-3.2701-0.80885-6.2699-2.0519-9.071-4.2971-0.31699-0.25408-1.013-0.78589-1.6664-1.4256-0.86735-0.84913-1.2642-1.3872-1.4109-2.0727-0.24261-1.1338 0.06065-2.3418 1.0548-3.139 0.78048-0.62586 1.8562-0.89826 2.8498-0.55506 1.4285 0.49345 1.6014 1.456 3.6314 2.8214 2.7645 1.8595 5.852 2.8247 8.2841 3.0799 3.3325 0.34962 5.9132-0.05166 8.3445-0.99169 0.94158-0.36405 1.3842-0.59561 2.4605-0.3451 0.88913 0.20696 1.4417 0.76162 1.8607 1.3564z"
+          />
+        </g>
+      </svg>
+
+      <h1 class="simple-comment-logotype">Simple Comment</h1>
+    </header>
+    <main>
+      <section class="simple-comment intro">
+        <p class="instructions">
+          <i>Simple Comment</i> is a new commenting system that can be added
+          easily to any website. Try the live demo below and add your name here
+          for news and updates.
+        </p>
+        <form
+          class="contact-form"
+          name="contact"
+          method="POST"
+          netlify-honeypot="city"
+          netlify="netlify"
+          action="/accept"
+        >
+          <p class="instructions">
+            Fill in your contact details here and click "send" to be on the
+            Simple Comment mailing list.
+          </p>
+          <div class="input-field">
+            <label for="name">name</label>
+            <input name="name" id="name" class="h2rem" />
+          </div>
+          <div class="input-field">
+            <label for="email">email</label>
+            <input type="email" name="email" id="email" class="h2rem" />
+          </div>
+          <div class="hide">
+            <!-- spam prevention: this should remain empty -->
+            <label for="city">city</label>
+            <input name="city" id="city" />
+          </div>
+          <div class="button-row">
+            <button type="submit">Send</button>
+          </div>
+        </form>
+      </section>
+
+      <hr />
+      <h2 class="simple-comment-logotype">Simple Comment demo:</h2>
+      <p>
+        What are your thoughts on the role of artificial intelligence in shaping
+        the future of work?
+      </p>
+      <section id="simple-comment-display"></section>
+    </main>
+    <script type="module" src="./js/simple-comment.js" defer></script>
+    <script type="module" defer>
+      var params = new URLSearchParams(window.location.search)
+      var topicId = params.get("topicId") || "http-localhost-7070"
+      setSimpleCommentDiscussion(topicId)
+    </script>
+  </body>
+</html>

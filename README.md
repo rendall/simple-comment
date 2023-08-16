@@ -11,7 +11,7 @@ See the demo: <https://simple-comment.netlify.app>
 _NB:_ Moderation tools are not yet adequate. There is no notification when a user has posted a comment, nor any way to hold it in moderation before approval. If you like this project and would like to see it developed further on a specific timeline, contact me. Otherwise, this project is still on the road, but on the slow road.
 
 [![Netlify Status](https://api.netlify.com/api/v1/badges/fb816766-6f5b-4dff-9c27-3f5948ac9705/deploy-status)](https://app.netlify.com/sites/simple-comment/deploys)
-[![Open API 3.0 Validator](https://img.shields.io/swagger/valid/3.0?label=Open%20API%203.0%20spec&specUrl=https%3A%2F%2Fraw.githubusercontent.com%2Frendall%2Fsimple-comment%2Fmaster%2Fsrc%2Fschema%2Fsimple-comment-api.json)](https://app.swaggerhub.com/apis/rendall-dev/simple-comment_api/1.0.0)
+[![Open API 3.0 Validator](https://img.shields.io/swagger/valid/3.0?label=Open%20API%203.0%20spec&specUrl=https%3A%2F%2Fraw.githubusercontent.com%2Frendall%2Fsimple-comment%2Fmaster%2Fsrc%2Fschema%2Fsimple-comment-openapi3.json)](https://app.swaggerhub.com/apis/rendall-dev/simple-comment_api/1.0.0)
 [![Website](https://img.shields.io/website?url=https%3A%2F%2Fsimple-comment.netlify.app%2F)](https://simple-comment.netlify.app)
 [![Documentation Status](https://readthedocs.org/projects/simple-comment/badge/?version=latest)](https://simple-comment.readthedocs.io/en/latest/?badge=latest)
 
@@ -70,12 +70,7 @@ The minimum functionality is [up and running](https://simple-comment.netlify.app
 - Industry-standard security
 - Designed to be fully customizable
 - Scalable, from free-tier to enterprise!
-- Free (as in "free beer": no cost)
-  - Takes advantage of free-tier offerings from DBaaS and website hosts
-- Free (as in "libre": open source)
-  - The source code is available to be modified and used without restriction
-  - Commercial use allowed! Start a business with it! Knock yourself out!
-  - MIT licensing available
+- Takes advantage of free-tier offerings from DBaaS and website hosts
 - Fully documented API
   - Open API 3
 - Ethical, no-track, visitor control over data
@@ -175,12 +170,13 @@ Assumes a unix-like environment, like Ubuntu.
 
 ### Usage
 
+1. `sudo systemctl start mongod` (q.v. [Linux](https://www.mongodb.com/docs/manual/tutorial/install-mongodb-on-ubuntu/#run-mongodb-community-edition))
 1. `yarn run start`
-1. open http://localhost:8080/
+1. open http://localhost:7070/
 
 ## API
 
-The API specification is described by the file [simple-comment-api.json](./src/schema/simple-comment-api.json) in Open API 3 format and is designed to be interchangeable with any backend, frontend and identification system
+The API specification is described by the file [simple-comment-openapi3.json](./src/schema/simple-comment-openapi3.json) in Open API 3 format and is designed to be interchangeable with any backend, frontend and identification system
 
 This is an overview of the _Simple Comment API_ endpoints
 
@@ -210,7 +206,22 @@ Returns the logged-in user id or `401`
 
 ## policy
 
-`policy` is an [object holding key-value pairs](./src/policy.ts) that governs how _Simple Comment_ behaves, determining for instance maximum comment length or whether ordinary users can delete themselves
+`policy` is an [object holding key-value pairs](./src/policy.json) that governs how _Simple Comment_ behaves, determining for instance maximum comment length or whether ordinary users can delete themselves.
+
+```ts
+{
+  isGuestAccountAllowed : boolean, // if true, a visitor can post anonymously using a guest account. if false, only authenticated users can comment.
+  canFirstVisitCreateTopic : boolean, // if a discussion does not exist for a page, shall it be created when visited for the first time, or does admin create all topics?
+  canGuestCreateUser : boolean, // can a user with guest credentials create (their own) user profile? if 'canPublicCreateUser' is set to 'true' this setting is ignored
+  canGuestReadDiscussion : boolean, // can a user with guest credentials browse and read discussions? if 'canPublicReadDiscussion' is set to 'true' this setting is ignored
+  canGuestReadUser : boolean, // can a user with guest credentials view user profiles? if 'canPublicReadUser' is true, this setting is ignored
+  canPublicCreateUser : boolean, // can a user with no credentials create (their own) user profile?
+  canPublicReadDiscussion : boolean, // can a user with no credentials browse and read discussions?
+  canPublicReadUser : boolean, // can an anonymous visitor view any user's profile?
+  canUserDeleteSelf : boolean, // can a user delete their own profile?
+  maxCommentLengthChars : number, // Attempting to post a comment longer than this number of characters will be rejected by the API
+}
+```
 
 ## Alternatives
 
