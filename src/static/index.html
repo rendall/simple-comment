@@ -94,17 +94,20 @@
     }
 
     h1,
-    h2 {
+    h2,
+    hr {
       color: #3287e6;
     }
 
-    h1.simple-comment-logotype {
+    .simple-comment-logotype {
       font-family: "Comfortaa", sans-serif;
-      font-size: 3.4rem;
       font-weight: 500;
+    }
+
+    h1 {
+      font-size: 3.4rem;
       line-height: 4rem;
       margin-left: 1rem;
-      color: $corporate-blue;
     }
 
     body {
@@ -112,14 +115,22 @@
       -webkit-font-smoothing: antialiased;
       background-color: #f8fcff;
       color: #33475c;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica,
-        Arial, sans-serif;
+      font-family: "SimpleComment comment", -apple-system, BlinkMacSystemFont,
+        "Segoe UI", Helvetica, Arial, sans-serif;
       font-size: 1.125rem;
       line-height: 1.61111em;
       margin-bottom: 1em;
       margin-top: 1em;
       margin: 0 auto;
       padding: 0 1rem;
+    }
+
+    p.instructions {
+      color: #33475c;
+      font-family: "SimpleComment comment", -apple-system, BlinkMacSystemFont,
+        "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 1.125rem;
+      line-height: 1.61111em;
     }
 
     a:hover {
@@ -158,8 +169,21 @@
       font-weight: bold;
     }
 
-    section {
-      margin-bottom: 3em;
+    section.intro {
+      margin-bottom: 3rem;
+    }
+
+    form.contact-form {
+      border: 1px solid #3287e6;
+      padding: 1rem;
+      margin: 2rem 1rem;
+    }
+
+    .contact-form label {
+      text-transform: capitalize;
+    }
+    .contact-form .hide {
+      display: none;
     }
   </style>
 
@@ -188,56 +212,49 @@
       <h1 class="simple-comment-logotype">Simple Comment</h1>
     </header>
     <main>
-      <section>
-        <p>
-          <i>Lorem ipsum</i> dolor sit amet, consectetur adipiscing elit. Ut eu
-          velit pulvinar, commodo risus vel, finibus quam. Curabitur iaculis
-          aliquet urna nec semper.
+      <section class="simple-comment intro">
+        <p class="instructions">
+          <i>Simple Comment</i> is a new commenting system that can be added
+          easily to any website. Try the live demo below and add your name here
+          for news and updates.
         </p>
-        <p>
-          <span>Nam tempor:</span>
-          <i>Mauris luctus</i> aliquam eros quis posuere. Praesent vitae libero
-          augue. Duis a laoreet turpis. Sed dapibus eu orci vel convallis.
-        </p>
-        <ul>
-          <li>
-            <a href="#">Nunc a varius sapien</a>: Donec ut enim tempor,
-            consectetur risus nec, bibendum dui.
-          </li>
-          <li>
-            <a href="#">Donec volutpat enim tempus</a>: erat tincidunt, eu
-            vestibulum orci ornare. In sed imperdiet ligula.
-          </li>
-        </ul>
-        <p>
-          <span>Vivamus eleifend:</span> Nunc imperdiet mattis ipsum, ac posuere
-          mauris rutrum in. Duis non mi sit amet quam lacinia molestie.
-        </p>
-        <p>
-          <span>Duis finibus:</span> Mauris ut congue turpis. Cras lectus
-          ligula, maximus ut tristique at, consectetur nec libero.
-        </p>
-        <p>
-          <span>Donec aliquet:</span> Aenean a elit at diam interdum ultricies.
-        </p>
-        <p>
-          <span>Curabitur imperdiet:</span> magna vitae congue sollicitudin,
-          quam dolor eleifend leo, eget eleifend turpis dolor eget mi.
-        </p>
-        <p>
-          <span>Affordable Pricing:</span>
-          <a href="#">Nunc feugiat dui ut nulla posuere</a>, in semper ante
-          malesuada. Phasellus consectetur ligula vitae metus imperdiet
-          convallis.
-        </p>
-        <p>
-          <span>Getting Started:</span> Vivamus dapibus est sed ipsum elementum
-          cursus. In tempus pharetra varius.
-          <a href="#">Nunc ornare hendrerit lacus</a> and
-          <a href="#">Proin tempus arcu a orci semper</a>.
-        </p>
+        <form
+          class="contact-form"
+          name="contact"
+          method="POST"
+          netlify-honeypot="city"
+          netlify="netlify"
+          action="/accept"
+        >
+          <p class="instructions">
+            Fill in your contact details here and click "send" to be on the
+            Simple Comment mailing list.
+          </p>
+          <div class="input-field">
+            <label for="name">name</label>
+            <input name="name" id="name" class="h2rem" />
+          </div>
+          <div class="input-field">
+            <label for="email">email</label>
+            <input type="email" name="email" id="email" class="h2rem" />
+          </div>
+          <div class="hide">
+            <!-- spam prevention: this should remain empty -->
+            <label for="city">city</label>
+            <input name="city" id="city" />
+          </div>
+          <div class="button-row">
+            <button type="submit">Send</button>
+          </div>
+        </form>
       </section>
 
+      <hr />
+      <h2 class="simple-comment-logotype">Simple Comment demo:</h2>
+      <p>
+        What are your thoughts on the role of artificial intelligence in shaping
+        the future of work?
+      </p>
       <section id="simple-comment-display"></section>
     </main>
     <script type="module" src="./js/simple-comment.js" defer></script>

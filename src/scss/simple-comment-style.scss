@@ -8,7 +8,11 @@ $success-green: #28a745;
 $inset-shadow-color: color.change($primary-color, $alpha: 0.5);
 $body-background: color.scale($primary-color, $lightness: 97%);
 $text-color: color.scale($primary-color, $lightness: -70%);
-$highlight-text-color: color.scale($body-background, $lightness: -50%, $saturation: -70%); // #7f8893;
+$highlight-text-color: color.scale(
+  $body-background,
+  $lightness: -50%,
+  $saturation: -70%
+); // #7f8893;
 //  $highlight-text-color: #7f8893;
 
 .simple-comment {
@@ -330,7 +334,7 @@ $highlight-text-color: color.scale($body-background, $lightness: -50%, $saturati
             BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
           margin-left: 0.5rem;
           padding-left: 2rem;
-          
+
           > p {
             margin-bottom: 1rem;
           }
