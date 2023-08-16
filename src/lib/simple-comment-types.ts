@@ -96,6 +96,7 @@ export type Comment = {
   replies?: Comment[]
   dateCreated: Date
   dateDeleted?: Date
+  new?: boolean // Used client-side to indicate a new just-posted comment
 }
 
 export type DeletedComment = Comment & {

@@ -118,7 +118,7 @@
   // Update the single source of truth
   const onCommentPosted = commentPostedEvent => {
     const { comment } = commentPostedEvent.detail
-    repliesFlatArray = [comment, ...repliesFlatArray]
+    repliesFlatArray = [{ ...comment, new: true }, ...repliesFlatArray]
     updateDiscussionDisplay(discussion, repliesFlatArray)
   }
 

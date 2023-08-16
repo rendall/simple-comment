@@ -1,16 +1,18 @@
 @use "sass:color";
 
 $corporate-blue: #3287e6;
+$primary-color: $corporate-blue;
 $error-red: #d9534f;
 $success-green: #28a745;
-$inset-shadow-color: color.change($corporate-blue, $alpha: 0.5);
+$inset-shadow-color: color.change($primary-color, $alpha: 0.5);
+$body-background: color.scale($primary-color, $lightness: 97%);
 
 .simple-comment {
   // resets
 
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
-  background-color: #f8fcff;
+  background-color: $body-background;
   color: #33475c;
   font-family: var(--interface-font-family), -apple-system, BlinkMacSystemFont,
     "Segoe UI", Helvetica, Arial, sans-serif;
@@ -32,7 +34,7 @@ $inset-shadow-color: color.change($corporate-blue, $alpha: 0.5);
 
   input,
   textarea {
-    border: 1px solid $corporate-blue;
+    border: 1px solid $primary-color;
     font-family: var(--input-font-family), monospace;
     font-size: 1.2rem;
     padding: 0.5rem;
@@ -41,10 +43,10 @@ $inset-shadow-color: color.change($corporate-blue, $alpha: 0.5);
     box-shadow: 0 0 0.3rem 0 $inset-shadow-color inset;
 
     &:focus-visible {
-      outline: 1px solid $corporate-blue;
+      outline: 1px solid $primary-color;
 
       &.is-error {
-        border: 1px solid $corporate-blue;
+        border: 1px solid $primary-color;
       }
     }
   }
@@ -55,7 +57,7 @@ $inset-shadow-color: color.change($corporate-blue, $alpha: 0.5);
 
   textarea {
     display: block;
-    height: 17rem;
+    height: 7rem;
     margin-bottom: 1rem;
     max-width: 100%;
     min-width: 100%;
@@ -65,7 +67,7 @@ $inset-shadow-color: color.change($corporate-blue, $alpha: 0.5);
     appearance: none;
     background-color: transparent;
     background: transparent;
-    border: 1px solid $corporate-blue;
+    border: 1px solid $primary-color;
     cursor: pointer;
     font-size: inherit;
     height: 2rem;
@@ -207,14 +209,14 @@ $inset-shadow-color: color.change($corporate-blue, $alpha: 0.5);
       .selection-tab {
         border: 0;
         margin: 0;
-        border-bottom: 1px solid $corporate-blue;
+        border-bottom: 1px solid $primary-color;
         border-radius: 0;
-        color: $corporate-blue;
+        color: $primary-color;
 
         &:hover:not(.selected) {
           color: inherit;
           font-weight: normal;
-          border: $corporate-blue 1px solid;
+          border: $primary-color 1px solid;
           border-top-left-radius: 5px;
           border-top-right-radius: 5px;
           border-bottom-style: dashed;
@@ -222,7 +224,7 @@ $inset-shadow-color: color.change($corporate-blue, $alpha: 0.5);
 
         &.selected {
           font-weight: bold;
-          border: $corporate-blue 2px solid;
+          border: $primary-color 2px solid;
           border-top-left-radius: 5px;
           border-top-right-radius: 5px;
           cursor: pointer;
@@ -302,15 +304,13 @@ $inset-shadow-color: color.change($corporate-blue, $alpha: 0.5);
             display: flex;
             flex-direction: row;
             justify-content: space-between;
-            width: calc(
-              100% - 3rem - 1.3rem
-            ); // Subtract the width and margin of the .user-avatar
+            width: calc(100% - 3rem - 1.3rem);
 
             .user-name {
               white-space: nowrap;
               overflow: hidden;
               text-overflow: ellipsis;
-              color: $corporate-blue;
+              color: $primary-color;
               font-weight: bold;
               margin-right: 1rem;
             }
@@ -332,6 +332,14 @@ $inset-shadow-color: color.change($corporate-blue, $alpha: 0.5);
           }
         }
 
+        .comment-footer {
+          margin-bottom: 1rem;
+        }
+
+        &.is-new {
+          animation: flash 1s ease-in-out;
+        }
+
         &.is-open,
         &.has-replies {
           position: relative;
@@ -351,11 +359,21 @@ $inset-shadow-color: color.change($corporate-blue, $alpha: 0.5);
             margin-left: 0.5rem;
           }
         }
-
-        .comment-footer {
-          margin-bottom: 1rem;
-        }
       }
     }
+  }
+}
+
+@keyframes flash {
+  0% {
+    background-color: $primary-color;
+  }
+
+  25% {
+    background-color: color.scale($primary-color, $lightness: 90%);
+  }
+
+  100% {
+    background-color: inherit;
   }
 }
