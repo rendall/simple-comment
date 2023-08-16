@@ -95,7 +95,7 @@ const transliterationMap = {
 }
 
 const transliterate = (char: string = ""): string =>
-  (Object.entries(transliterationMap).find(([key, value]) =>
+  (Object.entries(transliterationMap).find(([_key, value]) =>
     value.includes(char)
   ) ?? [char, undefined])[0]
 

@@ -23,7 +23,7 @@
   const { state, send } = useMachine(discussionMachine)
 
   const updateStatusDisplay = (message = "", error = false) => {
-    console.info({ message, error })
+    console.info("status update:", { message, error })
   }
 
   const loadingStateHandler = () => {

@@ -252,15 +252,16 @@
       <hr />
       <h2 class="simple-comment-logotype">Simple Comment demo:</h2>
       <p>
-        What are your thoughts on the role of artificial intelligence in shaping
-        the future of work?
+        Question for the day: What are your thoughts on the role of artificial
+        intelligence in shaping the future of work?
       </p>
       <section id="simple-comment-display"></section>
     </main>
     <script type="module" src="./js/simple-comment.js" defer></script>
     <script type="module" defer>
       var params = new URLSearchParams(window.location.search)
-      var topicId = params.get("topicId") || "http-localhost-7070"
+      var topicId =
+        params.get("topicId") || window.location.toString().replace(/\W/g, "-")
       setSimpleCommentDiscussion(topicId)
     </script>
   </body>
