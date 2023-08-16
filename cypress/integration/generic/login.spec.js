@@ -2,7 +2,7 @@
 
 describe(`User Authentication Flow`, () => {
   beforeEach(() => {
-    cy.visit("http://localhost:7070/")
+    cy.visit("/")
     cy.get("button.selection-tab-login").click()
   })
   after(() => {

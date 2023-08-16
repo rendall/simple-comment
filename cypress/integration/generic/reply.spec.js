@@ -23,7 +23,7 @@ describe("reply", () => {
   beforeEach(() => {
     cy.intercept("POST", ".netlify/functions/comment/*").as("postComment")
 
-    cy.visit("http://localhost:7070")
+    cy.visit("/")
     cy.get("button.comment-reply-button").first().as("replyButton")
     cy.get("@replyButton").closest("article.comment-body").as("commentBody")
     cy.get("@replyButton").click()

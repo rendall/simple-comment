@@ -12,7 +12,7 @@ describe("Signup Functionality", () => {
         req.reply({ statusCode: 200 })
       }
     )
-    cy.visit("http://localhost:7070/")
+    cy.visit("/")
     cy.get("button.selection-tab-signup").click()
   })
 

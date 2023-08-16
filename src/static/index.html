@@ -182,6 +182,7 @@
     .contact-form label {
       text-transform: capitalize;
     }
+
     .contact-form .hide {
       display: none;
     }
@@ -259,9 +260,11 @@
     </main>
     <script type="module" src="./js/simple-comment.js" defer></script>
     <script type="module" defer>
+      function toTopic(url) {
+        return url.replace("://", "-").replace(/\/$/, "").replace(/\W/g, "-")
+      }
       var params = new URLSearchParams(window.location.search)
-      var topicId =
-        params.get("topicId") || window.location.toString().replace(/\W/g, "-")
+      var topicId = params.get("topicId") || toTopic(window.location.toString())
       setSimpleCommentDiscussion(topicId)
     </script>
   </body>

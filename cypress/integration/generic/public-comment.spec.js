@@ -9,7 +9,7 @@ context("Guest comment", () => {
   const commentText = generateRandomCopy()
 
   before(() => {
-    cy.visit("http://localhost:7070/")
+    cy.visit("/")
   })
 
   beforeEach(() => {
