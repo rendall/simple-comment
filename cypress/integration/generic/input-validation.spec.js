@@ -18,7 +18,7 @@ context("Input invalid data", () => {
       }
     )
 
-    cy.visit("http://localhost:7070/")
+    cy.visit("/")
   })
 
   afterEach(() => {

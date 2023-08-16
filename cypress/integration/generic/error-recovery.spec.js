@@ -30,7 +30,7 @@ context("Error recovery", () => {
   const commentText = generateRandomCopy()
 
   beforeEach(() => {
-    cy.visit("http://localhost:7070/")
+    cy.visit("/")
   })
 
   afterEach(() => {
