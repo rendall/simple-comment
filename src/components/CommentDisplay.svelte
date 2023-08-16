@@ -6,6 +6,7 @@
     formatDate,
     idIconDataUrl,
     isResponseOk,
+    toParagraphs,
   } from "../frontend-utilities"
   import { useMachine } from "@xstate/svelte"
   import { commentDeleteMachine } from "../lib/commentDelete.xstate"
@@ -28,7 +29,6 @@
   }
 
   const onOpenCommentInput = commentId => () => {
-    // if (isRoot) showReply = commentId
     dispatch("reply", { commentId })
   }
 
@@ -103,6 +103,7 @@
       class:is-root={isRoot}
       class:is-deleted={comment.dateDeleted}
       class:has-replies={comment.replies?.length > 0}
+      class:is-new={comment.new}
       class:is-open={showReply === comment.id}
     >
       {#if comment.dateDeleted}
@@ -139,7 +140,9 @@
           </div>
         </header>
         <article class="comment-body">
-          <p>{comment.text}</p>
+          {#each toParagraphs(comment.text) as paragraph}
+            <p>{paragraph}</p>
+          {/each}
           {#if showReply === comment.id}
             <CommentInput
               placeholder="Your reply"

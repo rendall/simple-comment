@@ -226,3 +226,10 @@ export const idIconDataUrl = (userId: string) =>
     size: 8,
     scale: 6,
   })
+
+export const toParagraphs = (comment: string) =>
+  comment
+    .replaceAll(/\n{2,}/g, "\n")
+    .split("\n")
+    .filter(line => line.length)
+    .map(line => line.trim())
