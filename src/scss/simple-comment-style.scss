@@ -2,18 +2,21 @@
 
 $corporate-blue: #3287e6;
 $primary-color: $corporate-blue;
+$primary-hue: color.hue($primary-color);
 $error-red: #d9534f;
 $success-green: #28a745;
 $inset-shadow-color: color.change($primary-color, $alpha: 0.5);
 $body-background: color.scale($primary-color, $lightness: 97%);
+$text-color: color.scale($primary-color, $lightness: -70%);
+$highlight-text-color: color.scale($body-background, $lightness: -50%, $saturation: -70%); // #7f8893;
+//  $highlight-text-color: #7f8893;
 
 .simple-comment {
   // resets
-
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
   background-color: $body-background;
-  color: #33475c;
+  color: $text-color;
   font-family: var(--interface-font-family), -apple-system, BlinkMacSystemFont,
     "Segoe UI", Helvetica, Arial, sans-serif;
   font-size: 1rem;
@@ -123,7 +126,7 @@ $body-background: color.scale($primary-color, $lightness: 97%);
     margin-bottom: 0.5rem;
 
     .helper-text {
-      color: #7f8893;
+      color: $highlight-text-color;
       font-style: italic;
       margin: 0;
       min-height: 1.5rem;
@@ -272,10 +275,11 @@ $body-background: color.scale($primary-color, $lightness: 97%);
         margin-bottom: 3rem;
 
         .comment-header {
-          min-height: unset;
           align-items: center;
           display: flex;
           flex-direction: row;
+          margin-bottom: 0.25rem;
+          min-height: unset;
 
           p {
             margin: 0;
@@ -326,6 +330,10 @@ $body-background: color.scale($primary-color, $lightness: 97%);
             BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
           margin-left: 0.5rem;
           padding-left: 2rem;
+          
+          > p {
+            margin-bottom: 1rem;
+          }
 
           p:last-of-type {
             margin-bottom: 1rem;
