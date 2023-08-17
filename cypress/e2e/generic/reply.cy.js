@@ -25,12 +25,11 @@ describe("reply", () => {
 
     cy.visit("/")
     cy.get("button.comment-reply-button").first().as("replyButton")
-    cy.get("@replyButton").closest("article.comment-body").as("commentBody")
+    cy.get("@replyButton")
+      .closest("article.comment-body")
+      .as("commentBody", { type: "static" })
+    cy.get("@commentBody").should("exist")
     cy.get("@replyButton").click()
-  })
-
-  afterEach(() => {
-    cy.clearCookie("simple_comment_token") // clear the authentication/session cookie
   })
 
   it("it should reply to a comment as a guest", () => {

@@ -5,25 +5,14 @@ import {
   generateRandomName,
 } from "../../../src/tests/mockData"
 
-context("Guest comment", () => {
+describe("Guest comment", { testIsolation: false }, () => {
   const commentText = generateRandomCopy()
 
-  before(() => {
+  beforeEach(() => {
     cy.visit("/")
   })
 
-  beforeEach(() => {
-    // This keeps the same guest user authentication in memory for the
-    // duration of these tests
-    Cypress.Cookies.preserveOnce("simple_comment_token")
-  })
-
-  after(() => {
-    cy.clearCookie("simple_comment_token") // clear the authentication/session cookie
-  })
-
   it("Submit a comment as a guest user", () => {
-    // https://on.cypress.io/type
     cy.intercept("POST", ".netlify/functions/comment/*").as("postComment")
     cy.get("form.comment-form #guest-email").type("fake@email.com")
     cy.get("form.comment-form #guest-name").type(generateRandomName())
