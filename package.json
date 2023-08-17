@@ -92,7 +92,13 @@
     "yarn": "^1.22.18"
   },
   "resolutions": {
-    "async": "^2.6.4 || >2",
-    "glob-parent": "^6.0.2"
+    "@cypress/request": "^3.0.0",
+    "async": ">2.6.4 || ^2.6.4",
+    "glob-parent": ">6.0.2 || ^6.0.2"
+  },
+  "documentation": {
+    "resolutions": {
+      "@cypress/request": "Resolved to version 3.0.0 to address security vulnerability. q.v. https://github.com/advisories/GHSA-p8p7-x288-28g6"
+    }
   }
 }
