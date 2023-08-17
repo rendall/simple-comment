@@ -1,5 +1,7 @@
 /// <reference types="cypress" />
 describe("Simple Comment frontend", () => {
+  beforeEach(() => cy.visit("/"))
+
   it("successfully loads", () => {
     cy.visit("/")
   })
