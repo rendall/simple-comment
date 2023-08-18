@@ -2,6 +2,7 @@ yarn-error.log
 stats.json
 globalConfig.json
 debug.log
+/scripts/cypress/
 /node_modules
 /lib
 /functions
@@ -18,6 +19,6 @@ debug.log
 .env
 */*.js
 *.map
-!/dist/css/simple-comment-style.css
 !/docs/**/*.js
+!/dist/css/simple-comment-style.css
 !/cypress/**/*.js
