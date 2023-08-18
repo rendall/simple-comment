@@ -85,6 +85,7 @@ context("Error recovery", () => {
     cy.get("button.selection-tab-signup").click()
 
     cy.intercept("POST", ".netlify/functions/comment/*").as("postComment")
+    cy.intercept("POST", ".netlify/functions/user/").as("postUser")
 
     cy.get("form.comment-form .comment-field").type(commentText)
     cy.get("form.comment-form .comment-submit-button").click()
@@ -128,6 +129,7 @@ context("Error recovery", () => {
 
     cy.get("#status-display").should("not.have.class", "is-error")
 
+    cy.wait("@postUser").its("response.statusCode").should("eq", 201) // 201 Created
     cy.wait("@postComment").its("response.statusCode").should("eq", 201) // 201 Created
     cy.get("ul.comment-replies.is-root").should("contain", commentText)
   })

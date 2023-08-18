@@ -81,7 +81,8 @@ describe("Signup Functionality", () => {
     cy.get("#signup-user-id").clear().type(newUserInfo.id)
     cy.get("#signup-email").clear().type(newUserInfo.email)
     cy.get("#signup-password").clear().type("crankyB@biesMeikTroobl")
-    cy.get("#signup-form").submit()
+
+    cy.get(".comment-submit-button").click()
 
     cy.intercept("POST", "/.netlify/functions/auth", req => {
       req.reply({ statusCode: 200, body: "OK" })

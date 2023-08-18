@@ -12,8 +12,9 @@
   let isProcessing = true
 
   loginStateStore.subscribe(state => {
-    const { value, nextEvents } = state
-    loginStateValue = value
+    const { state: stateValue, nextEvents, select } = state
+    if (select !== undefined) return
+    loginStateValue = stateValue
     loginStateNextEvents = nextEvents
   })
 
@@ -55,7 +56,7 @@
         </p>
         <p id="self-email">{currentUser.email}</p>
       </div>
-      {#if loginStateNextEvents.includes("LOGOUT")}
+      {#if loginStateNextEvents?.includes("LOGOUT")}
         <button id="log-out-button" on:click={onLogoutClick}>Log out</button>
       {/if}
     </section>

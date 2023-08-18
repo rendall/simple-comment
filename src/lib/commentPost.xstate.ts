@@ -71,6 +71,7 @@ export const commentPostMachine = createMachine<
       validated: {
         on: {
           POST: "posting",
+          RESET: "idle",
         },
       },
       posting: {

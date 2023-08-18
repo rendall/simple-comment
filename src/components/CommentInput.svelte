@@ -1,12 +1,12 @@
 <script lang="ts">
+  import Login from "./Login.svelte"
+  import SkeletonCommentInput from "./low-level/SkeletonCommentInput.svelte"
   import type {
     Comment,
     CommentId,
     ServerResponse,
     User,
   } from "../lib/simple-comment-types"
-  import Login from "./Login.svelte"
-  import SkeletonCommentInput from "./low-level/SkeletonCommentInput.svelte"
   import { StateValue } from "xstate"
   import { commentPostMachine } from "../lib/commentPost.xstate"
   import { createEventDispatcher, onDestroy, onMount } from "svelte"
@@ -14,6 +14,7 @@
   import { isResponseOk } from "../frontend-utilities"
   import { postComment } from "../apiClient"
   import { useMachine } from "@xstate/svelte"
+  import { LoginTab } from "../lib/simple-comment-types"
   export let currentUser: User | undefined
   export let commentId: CommentId
   export let onCancel = null
@@ -21,10 +22,12 @@
   export let placeholder = "Your comment"
 
   let commentText = ""
+  let buttonCopy = "Add comment"
   let loginStateValue
   let textareaRef
   let textAreaWidth = "100%"
   let textAreaHeight = "7rem"
+  let loginTabSelect: LoginTab = LoginTab.guest
 
   const { state, send } = useMachine(commentPostMachine)
   const dispatch = createEventDispatcher()
@@ -35,13 +38,19 @@
   }
 
   const validatingStateHandler = () => {
+    if (loginTabSelect === LoginTab.guest && !commentText.length) {
+      send({ type: "ERROR", error: "Comment is required." })
+      return
+    }
     const hasCurrentUser = currentUser !== undefined
     if (hasCurrentUser) send({ type: "SUCCESS" })
     else send("LOG_IN")
   }
 
   const validatedStateHandler = () => {
-    send({ type: "POST" })
+    const hasComment = commentText && commentText.length
+    if (hasComment) send("POST")
+    else send("RESET")
   }
 
   const loggingInStateHandler = () => {
@@ -49,35 +58,40 @@
   }
 
   const unsubscribeLoginState = loginStateStore.subscribe(loginState => {
-    const { value } = loginState
-    loginStateValue = value
-    const commentInputStateValue = $state.value
+    const { state: stateValue, select } = loginState
 
-    //TODO: This state handling should be done via XState, probably by combining these state machines
-    switch (commentInputStateValue) {
-      case "loggingIn":
-        switch (loginStateValue) {
-          case "loggedIn":
-            setTimeout(() => send("SUCCESS"), 1)
-            break
-          case "error":
-            setTimeout(() => send({ type: "ERROR", error: "Login error" }))
-            break
-          case "loggedOut":
-            dispatchableStore.dispatch("loginIntent")
-            break
+    if (stateValue) {
+      loginStateValue = stateValue
+      const commentInputStateValue = $state.value
 
-          default:
-            console.warn(
-              `Unhandled loginState '${loginStateValue}' in CommentInput`
-            )
-            break
-        }
+      //TODO: This state handling should be done via XState, probably by combining these state machines
+      switch (commentInputStateValue) {
+        case "loggingIn":
+          switch (loginStateValue) {
+            case "loggedIn":
+              setTimeout(() => send("SUCCESS"), 1)
+              break
+            case "error":
+              setTimeout(() => send({ type: "ERROR", error: "Login error" }))
+              break
+            case "loggedOut":
+              dispatchableStore.dispatch("loginIntent")
+              break
 
-        break
+            default:
+              console.warn(
+                `Unhandled loginState '${loginStateValue}' in CommentInput`
+              )
+              break
+          }
 
-      default:
-        break
+          break
+
+        default:
+          break
+      }
+    } else if (select !== undefined) {
+      loginTabSelect = select
     }
   })
 
@@ -124,6 +138,20 @@
     send({ type: "RESET" })
   }
 
+  const getButtonCopy = (select: LoginTab, comment: string) => {
+    if (comment.length) return "Add comment"
+    else
+      switch (select) {
+        case LoginTab.signup:
+          return "Sign up"
+        case LoginTab.login:
+          return "Log in"
+        case LoginTab.guest:
+        default:
+          return "Add comment"
+      }
+  }
+
   const resizeObserver = new ResizeObserver(([textArea]) => {
     if (isProcessing) return
     const { inlineSize, blockSize } = textArea.borderBoxSize[0] ?? {
@@ -160,6 +188,8 @@
   $: isProcessing = (
     ["validating", "loggingIn", "posting", "deleting"] as StateValue[]
   ).includes($state.value)
+
+  $: buttonCopy = getButtonCopy(loginTabSelect, commentText)
 </script>
 
 <SkeletonCommentInput
@@ -173,7 +203,7 @@
     class="comment-field"
     bind:this={textareaRef}
     bind:value={commentText}
-    required
+    required={loginTabSelect === LoginTab.guest}
     {autofocus}
     {placeholder}
   />
@@ -182,6 +212,6 @@
     {#if onCancel !== null}
       <button class="comment-cancel-button" on:click={onCancel}>Cancel</button>
     {/if}
-    <button class="comment-submit-button" type="submit">Add comment</button>
+    <button class="comment-submit-button" type="submit">{buttonCopy}</button>
   </div>
 </form>

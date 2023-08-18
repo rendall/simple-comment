@@ -30,6 +30,7 @@ export type LoginMachineEvent =
   | { type: "GUEST"; guest: { name: string; email: string } }
   | { type: "LOGIN" }
   | { type: "LOGOUT" }
+  | { type: "RESET" }
   | { type: "SIGNUP" }
   | { type: "SUCCESS" }
 export const loginMachine = createMachine<
