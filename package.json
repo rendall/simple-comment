@@ -21,6 +21,7 @@
     "lint": "eslint .",
     "posttest": "rimraf ./globalConfig.json",
     "prebuild": "rimraf ./functions && rimraf ./dist/js && mkdir -p ./dist/js",
+    "start:db": "sudo systemctl start mongod",
     "start:backend": "netlify dev --port 7070",
     "start:frontend": "webpack-dev-server --config ./webpack.frontend.js",
     "start": "NODE_ENV=\"development\" NODE_OPTIONS=\"--max-old-space-size=4096\" netlify dev --port 7070 --command \"yarn run start:frontend\"",

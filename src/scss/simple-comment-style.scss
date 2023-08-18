@@ -8,12 +8,12 @@ $success-green: #28a745;
 $inset-shadow-color: color.change($primary-color, $alpha: 0.5);
 $body-background: color.scale($primary-color, $lightness: 97%);
 $text-color: color.scale($primary-color, $lightness: -70%);
+$accent-background: color.scale($primary-color, $lightness: 90%);
 $highlight-text-color: color.scale(
   $body-background,
   $lightness: -50%,
   $saturation: -70%
-); // #7f8893;
-//  $highlight-text-color: #7f8893;
+);
 
 .simple-comment {
   // resets
@@ -87,30 +87,6 @@ $highlight-text-color: color.scale(
     }
   }
 
-  /* Skeleton styles */
-  .skeleton {
-    /* Create a background color animation to simulate shimmer effect */
-    background-image: linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0.2) 25%,
-      rgba(255, 255, 255, 0.4) 50%,
-      rgba(255, 255, 255, 0.2) 75%
-    );
-    background-size: 200% 100%;
-    animation: shimmer 1s infinite;
-  }
-
-  /* Animation keyframes for shimmer effect */
-  @keyframes shimmer {
-    0% {
-      background-position: -200% 0;
-    }
-
-    100% {
-      background-position: 200% 0;
-    }
-  }
-
   .button-row {
     display: flex;
     direction: row;
@@ -161,6 +137,10 @@ $highlight-text-color: color.scale(
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
+    // border: 1px solid $primary-color;
+    padding: 1rem;
+    background-color: $accent-background;
+    margin-bottom: 3rem;
 
     .button-placeholder {
       height: 2.5rem;
@@ -179,7 +159,7 @@ $highlight-text-color: color.scale(
       margin-right: 1.3rem;
 
       img {
-        background-color: gray;
+        background-color: $accent-background;
       }
 
       > :first-child {
@@ -199,6 +179,10 @@ $highlight-text-color: color.scale(
 
       p {
         margin: 0;
+      }
+
+      button {
+        background-color: $body-background;
       }
     }
   }
@@ -255,6 +239,8 @@ $highlight-text-color: color.scale(
   }
 
   .simple-comment-discussion {
+    margin-bottom: 5rem;
+
     form.comment-form {
       margin-bottom: 3rem;
 
@@ -371,7 +357,56 @@ $highlight-text-color: color.scale(
             margin-left: 0.5rem;
           }
         }
+
+        &.is-deleted {
+          .gray-block {
+            background: color.adjust($text-color, $alpha: -0.9);
+            display: block;
+            height: 1rem;
+          }
+          > .comment-header {
+            .user-avatar {
+              .gray-block {
+                width: 2.5rem;
+                height: 2.5rem;
+              }
+            }
+
+            .comment-info {
+              .user-name {
+                display: flex;
+
+                :first-child {
+                  width: 4rem;
+                }
+
+                .gray-block {
+                  width: 5rem;
+                  margin-right: 1rem;
+                }
+              }
+
+              .comment-date {
+                .gray-block {
+                  width: 10rem;
+                }
+              }
+            }
+          }
+
+          > article.comment-body {
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+            font-style: italic;
+            color: color.adjust($text-color, $alpha: -0.4);
+            text-align: center;
+          }
+        }
       }
+    }
+
+    .is-hidden {
+      display: none;
     }
   }
 }

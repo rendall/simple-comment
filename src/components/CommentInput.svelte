@@ -5,13 +5,15 @@
     ServerResponse,
     User,
   } from "../lib/simple-comment-types"
+  import Login from "./Login.svelte"
+  import SkeletonCommentInput from "./low-level/SkeletonCommentInput.svelte"
+  import { StateValue } from "xstate"
   import { commentPostMachine } from "../lib/commentPost.xstate"
-  import { createEventDispatcher, onDestroy } from "svelte"
-  import { isResponseOk } from "../frontend-utilities"
+  import { createEventDispatcher, onDestroy, onMount } from "svelte"
   import { dispatchableStore, loginStateStore } from "../lib/svelte-stores"
+  import { isResponseOk } from "../frontend-utilities"
   import { postComment } from "../apiClient"
   import { useMachine } from "@xstate/svelte"
-  import Login from "./Login.svelte"
   export let currentUser: User | undefined
   export let commentId: CommentId
   export let onCancel = null
@@ -20,6 +22,9 @@
 
   let commentText = ""
   let loginStateValue
+  let textareaRef
+  let textAreaWidth = "100%"
+  let textAreaHeight = "7rem"
 
   const { state, send } = useMachine(commentPostMachine)
   const dispatch = createEventDispatcher()
@@ -119,6 +124,20 @@
     send({ type: "RESET" })
   }
 
+  const resizeObserver = new ResizeObserver(([textArea]) => {
+    if (isProcessing) return
+    const { inlineSize, blockSize } = textArea.borderBoxSize[0] ?? {
+      inlineSize: "100%",
+      blockSize: "7rem",
+    }
+    textAreaWidth = `${inlineSize}px`
+    textAreaHeight = `${blockSize}px`
+  })
+
+  onMount(() => {
+    resizeObserver.observe(textareaRef)
+  })
+
   onDestroy(() => {
     unsubscribeLoginState()
   })
@@ -137,20 +156,28 @@
       if ($state.value === stateValue) stateHandler()
     })
   }
+
+  $: isProcessing = (
+    ["validating", "loggingIn", "posting", "deleting"] as StateValue[]
+  ).includes($state.value)
 </script>
 
-<form class="comment-form" on:submit={onSubmit}>
+<SkeletonCommentInput
+  width={textAreaWidth}
+  height={textAreaHeight}
+  isHidden={!isProcessing}
+/>
+<form class="comment-form" class:is-hidden={isProcessing} on:submit={onSubmit}>
   <!-- svelte-ignore a11y-autofocus -->
   <textarea
     class="comment-field"
-    {placeholder}
+    bind:this={textareaRef}
+    bind:value={commentText}
     required
     {autofocus}
-    bind:value={commentText}
+    {placeholder}
   />
-  <!-- {#if !currentUser} -->
   <Login {currentUser} />
-  <!-- {/if} -->
   <div class="button-row">
     {#if onCancel !== null}
       <button class="comment-cancel-button" on:click={onCancel}>Cancel</button>

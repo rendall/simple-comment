@@ -14,6 +14,7 @@ export default defineConfig({
     },
     baseUrl: "http://localhost:7070",
     excludeSpecPattern: "**/examples/*.spec.js",
+    experimentalRunAllSpecs: true,
   },
 
   component: {

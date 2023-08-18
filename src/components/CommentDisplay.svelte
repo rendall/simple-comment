@@ -108,10 +108,17 @@
     >
       {#if comment.dateDeleted}
         <header class="comment-header">
-          <div class="user-avatar" />
+          <div class="user-avatar">
+            <div class="gray-block" />
+          </div>
           <div class="comment-info">
-            <p class="user-name" />
-            <p class="comment-date" />
+            <div class="user-name">
+              <div class="gray-block" />
+              <div class="gray-block" />
+            </div>
+            <div class="comment-date">
+              <div class="gray-block" />
+            </div>
           </div>
         </header>
         <article class="comment-body">

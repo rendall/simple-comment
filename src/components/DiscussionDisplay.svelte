@@ -11,6 +11,7 @@
   import { discussionMachine } from "../lib/discussion.xstate"
   import { isResponseOk, threadComments } from "../frontend-utilities"
   import CommentInput from "./CommentInput.svelte"
+  import SkeletonComment from "./low-level/SkeletonComment.svelte"
 
   export let discussionId: string
   export let title: string
@@ -115,7 +116,7 @@
     updateStatusDisplay("loaded")
   }
 
-  // Update the single source of truth
+  // Update the single source of truth without roundtrip to the server
   const onCommentPosted = commentPostedEvent => {
     const { comment } = commentPostedEvent.detail
     repliesFlatArray = [{ ...comment, new: true }, ...repliesFlatArray]
@@ -131,7 +132,8 @@
     event.preventDefault()
     showReply = discussionId
   }
-  // Update the single source of truth
+
+  // Update the single source of truth without roundtrip to the server
   const onCommentDeleted = commentDeletedEvent => {
     const { commentId } = commentDeletedEvent.detail
     const comment = repliesFlatArray.find(comment => comment.id === commentId)
@@ -197,5 +199,9 @@
       on:delete={onCommentDeleted}
       on:posted={onCommentPosted}
     />
+  {/if}
+  {#if $state.value === "loading"}
+    <SkeletonComment />
+    <div style="margin-bottom:10rem" />
   {/if}
 </section>
