@@ -193,12 +193,10 @@ export const isResponseOk = <T>(
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const debounceFunc = <T extends (...args: any[]) => void>(
   func: T,
-  wait = 250,
-  invoke?: T
+  wait = 250
 ) => {
   let debounceTimeout: number | null = null
   return (...args: Parameters<T>): void => {
-    if (invoke) invoke(...args)
     if (debounceTimeout) {
       window.clearTimeout(debounceTimeout)
     }
@@ -207,6 +205,7 @@ export const debounceFunc = <T extends (...args: any[]) => void>(
     }, wait)
   }
 }
+
 export const formatDate = (date: Date | string | undefined, locale?: string) =>
   date
     ? new Date(date).toLocaleDateString(locale, {

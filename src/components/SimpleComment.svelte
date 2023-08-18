@@ -5,7 +5,7 @@
   import SelfDisplay from "./SelfDisplay.svelte"
   export let discussionId
   export let title
-  export let currentUser: User | undefined
+  export let currentUser: User | undefined = undefined
 
   currentUserStore.subscribe(value => (currentUser = value))
 </script>

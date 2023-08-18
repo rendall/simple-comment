@@ -1,5 +1,7 @@
-import { writable } from "svelte/store"
+import type { StateValue } from "xstate"
 import type { User } from "../lib/simple-comment-types"
+import { writable } from "svelte/store"
+import { LoginTab } from "../lib/simple-comment-types"
 
 // the 'request' part of the store will contain the request details
 // the 'response' part of the store will contain the response details
@@ -20,9 +22,14 @@ const createDispatchableStore = () => {
 
 export const dispatchableStore = createDispatchableStore()
 
-export const loginStateStore = writable({
-  value: undefined,
+export const loginStateStore = writable<{
+  state?: StateValue
+  nextEvents?: string[]
+  select?: LoginTab
+}>({
+  state: undefined,
   nextEvents: undefined,
+  select: undefined,
 })
 
 export const currentUserStore = writable<User | undefined>(undefined)

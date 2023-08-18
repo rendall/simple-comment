@@ -9,6 +9,7 @@
     UserId,
     ValidationResult,
   } from "../lib/simple-comment-types"
+  import { LoginTab } from "../lib/simple-comment-types"
   import { useMachine } from "@xstate/svelte"
   import { loginMachine } from "../lib/login.xstate"
   import {
@@ -72,13 +73,7 @@
   let userPasswordMessage = undefined
   let userPasswordStatus = undefined
 
-  enum Tab {
-    guest,
-    login,
-    signup,
-  }
-
-  let selectedIndex = Tab.guest
+  let selectedIndex = LoginTab.guest
 
   const { state, send } = useMachine(loginMachine)
   const updateStatusDisplay = (message = "", error = false) => {
@@ -439,25 +434,25 @@
   const unsubscribeDispatchableStore = dispatchableStore.subscribe(event => {
     switch (event.name) {
       case "logoutIntent": {
-        const canLogout = nextEvents.includes("LOGOUT")
+        const canLogout = nextEvents?.includes("LOGOUT")
         if (canLogout) send("LOGOUT")
         else console.warn("Received logoutIntent at state", $state.value)
         break
       }
 
       case "loginIntent": {
-        const canLogin = nextEvents.some(event =>
+        const canLogin = nextEvents?.some(event =>
           ["LOGIN", "GUEST", "SIGNUP"].includes(event)
         )
         if (canLogin) {
           switch (selectedIndex) {
-            case Tab.guest:
+            case LoginTab.guest:
               send("GUEST")
               break
-            case Tab.signup:
+            case LoginTab.signup:
               send("SIGNUP")
               break
-            case Tab.login:
+            case LoginTab.login:
               send("LOGIN")
               break
             default:
@@ -507,8 +502,8 @@
       ["error", errorStateHandler],
     ]
 
-    nextEvents = $state.nextEvents
-    loginStateStore.set({ value: $state.value, nextEvents })
+    nextEvents = $state.nextEvents ?? []
+    loginStateStore.set({ state: $state.value, nextEvents })
     stateHandlers.forEach(([stateValue, stateHandler]) => {
       if ($state.value === stateValue) setTimeout(stateHandler, 1)
     })
@@ -516,6 +511,19 @@
 
   $: {
     currentUserStore.set(self)
+  }
+
+  $: {
+    loginStateStore.set({ select: selectedIndex })
+    if (
+      selectedIndex === LoginTab.signup &&
+      displayName.length &&
+      !userIdManuallyChanged
+    ) {
+      userId = formatUserId(displayName)
+      checkUserIdValid(userId)
+      checkUserIdExists(userId)
+    }
   }
 
   onMount(() => {
@@ -540,32 +548,35 @@
   {#if !self}
     <div class="selection-tabs button-row">
       <button
-        class:selected={selectedIndex === Tab.login}
+        class:selected={selectedIndex === LoginTab.login}
         class="selection-tab selection-tab-login"
-        on:click={() => (selectedIndex = Tab.login)}
+        on:click={() => (selectedIndex = LoginTab.login)}
         type="button">Login</button
       >
       <button
-        class:selected={selectedIndex === Tab.signup}
+        class:selected={selectedIndex === LoginTab.signup}
         class="selection-tab selection-tab-signup"
-        on:click={() => (selectedIndex = Tab.signup)}
+        on:click={() => (selectedIndex = LoginTab.signup)}
         type="button">Signup</button
       >
       <button
-        class:selected={selectedIndex === Tab.guest}
+        class:selected={selectedIndex === LoginTab.guest}
         class="selection-tab selection-tab-guest"
-        on:click={() => (selectedIndex = Tab.guest)}
+        on:click={() => (selectedIndex = LoginTab.guest)}
         type="button">Guest</button
       >
     </div>
     <div class="form-container">
-      {#if selectedIndex === Tab.guest}
+      {#if selectedIndex === LoginTab.guest}
         <form
           class="guest-login-form login-form"
           id="guest-login-form"
           in:fly={{ y: 0, duration: 250 }}
           on:submit={onGuestClick}
         >
+          <p class="call-to-action">
+            To comment as a guest, enter a display name and email below.
+          </p>
           <InputField
             bind:value={displayName}
             helperText={displayNameHelperText}
@@ -589,13 +600,17 @@
         </form>
       {/if}
 
-      {#if selectedIndex === Tab.login}
+      {#if selectedIndex === LoginTab.login}
         <form
           class="user-login-form login-form"
           id="user-login-form"
           in:fly={{ y: 0, duration: 250 }}
           on:submit={onLoginClick}
         >
+          <p class="call-to-action">
+            If you have an account, this is where you enter your user handle and
+            password to log in.
+          </p>
           <InputField
             id="login-user-id"
             labelText="User handle"
@@ -616,7 +631,7 @@
         </form>
       {/if}
 
-      {#if selectedIndex === Tab.signup}
+      {#if selectedIndex === LoginTab.signup}
         <form
           class="signup-form login-form"
           id="signup-form"

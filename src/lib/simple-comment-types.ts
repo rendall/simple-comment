@@ -162,3 +162,9 @@ export type Policy = {
   canUserDeleteSelf: boolean // can a user delete their own profile?
   maxCommentLengthChars: number // Attempting to post a comment longer than this number of characters will be rejected by the API
 }
+
+export enum LoginTab {
+  guest,
+  login,
+  signup,
+}

@@ -67,7 +67,7 @@ describe(`User Authentication Flow`, () => {
     // Perform the login action
     cy.get("#login-user-id").type("testuser")
     cy.get("#login-password").type("testpassword")
-    cy.get("#user-login-form").submit()
+    cy.get(".comment-submit-button").click()
 
     // Check the user details
     cy.get("#status-display").should("not.have.class", "is-error")
@@ -118,7 +118,7 @@ describe(`User Authentication Flow`, () => {
     // First log in
     cy.get("#login-user-id").type("testuser")
     cy.get("#login-password").type("testpassword")
-    cy.get("#user-login-form").submit()
+    cy.get(".comment-submit-button").click()
 
     cy.get("#user-login-form").should("not.exist")
 
