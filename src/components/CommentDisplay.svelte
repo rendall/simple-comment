@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from "svelte"
   import {
     formatDate,
     idIconDataUrl,
@@ -11,7 +12,6 @@
   export let comment: (Comment & { isNew?: true }) | undefined = undefined
   export let showReply: string
   export let currentUser: User | undefined
-  export let isRoot
   export let onDeleteSuccess
   export let onDeleteCommentClick
   export let onOpenCommentInput
@@ -19,12 +19,30 @@
   export let depth
   export let handleReplyEvent
 
-  let isDeleted = false
+  const isRoot = depth === 0
+
+  let commentDeleted
 
   let commentBodyHeight = 74
   let commentBodyRef
+  // Because these comments are in a list, Svelte seems to get
+  // confused about local variables when one is deleted. This
+  // "refs" object keeps them sorted by id.
+  let refs = {}
 
-  const onCloseCommentInput = () => onOpenCommentInput("")
+  const onCloseCommentInput = onOpenCommentInput("")
+
+  const onDeleteClick = () => {
+    commentDeleted = comment.id
+    commentBodyHeight = refs[comment.id] ?? 74
+    onDeleteCommentClick(comment.id)()
+  }
+
+  onMount(() => {
+    const { offsetHeight, clientHeight } = commentBodyRef ?? {}
+    commentBodyHeight = offsetHeight ?? clientHeight ?? 74
+    refs = { ...refs, [comment.id]: commentBodyHeight }
+  })
 </script>
 
 <li
@@ -36,7 +54,7 @@
   class:is-new={comment.isNew}
   class:is-open={showReply === comment.id}
 >
-  {#if isDeleted}
+  {#if commentDeleted === comment.id && !comment.dateDeleted}
     <SkeletonCommentDelete commentHeight={commentBodyHeight} />
   {:else if comment.dateDeleted}
     <header class="comment-header">
@@ -57,7 +75,7 @@
       <p>This comment was deleted {formatDate(comment.dateDeleted)}</p>
       <div class="button-row">
         {#if currentUser?.isAdmin && !comment.replies?.length}
-          <button on:click={onDeleteCommentClick(comment.id)}> Delete </button>
+          <button on:click={onDeleteClick}> Delete </button>
         {/if}
       </div>
     </article>
@@ -92,15 +110,16 @@
       {:else}
         <div class="button-row comment-footer">
           {#if currentUser?.isAdmin || (currentUser && currentUser?.id === comment.user?.id && !comment?.replies?.length)}
-            <button
-              on:click={onDeleteCommentClick(comment.id)}
-              class="comment-delete-button">Delete</button
-            >
+            <button on:click={onDeleteClick} class="comment-delete-button">
+              Delete
+            </button>
           {/if}
           <button
             on:click={onOpenCommentInput(comment.id)}
-            class="comment-reply-button">Reply</button
+            class="comment-reply-button"
           >
+            Reply
+          </button>
         </div>
       {/if}
     </article>
@@ -109,8 +128,8 @@
     <CommentList
       depth={depth + 1}
       on:delete={onDeleteSuccess}
-      on:reply={handleReplyEvent}
       on:posted={onCommentPosted}
+      on:reply={handleReplyEvent}
       replies={comment.replies}
       {currentUser}
       {showReply}
