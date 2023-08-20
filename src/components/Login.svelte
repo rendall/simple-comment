@@ -43,6 +43,7 @@
     validateEmail,
   } from "../lib/shared-utilities"
   import { onDestroy, onMount } from "svelte"
+  import PasswordInput from "./low-level/PasswordInput.svelte"
 
   const DISPLAY_NAME_HELPER_TEXT = "This is the name that others will see"
 
@@ -619,7 +620,7 @@
             bind:value={userId}
             required
           />
-          <InputField
+          <PasswordInput
             type="password"
             labelText="Password"
             helperText={userPasswordMessage}
@@ -673,7 +674,7 @@
             type="email"
             onInput={handleUserEmailInput}
           />
-          <InputField
+          <PasswordInput
             bind:value={userPassword}
             id="signup-password"
             labelText="Password"
@@ -681,7 +682,6 @@
             status={userPasswordStatus}
             onInput={handleSignupPasswordInput}
             required
-            type="password"
           />
         </form>
       {/if}

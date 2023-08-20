@@ -9,11 +9,9 @@ $inset-shadow-color: color.change($primary-color, $alpha: 0.5);
 $body-background: color.scale($primary-color, $lightness: 97%);
 $text-color: color.scale($primary-color, $lightness: -70%);
 $accent-background: color.scale($primary-color, $lightness: 90%);
-$highlight-text-color: color.scale(
-  $body-background,
-  $lightness: -50%,
-  $saturation: -70%
-);
+$highlight-text-color: color.scale($body-background,
+    $lightness: -50%,
+    $saturation: -70%);
 
 .simple-comment {
   // resets
@@ -93,7 +91,7 @@ $highlight-text-color: color.scale(
     justify-content: flex-end;
     position: relative;
 
-    > * {
+    >* {
       margin-right: 1rem;
     }
 
@@ -130,6 +128,32 @@ $highlight-text-color: color.scale(
       .helper-text {
         color: $success-green;
       }
+    }
+
+    &.has-icon {
+      position: relative;
+
+      .input-element {
+        padding-right: 3rem;
+      }
+
+      .icon {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        height: 3rem;
+        width: 3rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+      }
+
+      button.icon {
+        padding: 0;
+        border: none;
+      }
+
+
     }
   }
 
@@ -321,7 +345,7 @@ $highlight-text-color: color.scale(
           margin-left: 0.5rem;
           padding-left: 2rem;
 
-          > p {
+          >p {
             margin-bottom: 1rem;
           }
 
@@ -365,7 +389,7 @@ $highlight-text-color: color.scale(
             height: 1rem;
           }
 
-          > .comment-header {
+          >.comment-header {
             .user-avatar {
               .gray-block {
                 width: 2.5rem;
@@ -395,7 +419,7 @@ $highlight-text-color: color.scale(
             }
           }
 
-          > article.comment-body {
+          >article.comment-body {
             padding-top: 2rem;
             padding-bottom: 2rem;
             font-style: italic;
