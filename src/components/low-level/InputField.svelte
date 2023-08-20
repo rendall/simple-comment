@@ -6,6 +6,7 @@
   export let status = ""
   export let onInput = undefined
   export let onBlur = undefined
+  export let onIconClick = undefined
 
   let inputProps = {}
   $: {
@@ -22,19 +23,31 @@
   class="input-field"
   class:is-error={status === "error"}
   class:is-success={status === "success"}
+  class:has-icon={$$slots.icon}
 >
   {#if labelText}
     <label class="input-label" for={labelFor}>{labelText}</label>
   {/if}
-  <input
-    class="input-element"
-    {...inputProps}
-    bind:value
-    on:input={onInput}
-    on:blur={onBlur}
-    autocomplete="off"
-    autocapitalize="off"
-  />
+  <div class="input-wrapper">
+    <input
+      class="input-element"
+      {...inputProps}
+      bind:value
+      on:input={onInput}
+      on:blur={onBlur}
+      autocomplete="off"
+      autocapitalize="off"
+    />
+    {#if $$slots.icon}
+      {#if onIconClick}
+        <button on:click={onIconClick} class="icon" type="button">
+          <slot name="icon" /></button
+        >
+      {:else}
+        <div class="icon"><slot name="icon" /></div>
+      {/if}
+    {/if}
+  </div>
   {#if helperText?.length > 0}
     <p class="helper-text">{helperText}</p>
   {/if}

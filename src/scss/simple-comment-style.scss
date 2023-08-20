@@ -131,6 +131,36 @@ $highlight-text-color: color.scale(
         color: $success-green;
       }
     }
+
+    &.has-icon {
+      .input-wrapper {
+        position: relative;
+      }
+
+      .input-element {
+        padding-right: 3rem;
+      }
+
+      .icon {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        height: 3rem;
+        width: 3rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+
+        svg {
+          fill: $primary-color;
+        }
+      }
+
+      button.icon {
+        padding: 0;
+        border: none;
+      }
+    }
   }
 
   .self-display {

@@ -22,9 +22,7 @@ describe("Signup Functionality", () => {
       .should("not.have.class", "is-error")
     cy.get("#signup-email").clear()
     cy.get("#signup-email").type("invalidemail")
-    cy.get(".input-field.is-error #signup-email + .helper-text").should(
-      "not.be.empty"
-    )
+    cy.get(".input-field.is-error .helper-text").should("not.be.empty")
   })
 
   it("Displays error when trying to sign up with a user handle that is already taken", () => {
@@ -39,7 +37,7 @@ describe("Signup Functionality", () => {
       .should("not.have.class", "is-error")
     cy.get("#signup-name").clear()
     cy.get("#signup-user-id").type("existinguser")
-    cy.get(".input-field.is-error #signup-user-id + .helper-text").should(
+    cy.get(".input-field.is-error .helper-text").should(
       "contain",
       "'existinguser' is already taken. Please try another one."
     )

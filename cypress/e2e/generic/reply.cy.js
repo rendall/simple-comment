@@ -21,6 +21,9 @@ describe("reply", () => {
   const signupEmail = `${signupUserId}@example.com`
 
   beforeEach(() => {
+    cy.intercept("POST", ".netlify/functions/auth").as("postAuth")
+    cy.intercept("POST", ".netlify/functions/user/").as("postUser")
+    cy.intercept("GET", ".netlify/functions/gauth").as("getGauth")
     cy.intercept("POST", ".netlify/functions/comment/*").as("postComment")
 
     cy.visit("/")
@@ -48,9 +51,12 @@ describe("reply", () => {
     cy.get("@commentBody").find(".comment-field").type(commentText)
     cy.get("@commentBody").find("#guest-name").type(guestName)
     cy.get("@commentBody").find("#guest-email").type("guest@example.com")
-    cy.get("@commentBody").find(".comment-submit-button").click()
 
+    cy.get("@commentBody").find(".comment-submit-button").click()
+    cy.wait("@getGauth").its("response.statusCode").should("eq", 200)
+    cy.wait("@postUser").its("response.statusCode").should("eq", 201) // 201 Created
     cy.wait("@postComment").its("response.statusCode").should("eq", 201) // 201 Created
+
     cy.get("@commentBody")
       .parent()
       .find("ul.comment-replies")
@@ -75,6 +81,7 @@ describe("reply", () => {
     cy.get("@commentBody").find("#signup-password").type(signupPassword)
     cy.get("@commentBody").find(".comment-submit-button").click()
 
+    cy.wait("@postAuth").its("response.statusCode").should("eq", 200)
     cy.wait("@postComment").its("response.statusCode").should("eq", 201) // 201 Created
     cy.get("@commentBody")
       .parent()
@@ -99,6 +106,8 @@ describe("reply", () => {
     cy.get("@commentBody").find("#login-user-id").type(signupUserId)
     cy.get("@commentBody").find("#login-password").type(signupPassword)
     cy.get("@commentBody").find(".comment-submit-button").click()
+
+    cy.wait("@postAuth").its("response.statusCode").should("eq", 200)
 
     cy.wait("@postComment").its("response.statusCode").should("eq", 201) // 201 Created
     cy.get("@commentBody")
