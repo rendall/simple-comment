@@ -18,6 +18,11 @@
 
   const { state, send } = useMachine(commentDeleteMachine)
 
+  //TODO: Loosen tight coupling of CommentDisplay and CommentList
+  // The refactor of splitting one component into CommentList and
+  // CommentDisplay created a spaghetti of calls and pass-throughs.
+  // For instance, follow what happens when a user presses "Cancel"
+  // in CommentInput. Store may be more appropriate here.
   const dispatch = createEventDispatcher()
   const isRoot = depth === 0
 
@@ -53,7 +58,7 @@
     }
   }
 
-  const closeReply = () => onOpenCommentInput("")
+  const closeReply = onOpenCommentInput("")
 
   const onCommentPosted = commentPostedEvent => {
     closeReply()
@@ -99,7 +104,6 @@
       {currentUser}
       {depth}
       {handleReplyEvent}
-      {isRoot}
       {onCommentPosted}
       {onDeleteCommentClick}
       {onDeleteSuccess}
