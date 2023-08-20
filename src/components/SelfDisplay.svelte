@@ -30,7 +30,10 @@
   }
 </script>
 
-<div class="self-display-container">
+<div
+  class="self-display-container"
+  class:is-closed={!isProcessing && !currentUser}
+>
   {#if isProcessing}
     <section class="skeleton self-display" transition:fade>
       <div class="self-avatar skeleton"><SkeletonText avatar /></div>
@@ -65,10 +68,17 @@
 
 <style lang="scss">
   .self-display-container {
-    position: relative;
-    width: 100%;
     display: block;
     height: 10rem;
+    max-height: 10rem; /* Set the initial max-height */
+    overflow: hidden; /* Hide content that exceeds the max-height */
+    position: relative;
+    transition: max-height 0.3s ease; /* Add a smooth transition effect */
+    width: 100%;
+
+    &.is-closed {
+      max-height: 0;
+    }
 
     .self-display.skeleton {
       position: absolute;

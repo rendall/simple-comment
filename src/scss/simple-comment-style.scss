@@ -93,7 +93,7 @@ $highlight-text-color: color.scale(
     justify-content: flex-end;
     position: relative;
 
-    button {
+    > * {
       margin-right: 1rem;
     }
 
@@ -364,6 +364,7 @@ $highlight-text-color: color.scale(
             display: block;
             height: 1rem;
           }
+
           > .comment-header {
             .user-avatar {
               .gray-block {
@@ -400,6 +401,28 @@ $highlight-text-color: color.scale(
             font-style: italic;
             color: color.adjust($text-color, $alpha: -0.4);
             text-align: center;
+          }
+        }
+
+        .skeleton-comment-delete {
+          .comment-header {
+            width: 100%;
+          }
+
+          .comment-body {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            overflow: hidden;
+          }
+
+          .comment-footer {
+            height: 2rem;
+            min-height: 2rem;
+            margin-top: auto;
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 0;
           }
         }
       }

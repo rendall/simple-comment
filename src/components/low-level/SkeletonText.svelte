@@ -16,6 +16,7 @@
   $: widthNum = parseInt(width, 10)
   $: widthPx = width.includes("px")
   $: if (paragraph) {
+    rows = []
     for (let i = 0; i < lines; i++) {
       const min = widthPx ? widthNum - 75 : 0
       const max = widthPx ? widthNum : 75
@@ -28,7 +29,7 @@
 {#if paragraph}
   <div {...$$restProps}>
     {#each rows as { width }}
-      <p class="skeleton line" style:width />
+      <p class="skeleton line" style:width style:height />
     {/each}
   </div>
 {:else if avatar}

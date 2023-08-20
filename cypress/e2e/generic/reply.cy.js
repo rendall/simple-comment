@@ -32,6 +32,14 @@ describe("reply", () => {
     cy.get("@replyButton").click()
   })
 
+  it("should allow user to cancel their reply without answering", () => {
+    cy.get("@commentBody").find(".comment-field").should("exist")
+    cy.get("@commentBody").find(".comment-cancel-button").click()
+    cy.get("@commentBody")
+      .find(".comment-field")
+      .should("not.exist", { timeout: 1000 })
+  })
+
   it("it should reply to a comment as a guest", () => {
     cy.get("@commentBody").find(".selection-tab-guest").click()
 
@@ -51,6 +59,10 @@ describe("reply", () => {
       .parent()
       .find("ul.comment-replies")
       .should("contain", commentText)
+
+    cy.get("@commentBody")
+      .find(".comment-form")
+      .should("not.exist", { timeout: 1000 })
   })
   it("it should reply to a comment as a signup", () => {
     cy.get("@commentBody").find(".selection-tab-signup").click()
@@ -72,6 +84,10 @@ describe("reply", () => {
       .parent()
       .find("ul.comment-replies")
       .should("contain", commentText)
+
+    cy.get("@commentBody")
+      .find(".comment-form")
+      .should("not.exist", { timeout: 1000 })
   }) // it should reply to a comment as a signup
 
   it("it should reply to a comment as a login", () => {
@@ -93,5 +109,9 @@ describe("reply", () => {
       .parent()
       .find("ul.comment-replies")
       .should("contain", commentText)
+
+    cy.get("@commentBody")
+      .find(".comment-form")
+      .should("not.exist", { timeout: 1000 })
   }) // it should reply to a comment as a login
 })

@@ -27,8 +27,6 @@ const randomNumber = (min = 1, max = 10) =>
   Math.floor(Math.random() * (max - min)) + min
 
 context("Error recovery", () => {
-  const commentText = generateRandomCopy()
-
   beforeEach(() => {
     cy.visit("/")
   })
@@ -39,6 +37,8 @@ context("Error recovery", () => {
 
   it("Submit a guest comment after error", () => {
     cy.intercept("POST", ".netlify/functions/comment/*").as("postComment")
+
+    const commentText = generateRandomCopy()
 
     cy.get("form.comment-form .comment-field").type(commentText)
     cy.get("form.comment-form .comment-submit-button").click()
@@ -86,6 +86,8 @@ context("Error recovery", () => {
 
     cy.intercept("POST", ".netlify/functions/comment/*").as("postComment")
     cy.intercept("POST", ".netlify/functions/user/").as("postUser")
+
+    const commentText = generateRandomCopy()
 
     cy.get("form.comment-form .comment-field").type(commentText)
     cy.get("form.comment-form .comment-submit-button").click()

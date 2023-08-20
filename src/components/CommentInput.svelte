@@ -84,7 +84,6 @@
               )
               break
           }
-
           break
 
         default:
@@ -138,8 +137,12 @@
     send({ type: "RESET" })
   }
 
-  const getButtonCopy = (select: LoginTab, comment: string) => {
-    if (comment.length) return "Add comment"
+  const getButtonCopy = (
+    select: LoginTab,
+    comment: string,
+    loginStatus: string
+  ) => {
+    if (comment.length || loginStatus === "loggedIn") return "Add comment"
     else
       switch (select) {
         case LoginTab.signup:
@@ -189,7 +192,7 @@
     ["validating", "loggingIn", "posting", "deleting"] as StateValue[]
   ).includes($state.value)
 
-  $: buttonCopy = getButtonCopy(loginTabSelect, commentText)
+  $: buttonCopy = getButtonCopy(loginTabSelect, commentText, loginStateValue)
 </script>
 
 <SkeletonCommentInput
@@ -210,7 +213,9 @@
   <Login {currentUser} />
   <div class="button-row">
     {#if onCancel !== null}
-      <button class="comment-cancel-button" on:click={onCancel}>Cancel</button>
+      <button class="comment-cancel-button" type="button" on:click={onCancel}
+        >Cancel</button
+      >
     {/if}
     <button class="comment-submit-button" type="submit">{buttonCopy}</button>
   </div>

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import CommentDisplay from "./CommentDisplay.svelte"
+  import CommentList from "./CommentList.svelte"
   import type {
     Discussion,
     Comment,
@@ -17,7 +17,7 @@
   export let title: string
   export let currentUser: User | undefined
 
-  let repliesFlatArray: Comment[]
+  let repliesFlatArray: (Comment & { isNew?: true })[]
   let discussion: Discussion
   let showReply = discussionId
 
@@ -191,7 +191,7 @@
   {/if}
 
   {#if discussion?.replies}
-    <CommentDisplay
+    <CommentList
       {currentUser}
       {showReply}
       replies={discussion.replies}
