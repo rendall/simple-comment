@@ -9,9 +9,11 @@ $inset-shadow-color: color.change($primary-color, $alpha: 0.5);
 $body-background: color.scale($primary-color, $lightness: 97%);
 $text-color: color.scale($primary-color, $lightness: -70%);
 $accent-background: color.scale($primary-color, $lightness: 90%);
-$highlight-text-color: color.scale($body-background,
-    $lightness: -50%,
-    $saturation: -70%);
+$highlight-text-color: color.scale(
+  $body-background,
+  $lightness: -50%,
+  $saturation: -70%
+);
 
 .simple-comment {
   // resets
@@ -91,7 +93,7 @@ $highlight-text-color: color.scale($body-background,
     justify-content: flex-end;
     position: relative;
 
-    >* {
+    > * {
       margin-right: 1rem;
     }
 
@@ -131,7 +133,9 @@ $highlight-text-color: color.scale($body-background,
     }
 
     &.has-icon {
-      position: relative;
+      .input-wrapper {
+        position: relative;
+      }
 
       .input-element {
         padding-right: 3rem;
@@ -152,8 +156,6 @@ $highlight-text-color: color.scale($body-background,
         padding: 0;
         border: none;
       }
-
-
     }
   }
 
@@ -345,7 +347,7 @@ $highlight-text-color: color.scale($body-background,
           margin-left: 0.5rem;
           padding-left: 2rem;
 
-          >p {
+          > p {
             margin-bottom: 1rem;
           }
 
@@ -389,7 +391,7 @@ $highlight-text-color: color.scale($body-background,
             height: 1rem;
           }
 
-          >.comment-header {
+          > .comment-header {
             .user-avatar {
               .gray-block {
                 width: 2.5rem;
@@ -419,7 +421,7 @@ $highlight-text-color: color.scale($body-background,
             }
           }
 
-          >article.comment-body {
+          > article.comment-body {
             padding-top: 2rem;
             padding-bottom: 2rem;
             font-style: italic;
