@@ -1,6 +1,15 @@
 <script lang="ts">
+  import { onMount } from "svelte"
   import SkeletonText from "./SkeletonText.svelte"
   export let isHidden = false
+  export let commentHeight = undefined
+  let numLines = 2
+
+  onMount(() => {
+    if (commentHeight !== undefined) {
+      numLines = Math.floor(commentHeight / 16)
+    }
+  })
 </script>
 
 <div class="skeleton-comment" class:is-hidden={isHidden}>
@@ -12,7 +21,7 @@
     </div>
   </header>
   <article class="comment-body">
-    <SkeletonText paragraph />
+    <SkeletonText paragraph lines={numLines} />
   </article>
 </div>
 
