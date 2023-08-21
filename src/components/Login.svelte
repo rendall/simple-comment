@@ -44,8 +44,12 @@
   } from "../lib/shared-utilities"
   import { onDestroy, onMount } from "svelte"
   import PasswordInput from "./low-level/PasswordInput.svelte"
+  import PasswordTwinInput from "./low-level/PasswordTwinInput.svelte"
 
   const DISPLAY_NAME_HELPER_TEXT = "This is the name that others will see"
+  const USER_EMAIL_HELPER_TEXT =
+    "Used only for verification and approved notifications. We never show or share your email."
+  const USER_ID_HELPER_TEXT = "This is the user id that uniquely identifies you"
 
   export let currentUser: User | undefined
 
@@ -59,12 +63,12 @@
   let displayNameStatus: "error" | "success" | undefined = undefined
 
   let userEmail = ""
-  let userEmailHelperText =
-    "Used only for verification and approved notifications. We never show or share your email."
+  let userEmailHelperText = USER_EMAIL_HELPER_TEXT
+
   let userEmailStatus = ""
 
   let userId = ""
-  let userIdMessage = undefined
+  let userIdHelperText = undefined
   let userIdStatus = undefined
   let userIdManuallyChanged = false
 
@@ -269,31 +273,32 @@
     // send("RESET")
   }
 
-  const checkUserIdExists = async id => {
+  const checkUserIdExists = async (idToCheck?: UserId) => {
+    const id = idToCheck ?? userId
+
     if (!onSubmitCheckUserIdValid(id).isValid) return
 
-    userIdMessage = "..."
     try {
       await getOneUser(id)
-      userIdMessage = `The handle '${id}' is already taken. Please try another one.`
+      userIdHelperText = `The handle '${id}' is already taken. Please try another one.`
       userIdStatus = "error"
     } catch (error) {
-      userIdMessage = "This handle is available."
+      userIdHelperText = "This handle is available."
       userIdStatus = "success"
     }
   }
 
-  const checkUserIdExists_debounced = debounceFunc(checkUserIdExists, 300)
+  const checkUserIdExists_debounced = debounceFunc(checkUserIdExists, 400)
 
   const onSubmitCheckUserIdValid = userId => {
     const validation = validateUserId(userId)
 
     if (isValidationTrue(validation)) {
-      userIdMessage = "..."
+      userIdHelperText = "..."
       userIdStatus = "success"
     } else {
       userIdStatus = "error"
-      userIdMessage = validation.reason
+      userIdHelperText = validation.reason
     }
     return validation
   }
@@ -303,17 +308,17 @@
     const result = validateUserId(id)
 
     if (isValidResult(result)) {
-      userIdMessage = "..."
+      userIdHelperText = "..."
       userIdStatus = undefined
     } else {
       userIdStatus = "error"
-      userIdMessage = result.reason
+      userIdHelperText = result.reason
     }
 
     return result
   }
 
-  const checkUserIdValid_debounced = debounceFunc(checkUserIdValid, 50)
+  const checkUserIdValid_debounced = debounceFunc(checkUserIdValid, 300)
 
   const checkLoginValid = (): ValidationResult => {
     const userIdResult: ValidationResult =
@@ -358,16 +363,21 @@
   }
   const checkDisplayName_debounced = debounceFunc(checkDisplayNameValid, 250)
 
-  const handleDisplayNameSignupInput = () => {
-    handleDisplayNameInput()
-    if (!userIdManuallyChanged) {
+  const onSignupDisplayNameInput = () => {
+    if (displayName.length <= 3)
+      displayNameHelperText = DISPLAY_NAME_HELPER_TEXT
+    displayNameHelperText = "..."
+    displayNameStatus = undefined
+    checkDisplayName_debounced()
+    if (!userIdManuallyChanged && displayName.length > 3) {
+      userIdHelperText = "..."
+      userIdStatus = undefined
       const formattedUserId = formatUserId(displayName)
-      checkUserIdValid_debounced(formattedUserId)
       checkUserIdExists_debounced(formattedUserId)
       userId = formattedUserId
     }
   }
-  const handleDisplayNameInput = () => {
+  const onGuestDisplayNameInput = () => {
     displayNameHelperText = "..."
     displayNameStatus = undefined
     checkDisplayName_debounced()
@@ -386,14 +396,26 @@
     }
   }
 
-  const checkUserEmailValid_debounced = debounceFunc(checkUserEmailValid, 250)
-  const handleUserEmailInput = () => {
-    userEmailHelperText = "..."
+  const checkUserEmailValid_debounced = debounceFunc(checkUserEmailValid, 1000)
+
+  const onUserEmailInput = () => {
     userEmailStatus = undefined
+    if (userEmail.length <= 5) {
+      userEmailHelperText = USER_EMAIL_HELPER_TEXT
+      return
+    }
+    userEmailHelperText = "..."
     checkUserEmailValid_debounced()
   }
 
   const onUserIdInput = () => {
+    if (userId.length <= 3) {
+      userIdHelperText = USER_ID_HELPER_TEXT
+      userIdStatus = undefined
+      return
+    }
+    userIdHelperText = "..."
+    userIdStatus = undefined
     userIdManuallyChanged = true
     checkUserIdValid_debounced(userId)
     checkUserIdExists_debounced(userId)
@@ -510,22 +532,9 @@
     })
   }
 
-  $: {
-    currentUserStore.set(self)
-  }
+  $: currentUserStore.set(self)
 
-  $: {
-    loginStateStore.set({ select: selectedIndex })
-    if (
-      selectedIndex === LoginTab.signup &&
-      displayName.length &&
-      !userIdManuallyChanged
-    ) {
-      userId = formatUserId(displayName)
-      checkUserIdValid(userId)
-      checkUserIdExists(userId)
-    }
-  }
+  $: loginStateStore.set({ select: selectedIndex })
 
   onMount(() => {
     self = currentUser
@@ -537,7 +546,7 @@
   })
   $: {
     if (userId.length < 3 && !userIdStatus)
-      userIdMessage = "This is the user id that uniquely identifies you"
+      userIdHelperText = USER_ID_HELPER_TEXT
   }
 </script>
 
@@ -583,7 +592,7 @@
             helperText={displayNameHelperText}
             id="guest-name"
             labelText="Display Name"
-            onInput={handleDisplayNameInput}
+            onInput={onGuestDisplayNameInput}
             onBlur={checkDisplayNameValid}
             status={displayNameStatus}
             required
@@ -593,7 +602,7 @@
             helperText={userEmailHelperText}
             id="guest-email"
             labelText="Email"
-            onInput={handleUserEmailInput}
+            onInput={onUserEmailInput}
             onBlur={checkUserEmailValid}
             status={userEmailStatus}
             required
@@ -621,7 +630,6 @@
             required
           />
           <PasswordInput
-            type="password"
             labelText="Password"
             helperText={userPasswordMessage}
             status={userPasswordStatus}
@@ -650,14 +658,14 @@
             status={displayNameStatus}
             id="signup-name"
             labelText="Display name"
-            onInput={handleDisplayNameSignupInput}
+            onInput={onSignupDisplayNameInput}
             onBlur={checkDisplayNameValid}
             required
           />
           <InputField
             bind:value={userId}
             status={userIdStatus}
-            helperText={userIdMessage}
+            helperText={userIdHelperText}
             id="signup-user-id"
             labelText="User handle"
             onBlur={onUserIdBlur}
@@ -672,9 +680,9 @@
             labelText="Email"
             required
             type="email"
-            onInput={handleUserEmailInput}
+            onInput={onUserEmailInput}
           />
-          <PasswordInput
+          <PasswordTwinInput
             bind:value={userPassword}
             id="signup-password"
             labelText="Password"
