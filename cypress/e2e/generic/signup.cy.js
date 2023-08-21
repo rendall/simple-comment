@@ -102,4 +102,99 @@ describe("Signup Functionality", () => {
     cy.get("#self-display").should("contain", "@newuser")
     cy.get("#self-display").should("contain", "newuser@example.com")
   })
+
+  describe("PasswordTwinInput", () => {
+    it("Toggles password when icon is pressed", () => {
+      cy.get(".password-twin").should("have.class", "view")
+      cy.get("#signup-password").should("have.attr", "type", "password")
+      cy.get("#signup-password-confirm").should("exist")
+      cy.get("#signup-password + button.icon").click()
+      cy.get(".password-twin").should("not.have.class", "view")
+      cy.get(".password-twin").should("have.class", "view-off")
+      cy.get("#signup-password-confirm").should("not.exist")
+      cy.get("#signup-password").should("have.attr", "type", "text")
+    })
+
+    it("Displays error when passwords do not match", () => {
+      const password = "matchingPassword1776"
+      cy.get("#signup-password").type(password)
+      cy.get("#signup-password-confirm").type("does not match")
+      cy.get("#signup-password")
+        .parents(".password-twin")
+        .should("have.class", "is-error")
+      cy.get("#signup-password-confirm").clear().type(password)
+      cy.get("#signup-password")
+        .parents(".password-twin")
+        .should("not.have.class", "is-error")
+    })
+
+    it("Does not signup when passwords are mismatched", () => {
+      const newUserInfo = {
+        id: "newuser",
+        name: "Test User",
+        email: "newuser@example.com",
+      }
+      cy.intercept("GET", "/.netlify/functions/user/newuser", req => {
+        req.reply({ statusCode: 404 })
+      })
+
+      cy.intercept("POST", "/.netlify/functions/user").as("postUser")
+
+      cy.get("#signup-name").clear().type(newUserInfo.name)
+      cy.get("#signup-user-id").clear().type(newUserInfo.id)
+      cy.get("#signup-email").clear().type(newUserInfo.email)
+      cy.get("#signup-password").clear().type("crankyB@biesMeikTroobl")
+      cy.get("#signup-password-confirm").clear().type("doesnotmatch")
+
+      cy.get(".comment-submit-button").click()
+
+      cy.wait("@postUser").should("not.have.property", "response")
+    })
+
+    it("Does not sign up when second field is empty", () => {
+      const newUserInfo = {
+        id: "newuser",
+        name: "Test User",
+        email: "newuser@example.com",
+      }
+      cy.intercept("GET", "/.netlify/functions/user/newuser", req => {
+        req.reply({ statusCode: 404 })
+      })
+
+      cy.intercept("POST", "/.netlify/functions/user").as("postUser")
+
+      cy.get("#signup-name").clear().type(newUserInfo.name)
+      cy.get("#signup-user-id").clear().type(newUserInfo.id)
+      cy.get("#signup-email").clear().type(newUserInfo.email)
+      cy.get("#signup-password").clear().type("crankyB@biesMeikTroobl")
+      cy.get("#signup-password-confirm").clear()
+
+      cy.get(".comment-submit-button").click()
+
+      cy.wait("@postUser").should("not.have.property", "response")
+    })
+
+    it("Does sign up when second field is empty but view password is on", () => {
+      const newUserInfo = {
+        id: "newuser",
+        name: "Test User",
+        email: "newuser@example.com",
+      }
+      cy.intercept("GET", "/.netlify/functions/user/newuser", req => {
+        req.reply({ statusCode: 404 })
+      })
+
+      cy.intercept("POST", "/.netlify/functions/user").as("postUser")
+
+      cy.get("#signup-name").clear().type(newUserInfo.name)
+      cy.get("#signup-user-id").clear().type(newUserInfo.id)
+      cy.get("#signup-email").clear().type(newUserInfo.email)
+      cy.get("#signup-password").clear().type("crankyB@biesMeikTroobl")
+      cy.get("#signup-password + button.icon").click()
+
+      cy.get(".comment-submit-button").click()
+
+      cy.wait("@postUser").should("have.property", "response")
+    })
+  })
 })
