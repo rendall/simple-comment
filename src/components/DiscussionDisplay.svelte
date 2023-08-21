@@ -119,7 +119,7 @@
   // Update the single source of truth without roundtrip to the server
   const onCommentPosted = commentPostedEvent => {
     const { comment } = commentPostedEvent.detail
-    repliesFlatArray = [{ ...comment, new: true }, ...repliesFlatArray]
+    repliesFlatArray = [{ ...comment, isNew: true }, ...repliesFlatArray]
     updateDiscussionDisplay(discussion, repliesFlatArray)
   }
 

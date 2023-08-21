@@ -75,6 +75,9 @@
   let loginUserIdHelperText = " "
 
   let userPassword = ""
+  let userPasswordConfirm = ""
+  let isPasswordView = true
+
   let userPasswordMessage = undefined
   let userPasswordStatus = undefined
 
@@ -125,6 +128,7 @@
       checkUserIdValid(),
       checkUserEmailValid(),
       checkPasswordValid(),
+      checkPasswordsMatch(),
     ])
 
     if (isValidResult(result)) send({ type: "SIGNUP" })
@@ -180,6 +184,7 @@
       checkUserIdValid(),
       checkUserEmailValid(),
       checkPasswordValid(),
+      checkPasswordsMatch(),
     ])
     if (!isValidResult(result)) {
       send({ type: "ERROR", error: result.reason })
@@ -510,6 +515,19 @@
     return result
   }
 
+  const checkPasswordsMatch = (): ValidationResult => {
+    if (!isPasswordView) return { isValid: true }
+    if (userPasswordConfirm.length === 0)
+      return {
+        isValid: false,
+        reason:
+          "Confirm the password by re-entering it into the 'Confirm password' field below.",
+      }
+    if (userPasswordConfirm !== userPassword)
+      return { isValid: false, reason: "The passwords do not match." }
+    return { isValid: true }
+  }
+
   const checkPasswordValid_debounced = debounceFunc(checkPasswordValid, 500)
   const handleSignupPasswordInput = () => checkPasswordValid_debounced()
 
@@ -684,6 +702,8 @@
           />
           <PasswordTwinInput
             bind:value={userPassword}
+            bind:confirmValue={userPasswordConfirm}
+            bind:isPasswordView
             id="signup-password"
             labelText="Password"
             helperText={userPasswordMessage}

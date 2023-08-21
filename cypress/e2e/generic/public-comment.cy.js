@@ -19,7 +19,9 @@ describe("Guest comment", { testIsolation: false }, () => {
     cy.get("form.comment-form .comment-field").type(commentText)
     cy.get("form.comment-form .comment-submit-button").click()
     cy.wait("@postComment").its("response.statusCode").should("eq", 201) // 201 Created
-    cy.contains("article.comment-body p", commentText).should("exist")
+    cy.contains("article.comment-body p", commentText).as("commentBody")
+    cy.get("@commentBody").should("exist")
+    cy.get("@commentBody").parents("li.comment").should("have.class", "is-new")
   })
 
   it("Delete a comment as a logged-in guest user", () => {

@@ -4,12 +4,13 @@
   import PasswordInput from "./PasswordInput.svelte"
 
   export let value
+  export let confirmValue = ""
   export let errorMessage = ""
+  export let isPasswordView = true
 
   let togglePassword = true
   let inputProps
 
-  let confirmValue = ""
   let confirmStatus = ""
   let confirmId
 
@@ -26,11 +27,14 @@
   const onConfirmInput_debounce = debounceFunc(onConfirmInput, 500)
 
   $: {
-    const { value, ...rest } = $$props
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { value, confirmValue, isPasswordView, ...rest } = $$props
     const { id } = rest
     confirmId = `${id}-confirm`
     inputProps = rest
   }
+
+  $: isPasswordView = togglePassword
 </script>
 
 <fieldset

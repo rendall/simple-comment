@@ -88,6 +88,7 @@ context("Error recovery", () => {
     cy.intercept("POST", ".netlify/functions/user/").as("postUser")
 
     const commentText = generateRandomCopy()
+    const password = randomString()
 
     cy.get("form.comment-form .comment-field").type(commentText)
     cy.get("form.comment-form .comment-submit-button").click()
@@ -112,7 +113,9 @@ context("Error recovery", () => {
     cy.get("form.comment-form #signup-user-id").type(
       `-${randomString("abcdefghijklmnopqrstuvwxyz0123456789-", 10)}`
     )
-    cy.get("form.comment-form #signup-password").type(randomString())
+
+    cy.get("form.comment-form #signup-password").type(password)
+    cy.get("form.comment-form #signup-password-confirm").type(password)
 
     cy.get("form.comment-form #signup-name")
       .parents(".input-field")
