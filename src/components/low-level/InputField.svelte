@@ -20,7 +20,7 @@
 </script>
 
 <div
-  class="input-field"
+  class={`input-field ${labelFor}-field`}
   class:is-error={status === "error"}
   class:is-success={status === "success"}
   class:has-icon={$$slots.icon}

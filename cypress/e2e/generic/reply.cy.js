@@ -17,7 +17,9 @@ const formatUserName = displayName => {
 describe("reply", () => {
   const signupName = generateRandomName()
   const signupPassword = randomString()
-  const signupUserId = formatUserName(signupName)
+  const signupUserId =
+    formatUserName(signupName) +
+    randomString(`abcdefghijklmnopqrstuvwxyz0123456780-`, 10)
   const signupEmail = `${signupUserId}@example.com`
 
   beforeEach(() => {
@@ -77,8 +79,10 @@ describe("reply", () => {
 
     cy.get("@commentBody").find(".comment-field").type(commentText)
     cy.get("@commentBody").find("#signup-name").type(signupName)
+    cy.get("@commentBody").find("#signup-user-id").clear().type(signupUserId)
     cy.get("@commentBody").find("#signup-email").type(signupEmail)
     cy.get("@commentBody").find("#signup-password").type(signupPassword)
+    cy.get("@commentBody").find("#signup-password-confirm").type(signupPassword)
     cy.get("@commentBody").find(".comment-submit-button").click()
 
     cy.wait("@postAuth").its("response.statusCode").should("eq", 200)

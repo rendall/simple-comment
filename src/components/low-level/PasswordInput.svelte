@@ -7,6 +7,11 @@
   let IconComponent = View
   let inputProps
 
+  const onClick = e => {
+    e.preventDefault()
+    togglePassword = !togglePassword
+  }
+
   $: {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { value, type, ...rest } = $$props
@@ -20,8 +25,8 @@
 <InputField
   bind:value
   type={togglePassword ? "password" : "text"}
-  onIconClick={() => (togglePassword = !togglePassword)}
+  onIconClick={onClick}
   {...inputProps}
 >
-  <svelte:component this={IconComponent} slot="icon" size="32" />
+  <svelte:component this={IconComponent} slot="icon" size={32} />
 </InputField>
