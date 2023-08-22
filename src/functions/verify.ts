@@ -9,6 +9,7 @@ import {
   getCookieToken,
   hasBearerScheme,
   hasTokenCookie,
+  stripUndefinedHeaders,
 } from "../lib/backend-utilities"
 import type { Success, TokenClaim, Error } from "../lib/simple-comment-types"
 import {
@@ -21,8 +22,10 @@ import { MongodbService } from "../lib/MongodbService"
 
 dotenv.config()
 
-if (process.env.DB_CONNECTION_STRING === undefined) throw "DB_CONNECTION_STRING is not set in environment variables"
-if (process.env.DATABASE_NAME === undefined) throw "DATABASE_NAME is not set in environment variables"
+if (process.env.DB_CONNECTION_STRING === undefined)
+  throw "DB_CONNECTION_STRING is not set in environment variables"
+if (process.env.DATABASE_NAME === undefined)
+  throw "DATABASE_NAME is not set in environment variables"
 
 const service: MongodbService = new MongodbService(
   process.env.DB_CONNECTION_STRING,
@@ -34,8 +37,9 @@ const getAllowHeaders = (event: APIGatewayEvent) => {
     "Access-Control-Allow-Methods": "GET,OPTIONS",
     "Access-Control-Allow-Credentials": "true",
   }
+  const eventHeaders = stripUndefinedHeaders(event.headers)
   const allowedOriginHeaders = getAllowOriginHeaders(
-    event.headers,
+    eventHeaders,
     getAllowedOrigins()
   )
   const headers = { ...allowedHeaders, ...allowedOriginHeaders }
@@ -53,8 +57,10 @@ export const handler: Handler = async (event: APIGatewayEvent) => {
       headers
     )
 
-  const isBearer = hasBearerScheme(event.headers)
-  const hasCookie = hasTokenCookie(event.headers)
+  const eventHeaders = stripUndefinedHeaders(event.headers)
+
+  const isBearer = hasBearerScheme(eventHeaders)
+  const hasCookie = hasTokenCookie(eventHeaders)
 
   if (!isBearer && !hasCookie) {
     return addHeaders(
@@ -71,8 +77,8 @@ export const handler: Handler = async (event: APIGatewayEvent) => {
   ): Promise<Success<TokenClaim> | Success | Error> => {
     // This is going to throw an error. q.v. https://github.com/auth0/node-jsonwebtoken#errors--codes
     const token = hasCookie
-      ? getCookieToken(event.headers)
-      : getAuthCredentials(getAuthHeaderValue(event.headers))
+      ? getCookieToken(eventHeaders)
+      : getAuthCredentials(getAuthHeaderValue(eventHeaders))
 
     switch (method) {
       case "GET":

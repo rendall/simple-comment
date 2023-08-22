@@ -8,6 +8,7 @@ import type {
 } from "../lib/simple-comment-types"
 import { MongodbService } from "../lib/MongodbService"
 import {
+  error400BadRequest,
   error404CommentNotFound,
   error405MethodNotAllowed,
   success200OK,
@@ -18,12 +19,15 @@ import {
   getAllowOriginHeaders,
   getTargetId,
   getUserId,
+  isDefined,
+  toDefinedHeaders,
 } from "../lib/backend-utilities"
 dotenv.config()
 
-if (process.env.DB_CONNECTION_STRING === undefined) throw "DB_CONNECTION_STRING is not set in environment variables"
-if (process.env.DATABASE_NAME === undefined) throw "DATABASE_NAME is not set in environment variables"
-
+if (process.env.DB_CONNECTION_STRING === undefined)
+  throw "DB_CONNECTION_STRING is not set in environment variables"
+if (process.env.DATABASE_NAME === undefined)
+  throw "DATABASE_NAME is not set in environment variables"
 
 const service: MongodbService = new MongodbService(
   process.env.DB_CONNECTION_STRING,
@@ -35,8 +39,11 @@ const getAllowHeaders = (event: APIGatewayEvent) => {
     "Access-Control-Allow-Methods": "POST,GET,OPTIONS,PUT,DELETE",
     "Access-Control-Allow-Credentials": "true",
   }
+
+  const eventHeaders = toDefinedHeaders(event.headers)
+
   const allowedOriginHeaders = getAllowOriginHeaders(
-    event.headers,
+    eventHeaders,
     getAllowedOrigins()
   )
   const headers = { ...allowedMethods, ...allowedOriginHeaders }
@@ -56,8 +63,8 @@ export const handler = async (event: APIGatewayEvent) => {
       },
       headers
     )
-
-  const authUserId = getUserId(event.headers)
+  const eventHeaders = toDefinedHeaders(event.headers)
+  const authUserId = getUserId(eventHeaders)
   const targetId = getTargetId(event.path, "comment") as CommentId
 
   const handleMethod = (method): Promise<Success<Comment> | Error> => {
@@ -65,9 +72,13 @@ export const handler = async (event: APIGatewayEvent) => {
       case "GET":
         return service.commentGET(targetId, authUserId)
       case "POST":
-        return service.commentPOST(targetId, event.body, authUserId)
+        if (isDefined(event.body))
+          return service.commentPOST(targetId, event.body, authUserId)
+        else return new Promise<Error>(resolve => resolve(error400BadRequest))
       case "PUT":
-        return service.commentPUT(targetId, event.body, authUserId)
+        if (isDefined(event.body))
+          return service.commentPUT(targetId, event.body, authUserId)
+        else return new Promise<Error>(resolve => resolve(error400BadRequest))
       case "DELETE":
         return service.commentDELETE(targetId, authUserId)
       case "OPTIONS":

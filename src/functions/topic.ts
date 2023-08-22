@@ -9,6 +9,7 @@ import {
   getTargetId,
   getUpdateTopicInfo,
   getUserId,
+  stripUndefinedHeaders,
 } from "../lib/backend-utilities"
 import type {
   Discussion,
@@ -26,9 +27,10 @@ import { MongodbService } from "../lib/MongodbService"
 
 dotenv.config()
 
-if (process.env.DB_CONNECTION_STRING === undefined) throw "DB_CONNECTION_STRING is not set in environment variables"
-if (process.env.DATABASE_NAME === undefined) throw "DATABASE_NAME is not set in environment variables"
-
+if (process.env.DB_CONNECTION_STRING === undefined)
+  throw "DB_CONNECTION_STRING is not set in environment variables"
+if (process.env.DATABASE_NAME === undefined)
+  throw "DATABASE_NAME is not set in environment variables"
 
 const service: MongodbService = new MongodbService(
   process.env.DB_CONNECTION_STRING,
@@ -41,8 +43,9 @@ const getAllowHeaders = (event: APIGatewayEvent) => {
     "Access-Control-Allow-Credentials": "true",
     "Access-Control-Allow-Headers": "Cookie,Referrer-Policy",
   }
+  const eventHeaders = stripUndefinedHeaders(event.headers)
   const allowedOriginHeaders = getAllowOriginHeaders(
-    event.headers,
+    eventHeaders,
     getAllowedOrigins()
   )
   const headers = { ...allowHeaders, ...allowedOriginHeaders }
@@ -60,7 +63,8 @@ export const handler = async (event: APIGatewayEvent) => {
       headers
     )
 
-  const authUserId = getUserId(event.headers)
+  const eventHeaders = stripUndefinedHeaders(event.headers)
+  const authUserId = getUserId(eventHeaders)
   const targetId = getTargetId(event.path, "topic") as TopicId
 
   const handleMethod = (
@@ -78,7 +82,7 @@ export const handler = async (event: APIGatewayEvent) => {
               body: `${event.path} is not valid`,
             })
           )
-        const referer = getHeaderValue(event.headers, "Referer")
+        const referer = getHeaderValue(eventHeaders, "Referer")
         const newTopic = { ...getNewTopicInfo(event.body), referer }
         return service.topicPOST(newTopic, authUserId)
       }

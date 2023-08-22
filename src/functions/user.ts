@@ -1,6 +1,7 @@
 import * as dotenv from "dotenv"
 import type { APIGatewayEvent } from "aws-lambda"
 import {
+  error400BadRequest,
   error405MethodNotAllowed,
   error500InternalServerError,
   success200OK,
@@ -21,11 +22,15 @@ import {
   getTargetId,
   getUpdatedUserInfo,
   getUserId,
+  isDefined,
+  toDefinedHeaders,
 } from "../lib/backend-utilities"
 dotenv.config()
 
-if (process.env.DB_CONNECTION_STRING === undefined) throw "DB_CONNECTION_STRING is not set in environment variables"
-if (process.env.DATABASE_NAME === undefined) throw "DATABASE_NAME is not set in environment variables"
+if (process.env.DB_CONNECTION_STRING === undefined)
+  throw "DB_CONNECTION_STRING is not set in environment variables"
+if (process.env.DATABASE_NAME === undefined)
+  throw "DATABASE_NAME is not set in environment variables"
 
 const service: MongodbService = new MongodbService(
   process.env.DB_CONNECTION_STRING,
@@ -38,8 +43,9 @@ const getAllowHeaders = (event: APIGatewayEvent) => {
     "Access-Control-Allow-Credentials": "true",
     "Access-Control-Allow-Headers": "Cookie",
   }
+  const eventHeaders = toDefinedHeaders(event.headers)
   const allowedOriginHeaders = getAllowOriginHeaders(
-    event.headers,
+    eventHeaders,
     getAllowedOrigins()
   )
   const headers = { ...allowedMethods, ...allowedOriginHeaders }
@@ -47,8 +53,9 @@ const getAllowHeaders = (event: APIGatewayEvent) => {
 }
 
 export const handler = async (event: APIGatewayEvent) => {
+  const eventHeaders = toDefinedHeaders(event.headers)
   const headers = getAllowHeaders(event)
-  const authUserId = getUserId(event.headers) ?? undefined
+  const authUserId = getUserId(eventHeaders) ?? undefined
   const targetId = getTargetId(event.path, "user") as UserId
 
   const handleMethod = (
@@ -66,13 +73,17 @@ export const handler = async (event: APIGatewayEvent) => {
         else return service.userListGET(authUserId)
       }
       case "POST":
-        return service.userPOST(getNewUserInfo(event.body), authUserId)
+        if (isDefined(event.body))
+          return service.userPOST(getNewUserInfo(event.body), authUserId)
+        else return new Promise<Error>(resolve => resolve(error400BadRequest))
       case "PUT":
-        return service.userPUT(
-          targetId,
-          getUpdatedUserInfo(event.body),
-          authUserId
-        )
+        if (isDefined(event.body))
+          return service.userPUT(
+            targetId,
+            getUpdatedUserInfo(event.body),
+            authUserId
+          )
+        else return new Promise<Error>(resolve => resolve(error400BadRequest))
       case "DELETE":
         return service.userDELETE(targetId, authUserId)
       case "OPTIONS":

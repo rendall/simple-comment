@@ -32,10 +32,12 @@ import {
 
 dotenv.config()
 
-if (process.env.ALLOW_ORIGIN === undefined) throw "ALLOW_ORIGIN is not set in the environment variables"
+if (process.env.ALLOW_ORIGIN === undefined)
+  throw "ALLOW_ORIGIN is not set in the environment variables"
 const allowOrigin = process.env.ALLOW_ORIGIN
 
-if (process.env.JWT_SECRET === undefined) throw "JWT_SECRET is not set in the environment variables"
+if (process.env.JWT_SECRET === undefined)
+  throw "JWT_SECRET is not set in the environment variables"
 const jwtSecret = process.env.JWT_SECRET
 
 export const REALM = "Access to restricted resources"
@@ -43,7 +45,7 @@ const AUTHORIZATION_HEADER = "Authorization"
 const BEARER_SCHEME = "Bearer"
 const BASIC_SCHEME = "Basic"
 
-const isDefined = <T>(x: T | undefined | null): x is T =>
+export const isDefined = <T>(x: T | undefined | null): x is T =>
   x !== undefined && x !== null
 
 const dateToString = (d = new Date()) =>
@@ -150,6 +152,17 @@ export const isPublicSafeUser = (user: Partial<User>): user is PublicSafeUser =>
     key => !publicUnsafeUserProperties.includes(key)
   )
 
+export const toDefinedHeaders = (headers: {
+  [header: string]: string | undefined
+}): Headers =>
+  Object.keys(headers).reduce((filteredHeaders, key) => {
+    const value = headers[key]
+    if (value !== undefined) {
+      return { ...filteredHeaders, [key]: value }
+    }
+    return filteredHeaders
+  }, {})
+
 const hasHeader = (headers: Headers, header: string) =>
   Object.keys(headers).some(
     h => h.toLowerCase() === header.toLowerCase() && headers[h] !== undefined
@@ -158,10 +171,11 @@ const hasHeader = (headers: Headers, header: string) =>
 const getHeader = (headers: Headers, header: string) =>
   Object.keys(headers).find(h => h.toLowerCase() === header.toLowerCase())
 
-export const getHeaderValue = (
-  headers: Headers,
-  header: string
-) => headers[getHeader(headers, header)]
+export const getHeaderValue = (headers: Headers, header: string) => {
+  const headerField = getHeader(headers, header)
+  if (isDefined(headerField)) return headers[headerField]
+  else return undefined
+}
 
 export const addHeaders = (
   res: {
@@ -190,8 +204,7 @@ export const addHeaders = (
     }
 }
 
-const getOrigin = (headers: Headers) =>
-  getHeaderValue(headers, "origin")
+const getOrigin = (headers: Headers) => getHeaderValue(headers, "origin")
 
 export const getAllowedOrigins = () => allowOrigin.split(",")
 
@@ -242,14 +255,17 @@ export const getAllowOriginHeaders = (
   allowedOrigins: string[] = []
 ):
   | Record<string, never>
-  | { "Access-Control-Allow-Origin": string; Vary?: "Origin" } =>
+  | { "Access-Control-Allow-Origin": string; Vary?: "Origin" } => {
   // This function needs to return two headers if there
   // is an exact match and *no* headers if there is not!
-  allowedOrigins.includes("*")
-    ? { "Access-Control-Allow-Origin": "*" }
-    : allowedOrigins.includes(getOrigin(headers))
-    ? { "Access-Control-Allow-Origin": getOrigin(headers), Vary: "Origin" }
-    : {}
+  if (allowedOrigins.includes("*"))
+    return { "Access-Control-Allow-Origin": "*" }
+
+  const origin = getOrigin(headers)
+  if (isDefined(origin) && allowedOrigins.includes(origin))
+    return { "Access-Control-Allow-Origin": origin, Vary: "Origin" }
+  return {}
+}
 
 const parseAuthHeaderValue = (
   authHeaderValue: string,
@@ -266,7 +282,8 @@ const parseAuthHeaderValue = (
 export const nowPlusMinutes = (minutes: number): number =>
   new Date(new Date().valueOf() + minutes * 60 * 1000).valueOf()
 
-export const getAuthHeaderValue = (headers: Headers): string | undefined => getHeaderValue(headers, AUTHORIZATION_HEADER)
+export const getAuthHeaderValue = (headers: Headers): string | undefined =>
+  getHeaderValue(headers, AUTHORIZATION_HEADER)
 
 export const getAuthCredentials = (authHeaderValue: string) =>
   parseAuthHeaderValue(authHeaderValue).credentials
@@ -290,10 +307,7 @@ export const hasTokenCookie = (headers: Headers) =>
   getHeaderValue(headers, "Cookie").indexOf("simple_comment_token=") >= 0
 
 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cookie "Pairs in the list are separated by a semicolon and a space ('; ')"
-export const getCookieToken = (
-  headers: Headers,
-  cookieHeader?: string
-) =>
+export const getCookieToken = (headers: Headers, cookieHeader?: string) =>
   cookieHeader
     ? cookieHeader
         .split("; ")
@@ -344,7 +358,8 @@ export const getUserIdPassword = eventHeaders =>
     eventHeaders
   )
 
-export const isTokenClaim = <T>(claim: T | TokenClaim): claim is TokenClaim => (claim as TokenClaim).user !== undefined
+export const isTokenClaim = <T>(claim: T | TokenClaim): claim is TokenClaim =>
+  (claim as TokenClaim).user !== undefined
 
 export const getTokenClaim = (headers: {
   [key: string]: string
