@@ -22,6 +22,7 @@ import type {
 } from "./simple-comment-types"
 import urlNormalizer from "normalize-url"
 import {
+  isGuestId,
   joinValidations,
   validateDisplayName,
   validateEmail,
@@ -47,8 +48,6 @@ const generateString = (alpha:string, length = 12, id = ""): string => length <=
 
 /** Creates an id specifically for a guest */
 export const generateGuestId = () => `guest-${generateAlpha(2)}${generateNumeric(3)}-${dateToString()}`
-
-export const isGuestId = (userId: UserId) => userId && userId.match(/^guest-[a-z]{2}\d{3}-[a-z0-9]{5}$/) !== null
 
 /** Creates an id for a comment */
 export const generateCommentId = (parentId = "") => {

@@ -4,11 +4,10 @@ import {
   getAllowOriginHeaders,
   generateCommentId,
   isAllowedReferer,
-  isGuestId,
   parseQuery,
 } from "../../../src/lib/backend-utilities"
 import type { Email } from "../../../src/lib/simple-comment-types"
-import { validateEmail, validateUserId } from "../../lib/shared-utilities"
+import { isGuestId, validateEmail, validateUserId } from "../../lib/shared-utilities"
 import { mockUserId } from "../mockData"
 
 describe("test the `getAllowOriginHeaders` function", () => {
