@@ -30,6 +30,7 @@ import {
   getAllowedOrigins,
   isAllowedReferer,
   isComment,
+  isDefined,
   isDeleted,
   isDeletedComment,
   isEmail,
@@ -1474,10 +1475,11 @@ export class MongodbService extends Service {
   }
 
   verifyGET = async (
-    token?: AuthToken
+    token?: AuthToken | null
   ): Promise<Success<TokenClaim> | Error> => {
     try {
-      const claim = jwt.verify(token!, jwtSecret, { ignoreExpiration: false })
+      if (!isDefined(token)) return error400BadRequest
+      const claim = jwt.verify(token, jwtSecret, { ignoreExpiration: false })
       if (!isTokenClaim(claim)) return error400BadRequest
       else return { ...success200OK, body: claim }
     } catch (error) {

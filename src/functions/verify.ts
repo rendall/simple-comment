@@ -9,7 +9,7 @@ import {
   getCookieToken,
   hasBearerScheme,
   hasTokenCookie,
-  stripUndefinedHeaders,
+  toDefinedHeaders,
 } from "../lib/backend-utilities"
 import type { Success, TokenClaim, Error } from "../lib/simple-comment-types"
 import {
@@ -37,7 +37,7 @@ const getAllowHeaders = (event: APIGatewayEvent) => {
     "Access-Control-Allow-Methods": "GET,OPTIONS",
     "Access-Control-Allow-Credentials": "true",
   }
-  const eventHeaders = stripUndefinedHeaders(event.headers)
+  const eventHeaders = toDefinedHeaders(event.headers)
   const allowedOriginHeaders = getAllowOriginHeaders(
     eventHeaders,
     getAllowedOrigins()
@@ -57,7 +57,7 @@ export const handler: Handler = async (event: APIGatewayEvent) => {
       headers
     )
 
-  const eventHeaders = stripUndefinedHeaders(event.headers)
+  const eventHeaders = toDefinedHeaders(event.headers)
 
   const isBearer = hasBearerScheme(eventHeaders)
   const hasCookie = hasTokenCookie(eventHeaders)

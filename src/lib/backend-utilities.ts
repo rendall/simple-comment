@@ -171,7 +171,10 @@ const hasHeader = (headers: Headers, header: string) =>
 const getHeader = (headers: Headers, header: string) =>
   Object.keys(headers).find(h => h.toLowerCase() === header.toLowerCase())
 
-export const getHeaderValue = (headers: Headers, header: string) => {
+export const getHeaderValue = (
+  headers: Headers,
+  header: string
+): string | undefined => {
   const headerField = getHeader(headers, header)
   if (isDefined(headerField)) return headers[headerField]
   else return undefined
@@ -268,15 +271,17 @@ export const getAllowOriginHeaders = (
 }
 
 const parseAuthHeaderValue = (
-  authHeaderValue: string,
+  authHeaderValue?: string,
   spaceIndex?: number
-): { scheme: string; credentials: string } =>
-  spaceIndex === undefined
-    ? parseAuthHeaderValue(authHeaderValue, authHeaderValue.indexOf(" "))
-    : {
-        scheme: authHeaderValue.slice(0, spaceIndex),
-        credentials: authHeaderValue.slice(spaceIndex + 1),
-      }
+): { scheme: string; credentials: string } | undefined =>
+  isDefined(authHeaderValue)
+    ? spaceIndex === undefined
+      ? parseAuthHeaderValue(authHeaderValue, authHeaderValue.indexOf(" "))
+      : {
+          scheme: authHeaderValue.slice(0, spaceIndex),
+          credentials: authHeaderValue.slice(spaceIndex + 1),
+        }
+    : undefined
 
 /** nowPlusMinutes returns the numericDate `minutes` from now */
 export const nowPlusMinutes = (minutes: number): number =>
@@ -285,13 +290,13 @@ export const nowPlusMinutes = (minutes: number): number =>
 export const getAuthHeaderValue = (headers: Headers): string | undefined =>
   getHeaderValue(headers, AUTHORIZATION_HEADER)
 
-export const getAuthCredentials = (authHeaderValue: string) =>
-  parseAuthHeaderValue(authHeaderValue).credentials
+export const getAuthCredentials = (authHeaderValue?: string) =>
+  parseAuthHeaderValue(authHeaderValue)?.credentials
 
 export const hasBasicScheme = (
   headers: Headers,
   parse?: { scheme: string; credentials: string }
-) =>
+): boolean =>
   parse === undefined
     ? hasHeader(headers, AUTHORIZATION_HEADER)
       ? hasBasicScheme(
@@ -302,16 +307,17 @@ export const hasBasicScheme = (
     : parse.scheme.toLowerCase() === BASIC_SCHEME.toLowerCase()
 
 /** Checks the Cookie header for "simple_comment_token" and returns true if found, false otherwise */
-export const hasTokenCookie = (headers: Headers) =>
-  hasHeader(headers, "Cookie") &&
-  getHeaderValue(headers, "Cookie").indexOf("simple_comment_token=") >= 0
-
+export const hasTokenCookie = (headers: Headers) => {
+  const headerValue = getHeaderValue(headers, "Cookie")
+  if (headerValue) return headerValue.indexOf("simple_comment_token=") >= 0
+  else return false
+}
 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cookie "Pairs in the list are separated by a semicolon and a space ('; ')"
-export const getCookieToken = (headers: Headers, cookieHeader?: string) =>
+export const getCookieToken = (headers: Headers, cookieHeader?: string): string | null =>
   cookieHeader
     ? cookieHeader
         .split("; ")
-        .reduce(
+        .reduce<string | null>(
           (auth, pair) =>
             auth
               ? auth
@@ -373,9 +379,11 @@ export const getTokenClaim = (headers: {
     ? getCookieToken(headers)
     : getAuthCredentials(getAuthHeaderValue(headers))
 
+  if (!isDefined(token)) return null
+
   const claim = jwt.verify(token, jwtSecret)
 
-  if (!isTokenClaim(claim)) throw "Bad token"
+  if (!isTokenClaim(claim)) return null
 
   // claim.exp comes in seconds, Date().valueOf() comes in milliseconds
   // so multiply claim.exp by 1000
@@ -487,7 +495,7 @@ export const isDiscussion = (c: Comment | Discussion): c is Discussion =>
 export class HeaderList {
   private _headers: Headers
   constructor(headers?: Headers) {
-    this._headers = headers
+    this._headers = headers ?? {}
   }
   add = (header, value) => {
     this._headers = { ...this._headers, ...{ [header]: value } }
