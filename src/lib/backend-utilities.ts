@@ -313,7 +313,10 @@ export const hasTokenCookie = (headers: Headers) => {
   else return false
 }
 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cookie "Pairs in the list are separated by a semicolon and a space ('; ')"
-export const getCookieToken = (headers: Headers, cookieHeader?: string): string | null =>
+export const getCookieToken = (
+  headers: Headers,
+  cookieHeader?: string
+): string | null =>
   cookieHeader
     ? cookieHeader
         .split("; ")
