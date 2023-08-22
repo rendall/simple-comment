@@ -40,7 +40,7 @@ const isDefined = <T>(x: T | undefined | null): x is T =>
   x !== undefined && x !== null
 
 /** Creates an id specifically for a guest */
-export const createGuestId = () => uuidv4()
+export const generateGuestId = () => uuidv4()
 
 /**
  * Returns true if userId is a guest id
