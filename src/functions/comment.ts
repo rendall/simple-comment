@@ -64,7 +64,7 @@ export const handler = async (event: APIGatewayEvent) => {
       headers
     )
   const eventHeaders = toDefinedHeaders(event.headers)
-  const authUserId = getUserId(eventHeaders)
+  const authUserId = getUserId(eventHeaders) ?? undefined
   const targetId = getTargetId(event.path, "comment") as CommentId
 
   const handleMethod = (method): Promise<Success<Comment> | Error> => {
