@@ -31,6 +31,12 @@ import {
 
 dotenv.config()
 
+if (process.env.ALLOW_ORIGIN === undefined) throw "ALLOW_ORIGIN is not set in the environment variables"
+const allowOrigin = process.env.ALLOW_ORIGIN
+
+if (process.env.JWT_SECRET === undefined) throw "JWT_SECRET is not set in the environment variables"
+const jwtSecret = process.env.JWT_SECRET
+
 export const REALM = "Access to restricted resources"
 const AUTHORIZATION_HEADER = "Authorization"
 const BEARER_SCHEME = "Bearer"
@@ -186,7 +192,7 @@ export const addHeaders = (
 const getOrigin = (headers: { [header: string]: string }) =>
   getHeaderValue(headers, "origin")
 
-export const getAllowedOrigins = () => process.env.ALLOW_ORIGIN.split(",")
+export const getAllowedOrigins = () => allowOrigin.split(",")
 
 /** Normalize a url for allowedReferer test
  * - strips hash and query parameters
@@ -339,6 +345,8 @@ export const getUserIdPassword = eventHeaders =>
     eventHeaders
   )
 
+export const isTokenClaim = <T>(claim: T | TokenClaim): claim is TokenClaim => (claim as TokenClaim).user !== undefined
+
 export const getTokenClaim = (headers: {
   [key: string]: string
 }): TokenClaim | null => {
@@ -351,10 +359,9 @@ export const getTokenClaim = (headers: {
     ? getCookieToken(headers)
     : getAuthCredentials(getAuthHeaderValue(headers))
 
-  const claim: TokenClaim = jwt.verify(token, process.env.JWT_SECRET) as {
-    user: UserId
-    exp: number
-  }
+  const claim = jwt.verify(token, jwtSecret)
+
+  if (!isTokenClaim(claim)) throw "Bad token"
 
   // claim.exp comes in seconds, Date().valueOf() comes in milliseconds
   // so multiply claim.exp by 1000

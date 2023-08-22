@@ -33,6 +33,7 @@ import {
   isDeleted,
   isDeletedComment,
   isEmail,
+  isTokenClaim,
   normalizeUrl,
   toAdminSafeUser,
   toPublicSafeUser,
@@ -72,6 +73,15 @@ import {
 import { comparePassword, getAuthToken, hashPassword } from "./crypt"
 import * as jwt from "jsonwebtoken"
 import { isGuestId, isValidResult } from "./shared-utilities"
+
+if (process.env.SIMPLE_COMMENT_MODERATOR_PASSWORD === undefined) throw "SIMPLE_COMMENT_MODERATOR_PASSWORD is not set in environmental variables"
+const simpleCommentModeratorPassword = process.env.SIMPLE_COMMENT_MODERATOR_PASSWORD
+
+if (process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL === undefined) throw "SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL is not set in enviornmental variables"
+const simpleCommentModeratorEmail = process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL
+
+if (process.env.JWT_SECRET === undefined) throw "JWT_SECRET is not set in environmental variables"
+const jwtSecret = process.env.JWT_SECRET
 export class MongodbService extends Service {
   private isCrossSite = process.env.IS_CROSS_SITE === "true"
   private _client: MongoClient
@@ -127,8 +137,7 @@ export class MongodbService extends Service {
             // but there is no user with that name! This is a problem!
 
             // First, let's verify that they have the correct credentials
-            const isModeratorPassword =
-              process.env.SIMPLE_COMMENT_MODERATOR_PASSWORD === password
+            const isModeratorPassword = simpleCommentModeratorPassword === password
 
             if (!isModeratorPassword) {
               // Nope!
@@ -272,6 +281,11 @@ export class MongodbService extends Service {
     targetUserId?: UserId,
     authUserId?: UserId
   ): Promise<Success<PublicSafeUser | AdminSafeUser> | Error> => {
+    // TODO: do work around returning all users, but for now if targetUserId is not defined, return an error
+
+    if (targetUserId === undefined) return { ...error400BadRequest, body: "resource is undefined" }
+
+
     if (!authUserId && !policy.canPublicReadUser) {
       return error401UserNotAuthenticated
     }
@@ -301,15 +315,14 @@ export class MongodbService extends Service {
 
       // The Big Moderator is authenticated but has no user object in the database
       // We shall create it now
-      const hash = await hashPassword(
-        process.env.SIMPLE_COMMENT_MODERATOR_PASSWORD
-      )
+      const hash = await hashPassword( simpleCommentModeratorPassword)
+
       const adminUser: User = {
         id: targetUserId,
         name: "Simple Comment Moderator",
         isAdmin: true,
         hash,
-        email: process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL,
+        email: simpleCommentModeratorEmail,
       }
       await users.insertOne(adminUser)
 
@@ -508,6 +521,7 @@ export class MongodbService extends Service {
     text: string,
     authUserId?: UserId
   ): Promise<Success<Comment> | Error> => {
+
     if (!authUserId) {
       return error401UserNotAuthenticated
     }
@@ -525,7 +539,7 @@ export class MongodbService extends Service {
     const users: Collection<User> = (await this.getDb()).collection("users")
     const authUser = authUserId ? await users.findOne({ id: authUserId }) : null
 
-    if (authUserId && !authUser) {
+    if (authUser === null) {
       return error404UserUnknown
     }
 
@@ -555,6 +569,7 @@ export class MongodbService extends Service {
     }
 
     const adminSafeUser = toAdminSafeUser(authUser)
+
     const id = generateCommentId(parentId)
     const insertComment: Comment = {
       id,
@@ -618,7 +633,7 @@ export class MongodbService extends Service {
       return error401UserNotAuthenticated
     }
 
-    const isAdmin = authUser ? authUser.isAdmin : false
+    const isAdmin = authUser?.isAdmin ?? false
     const comments: Collection<Comment | DeletedComment | Discussion> = (
       await this.getDb()
     ).collection("comments")
@@ -632,7 +647,7 @@ export class MongodbService extends Service {
     }
 
     const foundComment = await cursor.next()
-    if (!isComment(foundComment) || isDeletedComment(foundComment)) {
+    if (foundComment === null || !isComment(foundComment) || isDeletedComment(foundComment)) {
       return {
         ...error404CommentNotFound,
         body: `Comment '${targetId}' not found`,
@@ -1078,7 +1093,7 @@ export class MongodbService extends Service {
       return error404UserUnknown
     }
 
-    const isAdmin = authUser ? authUser.isAdmin : false
+    const isAdmin = authUser?.isAdmin ?? false
     const comments: Collection<Comment | DeletedComment | Discussion> = (
       await this.getDb()
     ).collection("comments")
@@ -1452,10 +1467,9 @@ export class MongodbService extends Service {
     token?: AuthToken
   ): Promise<Success<TokenClaim> | Error> => {
     try {
-      const claim: TokenClaim = jwt.verify(token, process.env.JWT_SECRET, {
-        ignoreExpiration: false,
-      }) as TokenClaim
-      return { ...success200OK, body: claim }
+      const claim  = jwt.verify(token!, jwtSecret, { ignoreExpiration: false, })
+      if (!isTokenClaim(claim)) return error400BadRequest
+      else return { ...success200OK, body: claim }
     } catch (error) {
       console.error(error)
       switch (error.name) {
