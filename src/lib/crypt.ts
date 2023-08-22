@@ -1,4 +1,3 @@
-import { v4, validate as isValidUuid } from "uuid"
 import { hash, compare } from "bcryptjs"
 import * as jwt from "jsonwebtoken"
 import * as dotenv from "dotenv"
@@ -34,6 +33,3 @@ export const getAuthToken = (
   exp: number = getExpirationTime(YEAR_SECONDS)
 ): string => jwt.sign({ user, exp }, process.env.JWT_SECRET)
 
-export const uuidv4 = () => v4()
-
-export const isUuid = isValidUuid

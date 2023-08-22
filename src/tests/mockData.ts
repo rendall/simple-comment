@@ -14,7 +14,7 @@ const passwordInput =
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890!@#$%^&*()_+-= "
 const alphaAscii =
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890_-"
-const emailAscii = "abcdefghijklmnopqrstuvwxyz01234567890"
+const base36 = "abcdefghijklmnopqrstuvwxyz01234567890"
 const idCharacters = "abcdefghijklmnopqrstuvwxyz-0123456789"
 
 const randomNumber = (min: number = 1, max: number = 10): number =>
@@ -34,7 +34,7 @@ export const randomString = (
 const randomDate = () => new Date(randomNumber(0, new Date().valueOf()))
 // Returns a random email that will validate but does not create examples of all possible valid emails
 export const mockEmail = (): Email =>
-  `${randomString(emailAscii)}@${randomString(emailAscii)}.${randomString(
+  `${randomString(base36)}@${randomString(base36)}.${randomString(
     "abcdefghijklmnopqrstuvwxyz",
     3
   )}`
@@ -42,19 +42,28 @@ export const mockEmail = (): Email =>
 export const mockUserId = (length:number = randomNumber(5,36)): string =>
   randomString(idCharacters, length)
 
-export const mockUuid4 = () => {
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
-    const r = (Math.random() * 16) | 0
-    const v = c === "x" ? r : (r & 0x3) | 0x8
-    return v.toString(16)
-  })
-}
-
 export const mockPassword = () =>
   randomString(passwordInput, randomNumber(10, 50)).trim()
 
+const randomAlphaNumeric = (length = 10) => randomString(base36, length)
+
+const generateMockCommentId = (parentId = "") => {
+  const cId = `${randomAlphaNumeric( 3 )}-${randomAlphaNumeric(4)}-${randomAlphaNumeric(5)}`
+  if (parentId==="") return cId
+  const appendIndex = parentId.lastIndexOf("_")
+  const pId = parentId.slice(appendIndex + 1)
+  if (pId ==="") return cId
+
+  // if the commentId will be longer than 36 characters, truncate it
+  if (pId.length > (36 - cId.length - 1)) {
+    const to36 = pId.slice(0, 36)
+    return `${to36.slice(0, -cId.length - 1)}_${cId}`
+  }
+
+  return `${pId}_${cId}`
+}
 const mockComment = (parentId: TopicId | CommentId, user: User): Comment => ({
-  id: mockUuid4(),
+  id: generateMockCommentId(parentId),
   parentId,
   userId: user.id,
   text: randomString(alphaUserInput, randomNumber(50, 500)),

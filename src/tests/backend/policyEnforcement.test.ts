@@ -1,3 +1,4 @@
+import { generateGuestId } from "../../lib/backend-utilities"
 import { isUserAllowedTo } from "../../lib/policyEnforcement"
 import type { Policy, User } from "../../lib/simple-comment-types"
 import { Action } from "../../lib/simple-comment-types"
@@ -16,7 +17,7 @@ const mockPolicy: Policy = {
 }
 
 const mockGuestUser: User = {
-  id: "6e3c9dd2-fb1f-4c10-8d19-c6bdc0156b07",
+  id: "guest-ih517-c1m4i",
   name: "",
   email: "",
 }

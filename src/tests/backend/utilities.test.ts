@@ -2,6 +2,7 @@ import {
   addHeaders,
   generateGuestId,
   getAllowOriginHeaders,
+  generateCommentId,
   isAllowedReferer,
   isGuestId,
   parseQuery,
@@ -55,6 +56,39 @@ describe("Test guest id utility", () => {
     expect(isGuestId(guestId)).toBe(true)
   })
 })
+describe('generateCommentId', () => {
+
+  const commentPattern = '[a-z0-9]{3}-[a-z0-9]{4}-[a-z0-9]{5}';
+  test('generates a comment ID with a given parent ID', () => {
+    const commentId = generateCommentId('topic-1');
+    const expectedRegex = new RegExp(`^topic-1_${commentPattern}$`)
+    expect(commentId).toMatch(expectedRegex);
+  });
+
+  test('has parent id in string', () => {
+    const cId = "tuw-26xt-c1m4i"
+    const pId = "not_in-string"
+    const parentId = `${pId}_${cId}`
+    const commentId = generateCommentId(parentId);
+    const regex = new RegExp(`^${cId}_${commentPattern}`)
+    expect(commentId).toContain(cId)
+    expect(commentId).toMatch(regex);
+    expect(commentId).not.toContain(pId)
+
+  })
+
+  test('generates a comment ID without a parent ID', () => {
+    const commentId = generateCommentId();
+    const regex = new RegExp(`^${commentPattern}$`)
+    expect(commentId).toMatch(regex);
+  });
+
+  test('generates unique comment IDs', () => {
+    const commentId1 = generateCommentId('parent1');
+    const commentId2 = generateCommentId('parent2');
+    expect(commentId1).not.toBe(commentId2);
+  });
+});
 
 describe("Test validations", () => {
   test("good validateUserId", () => {
