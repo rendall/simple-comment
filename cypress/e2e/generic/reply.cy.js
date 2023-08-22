@@ -52,7 +52,10 @@ describe("reply", () => {
     const guestName = generateRandomName()
     cy.get("@commentBody").find(".comment-field").type(commentText)
     cy.get("@commentBody").find("#guest-name").type(guestName)
-    cy.get("@commentBody").find("#guest-email").type("guest@example.com")
+    cy.get("@commentBody")
+      .find("#guest-email")
+      .clear()
+      .type("guest@example.com")
 
     cy.get("@commentBody").find(".comment-submit-button").click()
     cy.wait("@getGauth").its("response.statusCode").should("eq", 200)

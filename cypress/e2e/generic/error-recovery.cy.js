@@ -51,7 +51,7 @@ context("Error recovery", () => {
       .should("have.class", "is-error")
     cy.get("#status-display").should("have.class", "is-error")
 
-    cy.get("form.comment-form #guest-email").type("fake@email.com")
+    cy.get("form.comment-form #guest-email").clear().type("fake@email.com")
 
     const guestName = generateRandomName()
     const userId = formatUserName(guestName)
@@ -108,7 +108,7 @@ context("Error recovery", () => {
 
     cy.get("#status-display").should("have.class", "is-error")
 
-    cy.get("form.comment-form #signup-email").type("fake@email.com")
+    cy.get("form.comment-form #signup-email").clear().type("fake@email.com")
     cy.get("form.comment-form #signup-name").type(generateRandomName())
     cy.get("form.comment-form #signup-user-id").type(
       `-${randomString("abcdefghijklmnopqrstuvwxyz0123456789-", 10)}`

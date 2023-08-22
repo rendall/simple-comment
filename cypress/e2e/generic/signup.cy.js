@@ -23,7 +23,7 @@ describe("Signup Functionality", () => {
       .parents(".input-field")
       .should("not.have.class", "is-error")
     cy.get("#signup-email").clear()
-    cy.get("#signup-email").type("invalidemail")
+    cy.get("#signup-email").clear().type("invalidemail")
     cy.get(".input-field.is-error .helper-text").should("not.be.empty")
   })
 
@@ -38,7 +38,7 @@ describe("Signup Functionality", () => {
       .parents(".input-field")
       .should("not.have.class", "is-error")
     cy.get("#signup-name").clear()
-    cy.get("#signup-user-id").type("existinguser")
+    cy.get("#signup-user-id").clear().type("existinguser")
     cy.get(".input-field.is-error .helper-text").should(
       "contain",
       "'existinguser' is already taken. Please try another one."
@@ -50,11 +50,11 @@ describe("Signup Functionality", () => {
       req.reply({ statusCode: 400 })
     })
 
-    cy.get("#signup-name").clear().type("Test User")
-    cy.get("#signup-user-id").clear().type("newuser")
-    cy.get("#signup-email").clear().type("newuser@example.com")
-    cy.get("#signup-password").clear().type("password123")
-    cy.get("#signup-password-confirm").clear().type("password123")
+    cy.get("#signup-name").clear().clear().type("Test User")
+    cy.get("#signup-user-id").clear().clear().type("newuser")
+    cy.get("#signup-email").clear().clear().type("newuser@example.com")
+    cy.get("#signup-password").clear().clear().type("password123")
+    cy.get("#signup-password-confirm").clear().clear().type("password123")
     cy.get("#signup-form").submit()
 
     cy.get("#status-display").should("have.class", "is-error")
@@ -125,7 +125,7 @@ describe("Signup Functionality", () => {
     it("Displays error when passwords do not match", () => {
       const password = "matchingPassword1776"
       cy.get("#signup-password").type(password)
-      cy.get("#signup-password-confirm").type("does not match")
+      cy.get("#signup-password-confirm").clear().type("does not match")
       cy.get("#signup-password")
         .parents(".password-twin")
         .should("have.class", "is-error")

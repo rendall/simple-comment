@@ -37,6 +37,7 @@
     loginStateStore,
   } from "../lib/svelte-stores"
   import {
+    isGuestId,
     isValidResult,
     joinValidations,
     validateDisplayName,
@@ -148,6 +149,7 @@
       verifySelf()
         .then((user: AdminSafeUser) => {
           self = user
+          localStorage.setItem("simpleCommentUser", JSON.stringify(user))
           send({ type: "SUCCESS" })
         })
         .catch(error => {
@@ -556,6 +558,20 @@
 
   onMount(() => {
     self = currentUser
+    const storedItem: string | null = localStorage.getItem("simpleCommentUser")
+    if (storedItem) {
+      const storedUser = JSON.parse(storedItem) as {
+        id?: string
+        name?: string
+        email?: string
+      }
+
+      const { id, name, email } = storedUser
+
+      if (id && !isGuestId(id)) userId = id
+      if (name) displayName = name
+      if (email) userEmail = email
+    }
   })
 
   onDestroy(() => {
