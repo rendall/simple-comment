@@ -32,4 +32,3 @@ export const getAuthToken = (
   user: string,
   exp: number = getExpirationTime(YEAR_SECONDS)
 ): string => jwt.sign({ user, exp }, process.env.JWT_SECRET)
-

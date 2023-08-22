@@ -39,7 +39,7 @@ export const mockEmail = (): Email =>
     3
   )}`
 
-export const mockUserId = (length:number = randomNumber(5,36)): string =>
+export const mockUserId = (length: number = randomNumber(5, 36)): string =>
   randomString(idCharacters, length)
 
 export const mockPassword = () =>
@@ -48,14 +48,16 @@ export const mockPassword = () =>
 const randomAlphaNumeric = (length = 10) => randomString(base36, length)
 
 const generateMockCommentId = (parentId = "") => {
-  const cId = `${randomAlphaNumeric( 3 )}-${randomAlphaNumeric(4)}-${randomAlphaNumeric(5)}`
-  if (parentId==="") return cId
+  const cId = `${randomAlphaNumeric(3)}-${randomAlphaNumeric(
+    4
+  )}-${randomAlphaNumeric(5)}`
+  if (parentId === "") return cId
   const appendIndex = parentId.lastIndexOf("_")
   const pId = parentId.slice(appendIndex + 1)
-  if (pId ==="") return cId
+  if (pId === "") return cId
 
   // if the commentId will be longer than 36 characters, truncate it
-  if (pId.length > (36 - cId.length - 1)) {
+  if (pId.length > 36 - cId.length - 1) {
     const to36 = pId.slice(0, 36)
     return `${to36.slice(0, -cId.length - 1)}_${cId}`
   }

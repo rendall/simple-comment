@@ -91,4 +91,5 @@ export const validateDisplayName = (name: string): ValidationResult => {
   return { isValid: true }
 }
 
-export const isGuestId = (userId: UserId) => userId && userId.match(/^guest-[a-z]{2}\d{3}-[a-z0-9]{5}$/) !== null
+export const isGuestId = (userId?: UserId) =>
+  userId && userId.match(/^guest-[a-z]{2}\d{3}-[a-z0-9]{5}$/) !== null
