@@ -8,6 +8,6 @@ A hit to the `/verify` endpoint verifies if a user is *identified* or a *guest* 
 
 An uncredentialed user can acquire guest credentials via the `/gauth` endpoint (*guest auth*). These credentials allow a user to create a *guest user* on the `/user` endpoint.
 
-A *guest user* does not have a password and cannot log in, but can comment according to `policy` settings, and can edit non-admin properties like `name` and `email`. *guest auth* credentials are expected to be stored locally in the visitor's browser and reused. The guest user's id is always a `uuid` and therefore an *identifed user* can never have a `uuid` as its id.
+A *guest user* does not have a password and cannot log in, but can comment according to `policy` settings, and can edit non-admin properties like `name` and `email`. *guest auth* credentials are expected to be stored locally in the visitor's browser and reused. The guest user's id is always of the form `guest-xxxxx-xxxxx` and therefore an *identifed user* cannot have this id format.
 
 If an *identified user* logs in or is created with *guest auth* credentials of a guest user, that guest user can be linked to the *identified* user.

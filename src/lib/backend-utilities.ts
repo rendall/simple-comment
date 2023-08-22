@@ -1,5 +1,5 @@
 /** Server-side utilities.  Using any of these in the front end will lead to darkness and despair. */
-import { validate as isUuid } from "uuid"
+import crypto from "crypto"
 import * as jwt from "jsonwebtoken"
 import * as dotenv from "dotenv"
 import * as picomatch from "picomatch"
@@ -20,9 +20,9 @@ import type {
   Email,
   ValidationResult,
 } from "./simple-comment-types"
-import { uuidv4 } from "./crypt"
 import urlNormalizer from "normalize-url"
 import {
+  isGuestId,
   joinValidations,
   validateDisplayName,
   validateEmail,
@@ -39,13 +39,44 @@ const BASIC_SCHEME = "Basic"
 const isDefined = <T>(x: T | undefined | null): x is T =>
   x !== undefined && x !== null
 
-/** Creates an id specifically for a guest */
-export const createGuestId = () => uuidv4()
+const dateToString = (d = new Date()) =>
+  (d.getFullYear() * 10000 + d.getMonth() * 100 + d.getDate()).toString(36)
+const timeToString = (d = new Date()) =>
+  (d.getHours() * 10000 + d.getMinutes() * 100 + d.getSeconds()).toString(36)
+const generateAlpha = (length = 12) =>
+  generateString("abcdefghijklmnopqrstuvwxyz", length)
+const generateNumeric = (length = 12) => generateString("0123456789", length)
+const generateAlphaNumeric = (length = 12): string =>
+  generateString("abcdefghijklmnopqrstuvwxyz0123456789", length)
+const generateString = (alpha: string, length = 12, id = ""): string =>
+  length <= 0
+    ? id
+    : generateString(
+        alpha,
+        length - 1,
+        id + alpha.charAt(crypto.randomInt(alpha.length))
+      )
 
-/**
- * Returns true if userId is a guest id
- */
-export const isGuestId = (userId: UserId) => isUuid(userId)
+/** Creates an id specifically for a guest */
+export const generateGuestId = () =>
+  `guest-${generateAlpha(2)}${generateNumeric(3)}-${dateToString()}`
+
+/** Creates an id for a comment */
+export const generateCommentId = (parentId = "") => {
+  const cId = `${generateAlphaNumeric(3)}-${timeToString()}-${dateToString()}`
+  if (parentId === "") return cId
+  const appendIndex = parentId.lastIndexOf("_")
+  const pId = parentId.slice(appendIndex + 1)
+  if (pId === "") return cId
+
+  // if the commentId will be longer than 36 characters, truncate it
+  if (pId.length > 36 - cId.length - 1) {
+    const to36 = pId.slice(0, 36)
+    return `${to36.slice(0, -cId.length - 1)}_${cId}`
+  }
+
+  return `${pId}_${cId}`
+}
 
 /**
  * These are user properties that are unsafe to return to admins

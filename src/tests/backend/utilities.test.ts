@@ -1,13 +1,18 @@
 import {
   addHeaders,
+  generateGuestId,
   getAllowOriginHeaders,
+  generateCommentId,
   isAllowedReferer,
-  isGuestId,
   parseQuery,
 } from "../../../src/lib/backend-utilities"
-import { v4 as uuidv4 } from "uuid"
 import type { Email } from "../../../src/lib/simple-comment-types"
-import { validateEmail, validateUserId } from "../../lib/shared-utilities"
+import {
+  isGuestId,
+  validateEmail,
+  validateUserId,
+} from "../../lib/shared-utilities"
+import { mockUserId } from "../mockData"
 
 describe("test the `getAllowOriginHeaders` function", () => {
   it("should return {headers} if there is a header match", () => {
@@ -47,11 +52,42 @@ describe("test the `getAllowOriginHeaders` function", () => {
 })
 
 describe("Test guest id utility", () => {
-  test("isGuestId should fail anything other than a uuid", () => {
+  test("isGuestId should pass id from generateGuestId", () => {
     //TODO: make this more random
     expect(isGuestId("rendall")).toBe(false)
-    const guestId = uuidv4()
+    const guestId = generateGuestId()
     expect(isGuestId(guestId)).toBe(true)
+  })
+})
+describe("generateCommentId", () => {
+  const commentPattern = "[a-z0-9]{3}-[a-z0-9]{4}-[a-z0-9]{5}"
+  test("generates a comment ID with a given parent ID", () => {
+    const commentId = generateCommentId("topic-1")
+    const expectedRegex = new RegExp(`^topic-1_${commentPattern}$`)
+    expect(commentId).toMatch(expectedRegex)
+  })
+
+  test("has parent id in string", () => {
+    const cId = "tuw-26xt-c1m4i"
+    const pId = "not_in-string"
+    const parentId = `${pId}_${cId}`
+    const commentId = generateCommentId(parentId)
+    const regex = new RegExp(`^${cId}_${commentPattern}`)
+    expect(commentId).toContain(cId)
+    expect(commentId).toMatch(regex)
+    expect(commentId).not.toContain(pId)
+  })
+
+  test("generates a comment ID without a parent ID", () => {
+    const commentId = generateCommentId()
+    const regex = new RegExp(`^${commentPattern}$`)
+    expect(commentId).toMatch(regex)
+  })
+
+  test("generates unique comment IDs", () => {
+    const commentId1 = generateCommentId("parent1")
+    const commentId2 = generateCommentId("parent2")
+    expect(commentId1).not.toBe(commentId2)
   })
 })
 
@@ -60,8 +96,8 @@ describe("Test validations", () => {
     expect(validateUserId("rendall-775-id")).toEqual({ isValid: true })
   })
 
-  test("uuidv4 in validateUserId", () => {
-    expect(validateUserId(uuidv4())).toEqual({ isValid: true })
+  test("guestId is validateUserId", () => {
+    expect(validateUserId(generateGuestId())).toEqual({ isValid: true })
   })
 
   test("incorrect characters in validateUserId", () => {
@@ -80,8 +116,8 @@ describe("Test validations", () => {
     })
   })
 
-  test("too many  characters in validateUserId", () => {
-    const tooMany = uuidv4() + "a"
+  test("too many characters in validateUserId", () => {
+    const tooMany = mockUserId(37)
     expect(tooMany.length).toBeGreaterThan(36)
     expect(validateUserId(tooMany)).toEqual({
       isValid: false,

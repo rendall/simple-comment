@@ -1,7 +1,7 @@
 import type { ActionType, Policy, UserId } from "./simple-comment-types"
 import { Action } from "./simple-comment-types"
 import policy from "../policy.json"
-import { isGuestId } from "../lib/backend-utilities"
+import { isGuestId } from "./shared-utilities"
 
 /** Return true iff action can be performed by user according to
  * policy, false otherwise

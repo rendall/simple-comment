@@ -100,7 +100,7 @@ const transliterate = (char: string = ""): string =>
   ) ?? [char, undefined])[0]
 
 /** Convert a display name to a default user id */
-export const formatUserId = displayName => {
+export const formatUserId = (displayName: string) => {
   return displayName
     .trim()
     .toLowerCase()

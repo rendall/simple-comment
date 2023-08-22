@@ -25,21 +25,22 @@ import { MongoClient } from "mongodb"
 import { Service } from "./Service"
 import {
   adminOnlyModifiableUserProperties,
+  generateCommentId,
+  generateGuestId,
+  getAllowedOrigins,
+  isAllowedReferer,
   isComment,
   isDeleted,
-  isGuestId,
   isDeletedComment,
+  isEmail,
+  normalizeUrl,
   toAdminSafeUser,
   toPublicSafeUser,
   toSafeUser,
   toTopic,
   toUpdatedUser,
-  validateUser,
-  isAllowedReferer,
-  getAllowedOrigins,
-  isEmail,
-  normalizeUrl,
   validateGuestUser,
+  validateUser,
 } from "./backend-utilities"
 import policy from "../policy.json"
 import {
@@ -68,9 +69,9 @@ import {
   success204CommentUpdated,
   success204UserUpdated,
 } from "./messages"
-import { comparePassword, getAuthToken, hashPassword, uuidv4 } from "./crypt"
+import { comparePassword, getAuthToken, hashPassword } from "./crypt"
 import * as jwt from "jsonwebtoken"
-import { isValidResult } from "./shared-utilities"
+import { isGuestId, isValidResult } from "./shared-utilities"
 export class MongodbService extends Service {
   private isCrossSite = process.env.IS_CROSS_SITE === "true"
   private _client: MongoClient
@@ -554,7 +555,7 @@ export class MongodbService extends Service {
     }
 
     const adminSafeUser = toAdminSafeUser(authUser)
-    const id = uuidv4()
+    const id = generateCommentId(parentId)
     const insertComment: Comment = {
       id,
       text,
@@ -957,7 +958,7 @@ export class MongodbService extends Service {
         })
         return
       }
-      const guestUserId = uuidv4()
+      const guestUserId = generateGuestId()
       const gauthToken = getAuthToken(guestUserId)
       resolve({ ...success200OK, body: gauthToken })
     })

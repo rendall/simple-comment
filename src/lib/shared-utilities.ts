@@ -1,5 +1,6 @@
 import type {
   InvalidResult,
+  UserId,
   ValidResult,
   ValidationResult,
 } from "./simple-comment-types"
@@ -89,3 +90,6 @@ export const validateDisplayName = (name: string): ValidationResult => {
     return { isValid: false, reason: "Display name is too long." }
   return { isValid: true }
 }
+
+export const isGuestId = (userId?: UserId) =>
+  userId && userId.match(/^guest-[a-z]{2}\d{3}-[a-z0-9]{5}$/) !== null
