@@ -4,20 +4,21 @@ import * as jwt from "jsonwebtoken"
 import * as dotenv from "dotenv"
 import * as picomatch from "picomatch"
 import type {
-  NewUser,
-  Success,
-  Error,
-  Topic,
-  UpdateUser,
-  UserId,
   AdminSafeUser,
   Comment,
   DeletedComment,
   Discussion,
-  PublicSafeUser,
-  User,
-  TokenClaim,
   Email,
+  Error,
+  Headers,
+  NewUser,
+  PublicSafeUser,
+  Success,
+  TokenClaim,
+  Topic,
+  UpdateUser,
+  User,
+  UserId,
   ValidationResult,
 } from "./simple-comment-types"
 import urlNormalizer from "normalize-url"
@@ -31,12 +32,20 @@ import {
 
 dotenv.config()
 
+if (process.env.ALLOW_ORIGIN === undefined)
+  throw "ALLOW_ORIGIN is not set in the environment variables"
+const allowOrigin = process.env.ALLOW_ORIGIN
+
+if (process.env.JWT_SECRET === undefined)
+  throw "JWT_SECRET is not set in the environment variables"
+const jwtSecret = process.env.JWT_SECRET
+
 export const REALM = "Access to restricted resources"
 const AUTHORIZATION_HEADER = "Authorization"
 const BEARER_SCHEME = "Bearer"
 const BASIC_SCHEME = "Basic"
 
-const isDefined = <T>(x: T | undefined | null): x is T =>
+export const isDefined = <T>(x: T | undefined | null): x is T =>
   x !== undefined && x !== null
 
 const dateToString = (d = new Date()) =>
@@ -143,18 +152,33 @@ export const isPublicSafeUser = (user: Partial<User>): user is PublicSafeUser =>
     key => !publicUnsafeUserProperties.includes(key)
   )
 
-const hasHeader = (headers: { [header: string]: string }, header: string) =>
+export const toDefinedHeaders = (headers: {
+  [header: string]: string | undefined
+}): Headers =>
+  Object.keys(headers).reduce((filteredHeaders, key) => {
+    const value = headers[key]
+    if (value !== undefined) {
+      return { ...filteredHeaders, [key]: value }
+    }
+    return filteredHeaders
+  }, {})
+
+const hasHeader = (headers: Headers, header: string) =>
   Object.keys(headers).some(
     h => h.toLowerCase() === header.toLowerCase() && headers[h] !== undefined
   )
 
-const getHeader = (headers: { [header: string]: string }, header: string) =>
+const getHeader = (headers: Headers, header: string) =>
   Object.keys(headers).find(h => h.toLowerCase() === header.toLowerCase())
 
 export const getHeaderValue = (
-  headers: { [header: string]: string },
+  headers: Headers,
   header: string
-) => headers[getHeader(headers, header)]
+): string | undefined => {
+  const headerField = getHeader(headers, header)
+  if (isDefined(headerField)) return headers[headerField]
+  else return undefined
+}
 
 export const addHeaders = (
   res: {
@@ -183,10 +207,9 @@ export const addHeaders = (
     }
 }
 
-const getOrigin = (headers: { [header: string]: string }) =>
-  getHeaderValue(headers, "origin")
+const getOrigin = (headers: Headers) => getHeaderValue(headers, "origin")
 
-export const getAllowedOrigins = () => process.env.ALLOW_ORIGIN.split(",")
+export const getAllowedOrigins = () => allowOrigin.split(",")
 
 /** Normalize a url for allowedReferer test
  * - strips hash and query parameters
@@ -231,45 +254,49 @@ export const isAllowedReferer = (
  * @returns
  */
 export const getAllowOriginHeaders = (
-  headers: { [header: string]: string },
+  headers: Headers,
   allowedOrigins: string[] = []
 ):
   | Record<string, never>
-  | { "Access-Control-Allow-Origin": string; Vary?: "Origin" } =>
+  | { "Access-Control-Allow-Origin": string; Vary?: "Origin" } => {
   // This function needs to return two headers if there
   // is an exact match and *no* headers if there is not!
-  allowedOrigins.includes("*")
-    ? { "Access-Control-Allow-Origin": "*" }
-    : allowedOrigins.includes(getOrigin(headers))
-    ? { "Access-Control-Allow-Origin": getOrigin(headers), Vary: "Origin" }
-    : {}
+  if (allowedOrigins.includes("*"))
+    return { "Access-Control-Allow-Origin": "*" }
+
+  const origin = getOrigin(headers)
+  if (isDefined(origin) && allowedOrigins.includes(origin))
+    return { "Access-Control-Allow-Origin": origin, Vary: "Origin" }
+  return {}
+}
 
 const parseAuthHeaderValue = (
-  authHeaderValue: string,
+  authHeaderValue?: string,
   spaceIndex?: number
-): { scheme: string; credentials: string } =>
-  spaceIndex === undefined
-    ? parseAuthHeaderValue(authHeaderValue, authHeaderValue.indexOf(" "))
-    : {
-        scheme: authHeaderValue.slice(0, spaceIndex),
-        credentials: authHeaderValue.slice(spaceIndex + 1),
-      }
+): { scheme: string; credentials: string } | undefined =>
+  isDefined(authHeaderValue)
+    ? spaceIndex === undefined
+      ? parseAuthHeaderValue(authHeaderValue, authHeaderValue.indexOf(" "))
+      : {
+          scheme: authHeaderValue.slice(0, spaceIndex),
+          credentials: authHeaderValue.slice(spaceIndex + 1),
+        }
+    : undefined
 
 /** nowPlusMinutes returns the numericDate `minutes` from now */
 export const nowPlusMinutes = (minutes: number): number =>
   new Date(new Date().valueOf() + minutes * 60 * 1000).valueOf()
 
-export const getAuthHeaderValue = (headers: {
-  [header: string]: string
-}): string | undefined => getHeaderValue(headers, AUTHORIZATION_HEADER)
+export const getAuthHeaderValue = (headers: Headers): string | undefined =>
+  getHeaderValue(headers, AUTHORIZATION_HEADER)
 
-export const getAuthCredentials = (authHeaderValue: string) =>
-  parseAuthHeaderValue(authHeaderValue).credentials
+export const getAuthCredentials = (authHeaderValue?: string) =>
+  parseAuthHeaderValue(authHeaderValue)?.credentials
 
 export const hasBasicScheme = (
-  headers: { [header: string]: string },
+  headers: Headers,
   parse?: { scheme: string; credentials: string }
-) =>
+): boolean =>
   parse === undefined
     ? hasHeader(headers, AUTHORIZATION_HEADER)
       ? hasBasicScheme(
@@ -280,19 +307,20 @@ export const hasBasicScheme = (
     : parse.scheme.toLowerCase() === BASIC_SCHEME.toLowerCase()
 
 /** Checks the Cookie header for "simple_comment_token" and returns true if found, false otherwise */
-export const hasTokenCookie = (headers: { [header: string]: string }) =>
-  hasHeader(headers, "Cookie") &&
-  getHeaderValue(headers, "Cookie").indexOf("simple_comment_token=") >= 0
-
+export const hasTokenCookie = (headers: Headers) => {
+  const headerValue = getHeaderValue(headers, "Cookie")
+  if (headerValue) return headerValue.indexOf("simple_comment_token=") >= 0
+  else return false
+}
 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cookie "Pairs in the list are separated by a semicolon and a space ('; ')"
 export const getCookieToken = (
-  headers: { [header: string]: string },
+  headers: Headers,
   cookieHeader?: string
-) =>
+): string | null =>
   cookieHeader
     ? cookieHeader
         .split("; ")
-        .reduce(
+        .reduce<string | null>(
           (auth, pair) =>
             auth
               ? auth
@@ -305,7 +333,7 @@ export const getCookieToken = (
 
 /** Checks the Authorization header for "Bearer" + token and returns true if found, false otherwise */
 export const hasBearerScheme = (
-  headers: { [header: string]: string },
+  headers: Headers,
   parse?: { scheme: string; credentials: string }
 ) =>
   parse === undefined
@@ -339,6 +367,9 @@ export const getUserIdPassword = eventHeaders =>
     eventHeaders
   )
 
+export const isTokenClaim = <T>(claim: T | TokenClaim): claim is TokenClaim =>
+  (claim as TokenClaim).user !== undefined
+
 export const getTokenClaim = (headers: {
   [key: string]: string
 }): TokenClaim | null => {
@@ -351,10 +382,11 @@ export const getTokenClaim = (headers: {
     ? getCookieToken(headers)
     : getAuthCredentials(getAuthHeaderValue(headers))
 
-  const claim: TokenClaim = jwt.verify(token, process.env.JWT_SECRET) as {
-    user: UserId
-    exp: number
-  }
+  if (!isDefined(token)) return null
+
+  const claim = jwt.verify(token, jwtSecret)
+
+  if (!isTokenClaim(claim)) return null
 
   // claim.exp comes in seconds, Date().valueOf() comes in milliseconds
   // so multiply claim.exp by 1000
@@ -464,9 +496,9 @@ export const isDiscussion = (c: Comment | Discussion): c is Discussion =>
   (c as Comment).parentId === undefined
 
 export class HeaderList {
-  private _headers: { [header: string]: string }
-  constructor(headers?: { [header: string]: string }) {
-    this._headers = headers
+  private _headers: Headers
+  constructor(headers?: Headers) {
+    this._headers = headers ?? {}
   }
   add = (header, value) => {
     this._headers = { ...this._headers, ...{ [header]: value } }

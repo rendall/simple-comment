@@ -15,8 +15,14 @@ import {
   getAllowOriginHeaders,
   getAllowedOrigins,
   addHeaders,
+  toDefinedHeaders,
 } from "../lib/backend-utilities"
 dotenv.config()
+
+if (process.env.DB_CONNECTION_STRING === undefined)
+  throw "DB_CONNECTION_STRING is not set in environment variables"
+if (process.env.DATABASE_NAME === undefined)
+  throw "DATABASE_NAME is not set in environment variables"
 
 const YEAR_SECONDS = 60 * 60 * 24 * 365 // 60s * 1 hour * 24 hours * 365 days
 const isCrossSite = process.env.IS_CROSS_SITE === "true"
@@ -32,8 +38,10 @@ const getAllowHeaders = (event: APIGatewayEvent) => {
     "Access-Control-Allow-Credentials": "true",
     "Access-Control-Allow-Headers": "Cookie,Authorization",
   }
+
+  const eventHeaders = toDefinedHeaders(event.headers)
   const allowedOriginHeaders = getAllowOriginHeaders(
-    event.headers,
+    eventHeaders,
     getAllowedOrigins()
   )
   const headers = { ...allowedMethods, ...allowedOriginHeaders }
@@ -82,7 +90,8 @@ export const handler = async (event: APIGatewayEvent) => {
 const handleAuth = async (
   event: APIGatewayEvent
 ): Promise<Success<string> | Error> => {
-  const isBasicAuth = hasBasicScheme(event.headers)
+  const eventHeaders = toDefinedHeaders(event.headers)
+  const isBasicAuth = hasBasicScheme(eventHeaders)
 
   const allowHeaders = getAllowHeaders(event)
 
