@@ -14,10 +14,15 @@ describe("Guest comment", { testIsolation: false }, () => {
 
   it("Submit a comment as a guest user", () => {
     cy.intercept("POST", ".netlify/functions/comment/*").as("postComment")
-    cy.get("form.comment-form #guest-email").type("fake@email.com")
-    cy.get("form.comment-form #guest-name").type(generateRandomName())
-    cy.get("form.comment-form .comment-field").type(commentText)
+    cy.intercept("GET", ".netlify/functions/user/*").as("getUser")
+    cy.get("form.comment-form #guest-email")
+      .clear()
+      .clear()
+      .type("fake@email.com")
+    cy.get("form.comment-form #guest-name").clear().type(generateRandomName())
+    cy.get("form.comment-form .comment-field").clear().type(commentText)
     cy.get("form.comment-form .comment-submit-button").click()
+    cy.wait("@getUser").its("response.statusCode").should("eq", 200)
     cy.wait("@postComment").its("response.statusCode").should("eq", 201) // 201 Created
     cy.contains("article.comment-body p", commentText).as("commentBody")
     cy.get("@commentBody").should("exist")
