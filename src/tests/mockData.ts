@@ -15,6 +15,8 @@ const passwordInput =
 const alphaAscii =
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890_-"
 const emailAscii = "abcdefghijklmnopqrstuvwxyz01234567890"
+const idCharacters = "abcdefghijklmnopqrstuvwxyz-0123456789"
+
 const randomNumber = (min: number = 1, max: number = 10): number =>
   Math.floor(Math.random() * (max - min)) + min
 export const randomString = (
@@ -37,8 +39,8 @@ export const mockEmail = (): Email =>
     3
   )}`
 
-export const mockUserId = (): string =>
-  randomString(emailAscii, randomNumber(5, 36))
+export const mockUserId = (length:number = randomNumber(5,36)): string =>
+  randomString(idCharacters, length)
 
 export const mockUuid4 = () => {
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {

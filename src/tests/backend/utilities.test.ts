@@ -1,13 +1,14 @@
 import {
   addHeaders,
+  generateGuestId,
   getAllowOriginHeaders,
   isAllowedReferer,
   isGuestId,
   parseQuery,
 } from "../../../src/lib/backend-utilities"
-import { v4 as uuidv4 } from "uuid"
 import type { Email } from "../../../src/lib/simple-comment-types"
 import { validateEmail, validateUserId } from "../../lib/shared-utilities"
+import { mockUserId } from "../mockData"
 
 describe("test the `getAllowOriginHeaders` function", () => {
   it("should return {headers} if there is a header match", () => {
@@ -47,10 +48,10 @@ describe("test the `getAllowOriginHeaders` function", () => {
 })
 
 describe("Test guest id utility", () => {
-  test("isGuestId should fail anything other than a uuid", () => {
+  test("isGuestId should pass id from generateGuestId", () => {
     //TODO: make this more random
     expect(isGuestId("rendall")).toBe(false)
-    const guestId = uuidv4()
+    const guestId = generateGuestId()
     expect(isGuestId(guestId)).toBe(true)
   })
 })
@@ -60,8 +61,8 @@ describe("Test validations", () => {
     expect(validateUserId("rendall-775-id")).toEqual({ isValid: true })
   })
 
-  test("uuidv4 in validateUserId", () => {
-    expect(validateUserId(uuidv4())).toEqual({ isValid: true })
+  test("guestId is validateUserId", () => {
+    expect(validateUserId(generateGuestId())).toEqual({ isValid: true })
   })
 
   test("incorrect characters in validateUserId", () => {
@@ -80,8 +81,8 @@ describe("Test validations", () => {
     })
   })
 
-  test("too many  characters in validateUserId", () => {
-    const tooMany = uuidv4() + "a"
+  test("too many characters in validateUserId", () => {
+    const tooMany = mockUserId(37)
     expect(tooMany.length).toBeGreaterThan(36)
     expect(validateUserId(tooMany)).toEqual({
       isValid: false,
