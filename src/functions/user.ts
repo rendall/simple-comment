@@ -24,6 +24,9 @@ import {
 } from "../lib/backend-utilities"
 dotenv.config()
 
+if (process.env.DB_CONNECTION_STRING === undefined) throw "DB_CONNECTION_STRING is not set in environment variables"
+if (process.env.DATABASE_NAME === undefined) throw "DATABASE_NAME is not set in environment variables"
+
 const service: MongodbService = new MongodbService(
   process.env.DB_CONNECTION_STRING,
   process.env.DATABASE_NAME
