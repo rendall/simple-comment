@@ -4,20 +4,21 @@ import * as jwt from "jsonwebtoken"
 import * as dotenv from "dotenv"
 import * as picomatch from "picomatch"
 import type {
-  NewUser,
-  Success,
-  Error,
-  Topic,
-  UpdateUser,
-  UserId,
   AdminSafeUser,
   Comment,
   DeletedComment,
   Discussion,
-  PublicSafeUser,
-  User,
-  TokenClaim,
   Email,
+  Error,
+  Headers,
+  NewUser,
+  PublicSafeUser,
+  Success,
+  TokenClaim,
+  Topic,
+  UpdateUser,
+  User,
+  UserId,
   ValidationResult,
 } from "./simple-comment-types"
 import urlNormalizer from "normalize-url"
@@ -149,16 +150,16 @@ export const isPublicSafeUser = (user: Partial<User>): user is PublicSafeUser =>
     key => !publicUnsafeUserProperties.includes(key)
   )
 
-const hasHeader = (headers: { [header: string]: string }, header: string) =>
+const hasHeader = (headers: Headers, header: string) =>
   Object.keys(headers).some(
     h => h.toLowerCase() === header.toLowerCase() && headers[h] !== undefined
   )
 
-const getHeader = (headers: { [header: string]: string }, header: string) =>
+const getHeader = (headers: Headers, header: string) =>
   Object.keys(headers).find(h => h.toLowerCase() === header.toLowerCase())
 
 export const getHeaderValue = (
-  headers: { [header: string]: string },
+  headers: Headers,
   header: string
 ) => headers[getHeader(headers, header)]
 
@@ -189,7 +190,7 @@ export const addHeaders = (
     }
 }
 
-const getOrigin = (headers: { [header: string]: string }) =>
+const getOrigin = (headers: Headers) =>
   getHeaderValue(headers, "origin")
 
 export const getAllowedOrigins = () => allowOrigin.split(",")
@@ -237,7 +238,7 @@ export const isAllowedReferer = (
  * @returns
  */
 export const getAllowOriginHeaders = (
-  headers: { [header: string]: string },
+  headers: Headers,
   allowedOrigins: string[] = []
 ):
   | Record<string, never>
@@ -265,15 +266,13 @@ const parseAuthHeaderValue = (
 export const nowPlusMinutes = (minutes: number): number =>
   new Date(new Date().valueOf() + minutes * 60 * 1000).valueOf()
 
-export const getAuthHeaderValue = (headers: {
-  [header: string]: string
-}): string | undefined => getHeaderValue(headers, AUTHORIZATION_HEADER)
+export const getAuthHeaderValue = (headers: Headers): string | undefined => getHeaderValue(headers, AUTHORIZATION_HEADER)
 
 export const getAuthCredentials = (authHeaderValue: string) =>
   parseAuthHeaderValue(authHeaderValue).credentials
 
 export const hasBasicScheme = (
-  headers: { [header: string]: string },
+  headers: Headers,
   parse?: { scheme: string; credentials: string }
 ) =>
   parse === undefined
@@ -286,13 +285,13 @@ export const hasBasicScheme = (
     : parse.scheme.toLowerCase() === BASIC_SCHEME.toLowerCase()
 
 /** Checks the Cookie header for "simple_comment_token" and returns true if found, false otherwise */
-export const hasTokenCookie = (headers: { [header: string]: string }) =>
+export const hasTokenCookie = (headers: Headers) =>
   hasHeader(headers, "Cookie") &&
   getHeaderValue(headers, "Cookie").indexOf("simple_comment_token=") >= 0
 
 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cookie "Pairs in the list are separated by a semicolon and a space ('; ')"
 export const getCookieToken = (
-  headers: { [header: string]: string },
+  headers: Headers,
   cookieHeader?: string
 ) =>
   cookieHeader
@@ -311,7 +310,7 @@ export const getCookieToken = (
 
 /** Checks the Authorization header for "Bearer" + token and returns true if found, false otherwise */
 export const hasBearerScheme = (
-  headers: { [header: string]: string },
+  headers: Headers,
   parse?: { scheme: string; credentials: string }
 ) =>
   parse === undefined
@@ -471,8 +470,8 @@ export const isDiscussion = (c: Comment | Discussion): c is Discussion =>
   (c as Comment).parentId === undefined
 
 export class HeaderList {
-  private _headers: { [header: string]: string }
-  constructor(headers?: { [header: string]: string }) {
+  private _headers: Headers
+  constructor(headers?: Headers) {
     this._headers = headers
   }
   add = (header, value) => {
