@@ -93,7 +93,7 @@ export const getOneUser = (userId: UserId) =>
  * @returns {ServerResponse<User>}
  */
 export const createUser = (newUserInfo: NewUser) =>
-  fetch(`${getSimpleCommentURL()}/user/`, {
+  fetch(`${getSimpleCommentURL()}/user`, {
     body: objToQuery(newUserInfo),
     method: "POST",
     credentials: "include",
