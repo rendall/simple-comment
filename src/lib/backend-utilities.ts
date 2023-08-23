@@ -65,6 +65,8 @@ const generateString = (alpha: string, length = 12, id = ""): string =>
         length - 1,
         id + alpha.charAt(crypto.randomInt(alpha.length))
       )
+const FULL_CHARS =
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
 
 /** Creates an id specifically for a guest */
 export const generateGuestId = () =>
@@ -86,6 +88,8 @@ export const generateCommentId = (parentId = "") => {
 
   return `${pId}_${cId}`
 }
+
+export const generateGuestChallenge = () => generateString(FULL_CHARS, 3)
 
 /**
  * These are user properties that are unsafe to return to admins
@@ -127,6 +131,7 @@ export const toAdminSafeUser = (user: User) =>
         "email",
         "isAdmin",
         "isVerified",
+        "challenge",
       ])
     : user
 
