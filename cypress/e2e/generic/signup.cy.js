@@ -50,11 +50,11 @@ describe("Signup Functionality", () => {
       req.reply({ statusCode: 400 })
     })
 
-    cy.get("#signup-name").clear().clear().type("Test User")
-    cy.get("#signup-user-id").clear().clear().type("newuser")
-    cy.get("#signup-email").clear().clear().type("newuser@example.com")
-    cy.get("#signup-password").clear().clear().type("password123")
-    cy.get("#signup-password-confirm").clear().clear().type("password123")
+    cy.get("#signup-name").clear().type("Test User")
+    cy.get("#signup-user-id").clear().type("newuser")
+    cy.get("#signup-email").clear().type("newuser@example.com")
+    cy.get("#signup-password").clear().type("password123")
+    cy.get("#signup-password-confirm").clear().type("password123")
     cy.get("#signup-form").submit()
 
     cy.get("#status-display").should("have.class", "is-error")
@@ -104,7 +104,7 @@ describe("Signup Functionality", () => {
 
     cy.get(".comment-submit-button").click()
 
-    cy.get("#status-display").should("not.have.class", "is-error")
+    cy.get("#status-display").should("not.exist")
     cy.get("#self-display").should("contain", "Test User")
     cy.get("#self-display").should("contain", "@newuser")
     cy.get("#self-display").should("contain", "newuser@example.com")

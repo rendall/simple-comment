@@ -46,6 +46,7 @@
   import { onDestroy, onMount } from "svelte"
   import PasswordInput from "./low-level/PasswordInput.svelte"
   import PasswordTwinInput from "./low-level/PasswordTwinInput.svelte"
+  import Avatar from "./low-level/Avatar.svelte"
 
   const DISPLAY_NAME_HELPER_TEXT = "This is the name that others will see"
   const USER_EMAIL_HELPER_TEXT =
@@ -533,28 +534,11 @@
   const checkPasswordValid_debounced = debounceFunc(checkPasswordValid, 500)
   const handleSignupPasswordInput = () => checkPasswordValid_debounced()
 
-  $: {
-    const stateHandlers: [string, () => void][] = [
-      ["verifying", verifyingStateHandler],
-      ["guestLoggingIn", guestLoggingInStateHandler],
-      ["loggingIn", loggingInStateHandler],
-      ["signingUp", signingUpStateHandler],
-      ["loggedIn", loggedInStateHandler],
-      ["loggingOut", loggingOutStateHandler],
-      ["loggedOut", loggedOutStateHandler],
-      ["error", errorStateHandler],
-    ]
-
-    nextEvents = $state.nextEvents ?? []
-    loginStateStore.set({ state: $state.value, nextEvents })
-    stateHandlers.forEach(([stateValue, stateHandler]) => {
-      if ($state.value === stateValue) setTimeout(stateHandler, 1)
-    })
+  const onTabClick = (tab: LoginTab) => e => {
+    e.preventDefault()
+    updateStatusDisplay()
+    selectedIndex = tab
   }
-
-  $: currentUserStore.set(self)
-
-  $: loginStateStore.set({ select: selectedIndex })
 
   onMount(() => {
     self = currentUser
@@ -578,6 +562,30 @@
     currentUserStore.set(self)
     unsubscribeDispatchableStore()
   })
+
+  $: {
+    const stateHandlers: [string, () => void][] = [
+      ["verifying", verifyingStateHandler],
+      ["guestLoggingIn", guestLoggingInStateHandler],
+      ["loggingIn", loggingInStateHandler],
+      ["signingUp", signingUpStateHandler],
+      ["loggedIn", loggedInStateHandler],
+      ["loggingOut", loggingOutStateHandler],
+      ["loggedOut", loggedOutStateHandler],
+      ["error", errorStateHandler],
+    ]
+
+    nextEvents = $state.nextEvents ?? []
+    loginStateStore.set({ state: $state.value, nextEvents })
+    stateHandlers.forEach(([stateValue, stateHandler]) => {
+      if ($state.value === stateValue) setTimeout(stateHandler, 1)
+    })
+  }
+
+  $: currentUserStore.set(self)
+
+  $: loginStateStore.set({ select: selectedIndex })
+
   $: {
     if (userId.length < 3 && !userIdStatus)
       userIdHelperText = USER_ID_HELPER_TEXT
@@ -585,31 +593,28 @@
 </script>
 
 <section class="simple-comment-login">
-  <p id="status-display" class={isError ? "is-error" : ""}>
-    {statusMessage}
-  </p>
-
   {#if !self}
     <div class="selection-tabs button-row">
       <button
         class:selected={selectedIndex === LoginTab.login}
         class="selection-tab selection-tab-login"
-        on:click={() => (selectedIndex = LoginTab.login)}
+        on:click={onTabClick(LoginTab.login)}
         type="button">Login</button
       >
       <button
         class:selected={selectedIndex === LoginTab.signup}
         class="selection-tab selection-tab-signup"
-        on:click={() => (selectedIndex = LoginTab.signup)}
+        on:click={onTabClick(LoginTab.signup)}
         type="button">Signup</button
       >
       <button
         class:selected={selectedIndex === LoginTab.guest}
         class="selection-tab selection-tab-guest"
-        on:click={() => (selectedIndex = LoginTab.guest)}
+        on:click={onTabClick(LoginTab.guest)}
         type="button">Guest</button
       >
     </div>
+
     <div class="form-container">
       {#if selectedIndex === LoginTab.guest}
         <form
@@ -618,9 +623,20 @@
           in:fly={{ y: 0, duration: 250 }}
           on:submit={onGuestClick}
         >
-          <p class="call-to-action">
-            To comment as a guest, enter a display name and email below.
-          </p>
+          {#if statusMessage && statusMessage.length}
+            <p
+              id="status-display"
+              class="call-to-action"
+              class:is-error={isError}
+            >
+              {statusMessage}
+            </p>
+          {:else}
+            <p class="call-to-action">
+              To comment as a guest, enter a display name and email below.
+            </p>
+          {/if}
+
           <InputField
             bind:value={displayName}
             helperText={displayNameHelperText}
@@ -651,10 +667,20 @@
           in:fly={{ y: 0, duration: 250 }}
           on:submit={onLoginClick}
         >
-          <p class="call-to-action">
-            If you have an account, this is where you enter your user handle and
-            password to log in.
-          </p>
+          {#if statusMessage && statusMessage.length}
+            <p
+              id="status-display"
+              class="call-to-action"
+              class:is-error={isError}
+            >
+              {statusMessage}
+            </p>
+          {:else}
+            <p class="call-to-action">
+              If you have an account, this is where you enter your user handle
+              and password to log in.
+            </p>
+          {/if}
           <InputField
             id="login-user-id"
             labelText="User handle"
@@ -662,7 +688,10 @@
             status={userIdStatus}
             bind:value={userId}
             required
-          />
+          >
+            <Avatar {userId} status={userIdStatus} slot="icon" />
+          </InputField>
+
           <PasswordInput
             labelText="Password"
             helperText={userPasswordMessage}
@@ -681,11 +710,21 @@
           in:fly={{ y: 0, duration: 250 }}
           on:submit={onSignupClick}
         >
-          <p class="call-to-action">
-            Unlock the full power of our platform with a quick sign-up. Secure
-            your ability to edit and manage your posts from any device, anytime.
-            Don't just join the conversation, own it. Sign up today!
-          </p>
+          {#if statusMessage && statusMessage.length}
+            <p
+              id="status-display"
+              class="call-to-action"
+              class:is-error={isError}
+            >
+              {statusMessage}
+            </p>
+          {:else}
+            <p class="call-to-action">
+              Unlock the full power of our platform with a quick sign-up. Secure
+              your ability to edit and manage your posts from any device,
+              anytime. Don't just join the conversation, own it. Sign up today!
+            </p>
+          {/if}
           <InputField
             bind:value={displayName}
             helperText={displayNameHelperText}
@@ -704,7 +743,9 @@
             labelText="User handle"
             onBlur={onUserIdBlur}
             onInput={onUserIdInput}
-          />
+          >
+            <Avatar {userId} status={userIdStatus} slot="icon" />
+          </InputField>
 
           <InputField
             bind:value={userEmail}
