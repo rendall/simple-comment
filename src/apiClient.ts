@@ -2,20 +2,22 @@ import { isResponseOk } from "./frontend-utilities"
 import type {
   AdminSafeUser,
   AuthToken,
+  Comment,
+  CommentId,
   Discussion,
   NewUser,
   PublicSafeUser,
   ServerResponse,
+  ServerResponseError,
   TokenClaim,
   Topic,
-  Comment,
-  UserId,
+  TopicId,
   User,
-  ServerResponseError,
+  UserId,
 } from "./lib/simple-comment-types"
 
 const trimDash = (slug: string) => slug.replace(/-+$/, "").replace(/^-+/, "")
-const cleanSlug = (slug: string) =>
+const cleanSlug = (slug: string): string =>
   slug.match(/--/) ? cleanSlug(slug.replace(/--/g, "-")) : trimDash(slug)
 
 /** Returns a slugified version of the given string */
@@ -181,7 +183,10 @@ export const postAuth = (user: string, password: string) => {
  * @param {string} text - the comment copy
  * @returns {ServerResponse}
  */
-export const postComment = (targetId, text): Promise<ServerResponse<Comment>> =>
+export const postComment = (
+  targetId: CommentId,
+  text: string
+): Promise<ServerResponse<Comment>> =>
   fetch(`${getSimpleCommentURL()}/comment/${targetId}`, {
     body: text,
     method: "POST",
@@ -194,7 +199,7 @@ export const postComment = (targetId, text): Promise<ServerResponse<Comment>> =>
  * @param {string} commentId
  * @return {ServerResponse}
  */
-export const deleteComment = commentId =>
+export const deleteComment = (commentId: CommentId) =>
   fetch(`${getSimpleCommentURL()}/comment/${commentId}`, {
     method: "DELETE",
     credentials: "include",
@@ -209,7 +214,7 @@ export const deleteComment = commentId =>
  * @param {string} topicId
  * @returns {Discussion}
  */
-export const getOneDiscussion = topicId =>
+export const getOneDiscussion = (topicId: TopicId) =>
   fetch(`${getSimpleCommentURL()}/topic/${topicId}`, {
     credentials: "include",
   }).then(res => resolveBody<Discussion>(res))
@@ -239,7 +244,11 @@ export const getDefaultDiscussionId = (title: string = window.location.href) =>
  * @param {string} title - The title of the Topic
  * @param {boolean} isLocked - set to 'true' if the Topic should be 'locked'. default value is 'false'
  */
-export const createNewTopic = (id, title, isLocked = false) => {
+export const createNewTopic = (
+  id: TopicId,
+  title: string,
+  isLocked = false
+) => {
   const body = `id=${id}&title=${title}&isLocked=${isLocked}`
   const credentials: RequestCredentials = "include"
   const authReqInfo = {
