@@ -1,5 +1,6 @@
 const path = require("path")
 const fs = require("fs")
+const webpack = require("webpack")
 
 const mode = process.env.NODE_ENV ?? "development"
 const isProduction = mode === "production"
@@ -48,6 +49,24 @@ const config = {
   stats: {
     colors: true,
   },
+  plugins: [
+    new webpack.IgnorePlugin({
+      checkResource(resource, context) {
+        const ignores = [
+          ["@mongodb-js/zstd", "mongodb/lib"],
+          ["aws-crt", "@aws-sdk/util-user-agent-node/dist-es"],
+          ["gcp-metadata", "mongodb-client-encryption/lib/providers"],
+          ["kerberos", "mongodb/lib"],
+          ["snappy", "mongodb/lib"],
+        ]
+
+        if (resource.includes("mongodb/lib/utils"))
+          console.log({ resource, context })
+
+        return ignores.some(([i, c]) => resource === i && context.endsWith(c))
+      },
+    }),
+  ],
 }
 
 module.exports = config
