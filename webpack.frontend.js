@@ -39,7 +39,6 @@ module.exports = {
   },
   devtool: "source-map",
   entry: {
-    "vanilla": path.resolve(__dirname, "src/vanilla.ts"),
     "simple-comment": path.resolve(__dirname, "src/simple-comment.ts"),
     "simple-comment-style": path.resolve(
       __dirname,
@@ -88,7 +87,6 @@ module.exports = {
       {
         test: /\.ts$/,
         loader: "ts-loader",
-        exclude: [/node_modules/, /tests/],
         options: { configFile: "tsconfig.frontend.json" },
       },
       {

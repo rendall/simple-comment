@@ -1,6 +1,11 @@
 {
   "include": ["./src"],
-  "exclude": ["./src/lib/*.ts", "./src/tests/**/*.ts", "node_modules"],
+  "exclude": [
+    "./src/lib/*.ts",
+    "./src/functions/**",
+    "./src/tests/**/*.ts",
+    "node_modules"
+  ],
   "extends": "@tsconfig/svelte/tsconfig.json",
   "compilerOptions": {
     "baseUrl": ".",
