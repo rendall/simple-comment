@@ -10,8 +10,7 @@ describe(`User Authentication Flow`, () => {
   })
   it("should handle incorrect credentials", () => {
     // Check that #status-display does not have class is-error nor any message
-    cy.get("#status-display").should("not.have.class", "is-error")
-    cy.get("#status-display").should("not.have.text")
+    cy.get("#status-display").should("not.exist")
 
     // Enter username and password
     cy.get("#login-user-id").clear().type("wronguser")
@@ -70,7 +69,7 @@ describe(`User Authentication Flow`, () => {
     cy.get(".comment-submit-button").click()
 
     // Check the user details
-    cy.get("#status-display").should("not.have.class", "is-error")
+    cy.get("#status-display").should("not.exist")
     cy.get("#self-display").should("contain", "Test User")
     cy.get("#self-display").should("contain", "@testuser")
     cy.get("#self-display").should("contain", "testuser@example.com")

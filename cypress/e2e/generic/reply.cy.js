@@ -50,8 +50,8 @@ describe("reply", () => {
 
     const commentText = generateRandomCopy()
     const guestName = generateRandomName()
-    cy.get("@commentBody").find(".comment-field").type(commentText)
-    cy.get("@commentBody").find("#guest-name").type(guestName)
+    cy.get("@commentBody").find(".comment-field").clear().type(commentText)
+    cy.get("@commentBody").find("#guest-name").clear().type(guestName)
     cy.get("@commentBody")
       .find("#guest-email")
       .clear()
@@ -80,12 +80,15 @@ describe("reply", () => {
 
     const commentText = generateRandomCopy()
 
-    cy.get("@commentBody").find(".comment-field").type(commentText)
-    cy.get("@commentBody").find("#signup-name").type(signupName)
+    cy.get("@commentBody").find(".comment-field").clear().type(commentText)
+    cy.get("@commentBody").find("#signup-name").clear().type(signupName)
     cy.get("@commentBody").find("#signup-user-id").clear().type(signupUserId)
-    cy.get("@commentBody").find("#signup-email").type(signupEmail)
-    cy.get("@commentBody").find("#signup-password").type(signupPassword)
-    cy.get("@commentBody").find("#signup-password-confirm").type(signupPassword)
+    cy.get("@commentBody").find("#signup-email").clear().type(signupEmail)
+    cy.get("@commentBody").find("#signup-password").clear().type(signupPassword)
+    cy.get("@commentBody")
+      .find("#signup-password-confirm")
+      .clear()
+      .type(signupPassword)
     cy.get("@commentBody").find(".comment-submit-button").click()
 
     cy.wait("@postAuth").its("response.statusCode").should("eq", 200)
@@ -109,9 +112,9 @@ describe("reply", () => {
 
     const commentText = generateRandomCopy()
 
-    cy.get("@commentBody").find(".comment-field").type(commentText)
-    cy.get("@commentBody").find("#login-user-id").type(signupUserId)
-    cy.get("@commentBody").find("#login-password").type(signupPassword)
+    cy.get("@commentBody").find(".comment-field").clear().type(commentText)
+    cy.get("@commentBody").find("#login-user-id").clear().type(signupUserId)
+    cy.get("@commentBody").find("#login-password").clear().type(signupPassword)
     cy.get("@commentBody").find(".comment-submit-button").click()
 
     cy.wait("@postAuth").its("response.statusCode").should("eq", 200)

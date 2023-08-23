@@ -75,7 +75,7 @@ context("Error recovery", () => {
 
     cy.get("form.comment-form .comment-submit-button").click()
 
-    cy.get("#status-display").should("not.have.class", "is-error")
+    cy.get("#status-display").should("not.exist")
 
     cy.wait("@postComment").its("response.statusCode").should("eq", 201) // 201 Created
     cy.get("ul.comment-replies.is-root").should("contain", commentText)
@@ -132,7 +132,7 @@ context("Error recovery", () => {
 
     cy.get("form.comment-form .comment-submit-button").click()
 
-    cy.get("#status-display").should("not.have.class", "is-error")
+    cy.get("#status-display").should("not.exist")
 
     cy.wait("@postUser").its("response.statusCode").should("eq", 201) // 201 Created
     cy.wait("@postComment").its("response.statusCode").should("eq", 201) // 201 Created
