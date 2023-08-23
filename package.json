@@ -1,6 +1,6 @@
 {
   "devDependencies": {
-    "@shelf/jest-mongodb": "^2.2.1",
+    "@shelf/jest-mongodb": "^4.1.7",
     "@types/bcryptjs": "^2.4.2",
     "@types/jest": "^29.5.3",
     "@types/jsonwebtoken": "^8.5.0",
@@ -64,7 +64,7 @@
     "jsonwebtoken": "^9.0.1",
     "merge": "^2.1.1",
     "mini-css-extract-plugin": "^2.7.6",
-    "mongodb": "^4.5.0",
+    "mongodb": "^5.8.0",
     "mongodb-memory-server": "^8.5.1",
     "normalize-url": "^8.0.0",
     "picomatch": "^2.3.1",
