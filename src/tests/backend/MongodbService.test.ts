@@ -104,6 +104,12 @@ const testDeleteTopicComments = mockCommentTree(20, testUsers, [
 const testTopics: Topic[] = mockTopicsArray()
 const testComments = mockCommentTree(500, testUsers, testTopics)
 
+const testTopicsWithComments = () => testTopics.filter(topic =>
+  testComments.some(
+    comment => isComment(comment) && comment.parentId === topic.id
+  )
+)
+
 // This user tests that login happens
 const authUserTest = {
   ...mockUser("auth-"),
@@ -949,8 +955,9 @@ describe("Full API service test", () => {
       )
     })
   })
+
   test("GET to /topic/{topicId} should return a topic and descendent comments", () => {
-    const targetTopicId = chooseRandomElement(testTopics).id
+    const targetTopicId = chooseRandomElement(testTopicsWithComments()).id
     return service
       .topicGET(targetTopicId)
       .then((res: Success<Discussion> | Error) => {
