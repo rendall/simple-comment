@@ -31,11 +31,12 @@
     <link rel="stylesheet" type="text/css" href="./css/simple-comment.css" />
     <style>
       @font-face {
-        font-family: "Comfortaa";
+        font-family: "Simple Comment";
         font-style: normal;
         font-weight: 500;
         font-display: block;
-        src: url(../font/simple-comment.woff2) format("woff2");
+        src: url(../font/subset-Comfortaa-Medium.woff2) format("woff2"),
+          url(../font/subset-Comfortaa-Medium.woff) format("woff");
       }
 
       @font-face {
@@ -94,12 +95,13 @@
 
       h1,
       h2,
-      hr {
+      hr,
+      i {
         color: #3287e6;
       }
 
       .simple-comment-logotype {
-        font-family: "Comfortaa", sans-serif;
+        font-family: "Simple Comment", sans-serif;
         font-weight: 500;
       }
 
@@ -131,6 +133,11 @@
         font-size: 1.125rem;
         font-style: italic;
         line-height: 1.61111em;
+      }
+
+      p.question-of-the-day {
+        margin: 1rem;
+        font-size: 1.1rem;
       }
 
       a:hover {
@@ -174,7 +181,7 @@
         border: 1px solid #3287e6;
         padding: 1rem;
         box-sizing: border-box;
-        box-shadow: 0 0 0.3rem 0 rgba(50, 135, 230, 0.5) t;
+        box-shadow: 0 0 0.3rem 0 rgba(50, 135, 230, 0.5);
       }
 
       form.contact-form {
@@ -208,7 +215,6 @@
         class="simple-comment-logo"
         version="1.1"
         viewBox="0 0 100 100"
-        alt="thought bubble with a slight smile"
         xmlns="http://www.w3.org/2000/svg"
       >
         <g>
@@ -228,10 +234,10 @@
     </header>
     <main>
       <section class="simple-comment intro">
+        <h2 class="simple-comment-logotype">Simple Comment newsletter</h2>
         <p class="instructions">
-          <i>Simple Comment</i> is a commenting system that can be added easily
-          to any website. To join the mailing list for news and updates, or to
-          request your own free instance, add your email address here.
+          To join the mailing list for news and updates, or to request your own
+          free instance of <i>Simple Comment</i>, add your email address here.
         </p>
         <form
           class="contact-form"
@@ -258,19 +264,22 @@
           <button type="submit">Join</button>
         </form>
       </section>
-      <h2 class="simple-comment-logotype">Simple Comment demo:</h2>
-      <p class="instructions">
-        To try out Simple Comment, add a comment and add your info. You can use
-        the Question of the Day as a prompt, or type whatever is on your mind.
-      </p>
-      <p>
-        Question for the day: What subjects should be taught in school but are
-        not?
-      </p>
-      <section id="simple-comment-display"></section>
+      <section class="simple-comment">
+        <h2 class="simple-comment-logotype">Simple Comment demo</h2>
+        <p class="instructions">
+          <i>Simple Comment</i> is a commenting system that can be added easily
+          to any website. To try it out, add a comment and your info. You can
+          use the Question of the Day as a prompt, or type whatever is on your
+          mind.
+        </p>
+        <p class="question-of-the-day">
+          Question for the day: What's the most interesting book or movie you've seen recently?
+        </p>
+        <div id="simple-comment-display"></div>
+      </section>
     </main>
-    <script type="module" src="./js/simple-comment.js" defer></script>
-    <script type="module" defer>
+    <script type="module" src="./js/simple-comment.js"></script>
+    <script type="module">
       function toTopic(url) {
         return url.replace("://", "-").replace(/\/$/, "").replace(/\W/g, "-")
       }
