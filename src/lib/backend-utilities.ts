@@ -148,6 +148,9 @@ export const isDeletedComment = (
   target: Comment | Discussion
 ): target is DeletedComment => isComment(target) && isDeleted(target)
 
+export const isUser = (x: unknown): x is User =>
+  !!x && typeof x === "object" && "id" in x && "name" in x && "email" in x
+
 export const isAdminSafeUser = (user: Partial<User>): user is AdminSafeUser =>
   (Object.keys(user) as (keyof User)[]).every(
     key => !adminOnlyModifiableUserProperties.includes(key)
