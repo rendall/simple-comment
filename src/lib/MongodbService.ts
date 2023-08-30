@@ -36,6 +36,7 @@ import {
   isDeletedComment,
   isEmail,
   isTokenClaim,
+  isUser,
   normalizeUrl,
   toAdminSafeUser,
   toPublicSafeUser,
@@ -134,7 +135,7 @@ export class MongodbService extends Service {
             : users.findOne({ id: identification })
         )
         .then(async user => {
-          if (user === null) {
+          if (!isUser(user)) {
             // User is unknown. Reject them unless they claim to be Big Moderator
             if (identification !== process.env.SIMPLE_COMMENT_MODERATOR_ID) {
               reject(error404UserUnknown)
@@ -161,6 +162,12 @@ export class MongodbService extends Service {
             resolve({ ...success200OK, body: adminAuthToken })
 
             // At this point Big Moderator is authenticated but has no user object in the database
+          } else if (isGuestId(identification)) {
+            // Guest authentication relies only on a challenge
+            if (password === user.challenge) {
+              const authToken = getAuthToken(user.id)
+              resolve({ ...success200OK, body: authToken })
+            } else reject(error401BadCredentials)
           } else {
             const isSame = await comparePassword(password, user.hash)
             if (!isSame) reject(error401BadCredentials)
