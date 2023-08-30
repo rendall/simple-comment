@@ -61,6 +61,7 @@
   const closeReply = onOpenCommentInput("")
 
   const onCommentPosted = commentPostedEvent => {
+    //TODO: Add error handling for bad onCommentPosted
     closeReply()
     const { comment } = commentPostedEvent.detail
     dispatch("posted", { comment })

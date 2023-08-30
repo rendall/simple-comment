@@ -109,6 +109,7 @@ export type User = {
   id: UserId
   name: string
   email: Email
+  challenge?: string
   hash?: string
   isAdmin?: boolean
   isVerified?: boolean
@@ -119,7 +120,7 @@ export type PublicSafeUser = Pick<User, "id" | "name" | "isAdmin">
 // This is a user that is safe to return from the server to admin
 export type AdminSafeUser = Pick<
   User,
-  "id" | "name" | "email" | "isAdmin" | "isVerified"
+  "id" | "name" | "email" | "isAdmin" | "isVerified" | "challenge"
 >
 // The information that may be expected for a new user
 export type NewUser = {

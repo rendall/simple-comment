@@ -593,7 +593,7 @@ describe("Full API service test", () => {
     return service
       .userPUT(updatedGuestUser.id, updatedGuestUser, adminAuthUser.id)
       .then((res: Success<AdminSafeUser> | Error) => {
-        expect(res).toEqual({
+        expect(res).toMatchObject({
           statusCode: 204,
           body: toAdminSafeUser(updatedGuestUser),
         })

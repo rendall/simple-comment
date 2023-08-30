@@ -26,6 +26,7 @@ import { Service } from "./Service"
 import {
   adminOnlyModifiableUserProperties,
   generateCommentId,
+  generateGuestChallenge,
   generateGuestId,
   getAllowedOrigins,
   isAllowedReferer,
@@ -35,6 +36,7 @@ import {
   isDeletedComment,
   isEmail,
   isTokenClaim,
+  isUser,
   normalizeUrl,
   toAdminSafeUser,
   toPublicSafeUser,
@@ -133,7 +135,7 @@ export class MongodbService extends Service {
             : users.findOne({ id: identification })
         )
         .then(async user => {
-          if (user === null) {
+          if (!isUser(user)) {
             // User is unknown. Reject them unless they claim to be Big Moderator
             if (identification !== process.env.SIMPLE_COMMENT_MODERATOR_ID) {
               reject(error404UserUnknown)
@@ -160,6 +162,12 @@ export class MongodbService extends Service {
             resolve({ ...success200OK, body: adminAuthToken })
 
             // At this point Big Moderator is authenticated but has no user object in the database
+          } else if (isGuestId(identification)) {
+            // Guest authentication relies only on a challenge
+            if (password === user.challenge) {
+              const authToken = getAuthToken(user.id)
+              resolve({ ...success200OK, body: authToken })
+            } else reject(error401BadCredentials)
           } else {
             const isSame = await comparePassword(password, user.hash)
             if (!isSame) reject(error401BadCredentials)
@@ -215,7 +223,6 @@ export class MongodbService extends Service {
       return error400PasswordMissing
     }
 
-    // const userCheck = validateUser(newUser)
     const userCheck = isGuestId(newUser.id)
       ? validateGuestUser(newUser, authUserId)
       : validateUser(newUser)
@@ -268,7 +275,7 @@ export class MongodbService extends Service {
       name: newUser.name.trim(),
     }
     const user: User = isGuestId(newUser.id)
-      ? adminSafeUser
+      ? { ...adminSafeUser, challenge: generateGuestChallenge() }
       : ({ ...adminSafeUser, hash } as User)
 
     const result = await users.insertOne(user)
@@ -289,8 +296,6 @@ export class MongodbService extends Service {
     targetUserId?: UserId,
     authUserId?: UserId
   ): Promise<Success<PublicSafeUser | AdminSafeUser> | Error> => {
-    // TODO: do work around returning all users, but for now if targetUserId is not defined, return an error
-
     if (targetUserId === undefined)
       return { ...error400BadRequest, body: "resource is undefined" }
 
@@ -307,9 +312,9 @@ export class MongodbService extends Service {
     }
 
     const users: Collection<User> = (await this.getDb()).collection("users")
-    const foundUser = await users.find({ id: targetUserId }).limit(1).next()
+    const user = await users.find({ id: targetUserId }).limit(1).next()
 
-    if (!foundUser) {
+    if (!user) {
       const isModerator =
         authUserId === targetUserId &&
         authUserId === process.env.SIMPLE_COMMENT_MODERATOR_ID
@@ -335,15 +340,15 @@ export class MongodbService extends Service {
       await users.insertOne(adminUser)
 
       // Big Moderator is created, let's return it
-      const outUser = toAdminSafeUser(adminUser)
-      return { ...success200OK, body: outUser }
+      const body = toAdminSafeUser(adminUser)
+      return { ...success200OK, body }
     }
 
     const authUser = await users.findOne({ id: authUserId })
     const isAdmin = authUser ? authUser.isAdmin : false
     const isSelf = authUser && targetUserId === authUser.id
-    const outUser = toSafeUser(foundUser, isSelf || isAdmin)
-    return { ...success200OK, body: outUser }
+    const body = toSafeUser(user, isSelf || isAdmin)
+    return { ...success200OK, body }
   }
 
   /**

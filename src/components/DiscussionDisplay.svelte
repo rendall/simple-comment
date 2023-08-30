@@ -14,11 +14,16 @@
   import SkeletonComment from "./low-level/SkeletonComment.svelte"
 
   export let discussionId: string
-  export let title: string
+  export let title: string = ""
   export let currentUser: User | undefined
 
-  let repliesFlatArray: (Comment & { isNew?: true })[]
-  let discussion: Discussion
+  let repliesFlatArray: (Comment & { isNew?: true })[] = []
+  let discussion: Discussion = {
+    id: "",
+    title,
+    isLocked: false,
+    dateCreated: undefined,
+  }
   let showReply = discussionId
 
   const { state, send } = useMachine(discussionMachine)

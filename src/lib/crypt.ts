@@ -26,7 +26,7 @@ export const hashPassword = async (password: string) =>
 export const comparePassword = async (
   plainTextPassword: string,
   hash: string
-) => await compare(plainTextPassword, hash)
+) => await compare(plainTextPassword, hash).catch(() => false)
 
 export const getAuthToken = (
   user: string,

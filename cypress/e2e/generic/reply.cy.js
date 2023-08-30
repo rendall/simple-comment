@@ -24,7 +24,7 @@ describe("reply", () => {
 
   beforeEach(() => {
     cy.intercept("POST", ".netlify/functions/auth").as("postAuth")
-    cy.intercept("POST", ".netlify/functions/user/").as("postUser")
+    cy.intercept("POST", ".netlify/functions/user").as("postUser")
     cy.intercept("GET", ".netlify/functions/gauth").as("getGauth")
     cy.intercept("POST", ".netlify/functions/comment/*").as("postComment")
 
@@ -44,8 +44,8 @@ describe("reply", () => {
       .find(".comment-field")
       .should("not.exist", { timeout: 1000 })
   })
-
   it("it should reply to a comment as a guest", () => {
+    cy.clearLocalStorage()
     cy.get("@commentBody").find(".selection-tab-guest").click()
 
     const commentText = generateRandomCopy()
@@ -106,7 +106,6 @@ describe("reply", () => {
       .find(".comment-form")
       .should("not.exist", { timeout: 1000 })
   }) // it should reply to a comment as a signup
-
   it("it should reply to a comment as a login", () => {
     cy.get("@commentBody").find(".selection-tab-login").click()
 

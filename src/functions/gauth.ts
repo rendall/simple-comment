@@ -1,5 +1,5 @@
-/** gauth stands for temporary auth, a separate endpoint for
- * 'temporary auth' to authenticate visitors */
+/** gauth stands for guest auth, a separate endpoint for
+ * a 'temporary auth' to authenticate new visitors */
 import * as dotenv from "dotenv"
 import type { APIGatewayEvent } from "aws-lambda"
 import { MongodbService } from "../lib/MongodbService"

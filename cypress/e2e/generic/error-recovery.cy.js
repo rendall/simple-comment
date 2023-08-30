@@ -85,7 +85,7 @@ context("Error recovery", () => {
     cy.get("button.selection-tab-signup").click()
 
     cy.intercept("POST", ".netlify/functions/comment/*").as("postComment")
-    cy.intercept("POST", ".netlify/functions/user/").as("postUser")
+    cy.intercept("POST", ".netlify/functions/user").as("postUser")
 
     const commentText = generateRandomCopy()
     const password = randomString()
