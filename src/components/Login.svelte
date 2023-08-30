@@ -19,6 +19,7 @@
     getGuestToken,
     getOneUser,
     postAuth,
+    updateUser,
     verifySelf,
     verifyUser,
   } from "../apiClient"
@@ -83,7 +84,13 @@
   let userPasswordMessage = undefined
   let userPasswordStatus = undefined
 
-  let selectedIndex = LoginTab.guest
+  let selectedIndex = isNaN(
+    parseInt(localStorage.getItem("simple_comment_login_tab"))
+  )
+    ? LoginTab.guest
+    : parseInt(localStorage.getItem("simple_comment_login_tab"))
+
+  let lastIdChecked
 
   const { state, send } = useMachine(loginMachine)
   const updateStatusDisplay = (message = "", error = false) => {
@@ -150,7 +157,7 @@
       verifySelf()
         .then((user: AdminSafeUser) => {
           self = user
-          localStorage.setItem("simpleCommentUser", JSON.stringify(user))
+          localStorage.setItem("simple_comment_user", JSON.stringify(user))
           send({ type: "SUCCESS" })
         })
         .catch(error => {
@@ -294,6 +301,8 @@
       userIdHelperText = "This handle is available."
       userIdStatus = "success"
     }
+
+    lastIdChecked = id
   }
 
   const checkUserIdExists_debounced = debounceFunc(checkUserIdExists, 400)
@@ -378,9 +387,10 @@
     displayNameStatus = undefined
     checkDisplayName_debounced()
     if (!userIdManuallyChanged && displayName.length > 3) {
+      const formattedUserId = formatUserId(displayName)
+      if (formattedUserId === lastIdChecked) return
       userIdHelperText = "..."
       userIdStatus = undefined
-      const formattedUserId = formatUserId(displayName)
       checkUserIdExists_debounced(formattedUserId)
       userId = formattedUserId
     }
@@ -417,6 +427,7 @@
   }
 
   const onUserIdInput = () => {
+    userId = formatUserId(userId.replace(/\s/g, "-"))
     if (userId.length <= 3) {
       userIdHelperText = USER_ID_HELPER_TEXT
       userIdStatus = undefined
@@ -430,14 +441,12 @@
   }
 
   const onUserIdBlur = () => {
+    if (userId === lastIdChecked) return
     checkUserIdValid_debounced(userId)
     checkUserIdExists_debounced(userId)
   }
 
   const guestLoggingInStateHandler = () => {
-    const name = displayName
-    const email = userEmail
-
     const guestValidationResult = joinValidations([
       checkDisplayNameValid(),
       checkUserEmailValid(),
@@ -448,18 +457,65 @@
       return
     }
 
-    getGuestToken()
-      .then(() => verifyUser())
-      .then((response: ServerResponseSuccess<TokenClaim>) => response.body.user)
-      .then(id => createGuestUser({ id, name, email }))
-      .then(response => {
-        if (isResponseOk(response)) send("SUCCESS")
-        else send({ type: "ERROR", error: response })
-      })
-      .catch(error => {
-        console.error(error)
-        send({ type: "ERROR", error })
-      })
+    const storedItem: string | null = localStorage.getItem(
+      "simple_comment_user"
+    )
+
+    const storedUser = storedItem
+      ? (JSON.parse(storedItem) as {
+          id?: string
+          name?: string
+          email?: string
+          challenge?: string
+        })
+      : { id: undefined, challenge: undefined }
+
+    const {
+      id: storedId,
+      challenge: storedChallenge,
+      name: storedName,
+      email: storedEmail,
+    } = storedUser
+
+    const postAuthFlow = () =>
+      postAuth(storedId, storedChallenge)
+        .then(() => verifyUser())
+        .then((response: ServerResponseSuccess<TokenClaim>) => response)
+        .then(response => {
+          if (isResponseOk(response)) {
+            send("SUCCESS")
+          } else getTokenFlow()
+        })
+        .catch(getTokenFlow)
+
+    const getTokenFlow = () =>
+      getGuestToken()
+        .then(() => verifyUser())
+        .then(
+          (response: ServerResponseSuccess<TokenClaim>) => response.body.user
+        )
+        .then(id =>
+          createGuestUser({ id, name: displayName, email: userEmail })
+        )
+        .then(response => {
+          if (isResponseOk(response)) send("SUCCESS")
+          else send({ type: "ERROR", error: response })
+        })
+        .catch(error => {
+          console.error(error)
+          send({ type: "ERROR", error })
+        })
+
+    const updateIfChanged = () => {
+      if (displayName !== storedName || userEmail !== storedEmail) {
+        updateUser({ id: storedId, name: displayName, email: userEmail }).catch(
+          error => send({ type: "ERROR", error })
+        )
+      }
+    }
+
+    if (storedId && storedChallenge) postAuthFlow().then(updateIfChanged)
+    else getTokenFlow()
   }
 
   const unsubscribeDispatchableStore = dispatchableStore.subscribe(event => {
@@ -538,11 +594,29 @@
     e.preventDefault()
     updateStatusDisplay()
     selectedIndex = tab
+    localStorage.setItem("simple_comment_login_tab", selectedIndex.toString())
+    switch (selectedIndex) {
+      case LoginTab.signup: {
+        const hasDisplayName = displayName && displayName.trim().length > 0
+        const hasUserId = userId && userId.trim().length > 0
+        if (hasDisplayName && !hasUserId) {
+          userIdManuallyChanged = false
+          userId = formatUserId(displayName)
+          checkUserIdExists()
+        }
+        break
+      }
+
+      default:
+        break
+    }
   }
 
   onMount(() => {
     self = currentUser
-    const storedItem: string | null = localStorage.getItem("simpleCommentUser")
+    const storedItem: string | null = localStorage.getItem(
+      "simple_comment_user"
+    )
     if (storedItem) {
       const storedUser = JSON.parse(storedItem) as {
         id?: string
