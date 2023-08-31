@@ -9,6 +9,11 @@ describe("Guest comment", { testIsolation: false }, () => {
   const commentText = generateRandomCopy()
   let userId
 
+  before(() => {
+    cy.clearAllLocalStorage()
+    cy.clearAllCookies()
+  })
+
   beforeEach(() => {
     cy.clearLocalStorage("simple_comment_login_tab")
     cy.visit("/")
