@@ -6,9 +6,6 @@ import {
 } from "../../../src/tests/mockData"
 
 describe("Guest comment", { testIsolation: false }, () => {
-  const commentText = generateRandomCopy()
-  let userId
-
   before(() => {
     cy.clearAllLocalStorage()
     cy.clearAllCookies()
@@ -20,6 +17,7 @@ describe("Guest comment", { testIsolation: false }, () => {
   })
 
   it("Submit a comment as a guest user", () => {
+    const commentText = generateRandomCopy()
     cy.intercept("POST", ".netlify/functions/comment/*").as("postComment")
     cy.intercept("GET", ".netlify/functions/user/*").as("getUser")
     cy.get("form.comment-form #guest-email").clear().type("fake@email.com")
@@ -39,17 +37,69 @@ describe("Guest comment", { testIsolation: false }, () => {
       })
   })
 
+  it("Edit a comment as a logged-in guest user", () => {
+    const commentText = generateRandomCopy()
+    cy.intercept("PUT", ".netlify/functions/comment/*").as("putComment")
+    cy.get(".comment-edit-button").first().click()
+    cy.get("form.comment-form .comment-field").clear().type(commentText)
+    cy.get("form.comment-form .comment-update-button").click()
+    cy.wait("@putComment").its("response.statusCode").should("eq", 204) // 204
+    cy.contains("article.comment-body p", commentText).should("exist")
+  })
+
+  it("Editing should handle errors", () => {
+    const commentText = generateRandomCopy()
+    let errorReply = true
+    // Stub the first response to error out
+    // then pass the next response through
+    cy.intercept("PUT", ".netlify/functions/comment/*", req => {
+      if (errorReply) {
+        errorReply = false
+        req.reply({
+          statusCode: 500,
+          body: "Error response body",
+        })
+      } else req.reply()
+    }).as("putComment")
+    cy.get(".comment-edit-button").first().click()
+
+    cy.get("form.comment-form .comment-field").clear().type(commentText)
+    cy.get("form.comment-form .comment-update-button").click()
+    cy.wait("@putComment")
+
+    cy.get("form.comment-form .comment-update-button").click()
+
+    cy.wait("@putComment").then(interception => {
+      expect(interception.response.statusCode).to.equal(204)
+    })
+    cy.contains("article.comment-body p", commentText).should("exist")
+  })
+
   it("Delete a comment as a logged-in guest user", () => {
     cy.intercept("DELETE", ".netlify/functions/comment/*").as("deleteComment")
-    cy.get(".comment-delete-button").first().click()
-    cy.wait("@deleteComment").its("response.statusCode").should("eq", 202) // 202 Accepted
-    cy.contains("article.comment-body p", commentText).should("not.exist")
+    cy.get(".comment-delete-button").as("deleteButton")
+    cy.get("@deleteButton")
+      .closest("article.comment-body")
+      .children("p")
+      .first()
+      .as("articleBody")
+    cy.get("@articleBody")
+      .invoke("text")
+      .then(articleBodyText => {
+        expect(articleBodyText).not.to.be.undefined
+        cy.contains("article.comment-body p", articleBodyText).should("exist")
+        cy.get("@deleteButton").click()
+        cy.wait("@deleteComment").its("response.statusCode").should("eq", 202) // 202 Accepted
+        cy.contains("article.comment-body p", articleBodyText).should(
+          "not.exist"
+        )
+      })
   })
 
   it("Reply to a comment as a logged-in guest", () => {
     cy.get("button.comment-reply-button").first().as("replyButton")
     cy.get("@replyButton").closest("article.comment-body").as("commentBody")
-    cy.get("@replyButton").first().click()
+    cy.get("@replyButton").click()
     cy.get("form.guest-login-form").should("not.exist")
   })
 
