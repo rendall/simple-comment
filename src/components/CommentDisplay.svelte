@@ -9,6 +9,7 @@
   import CommentInput from "./CommentInput.svelte"
   import CommentList from "./CommentList.svelte"
   import SkeletonCommentDelete from "./low-level/SkeletonCommentDelete.svelte"
+  import CommentEdit from "./CommentEdit.svelte"
   export let comment: (Comment & { isNew?: true }) | undefined = undefined
   export let showReply: string
   export let currentUser: User | undefined
@@ -22,6 +23,7 @@
   const isRoot = depth === 0
 
   let commentDeleted
+  let isEditing = false
 
   let commentBodyHeight = 74
   let commentBodyRef
@@ -29,6 +31,14 @@
   // confused about local variables when one is deleted. This
   // "refs" object keeps them sorted by id.
   let refs = {}
+
+  const canEdit = (comment: Comment): boolean => true
+
+  const onEditClick = () => {
+    isEditing = true
+  }
+
+  const onCancelEditClick = () => { isEditing = false}
 
   const onCloseCommentInput = onOpenCommentInput("")
 
@@ -107,13 +117,29 @@
           onCancel={onCloseCommentInput}
           on:posted={onCommentPosted}
         />
+      {:else if isEditing}
+        <CommentEdit
+          placeholder="Your edit"
+          autofocus={isRoot ? true : false}
+          commentId={comment.id}
+          {currentUser}
+          onCancel={onCancelEditClick}
+          on:posted={onCommentPosted}
+        />
       {:else}
         <div class="button-row comment-footer">
+          {#if currentUser && currentUser?.id === comment.user?.id && canEdit(comment)}
+            <button on:click={onEditClick} class="comment-edit-button">
+              Edit
+            </button>
+          {/if}
+
           {#if currentUser?.isAdmin || (currentUser && currentUser?.id === comment.user?.id && !comment?.replies?.length)}
             <button on:click={onDeleteClick} class="comment-delete-button">
               Delete
             </button>
           {/if}
+
           <button
             on:click={onOpenCommentInput(comment.id)}
             class="comment-reply-button"
