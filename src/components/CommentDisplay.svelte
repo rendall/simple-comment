@@ -16,7 +16,8 @@
   export let onDeleteSuccess
   export let onDeleteCommentClick
   export let onOpenCommentInput
-  export let onCommentPosted
+  export let onPostSuccess
+  export let onUpdateSuccess
   export let depth
   export let handleReplyEvent
 
@@ -32,15 +33,27 @@
   // "refs" object keeps them sorted by id.
   let refs = {}
 
-  const canEdit = (comment: Comment): boolean => true
+  // Can edit for two hours
+  const canEdit = (comment: Comment): boolean =>
+    new Date().valueOf() - new Date(comment.dateCreated).valueOf() <= 7200000
 
-  const onEditClick = () => {
+  const onEditClick = (comment: Comment) => {
+    const commentId = comment?.id
+    onOpenCommentInput(commentId)()
     isEditing = true
   }
 
-  const onCancelEditClick = () => { isEditing = false}
+  const onCancelEditClick = () => {
+    isEditing = false
+    onCloseCommentInput()
+  }
 
   const onCloseCommentInput = onOpenCommentInput("")
+
+  const onCommentTextUpdated = text => {
+    isEditing = false
+    onUpdateSuccess({ ...comment, text })
+  }
 
   const onDeleteClick = () => {
     commentDeleted = comment.id
@@ -105,31 +118,37 @@
       </div>
     </header>
     <article class="comment-body" bind:this={commentBodyRef}>
-      {#each toParagraphs(comment.text) as paragraph}
-        <p>{paragraph}</p>
-      {/each}
-      {#if showReply === comment.id}
+      {#if isEditing}
+        <CommentEdit
+          placeholder="Your edit"
+          autofocus={isRoot ? true : false}
+          commentId={comment.id}
+          commentText={comment.text}
+          {currentUser}
+          onCancel={onCancelEditClick}
+          onTextUpdated={onCommentTextUpdated}
+        />
+      {:else}
+        {#each toParagraphs(comment.text) as paragraph}
+          <p>{paragraph}</p>
+        {/each}
+      {/if}
+      {#if showReply === comment.id && !isEditing}
         <CommentInput
           placeholder="Your reply"
           autofocus={isRoot ? true : false}
           commentId={comment.id}
           {currentUser}
           onCancel={onCloseCommentInput}
-          on:posted={onCommentPosted}
+          on:posted={onPostSuccess}
         />
-      {:else if isEditing}
-        <CommentEdit
-          placeholder="Your edit"
-          autofocus={isRoot ? true : false}
-          commentId={comment.id}
-          {currentUser}
-          onCancel={onCancelEditClick}
-          on:posted={onCommentPosted}
-        />
-      {:else}
+      {:else if !isEditing}
         <div class="button-row comment-footer">
           {#if currentUser && currentUser?.id === comment.user?.id && canEdit(comment)}
-            <button on:click={onEditClick} class="comment-edit-button">
+            <button
+              on:click={() => onEditClick(comment)}
+              class="comment-edit-button"
+            >
               Edit
             </button>
           {/if}
@@ -154,7 +173,7 @@
     <CommentList
       depth={depth + 1}
       on:delete={onDeleteSuccess}
-      on:posted={onCommentPosted}
+      on:posted={onPostSuccess}
       on:reply={handleReplyEvent}
       replies={comment.replies}
       {currentUser}

@@ -128,6 +128,14 @@
     updateDiscussionDisplay(discussion, repliesFlatArray)
   }
 
+  const onCommentUpdated = commentUpdatedEvent => {
+    const { comment } = commentUpdatedEvent.detail
+    repliesFlatArray = repliesFlatArray.map(reply =>
+      reply.id === comment.id ? { ...comment, isNew: true } : reply
+    )
+    updateDiscussionDisplay(discussion, repliesFlatArray)
+  }
+
   const onReply = event => {
     const { commentId } = event.detail
     showReply = commentId === "" ? discussionId : commentId
@@ -203,6 +211,7 @@
       on:reply={onReply}
       on:delete={onCommentDeleted}
       on:posted={onCommentPosted}
+      on:updated={onCommentUpdated}
     />
   {/if}
   {#if $state.value === "loading"}

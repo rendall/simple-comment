@@ -1,119 +1,50 @@
 <script lang="ts">
-  import Login from "./Login.svelte"
   import SkeletonCommentInput from "./low-level/SkeletonCommentInput.svelte"
-  import type {
-    Comment,
-    CommentId,
-    ServerResponse,
-    User,
-  } from "../lib/simple-comment-types"
+  import type { CommentId } from "../lib/simple-comment-types"
   import { StateValue } from "xstate"
-  import { commentPostMachine } from "../lib/commentPost.xstate"
-  import { createEventDispatcher, onDestroy, onMount } from "svelte"
-  import { dispatchableStore, loginStateStore } from "../lib/svelte-stores"
+  import { commentEditMachine } from "../lib/commentEdit.xstate"
+  import { onMount } from "svelte"
   import { isResponseOk } from "../frontend-utilities"
-  import { postComment } from "../apiClient"
+  import { putComment } from "../apiClient"
   import { useMachine } from "@xstate/svelte"
-  import { LoginTab } from "../lib/simple-comment-types"
-  export let currentUser: User | undefined
   export let commentId: CommentId
   export let onCancel = null
   export let autofocus = false
   export let placeholder = "Your comment"
+  export let commentText = ""
+  export let onTextUpdated
 
-  let commentText = ""
-  let buttonCopy = "Add comment"
-  let loginStateValue
   let textareaRef
   let textAreaWidth = "100%"
   let textAreaHeight = "7rem"
-  let loginTabSelect: LoginTab = LoginTab.guest
+  let originalText = ""
+  let errorText
 
-  const { state, send } = useMachine(commentPostMachine)
-  const dispatch = createEventDispatcher()
+  const { state, send } = useMachine(commentEditMachine)
 
   const onSubmit = e => {
     e.preventDefault()
-    send({ type: "SUBMIT" })
+    send("SUBMIT")
   }
 
-  const validatingStateHandler = () => {
-    if (loginTabSelect === LoginTab.guest && !commentText.length) {
-      send({ type: "ERROR", error: "Comment is required." })
+  const updatingStateHandler = async () => {
+    if (commentText === originalText || commentText.trim() === "") {
+      if (onCancel) onCancel()
       return
     }
-    const hasCurrentUser = currentUser !== undefined
-    if (hasCurrentUser) send({ type: "SUCCESS" })
-    else send("LOG_IN")
-  }
-
-  const validatedStateHandler = () => {
-    const hasComment = commentText && commentText.length
-    if (hasComment) send("POST")
-    else send("RESET")
-  }
-
-  const loggingInStateHandler = () => {
-    dispatchableStore.dispatch("loginIntent")
-  }
-
-  const unsubscribeLoginState = loginStateStore.subscribe(loginState => {
-    const { state: stateValue, select } = loginState
-
-    if (stateValue) {
-      loginStateValue = stateValue
-      const commentInputStateValue = $state.value
-
-      //TODO: This state handling should be done via XState, probably by combining these state machines
-      switch (commentInputStateValue) {
-        case "loggingIn":
-          switch (loginStateValue) {
-            case "loggedIn":
-              setTimeout(() => send("SUCCESS"), 1)
-              break
-            case "error":
-              setTimeout(() => send({ type: "ERROR", error: "Login error" }))
-              break
-            case "loggedOut":
-              dispatchableStore.dispatch("loginIntent")
-              break
-
-            default:
-              console.warn(
-                `Unhandled loginState '${loginStateValue}' in CommentInput`
-              )
-              break
-          }
-          break
-
-        default:
-          break
-      }
-    } else if (select !== undefined) {
-      loginTabSelect = select
-    }
-  })
-
-  const postingStateHandler = async () => {
     try {
-      const response = await postComment(commentId, commentText)
-      if (isResponseOk(response)) send({ type: "SUCCESS", response })
-      else send("ERROR", response)
+      const response = await putComment(commentId, commentText)
+      if (isResponseOk(response)) send({ type: "SUCCESS", commentText })
+      else send({ type: "ERROR", error: response })
     } catch (error) {
-      send("ERROR", error)
+      send({ type: "ERROR", error })
     }
   }
 
-  const postedStateHandler = () => {
-    const { response } = $state.context
-    if (!response) {
-      console.warn("'posted' state reached without corresponding response")
-      return
-    }
-    const { body } = response as ServerResponse<Comment>
-    dispatch("posted", { comment: body })
+  const updatedStateHandler = () => {
+    const { commentText } = $state.context
+    onTextUpdated(commentText)
     send({ type: "RESET" })
-    commentText = ""
   }
 
   const errorStateHandler = () => {
@@ -121,38 +52,31 @@
     if (!error) {
       console.error("Unknown error")
       console.trace()
-      return
-    }
-
-    if (typeof error === "string") {
+      errorText = "An unknown error has occured. Try reloading the page."
+    } else if (typeof error === "string") {
       console.error(error)
-      return
+      errorText = error
+    } else if (error.ok) {
+      console.warn("Error handler caught an OK response", error)
+    } else {
+      const { status, body } = error
+      switch (status) {
+        case 400:
+          errorText =
+            body === "Comment text is same"
+              ? "The comment is identical. Edit the comment and push 'Update comment'"
+              : "The comment was rejected."
+          break
+        default:
+          errorText =
+            "An unknown error has occurred. Possibly the server is unavailable. Try reloading the page."
+          break
+      }
     }
-
-    const { ok } = error as ServerResponse
-    if (ok) console.warn("Error handler caught an OK response", error)
 
     // At this stage the error messages should already be present on the page
 
     send({ type: "RESET" })
-  }
-
-  const getButtonCopy = (
-    select: LoginTab,
-    comment: string,
-    loginStatus: string
-  ) => {
-    if (comment.length || loginStatus === "loggedIn") return "Add comment"
-    else
-      switch (select) {
-        case LoginTab.signup:
-          return "Sign up"
-        case LoginTab.login:
-          return "Log in"
-        case LoginTab.guest:
-        default:
-          return "Add comment"
-      }
   }
 
   const resizeObserver = new ResizeObserver(([textArea]) => {
@@ -167,32 +91,24 @@
 
   onMount(() => {
     resizeObserver.observe(textareaRef)
-  })
-
-  onDestroy(() => {
-    unsubscribeLoginState()
+    originalText = commentText
   })
 
   $: {
-    const stateHandlers: [string, () => void][] = [
-      ["validating", validatingStateHandler],
-      ["validated", validatedStateHandler],
-      ["loggingIn", loggingInStateHandler],
-      ["posting", postingStateHandler],
-      ["posted", postedStateHandler],
+    const stateHandlers: [StateValue, () => void][] = [
+      ["updating", updatingStateHandler],
+      ["updated", updatedStateHandler],
       ["error", errorStateHandler],
     ]
+
+    errorText = ""
 
     stateHandlers.forEach(([stateValue, stateHandler]) => {
       if ($state.value === stateValue) stateHandler()
     })
   }
 
-  $: isProcessing = (
-    ["validating", "loggingIn", "posting", "deleting"] as StateValue[]
-  ).includes($state.value)
-
-  $: buttonCopy = getButtonCopy(loginTabSelect, commentText, loginStateValue)
+  $: isProcessing = (["updating"] as StateValue[]).includes($state.value)
 </script>
 
 <SkeletonCommentInput
@@ -206,17 +122,18 @@
     class="comment-field"
     bind:this={textareaRef}
     bind:value={commentText}
-    required={loginTabSelect === LoginTab.guest}
     {autofocus}
     {placeholder}
   />
-  <Login {currentUser} />
+  {#if errorText && errorText.length > 0}
+    <p class="is-error">{errorText}</p>
+  {/if}
   <div class="button-row">
     {#if onCancel !== null}
-      <button class="comment-cancel-button" type="button" on:click={onCancel}
-        >Cancel</button
-      >
+      <button class="comment-cancel-button" type="button" on:click={onCancel}>
+        Cancel
+      </button>
     {/if}
-    <button class="comment-submit-button" type="submit">{buttonCopy}</button>
+    <button class="comment-update-button" type="submit">Update comment</button>
   </div>
 </form>

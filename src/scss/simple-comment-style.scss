@@ -297,9 +297,15 @@ $highlight-text-color: color.scale(
 
     form.comment-form {
       margin-bottom: 3rem;
-
+      .comment-update-button {
+        width: 12.5rem;
+      }
       .comment-submit-button {
         width: 10rem;
+      }
+
+      p.is-error {
+        color: $error-red;
       }
     }
 
