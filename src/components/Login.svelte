@@ -271,6 +271,11 @@
           "Authenticating user is unknown",
           "It seems there's an issue with your current session. Please log out and log back in again. If the problem persists, contact the site administrator for assistance.",
         ],
+        [
+          undefined,
+          undefined,
+          "Unknown error. Possibly the comment server is unreachable. Try reloading.",
+        ],
       ]
 
       const messageTuple = errorMessages.find(
