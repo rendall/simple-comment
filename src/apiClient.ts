@@ -193,6 +193,23 @@ export const postComment = (
     credentials: "include",
   }).then(res => resolveBody<Comment>(res))
 
+/** PUT (update) an edited, existing comment
+ * @async
+ * @function
+ * @param {string} commentId - comment to update
+ * @param {string} text - the updated comment copy
+ * @returns {ServerResponse}
+ */
+export const putComment = (
+  commentId: CommentId,
+  text: string
+): Promise<ServerResponse<Comment>> =>
+  fetch(`${getSimpleCommentURL()}/comment/${commentId}`, {
+    body: text,
+    method: "PUT",
+    credentials: "include",
+  }).then(res => resolveBody<Comment>(res))
+
 /** Delete a comment
  * @async
  * @function

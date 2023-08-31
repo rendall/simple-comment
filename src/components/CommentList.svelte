@@ -60,11 +60,15 @@
 
   const closeReply = onOpenCommentInput("")
 
-  const onCommentPosted = commentPostedEvent => {
-    //TODO: Add error handling for bad onCommentPosted
+  const onPostSuccess = commentPostedEvent => {
     closeReply()
     const { comment } = commentPostedEvent.detail
     dispatch("posted", { comment })
+  }
+
+  const onUpdateSuccess = comment => {
+    closeReply()
+    dispatch("updated", { comment })
   }
 
   const errorStateHandler = () => {
@@ -105,10 +109,11 @@
       {currentUser}
       {depth}
       {handleReplyEvent}
-      {onCommentPosted}
       {onDeleteCommentClick}
       {onDeleteSuccess}
       {onOpenCommentInput}
+      {onPostSuccess}
+      {onUpdateSuccess}
       {showReply}
     />
   {/each}

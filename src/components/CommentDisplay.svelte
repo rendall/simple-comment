@@ -9,19 +9,22 @@
   import CommentInput from "./CommentInput.svelte"
   import CommentList from "./CommentList.svelte"
   import SkeletonCommentDelete from "./low-level/SkeletonCommentDelete.svelte"
+  import CommentEdit from "./CommentEdit.svelte"
   export let comment: (Comment & { isNew?: true }) | undefined = undefined
   export let showReply: string
   export let currentUser: User | undefined
   export let onDeleteSuccess
   export let onDeleteCommentClick
   export let onOpenCommentInput
-  export let onCommentPosted
+  export let onPostSuccess
+  export let onUpdateSuccess
   export let depth
   export let handleReplyEvent
 
   const isRoot = depth === 0
 
   let commentDeleted
+  let isEditing = false
 
   let commentBodyHeight = 74
   let commentBodyRef
@@ -30,7 +33,27 @@
   // "refs" object keeps them sorted by id.
   let refs = {}
 
+  // Can edit for two hours
+  const canEdit = (comment: Comment): boolean =>
+    new Date().valueOf() - new Date(comment.dateCreated).valueOf() <= 7200000
+
+  const onEditClick = (comment: Comment) => {
+    const commentId = comment?.id
+    onOpenCommentInput(commentId)()
+    isEditing = true
+  }
+
+  const onCancelEditClick = () => {
+    isEditing = false
+    onCloseCommentInput()
+  }
+
   const onCloseCommentInput = onOpenCommentInput("")
+
+  const onCommentTextUpdated = text => {
+    isEditing = false
+    onUpdateSuccess({ ...comment, text })
+  }
 
   const onDeleteClick = () => {
     commentDeleted = comment.id
@@ -95,25 +118,47 @@
       </div>
     </header>
     <article class="comment-body" bind:this={commentBodyRef}>
-      {#each toParagraphs(comment.text) as paragraph}
-        <p>{paragraph}</p>
-      {/each}
-      {#if showReply === comment.id}
+      {#if isEditing}
+        <CommentEdit
+          placeholder="Your edit"
+          autofocus={isRoot ? true : false}
+          commentId={comment.id}
+          commentText={comment.text}
+          {currentUser}
+          onCancel={onCancelEditClick}
+          onTextUpdated={onCommentTextUpdated}
+        />
+      {:else}
+        {#each toParagraphs(comment.text) as paragraph}
+          <p>{paragraph}</p>
+        {/each}
+      {/if}
+      {#if showReply === comment.id && !isEditing}
         <CommentInput
           placeholder="Your reply"
           autofocus={isRoot ? true : false}
           commentId={comment.id}
           {currentUser}
           onCancel={onCloseCommentInput}
-          on:posted={onCommentPosted}
+          on:posted={onPostSuccess}
         />
-      {:else}
+      {:else if !isEditing}
         <div class="button-row comment-footer">
+          {#if currentUser && currentUser?.id === comment.user?.id && canEdit(comment)}
+            <button
+              on:click={() => onEditClick(comment)}
+              class="comment-edit-button"
+            >
+              Edit
+            </button>
+          {/if}
+
           {#if currentUser?.isAdmin || (currentUser && currentUser?.id === comment.user?.id && !comment?.replies?.length)}
             <button on:click={onDeleteClick} class="comment-delete-button">
               Delete
             </button>
           {/if}
+
           <button
             on:click={onOpenCommentInput(comment.id)}
             class="comment-reply-button"
@@ -128,7 +173,7 @@
     <CommentList
       depth={depth + 1}
       on:delete={onDeleteSuccess}
-      on:posted={onCommentPosted}
+      on:posted={onPostSuccess}
       on:reply={handleReplyEvent}
       replies={comment.replies}
       {currentUser}
