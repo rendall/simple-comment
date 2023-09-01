@@ -28,12 +28,10 @@
 
   const { state, send } = useMachine(discussionMachine)
 
-  const updateStatusDisplay = (message = "", error = false) => {
-    console.info("status update:", { message, error })
-  }
+  const updateStatusDisplay = (message = "", error = false) =>
+    error ? console.error(message) : console.info(message)
 
   const loadingStateHandler = () => {
-    updateStatusDisplay("loading")
     getOneDiscussion(discussionId)
       .then(response => {
         if (isResponseOk(response)) {
@@ -117,10 +115,6 @@
       .catch(error => send({ type: "ERROR", error }))
   }
 
-  const loadedStateHandler = () => {
-    updateStatusDisplay("loaded")
-  }
-
   // Update the single source of truth without roundtrip to the server
   const onCommentPosted = commentPostedEvent => {
     const { comment } = commentPostedEvent.detail
@@ -178,7 +172,6 @@
   $: {
     const stateHandlers: [string, () => void][] = [
       ["loading", loadingStateHandler],
-      ["loaded", loadedStateHandler],
       ["creating", creatingStateHandler],
       ["error", errorStateHandler],
     ]

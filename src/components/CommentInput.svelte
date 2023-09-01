@@ -209,6 +209,7 @@
     required={loginTabSelect === LoginTab.guest}
     {autofocus}
     {placeholder}
+    dir="auto"
   />
   <Login {currentUser} />
   <div class="button-row">

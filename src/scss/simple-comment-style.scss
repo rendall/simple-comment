@@ -223,6 +223,7 @@ $highlight-text-color: color.scale(
       h2 {
         margin: 0;
         font-size: 1.2rem;
+        width: fit-content;
       }
 
       p {
@@ -391,6 +392,10 @@ $highlight-text-color: color.scale(
 
           p:last-of-type {
             margin-bottom: 1rem;
+          }
+
+          &.is-rtl {
+            text-align: right;
           }
         }
 
