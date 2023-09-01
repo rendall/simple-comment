@@ -238,6 +238,10 @@ $highlight-text-color: color.scale(
   .simple-comment-login {
     margin-bottom: 0;
 
+    &.is-loading {
+      display: none;
+    }
+
     #status-display {
       &.is-error {
         color: $error-red;
