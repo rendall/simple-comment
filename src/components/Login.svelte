@@ -48,6 +48,7 @@
   import PasswordInput from "./low-level/PasswordInput.svelte"
   import PasswordTwinInput from "./low-level/PasswordTwinInput.svelte"
   import Avatar from "./low-level/Avatar.svelte"
+  import { StateValue } from "xstate"
 
   const DISPLAY_NAME_HELPER_TEXT = "This is the name that others will see"
   const USER_EMAIL_HELPER_TEXT =
@@ -58,6 +59,8 @@
 
   let self: User = currentUser
   let isError = false
+  let isLoaded = false // Hide the component until isLoaded is true
+
   let nextEvents = []
   let statusMessage = ""
 
@@ -97,6 +100,8 @@
     statusMessage = message
     isError = error
   }
+
+  //TODO: Move the log in *functionality* away from the Login.svelte *component*. Currently the Login component must be on the page for login functionality to occur.
 
   /** Note that usually these onClick events will not be used. Rather, "loginIntent" will be sent.*/
   const onGuestClick = async (e: Event) => {
@@ -654,6 +659,12 @@
       ["error", errorStateHandler],
     ]
 
+    isLoaded =
+      isLoaded ||
+      (["loggedIn", "loggedOut", "error"] as StateValue[]).includes(
+        $state.value
+      )
+
     nextEvents = $state.nextEvents ?? []
     loginStateStore.set({ state: $state.value, nextEvents })
     stateHandlers.forEach(([stateValue, stateHandler]) => {
@@ -671,7 +682,7 @@
   }
 </script>
 
-<section class="simple-comment-login">
+<section class="simple-comment-login" class:is-loading={!isLoaded}>
   {#if !self}
     <div class="selection-tabs button-row">
       <button
