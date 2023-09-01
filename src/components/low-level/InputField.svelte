@@ -37,6 +37,7 @@
       on:blur={onBlur}
       autocomplete="off"
       autocapitalize="off"
+      dir="auto"
     />
     {#if $$slots.icon}
       {#if onIconClick}

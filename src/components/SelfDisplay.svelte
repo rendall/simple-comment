@@ -52,7 +52,7 @@
         <img src={idIconDataUrl(currentUser.id)} alt="" />
       </div>
       <div class="self-info">
-        <h2 id="self-user-name">{currentUser.name}</h2>
+        <h2 id="self-user-name" dir="auto">{currentUser.name}</h2>
         <p id="self-user-id">
           @{currentUser.id}
           {currentUser.isAdmin ? "(admin)" : ""}

@@ -93,3 +93,9 @@ export const validateDisplayName = (name: string): ValidationResult => {
 
 export const isGuestId = (userId?: UserId) =>
   userId && userId.match(/^guest-[a-z]{2}\d{3}-[a-z0-9]{5}$/) !== null
+
+export const isRtl = (text: string) =>
+  // eslint-disable-next-line no-misleading-character-class
+  /[\u0600-\u06FF\u0750-\u077F\u0590-\u05FF\u05B0-\u05FF\u05F0-\u05FF]/.test(
+    text
+  )

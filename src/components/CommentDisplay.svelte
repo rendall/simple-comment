@@ -1,15 +1,17 @@
 <script lang="ts">
   import { onMount } from "svelte"
+  import { isRtl } from "../lib/shared-utilities"
   import {
     formatDate,
     idIconDataUrl,
     toParagraphs,
   } from "../frontend-utilities"
   import type { Comment, User } from "../lib/simple-comment-types"
-  import CommentInput from "./CommentInput.svelte"
-  import CommentList from "./CommentList.svelte"
   import SkeletonCommentDelete from "./low-level/SkeletonCommentDelete.svelte"
+  import CommentList from "./CommentList.svelte"
+  import CommentInput from "./CommentInput.svelte"
   import CommentEdit from "./CommentEdit.svelte"
+
   export let comment: (Comment & { isNew?: true }) | undefined = undefined
   export let showReply: string
   export let currentUser: User | undefined
@@ -111,26 +113,29 @@
         />
       </div>
       <div class="comment-info">
-        <p class="user-name">
+        <p class="user-name" dir="auto">
           {comment.user.name ?? "Anonymous"}
         </p>
-        <p class="comment-date">{formatDate(comment.dateCreated)}</p>
+        <p class="comment-date" dir="auto">{formatDate(comment.dateCreated)}</p>
       </div>
     </header>
-    <article class="comment-body" bind:this={commentBodyRef}>
+    <article
+      class="comment-body"
+      bind:this={commentBodyRef}
+      class:is-rtl={isRtl(comment.text)}
+    >
       {#if isEditing}
         <CommentEdit
           placeholder="Your edit"
           autofocus={isRoot ? true : false}
           commentId={comment.id}
           commentText={comment.text}
-          {currentUser}
           onCancel={onCancelEditClick}
           onTextUpdated={onCommentTextUpdated}
         />
       {:else}
         {#each toParagraphs(comment.text) as paragraph}
-          <p>{paragraph}</p>
+          <p dir="auto">{paragraph}</p>
         {/each}
       {/if}
       {#if showReply === comment.id && !isEditing}

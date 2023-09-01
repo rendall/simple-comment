@@ -124,6 +124,7 @@
     bind:value={commentText}
     {autofocus}
     {placeholder}
+    dir="auto"
   />
   {#if errorText && errorText.length > 0}
     <p class="is-error">{errorText}</p>
