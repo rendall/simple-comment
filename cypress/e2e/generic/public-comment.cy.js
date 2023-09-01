@@ -6,6 +6,8 @@ import {
 } from "../../../src/tests/mockData"
 
 describe("Guest comment", { testIsolation: false }, () => {
+  let userId
+
   before(() => {
     cy.clearAllLocalStorage()
     cy.clearAllCookies()
@@ -17,16 +19,16 @@ describe("Guest comment", { testIsolation: false }, () => {
   })
 
   it("Submit a comment as a guest user", () => {
-    const commentText = generateRandomCopy()
+    const guestCommentText = generateRandomCopy()
     cy.intercept("POST", ".netlify/functions/comment/*").as("postComment")
     cy.intercept("GET", ".netlify/functions/user/*").as("getUser")
     cy.get("form.comment-form #guest-email").clear().type("fake@email.com")
     cy.get("form.comment-form #guest-name").clear().type(generateRandomName())
-    cy.get("form.comment-form .comment-field").clear().type(commentText)
+    cy.get("form.comment-form .comment-field").clear().type(guestCommentText)
     cy.get("form.comment-form .comment-submit-button").click()
     cy.wait("@getUser").its("response.statusCode").should("eq", 200)
     cy.wait("@postComment").its("response.statusCode").should("eq", 201) // 201 Created
-    cy.contains("article.comment-body p", commentText).as("commentBody")
+    cy.contains("article.comment-body p", guestCommentText).as("commentBody")
     cy.get("@commentBody").should("exist")
     cy.get("@commentBody").parents("li.comment").should("have.class", "is-new")
     cy.get("p#self-user-id").should("exist")
@@ -38,17 +40,17 @@ describe("Guest comment", { testIsolation: false }, () => {
   })
 
   it("Edit a comment as a logged-in guest user", () => {
-    const commentText = generateRandomCopy()
+    const loggedInEditText = generateRandomCopy()
     cy.intercept("PUT", ".netlify/functions/comment/*").as("putComment")
     cy.get(".comment-edit-button").first().click()
-    cy.get("form.comment-form .comment-field").clear().type(commentText)
+    cy.get("form.comment-form .comment-field").clear().type(loggedInEditText)
     cy.get("form.comment-form .comment-update-button").click()
     cy.wait("@putComment").its("response.statusCode").should("eq", 204) // 204
-    cy.contains("article.comment-body p", commentText).should("exist")
+    cy.contains("article.comment-body p", loggedInEditText).should("exist")
   })
 
   it("Editing should handle errors", () => {
-    const commentText = generateRandomCopy()
+    const errorText = generateRandomCopy()
     let errorReply = true
     // Stub the first response to error out
     // then pass the next response through
@@ -63,7 +65,7 @@ describe("Guest comment", { testIsolation: false }, () => {
     }).as("putComment")
     cy.get(".comment-edit-button").first().click()
 
-    cy.get("form.comment-form .comment-field").clear().type(commentText)
+    cy.get("form.comment-form .comment-field").clear().type(errorText)
     cy.get("form.comment-form .comment-update-button").click()
     cy.wait("@putComment")
 
@@ -72,7 +74,7 @@ describe("Guest comment", { testIsolation: false }, () => {
     cy.wait("@putComment").then(interception => {
       expect(interception.response.statusCode).to.equal(204)
     })
-    cy.contains("article.comment-body p", commentText).should("exist")
+    cy.contains("article.comment-body p", errorText).should("exist")
   })
 
   it("Delete a comment as a logged-in guest user", () => {
@@ -109,17 +111,19 @@ describe("Guest comment", { testIsolation: false }, () => {
   })
 
   it("Logs in as same user", () => {
-    cy.get("form.comment-form .comment-field").clear().type(commentText)
+    const sameUserCommentText = generateRandomCopy()
+    cy.get("form.comment-form .comment-field").clear().type(sameUserCommentText)
     cy.intercept("POST", ".netlify/functions/auth").as("postAuth")
     cy.get("form.comment-form .comment-submit-button").click()
     cy.wait("@postAuth").its("response.statusCode").should("eq", 200)
-    cy.contains("article.comment-body p", commentText).as("commentBody")
+    cy.contains("article.comment-body p", sameUserCommentText).as("commentBody")
     cy.get("@commentBody").should("exist")
     cy.get("p#self-user-id").should("exist")
     cy.contains("p#self-user-id", userId)
   })
 
   it("Will not log in as same user with altered data", () => {
+    const sneakyHackerText = generateRandomCopy()
     cy.get("p#self-user-id").contains(userId)
     cy.intercept("DELETE", ".netlify/functions/auth").as("deleteAuth")
     cy.intercept("POST", ".netlify/functions/auth").as("postAuthError")
@@ -144,10 +148,10 @@ describe("Guest comment", { testIsolation: false }, () => {
       expect(storedAlteredUser).to.deep.equal(alteredUser)
     })
     cy.wait("@deleteAuth").its("response.statusCode").should("eq", 202)
-    cy.get("form.comment-form .comment-field").clear().type(commentText)
+    cy.get("form.comment-form .comment-field").clear().type(sneakyHackerText)
     cy.get("form.comment-form .comment-submit-button").click()
     cy.wait("@postAuthError").its("response.statusCode").should("eq", 401)
-    cy.contains("article.comment-body p", commentText).as("commentBody")
+    cy.contains("article.comment-body p", sneakyHackerText).as("commentBody")
     cy.get("@commentBody").should("exist")
     cy.get("p#self-user-id").should("not.contain", userId)
   })
