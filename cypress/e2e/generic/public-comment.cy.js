@@ -3,7 +3,7 @@
 import {
   generateRandomCopy,
   generateRandomName,
-} from "../../../src/tests/mockData"
+} from "../../../src/tests/mockComment"
 
 describe("Guest comment", { testIsolation: false }, () => {
   let userId
