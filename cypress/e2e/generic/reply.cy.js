@@ -1,10 +1,10 @@
 /// <reference types="cypress" />
 
+import { randomString } from "../../../src/tests/mockData"
 import {
   generateRandomCopy,
   generateRandomName,
-  randomString,
-} from "../../../src/tests/mockData"
+} from "../../../src/tests/mockComment"
 
 const formatUserName = displayName => {
   return displayName

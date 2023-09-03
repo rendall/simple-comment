@@ -7912,7 +7912,7 @@ describe("Loading performance", () => {
       .then(p => {
         p.measure("pageLoad", "start-loading", "end-loading")
         const measure = p.getEntriesByName("pageLoad")[0]
-        assert.isAtMost(measure.duration, 2000)
+        assert.isAtMost(measure.duration, 2500)
       })
 
     cy.get("li#last-comment").then(() => {

@@ -2,7 +2,7 @@
 import {
   generateRandomCopy,
   generateRandomName,
-} from "../../../src/tests/mockData"
+} from "../../../src/tests/mockComment"
 
 const formatUserName = displayName => {
   return displayName

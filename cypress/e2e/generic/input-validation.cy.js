@@ -3,7 +3,7 @@
 import {
   generateRandomCopy,
   generateRandomName,
-} from "../../../src/tests/mockData"
+} from "../../../src/tests/mockComment"
 
 context("Input invalid data", () => {
   beforeEach(() => {
