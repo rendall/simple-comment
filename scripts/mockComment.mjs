@@ -1,43 +1,11 @@
-#!/usr/bin/env node
-/**
- * The following script generates a random English or Finnish sentence, along with a random name that could either be American or Finnish.
- *
- * The main functions in this script are:
- * - generateRandomEnglishSentence: Creates a random English sentence by picking a subject and verb, then choosing an appropriate object for that verb.
- * - generateRandomFinnishSentence: Creates a random Finnish sentence using similar logic as generateRandomEnglishSentence.
- * - generateRandomName: Generates a random American or Finnish name.
- * - generateRandomCopy: Utilizes the sentence generation functions to produce either English or Finnish sentences a random number of times.
- *
- * To use this script, run it from the command line using Node.js: 'node scripts/mockData.mjs'.
- * It will print out an object containing a randomly generated name and a paragraph of copy to the console.
- *
- * @example
- * > node scripts/mockData.mjs
- * > { name: 'James Smith', copy: 'He writes a dissertation. I believe a theory.' }
- *
- * Note: This is just a random example, the output will vary each time the script is run.
- */
-var randomNumber = function (min, max) {
-  if (min === void 0) {
-    min = 1
-  }
-  if (max === void 0) {
-    max = 10
-  }
-  return Math.floor(Math.random() * (max - min)) + min
-}
-var chooseRandomElement = function (array) {
-  return array[Math.floor(Math.random() * array.length)]
-}
-var capitalize = function (word) {
-  return word.replace(/^\w/, function (c) {
-    return c.toUpperCase()
-  })
-}
-// Function to generate a random sentence
-var generateRandomEnglishSentence = function () {
-  var subjects = ["I", "You", "He", "She", "It", "They", "We"]
-  var actions = [
+const randomNumber = (min = 1, max = 10) =>
+  Math.floor(Math.random() * (max - min)) + min
+const chooseRandomElement = array =>
+  array[Math.floor(Math.random() * array.length)]
+const capitalize = word => word.replace(/^\w/, c => c.toUpperCase())
+const generateRandomEnglishSentence = () => {
+  const subjects = ["I", "You", "He", "She", "It", "They", "We"]
+  const actions = [
     { verb: "add", objects: ["sugar", "flour", "salt", "pepper", "water"] },
     {
       verb: "admire",
@@ -451,7 +419,13 @@ var generateRandomEnglishSentence = function () {
     },
     {
       verb: "think",
-      objects: ["a thought", "an idea", "a plan", "a decision", "an answer"],
+      objects: [
+        "about the future",
+        "of an idea",
+        "in images",
+        "a thought",
+        "of an answer",
+      ],
     },
     {
       verb: "throw",
@@ -463,7 +437,14 @@ var generateRandomEnglishSentence = function () {
     },
     {
       verb: "translate",
-      objects: ["a document", "a book", "a sentence", "a word", "an article"],
+      objects: [
+        "a document",
+        "a book",
+        "a sentence",
+        "a word",
+        "an article",
+        "word for word",
+      ],
     },
     {
       verb: "understand",
@@ -488,21 +469,15 @@ var generateRandomEnglishSentence = function () {
     },
     { verb: "write", objects: ["a letter", "a novel", "a dissertation"] },
   ]
-  var subject = chooseRandomElement(subjects)
-  var action = chooseRandomElement(actions)
-  var object = chooseRandomElement(action.objects)
-  var isThirdPerson = function (subject) {
-    return ["He", "She", "It"].includes(subject)
-  }
-  var thirdPersonSingular = function (verb) {
-    var endsWithEs = ["o", "ch", "sh", "ss", "x", "z"]
-    var lastTwoChars = verb.slice(-2)
-    var lastChar = verb.slice(-1)
-    if (
-      endsWithEs.some(function (ending) {
-        return verb.endsWith(ending)
-      })
-    ) {
+  const subject = chooseRandomElement(subjects)
+  const action = chooseRandomElement(actions)
+  const object = chooseRandomElement(action.objects)
+  const isThirdPerson = subject => ["He", "She", "It"].includes(subject)
+  const thirdPersonSingular = verb => {
+    const endsWithEs = ["o", "ch", "sh", "ss", "x", "z"]
+    const lastTwoChars = verb.slice(-2)
+    const lastChar = verb.slice(-1)
+    if (endsWithEs.some(ending => verb.endsWith(ending))) {
       return verb + "es"
     } else if (
       lastTwoChars[0] !== "a" &&
@@ -517,202 +492,13 @@ var generateRandomEnglishSentence = function () {
       return verb + "s"
     }
   }
-  // Generate the sentence
-  var sentence = ""
-    .concat(subject, " ")
-    .concat(
-      isThirdPerson(subject) ? thirdPersonSingular(action.verb) : action.verb,
-      " "
-    )
-    .concat(object, ".")
+  const sentence = `${subject} ${
+    isThirdPerson(subject) ? thirdPersonSingular(action.verb) : action.verb
+  } ${object}.`
   return sentence
 }
-var generateRandomCopy = function (sentenceFunc, i, copy) {
-  if (sentenceFunc === void 0) {
-    sentenceFunc = chooseRandomElement([
-      generateRandomEnglishSentence,
-      generateRandomFinnishSentence,
-      generateRandomJapaneseSentence,
-      generateRandomGreekSentence,
-    ])
-  }
-  if (i === void 0) {
-    i = randomNumber()
-  }
-  if (copy === void 0) {
-    copy = ""
-  }
-  return i <= 0
-    ? copy.trim()
-    : generateRandomCopy(
-        sentenceFunc,
-        i - 1,
-        "".concat(copy, " ").concat(sentenceFunc())
-      )
-}
-var generateFinnishName = function () {
-  var finnishFirstNames = [
-    "Akseli",
-    "Aleksis",
-    "Alvar",
-    "Antero",
-    "Antti",
-    "Ari",
-    "Armas",
-    "Eero",
-    "Eino",
-    "Erkki",
-    "Esko",
-    "Ilmari",
-    "Jalmari",
-    "Janne",
-    "Jari",
-    "Johannes",
-    "Juha",
-    "Juhani",
-    "Jukka",
-    "Jussi",
-    "Kaarle",
-    "Kalle",
-    "Lauri",
-    "Markku",
-    "Matti",
-    "Mika",
-    "Mikael",
-    "Olavi",
-    "Oskari",
-    "Pekka",
-    "Risto",
-    "Sami",
-    "Tapani",
-    "Tapio",
-    "Teemu",
-    "Timo",
-    "Toivo",
-    "Urho",
-    "Veikko",
-    "Väinö",
-  ]
-  var finnishLastNames = [
-    "Korhonen",
-    "Virtanen",
-    "Mäkinen",
-    "Nieminen",
-    "Häkkinen",
-    "Laine",
-    "Heikkinen",
-    "Koskinen",
-    "Järvinen",
-    "Lehtinen",
-    "Lehtonen",
-    "Saarinen",
-    "Salminen",
-    "Tuominen",
-    "Laitinen",
-    "Lindholm",
-    "Mäkelä",
-    "Hämäläinen",
-    "Lampinen",
-    "Toivonen",
-    "Rantanen",
-    "Heikkilä",
-    "Kinnunen",
-    "Nurmi",
-    "Laitinen",
-    "Kallio",
-    "Salonen",
-    "Mikkonen",
-    "Laaksonen",
-    "Heinonen",
-    "Jokinen",
-    "Koivisto",
-    "Lahtinen",
-    "Hiltunen",
-    "Kettunen",
-    "Mattila",
-    "Koivunen",
-    "Pelkonen",
-    "Karjalainen",
-    "Ojala",
-  ]
-  return ""
-    .concat(chooseRandomElement(finnishFirstNames), " ")
-    .concat(chooseRandomElement(finnishLastNames))
-}
-var generateAmericanName = function () {
-  var americanFirstNames = [
-    "James",
-    "John",
-    "Robert",
-    "Michael",
-    "William",
-    "David",
-    "Richard",
-    "Joseph",
-    "Thomas",
-    "Charles",
-    "Patricia",
-    "Jennifer",
-    "Linda",
-    "Elizabeth",
-    "Susan",
-    "Jessica",
-    "Sarah",
-    "Karen",
-    "Nancy",
-    "Lisa",
-    "Margaret",
-    "Betty",
-    "Sandra",
-    "Ashley",
-    "Dorothy",
-    "Kimberly",
-    "Emily",
-    "Donna",
-    "Michelle",
-    "Carol",
-  ]
-  var americanLastNames = [
-    "Smith",
-    "Johnson",
-    "Williams",
-    "Brown",
-    "Jones",
-    "Garcia",
-    "Miller",
-    "Davis",
-    "Rodriguez",
-    "Martinez",
-    "Hernandez",
-    "Lopez",
-    "Gonzalez",
-    "Wilson",
-    "Anderson",
-    "Thomas",
-    "Taylor",
-    "Moore",
-    "Jackson",
-    "Martin",
-    "Lee",
-    "Perez",
-    "Thompson",
-    "White",
-    "Harris",
-    "Sanchez",
-    "Clark",
-    "Ramirez",
-    "Lewis",
-    "Robinson",
-  ]
-  return ""
-    .concat(chooseRandomElement(americanFirstNames), " ")
-    .concat(chooseRandomElement(americanLastNames))
-}
-var generateRandomName = function () {
-  return chooseRandomElement([generateAmericanName, generateFinnishName])()
-}
-var generateRandomFinnishSentence = function () {
-  var verbAssociationTuples = [
+const generateRandomFinnishSentence = () => {
+  const verbAssociationTuples = [
     [
       "aloittaa",
       [
@@ -895,9 +681,9 @@ var generateRandomFinnishSentence = function () {
     ],
     ["valvoa", ["työtä", "lapsia", "projektia", "koetta", "ylläpidon"]],
   ]
-  var conjugateFinnishType1Verb = function (subject, verb) {
-    var stem = verb.slice(0, -1) // remove the last character
-    var degrade = function (stem) {
+  const conjugateFinnishType1Verb = (subject, verb) => {
+    const stem = verb.slice(0, -1)
+    const degrade = stem => {
       if (stem.match(/kk.$/)) return stem.replace(/kk(.)$/, "k$1")
       if (stem.match(/pp.$/)) return stem.replace(/pp(.)$/, "p$1")
       if (stem.match(/tt.$/)) return stem.replace(/tt(.)$/, "t$1")
@@ -919,7 +705,7 @@ var generateRandomFinnishSentence = function () {
       case "sinä":
         return degrade(stem) + "t"
       case "hän":
-        return stem + stem.slice(-1) // replace last vowel with second to last
+        return stem + stem.slice(-1)
       case "me":
         return degrade(stem) + "mme"
       case "te":
@@ -927,102 +713,15 @@ var generateRandomFinnishSentence = function () {
       case "he":
         return stem + (verb.match(/[aou]/) ? "vat" : "vät")
       default:
-        throw "Unexpected subject '".concat(subject, "'")
+        throw `Unexpected subject '${subject}'`
     }
   }
-  var _a = chooseRandomElement(verbAssociationTuples),
-    infinitive = _a[0],
-    assocations = _a[1]
-  var directObject = chooseRandomElement(assocations)
-  var subject = chooseRandomElement(["minä", "sinä", "hän", "me", "te", "he"])
-  var verb = conjugateFinnishType1Verb(subject, infinitive)
-  return ""
-    .concat(capitalize(subject), " ")
-    .concat(verb, " ")
-    .concat(directObject, ".")
+  const [infinitive, assocations] = chooseRandomElement(verbAssociationTuples)
+  const directObject = chooseRandomElement(assocations)
+  const subject = chooseRandomElement(["minä", "sinä", "hän", "me", "te", "he"])
+  const verb = conjugateFinnishType1Verb(subject, infinitive)
+  return `${capitalize(subject)} ${verb} ${directObject}.`
 }
-
-var generateRandomJapaneseSentence = function () {
-  var subjects = [
-    "私",
-    "僕",
-    "俺",
-    "私たち",
-    "僕たち",
-    "俺たち",
-    "あなた",
-    "あなたたち",
-    "あなた方",
-    "彼",
-    "彼女",
-    "彼ら",
-    "彼女ら",
-  ]
-  var actions = [
-    { verb: "する", objects: ["仕事", "勉強", "結婚", "練習"] },
-    { verb: "仕事する" },
-    {
-      verb: "作る",
-      objects: [
-        "料理",
-        "絵",
-        "プログラム",
-        "家",
-        "服",
-        "音楽",
-        "映画",
-        "ケーキ",
-        "アート",
-        "デザイン",
-      ],
-    },
-    { verb: "出る", objects: ["家", "店", "学校", "オフィス", "部屋"] },
-    { verb: "勉強する" },
-    { verb: "動く" },
-    { verb: "始まる" },
-    { verb: "寝る" },
-    { verb: "帰る" },
-    { verb: "旅行する" },
-    { verb: "書く" },
-    { verb: "歌う", objects: ["歌", "曲", "メロディー"] },
-    { verb: "止まる" },
-    { verb: "泳ぐ" },
-    {
-      verb: "着る",
-      objects: ["服", "ジャケット", "コート", "ドレス", "ズボン"],
-    },
-    { verb: "知る", objects: ["事実", "情報", "答え", "場所", "人"] },
-    { verb: "笑う" },
-    { verb: "終わる" },
-    { verb: "結婚する" },
-    { verb: "練習する" },
-    { verb: "聞く", objects: ["音楽", "話", "ラジオ", "ニュース"] },
-    {
-      verb: "行く",
-      objects: ["学校", "レストラン", "公園", "映画館", "海", "街"],
-    },
-    { verb: "見る", objects: ["映画", "本", "景色", "テレビ", "絵"] },
-    { verb: "読む", objects: ["新聞", "小説", "詩", "雑誌", "本"] },
-    { verb: "買う", objects: ["服", "本", "食べ物", "商品", "ギフト"] },
-    { verb: "走る", objects: ["マラソン", "コース", "距離", "レース"] },
-    { verb: "起きる" },
-    { verb: "運転する", objects: ["車", "バス", "自動車"] },
-    { verb: "食べる", objects: ["食事", "ご飯", "料理", "フルーツ", "野菜"] },
-    { verb: "飲む", objects: ["水", "お茶", "コーヒー", "ジュース", "酒"] },
-  ]
-
-  var subject = chooseRandomElement(subjects)
-  var action = chooseRandomElement(actions)
-  const { objects, verb } = action
-
-  // Generate the sentence
-  var sentence = objects
-    ? `${subject} は ${chooseRandomElement(objects)} を ${verb}。`
-    : `${subject} は ${verb}。`
-
-  return sentence
-}
-
 const generateRandomGreekSentence = () => {
   const subjects = [
     "Εγώ",
@@ -1308,10 +1007,8 @@ const generateRandomGreekSentence = () => {
       ],
     },
   ]
-
   const { objects, verb } = chooseRandomElement(actions)
   const object = chooseRandomElement(objects)
-
   const conjugate = (subject, verb) => {
     switch (subject) {
       case "Εγώ":
@@ -1333,124 +1030,2276 @@ const generateRandomGreekSentence = () => {
         return "Unknown subject"
     }
   }
-
   const sentence = `${subject} ${conjugate(subject, verb)} ${object}.`
   return sentence
 }
-
-function toEmail(name) {
-  // Normalize the name to its base form (NFD)
+const generateRandomArabicSentence = () => {
+  const arabicSubjects = [
+    "أنا",
+    "أنتَ",
+    "أنتِ",
+    "هو",
+    "هي",
+    "أنتُما",
+    "هما",
+    "هم",
+    "هما",
+    "نحن",
+    "أنتم",
+    "أنتن",
+    "هن",
+  ]
+  const arabicActions = [
+    { verb: "يكتب", objects: ["رسالة", "كتاب"] },
+    { verb: "يُضيف", objects: ["كلمة", "رقم", "فقرة", "صورة", "تعليق"] },
+    { verb: "يُرتِّب", objects: ["جدول", "كتب", "صور", "ملفات", "أفكار"] },
+    {
+      verb: "يُؤمِن",
+      objects: [
+        "المساواة",
+        "العدالة",
+        "حقوق",
+        "الديمقراطية",
+        "التنوع",
+        "العلم",
+        "التقدم",
+        "التعليم",
+        "الاقتصاد",
+        "البيئة",
+        "بالمشروعية",
+      ],
+    },
+    {
+      "verb": "يُفرِّش",
+      "objects": [
+        "شعر",
+        "أسنان",
+        "فرشاة الأسنان",
+        "لوحة",
+        "صورة",
+        "غرفة",
+        "سيارة",
+        "ملابس",
+        "أثاث",
+        "جدار",
+      ],
+    },
+    {
+      "verb": "يبني",
+      "objects": [
+        "منزل",
+        "مبنى",
+        "جسر",
+        "طريق",
+        "سور",
+        "مصنع",
+        "برج",
+        "سد",
+        "فندق",
+        "مدرسة",
+      ],
+    },
+    {
+      "verb": "يشتري",
+      "objects": [
+        "سيارة",
+        "منزل",
+        "هاتف",
+        "ملابس",
+        "طعام",
+        "كتاب",
+        "حقيبة",
+        "ساعة",
+        "تذكرة",
+        "جواهر",
+      ],
+    },
+    {
+      "verb": "يُتصل",
+      "objects": [
+        "بشخص",
+        "بصديق",
+        "بعائلة",
+        "برقم هاتف",
+        "بمدير",
+        "بزبون",
+        "بوالدين",
+        "بجار",
+        "بمستشفى",
+        "بمكتب",
+      ],
+    },
+    {
+      "verb": "يحمل",
+      "objects": [
+        "حقيبة",
+        "صندوق",
+        "طفلًا",
+        "شيئًا ثقيلًا",
+        "تسوقًا",
+        "سلة",
+        "أمتعة",
+        "أدوات",
+        "شنطة",
+        "كيس",
+      ],
+    },
+    {
+      "verb": "يمسك",
+      "objects": [
+        "كرة",
+        "سمكة",
+        "كائن",
+        "قطار",
+        "فرصة",
+        "كلب",
+        "بالون",
+        "فريسة",
+        "جائزة",
+        "طائرة",
+      ],
+    },
+    {
+      "verb": "يلتقط",
+      "objects": [
+        "صورة",
+        "أنفاس",
+        "زهرة",
+        "فكرة",
+        "ذكريات",
+        "لقطة",
+        "أشياء",
+        "ألوان",
+        "فرصة",
+        "لمحة",
+      ],
+    },
+    {
+      "verb": "يختار",
+      "objects": [
+        "خيار",
+        "مسار",
+        "قرار",
+        "ملابس",
+        "غذاء",
+        "هدية",
+        "مكان",
+        "خيارات",
+        "منتج",
+        "فرصة",
+      ],
+    },
+    {
+      "verb": "ينظّف",
+      "objects": [
+        "منزل",
+        "غرفة",
+        "سيارة",
+        "ملابس",
+        "أواني",
+        "شاشة",
+        "أثاث",
+        "زجاج",
+        "حمام",
+        "سجادة",
+      ],
+    },
+    {
+      "verb": "يُقارِن",
+      "objects": [
+        "أسعار",
+        "منتجات",
+        "خصائص",
+        "ميزات",
+        "تصاميم",
+        "أحجام",
+        "نتائج",
+        "أشكال",
+        "أداء",
+        "خيارات",
+      ],
+    },
+    {
+      "verb": "يُعتَبِر",
+      "objects": [
+        "فكرة",
+        "رأي",
+        "خيار",
+        "مقترح",
+        "حقيقة",
+        "أمر",
+        "تصرف",
+        "رؤية",
+        "نتيجة",
+        "تأثير",
+      ],
+    },
+    {
+      "verb": "يحتوي",
+      "objects": [
+        "حاوية",
+        "صندوق",
+        "كيس",
+        "زجاجة",
+        "منتج",
+        "مستودع",
+        "حقيبة",
+        "محتوى",
+        "مطبخ",
+        "غرفة",
+      ],
+    },
+    {
+      "verb": "يستمرّ",
+      "objects": [
+        "عمل",
+        "دراسة",
+        "جهد",
+        "نشاط",
+        "حركة",
+        "حياة",
+        "تقدم",
+        "تطوير",
+        "رحلة",
+        "علاقة",
+      ],
+    },
+    {
+      "verb": "يدافع",
+      "objects": [
+        "عن حقوق الإنسان",
+        "عن وطنه",
+        "عن الضعفاء",
+        "عن نفسه",
+        "عن الحقيقة",
+        "عن الحياة",
+        "عن المستقبل",
+        "عن الحرية",
+        "عن العدالة",
+        "عن الديمقراطية",
+      ],
+    },
+    {
+      "verb": "يوصل",
+      "objects": [
+        "إلى الوجهة",
+        "إلى المطار",
+        "إلى الفندق",
+        "إلى المدرسة",
+        "إلى المكتب",
+        "إلى المستشفى",
+        "إلى المحطة",
+        "إلى المنزل",
+        "إلى الشاطئ",
+        "إلى الجامعة",
+      ],
+    },
+    {
+      "verb": "يوصل",
+      "objects": [
+        "بطرد",
+        "برسالة",
+        "بمنتج",
+        "بطلب",
+        "بخبر",
+        "بزمان",
+        "بوجبة",
+        "ببضعة أيام",
+        "بوثيقة",
+        "بهدية",
+      ],
+    },
+    {
+      "verb": "يصف",
+      "objects": [
+        "بمكان",
+        "بشخص",
+        "بحدث",
+        "بمشهد",
+        "بمشاعر",
+        "بتجربة",
+        "بمظهر",
+        "بصوت",
+        "بطعام",
+        "بمشروع",
+      ],
+    },
+    {
+      "verb": "يرسم",
+      "objects": [
+        "صورة",
+        "لوحة",
+        "رسمة",
+        "خريطة",
+        "شكل",
+        "مخطط",
+        "خطوط",
+        "كاريكاتير",
+        "رمز",
+        "أشكال هندسية",
+      ],
+    },
+    {
+      "verb": "يقود",
+      "objects": [
+        "سيارة",
+        "دراجة",
+        "حافلة",
+        "شاحنة",
+        "قارب",
+        "دراجة نارية",
+        "سفينة",
+        "طائرة",
+        "جرار",
+        "قطار",
+      ],
+    },
+    {
+      "verb": "يُسقِط",
+      "objects": [
+        "كرة",
+        "مفتاح",
+        "ورقة",
+        "قلم",
+        "حقيبة",
+        "زجاجة",
+        "صحن",
+        "مظلة",
+        "قطرة ماء",
+        "هاتف محمول",
+      ],
+    },
+    {
+      "verb": "يشرح",
+      "objects": [
+        "فكرة",
+        "مفهوم",
+        "موضوع",
+        "عملية",
+        "مفتاح",
+        "نظرية",
+        "معلومة",
+        "سياق",
+        "تفصيل",
+        "حقيقة",
+      ],
+    },
+    {
+      "verb": "يملأ",
+      "objects": [
+        "كوب",
+        "حوض",
+        "صحن",
+        "حقيبة",
+        "حوض استحمام",
+        "سطل",
+        "صفيحة",
+        "كيس",
+        "قلب",
+        "فم",
+      ],
+    },
+    {
+      "verb": "يجد",
+      "objects": [
+        "مفتاح",
+        "كنز",
+        "مسار",
+        "حل",
+        "إجابة",
+        "مخرج",
+        "خيار",
+        "مكان",
+        "وظيفة",
+        "أخطاء",
+      ],
+    },
+    {
+      "verb": "ينهي",
+      "objects": [
+        "مهمة",
+        "عمل",
+        "دراسة",
+        "فيلم",
+        "كتاب",
+        "مشروع",
+        "تمرين",
+        "طعام",
+        "سباق",
+        "لعبة",
+      ],
+    },
+    {
+      "verb": "يطير",
+      "objects": [
+        "طائرة",
+        "طائر",
+        "طائرة ورقية",
+        "جواز سفر",
+        "طائرة حربية",
+        "بالون هواء",
+        "طائرة شراعية",
+        "فراشة",
+        "طائرة درون",
+        "جمل طائر",
+      ],
+    },
+    {
+      "verb": "يُسلّم",
+      "objects": [
+        "بالسلام",
+        "بالتحية",
+        "بالابتسامة",
+        "بالكلمة الطيبة",
+        "بالمصافحة",
+        "بالاحترام",
+        "بالود",
+        "بالترحيب",
+        "بالدعوة",
+        "بالمرحبا",
+      ],
+    },
+    {
+      "verb": "يُرشد",
+      "objects": [
+        "بالمسار",
+        "بالإرشاد",
+        "بالتوجيه",
+        "بالنصيحة",
+        "بالخبرة",
+        "بالمعلومات",
+        "بالمساعدة",
+        "بالإشارة",
+        "بالتوجيهات",
+        "بالملامح",
+      ],
+    },
+    {
+      "verb": "يُسمع",
+      "objects": [
+        "بالصوت",
+        "بالأصوات",
+        "بالضجيج",
+        "بالموسيقى",
+        "بالكلام",
+        "بالأخبار",
+        "بالتلفزيون",
+        "بالمكالمة",
+        "بالموسيقى",
+        "بالأصوات الطبيعية",
+      ],
+    },
+    {
+      "verb": "يُساعد",
+      "objects": [
+        "بالمشكلة",
+        "بالمساعدة",
+        "بالنصيحة",
+        "بالدعم",
+        "بالتوجيه",
+        "بالحل",
+        "بالتعليم",
+        "بالتسهيل",
+        "بالفهم",
+        "بالعمل",
+      ],
+    },
+    {
+      "verb": "يُضرب",
+      "objects": [
+        "بالقوة",
+        "باللكمة",
+        "بالضربة",
+        "بالجزمة",
+        "بالعصا",
+        "بالمطرقة",
+        "بالمضرب",
+        "باليد",
+        "بالركلة",
+        "باللكمة القاضية",
+      ],
+    },
+    {
+      "verb": "يُتخيل",
+      "objects": [
+        "بالمغامرة",
+        "بالأحلام",
+        "بالخيال",
+        "بالقصص",
+        "بالعوالم",
+        "بالمستقبل",
+        "بالرحلات",
+        "بالسفر",
+        "بالأفكار",
+        "بالتصورات",
+      ],
+    },
+    {
+      "verb": "يشمل",
+      "objects": [
+        "قائمة",
+        "مجموعة",
+        "عناصر",
+        "مكونات",
+        "أعضاء",
+        "مواد",
+        "خيارات",
+        "فئات",
+        "مستندات",
+        "أفراد",
+      ],
+    },
+    {
+      "verb": "يدعو",
+      "objects": [
+        "أصدقاء",
+        "ضيوف",
+        "عائلة",
+        "زملاء",
+        "جيران",
+        "شركاء",
+        "مشجعين",
+        "زبائن",
+        "زملاء عمل",
+        "متحدثين",
+      ],
+    },
+    {
+      "verb": "يحتفظ",
+      "objects": [
+        "مفتاح",
+        "سجل",
+        "ملف",
+        "سرّ",
+        "ذاكرة",
+        "مقال",
+        "سرير",
+        "كلمة مرور",
+        "صورة",
+        "عقد",
+      ],
+    },
+    {
+      "verb": "يرمي",
+      "objects": [
+        "كرة",
+        "حجر",
+        "قمامة",
+        "كرسي",
+        "كعب",
+        "زجاجة",
+        "باب",
+        "كلب",
+        "صخرة",
+        "كرة قدم",
+      ],
+    },
+    {
+      "verb": "يعرف",
+      "objects": [
+        "شخص",
+        "مكان",
+        "سبب",
+        "لغة",
+        "علم",
+        "تفاصيل",
+        "أمور",
+        "وقت",
+        "حقيقة",
+        "حدث",
+      ],
+    },
+    {
+      "verb": "يتعلم",
+      "objects": [
+        "لغة",
+        "مهارة",
+        "مادة دراسية",
+        "فن",
+        "علم",
+        "درس",
+        "تقنية",
+        "نظرية",
+        "أسلوب",
+        "معلومات",
+      ],
+    },
+    {
+      "verb": "يرفع",
+      "objects": [
+        "وزن",
+        "أثقال",
+        "أشياء",
+        "أيدي",
+        "أجسام",
+        "أمتعة",
+        "رأس",
+        "سلاح",
+        "صوت",
+        "علم",
+      ],
+    },
+    {
+      "verb": "يحبّ",
+      "objects": [
+        "زهرة",
+        "أهل",
+        "أصدقاء",
+        "حيوان",
+        "فن",
+        "أطفال",
+        "طعام",
+        "موسيقى",
+        "طبيعة",
+        "ألعاب",
+      ],
+    },
+    {
+      "verb": "يدير",
+      "objects": [
+        "مشروع",
+        "شركة",
+        "فريق",
+        "موارد",
+        "عملية",
+        "مهمة",
+        "أمور",
+        "محل",
+        "مستودع",
+        "موظفين",
+      ],
+    },
+    {
+      "verb": "يعني",
+      "objects": [
+        "كلمة",
+        "مفهوم",
+        "عبارة",
+        "رمز",
+        "معنى",
+        "إشارة",
+        "تفسير",
+        "مقصود",
+        "نية",
+        "تأويل",
+      ],
+    },
+    {
+      "verb": "يقيس",
+      "objects": [
+        "مسافة",
+        "زمن",
+        "حجم",
+        "وزن",
+        "سرعة",
+        "درجة حرارة",
+        "كمية",
+        "أبعاد",
+        "كفاءة",
+        "عمق",
+      ],
+    },
+    {
+      "verb": "يلتقي",
+      "objects": [
+        "صديق",
+        "شريك",
+        "عائلة",
+        "زميل",
+        "عميل",
+        "زبون",
+        "زميل دراسة",
+        "زملاء عمل",
+        "جار",
+        "فريق عمل",
+      ],
+    },
+    {
+      "verb": "يتحرّك",
+      "objects": [
+        "سيارة",
+        "شاحنة",
+        "جسم",
+        "جندي",
+        "قافلة",
+        "سفينة",
+        "قطار",
+        "حيوان",
+        "رأس",
+        "بضائع",
+      ],
+    },
+    {
+      "verb": "يحتاج",
+      "objects": [
+        "مساعدة",
+        "وقت",
+        "مال",
+        "دعم",
+        "نصيحة",
+        "معلومات",
+        "فهم",
+        "مساحة",
+        "أدوات",
+        "فرص",
+      ],
+    },
+    {
+      "verb": "يلاحظ",
+      "objects": [
+        "فرق",
+        "تغيير",
+        "علامة",
+        "خطأ",
+        "تفاصيل",
+        "ملاحظة",
+        "اختلاف",
+        "ظاهرة",
+        "تحسين",
+        "تناقض",
+      ],
+    },
+    {
+      "verb": "يقدّم",
+      "objects": [
+        "مساعدة",
+        "اقتراح",
+        "طعام",
+        "خدمة",
+        "هدية",
+        "عرض",
+        "معلومات",
+        "دعم",
+        "شكر",
+        "مساعدة إنسانية",
+      ],
+    },
+    {
+      "verb": "يأمر",
+      "objects": [
+        "طعام",
+        "منتج",
+        "خدمة",
+        "عمل",
+        "مشروب",
+        "وجبة",
+        "أوامر",
+        "أمور",
+        "مستلزمات",
+        "توجيهات",
+      ],
+    },
+    {
+      "verb": "يدين",
+      "objects": [
+        "مال",
+        "دين",
+        "خدمة",
+        "لصديق",
+        "لشركة",
+        "لبنك",
+        "لعائلة",
+        "لحكومة",
+        "لزبون",
+        "لجامعة",
+      ],
+    },
+    {
+      "verb": "يمتلك",
+      "objects": [
+        "سيارة",
+        "منزل",
+        "شركة",
+        "أرض",
+        "هاتف",
+        "فندق",
+        "أعمال",
+        "مصنع",
+        "حقوق",
+        "تحف",
+      ],
+    },
+    {
+      "verb": "يرسم",
+      "objects": [
+        "لوحة",
+        "صورة",
+        "جدار",
+        "سيارة",
+        "باب",
+        "مناظر",
+        "غرفة",
+        "وجه",
+        "أظافر",
+        "أشكال",
+      ],
+    },
+    {
+      "verb": "يختار",
+      "objects": [
+        "زهرة",
+        "ملابس",
+        "فاكهة",
+        "مكان",
+        "فريق",
+        "كتاب",
+        "ألوان",
+        "منتج",
+        "قائمة",
+        "خيارات",
+      ],
+    },
+    {
+      "verb": "يفضل",
+      "objects": [
+        "شاي",
+        "قهوة",
+        "طعام",
+        "سيارة",
+        "جوارب",
+        "طقس",
+        "أفلام",
+        "أصدقاء",
+        "مكان",
+        "تجربة",
+      ],
+    },
+    {
+      "verb": "يعدّ",
+      "objects": [
+        "وجبة",
+        "تقرير",
+        "عرض",
+        "اختبار",
+        "مشروع",
+        "خطة",
+        "مفاجأة",
+        "طعام",
+        "مشروب",
+        "هدية",
+      ],
+    },
+    {
+      "verb": "ينطق",
+      "objects": [
+        "كلمة",
+        "اسم",
+        "جملة",
+        "حروف",
+        "صوت",
+        "لغة",
+        "حرف",
+        "كلمات",
+        "عبارة",
+        "ألفاظ",
+      ],
+    },
+    {
+      "verb": "يحمي",
+      "objects": [
+        "بيئة",
+        "حقوق",
+        "أمان",
+        "أطفال",
+        "معلومات",
+        "ممتلكات",
+        "مجتمع",
+        "ممتلكات شخصية",
+        "سرية",
+        "بيانات",
+      ],
+    },
+    {
+      "verb": "يسحب",
+      "objects": [
+        "ستارة",
+        "جسم",
+        "زنجير",
+        "كرسي",
+        "سيارة",
+        "أغطية",
+        "ماء",
+        "ملف",
+        "أمتعة",
+        "رف",
+      ],
+    },
+    {
+      "verb": "يدفع",
+      "objects": [
+        "باب",
+        "سيارة",
+        "كرسي",
+        "زنجير",
+        "موقع",
+        "دراجة",
+        "لوح",
+        "مكتب",
+        "صندوق",
+        "زر",
+      ],
+    },
+    {
+      "verb": "يستلم",
+      "objects": [
+        "بريد",
+        "طرد",
+        "هدية",
+        "أموال",
+        "طلب",
+        "إشعار",
+        "رسالة",
+        "جواب",
+        "شهادة",
+        "تحديث",
+      ],
+    },
+    {
+      "verb": "يتعرّف",
+      "objects": [
+        "وجوه",
+        "أصوات",
+        "أماكن",
+        "رموز",
+        "ألوان",
+        "أشخاص",
+        "علامات",
+        "عيوب",
+        "نماذج",
+        "ملامح",
+      ],
+    },
+    {
+      "verb": "يتذكّر",
+      "objects": [
+        "ذكريات",
+        "أحداث",
+        "أسماء",
+        "مواعيد",
+        "تفاصيل",
+        "أرقام",
+        "كلمات",
+        "أماكن",
+        "وعود",
+        "أفكار",
+      ],
+    },
+    {
+      "verb": "يُبلّغ",
+      "objects": [
+        "أخبار",
+        "معلومات",
+        "أحداث",
+        "تقارير",
+        "نتائج",
+        "شكاوى",
+        "ملاحظات",
+        "تطورات",
+        "مشاكل",
+        "إجراءات",
+      ],
+    },
+    {
+      "verb": "يحترم",
+      "objects": [
+        "قوانين",
+        "قيم",
+        "حقوق",
+        "عادات",
+        "ثقافات",
+        "رؤساء",
+        "أصول",
+        "تقاليد",
+        "معتقدات",
+        "فعاليات",
+      ],
+    },
+    {
+      "verb": "يعود",
+      "objects": [
+        "منتج",
+        "زائر",
+        "سفر",
+        "استثمار",
+        "أموال",
+        "فصل دراسي",
+        "ملف",
+        "هدية",
+        "كتاب",
+        "صديق",
+      ],
+    },
+    {
+      "verb": "يركب",
+      "objects": [
+        "سيارة",
+        "دراجة",
+        "حصان",
+        "حافلة",
+        "دراجة نارية",
+        "قطار",
+        "طائرة",
+        "زلاجة",
+        "قارب",
+        "ألعاب",
+      ],
+    },
+    {
+      "verb": "يحكم",
+      "objects": [
+        "بلد",
+        "مجتمع",
+        "قانون",
+        "حكومة",
+        "مملكة",
+        "مدينة",
+        "قرار",
+        "فريق",
+        "شركة",
+        "منطقة",
+      ],
+    },
+    {
+      "verb": "يوفِّر",
+      "objects": [
+        "وقت",
+        "مال",
+        "جهد",
+        "موارد",
+        "فرصة",
+        "فاتورة",
+        "مساحة",
+        "حياة",
+        "طاقة",
+        "بيانات",
+      ],
+    },
+    {
+      "verb": "يحفظ",
+      "objects": [
+        "معلومات",
+        "صور",
+        "ملفات",
+        "ذكريات",
+        "أمان",
+        "مستندات",
+        "أسرار",
+        "أموال",
+        "كلمات مرور",
+        "مفاتيح",
+      ],
+    },
+    {
+      "verb": "يرى",
+      "objects": [
+        "مشهد",
+        "صورة",
+        "رؤية",
+        "شاشة",
+        "عرض",
+        "فيلم",
+        "نتيجة",
+        "حقيقة",
+        "ظاهرة",
+        "أشباح",
+      ],
+    },
+    {
+      "verb": "يبيع",
+      "objects": [
+        "سلعة",
+        "منتج",
+        "خدمة",
+        "عقار",
+        "ملكية",
+        "سيارة",
+        "منزل",
+        "أسهم",
+        "جواهر",
+        "تذاكر",
+      ],
+    },
+    {
+      "verb": "يرسل",
+      "objects": [
+        "رسالة",
+        "بريد إلكتروني",
+        "طلب",
+        "هدية",
+        "ملف",
+        "طرد",
+        "صورة",
+        "رسميات",
+        "بيانات",
+        "صوت",
+      ],
+    },
+    {
+      "verb": "يخدم",
+      "objects": [
+        "زبون",
+        "مجتمع",
+        "ضيوف",
+        "عملاء",
+        "مريض",
+        "جمهور",
+        "جيش",
+        "مستخدم",
+        "أعضاء",
+        "عائلة",
+      ],
+    },
+    {
+      "verb": "يظهر",
+      "objects": [
+        "فيلم",
+        "صورة",
+        "شاشة",
+        "برنامج",
+        "معلومات",
+        "حقائق",
+        "خيارات",
+        "إعلان",
+        "عرض",
+        "موهبة",
+      ],
+    },
+    {
+      "verb": "يتهجى",
+      "objects": [
+        "كلمة",
+        "اسم",
+        "جملة",
+        "حرف",
+        "تسجيل",
+        "لفظ",
+        "نص",
+        "سلسلة",
+        "شفرة",
+        "شعار",
+      ],
+    },
+    {
+      "verb": "يبدأ",
+      "objects": [
+        "مشروع",
+        "عمل",
+        "فصل",
+        "سباق",
+        "أحداث",
+        "رحلة",
+        "عام دراسي",
+        "عرض",
+        "مهرجان",
+        "تدريب",
+      ],
+    },
+    {
+      "verb": "يسرق",
+      "objects": [
+        "مال",
+        "مجوهرات",
+        "هاتف",
+        "سيارة",
+        "بيانات",
+        "أفكار",
+        "هدايا",
+        "لوحة فنية",
+        "ساعة",
+        "ملابس",
+      ],
+    },
+    {
+      "verb": "يتوقّف",
+      "objects": [
+        "سيارة",
+        "عملية",
+        "حركة",
+        "ضوضاء",
+        "تنفس",
+        "مظهر",
+        "مشروع",
+        "دموع",
+        "عمل",
+        "نشاط",
+      ],
+    },
+    {
+      "verb": "يدرس",
+      "objects": [
+        "مادة دراسية",
+        "كتاب",
+        "دروس",
+        "بحث",
+        "تقرير",
+        "لغة",
+        "فصل",
+        "مشروع",
+        "تاريخ",
+        "علوم",
+      ],
+    },
+    {
+      "verb": "يدعم",
+      "objects": [
+        "فريق",
+        "مشروع",
+        "قضية",
+        "مبادرة",
+        "مؤسسة",
+        "حملة",
+        "مبلغ مالي",
+        "أسرة",
+        "طلاب",
+        "فنان",
+      ],
+    },
+    {
+      "verb": "يعلم",
+      "objects": [
+        "طالب",
+        "مادة دراسية",
+        "لغة",
+        "مهارة",
+        "درس",
+        "فن",
+        "علم",
+        "تقنية",
+        "مبدأ",
+        "فصل",
+      ],
+    },
+    {
+      "verb": "يخبر",
+      "objects": [
+        "شخص",
+        "قصة",
+        "خبر",
+        "سر",
+        "أحداث",
+        "حقيقة",
+        "رأي",
+        "معلومات",
+        "خطة",
+        "تفاصيل",
+      ],
+    },
+    {
+      "verb": "يفكر",
+      "objects": [
+        "فكرة",
+        "مسألة",
+        "قرار",
+        "أمر",
+        "سيناريو",
+        "رؤية",
+        "مستقبل",
+        "خيار",
+        "فلسفة",
+        "أحلام",
+      ],
+    },
+    {
+      "verb": "يرمي",
+      "objects": [
+        "كرة",
+        "مهمة",
+        "قمامة",
+        "حجر",
+        "سهم",
+        "ورقة",
+        "قنبلة",
+        "سلاح",
+        "صاروخ",
+        "خطأ",
+      ],
+    },
+    {
+      "verb": "يدرب",
+      "objects": [
+        "فريق",
+        "رياضي",
+        "موظف",
+        "جيش",
+        "مجموعة",
+        "متدرب",
+        "حيوان",
+        "فني",
+        "ألعاب",
+        "فرسان",
+      ],
+    },
+    {
+      "verb": "يترجم",
+      "objects": [
+        "نص",
+        "كتاب",
+        "مقال",
+        "لغة",
+        "وثيقة",
+        "ترجمة",
+        "جملة",
+        "كلمة",
+        "شعر",
+        "فيلم",
+      ],
+    },
+    {
+      "verb": "يفهم",
+      "objects": [
+        "مفهوم",
+        "لغة",
+        "معنى",
+        "سياق",
+        "أفكار",
+        "شرح",
+        "دروس",
+        "رموز",
+        "تصميم",
+        "خيارات",
+      ],
+    },
+    {
+      "verb": "يزور",
+      "objects": [
+        "مدينة",
+        "معلم سياحي",
+        "عائلة",
+        "أصدقاء",
+        "متحف",
+        "مكان",
+        "مريض",
+        "مدرسة",
+        "بيت",
+        "بلد",
+      ],
+    },
+    {
+      "verb": "يرغب",
+      "objects": [
+        "سفر",
+        "عمل",
+        "منتج",
+        "تغيير",
+        "تحسين",
+        "زواج",
+        "مغامرة",
+        "مستقبل",
+        "تحدي",
+        "مرافقة",
+      ],
+    },
+    {
+      "verb": "يريد",
+      "objects": [
+        "شيء",
+        "نجاح",
+        "سعادة",
+        "حب",
+        "استقرار",
+        "حياة",
+        "راحة",
+        "تغيير",
+        "إصلاح",
+        "حلم",
+      ],
+    },
+    {
+      "verb": "يزن",
+      "objects": [
+        "جسم",
+        "طعام",
+        "حقيبة",
+        "ذهب",
+        "سائل",
+        "حجر كريم",
+        "ورقة",
+        "كتلة",
+        "عينة",
+        "أوزان",
+      ],
+    },
+    {
+      "verb": "يكتب",
+      "objects": [
+        "رسالة",
+        "مقال",
+        "كتاب",
+        "مذكرة",
+        "تقرير",
+        "مدونة",
+        "شهادة",
+        "قصة",
+        "رسم",
+        "ملاحظات",
+      ],
+    },
+    {
+      "verb": "يرسم",
+      "objects": [
+        "صورة",
+        "رسم",
+        "لوحة",
+        "مخطط",
+        "خارطة",
+        "تصميم",
+        "شكل",
+        "رمز",
+        "جرافيك",
+        "فن",
+      ],
+    },
+  ]
+  const conjugateArabicVerbs = (subject, verb) => {
+    switch (subject) {
+      case "أنا":
+        return `أ${verb.slice(1)}`
+      case "أنتم":
+        return `ت${verb.slice(1)}`
+      case "أنتن":
+        return `ت${verb.slice(1)}`
+      case "أنتَ":
+        return `ت${verb.slice(1)}`
+      case "أنتُما":
+        return `ت${verb.slice(1)}`
+      case "أنتِ":
+        return `ت${verb.slice(1)}`
+      case "نحن":
+        return `ن${verb.slice(1)}`
+      case "هم":
+        return `ي${verb.slice(1)}`
+      case "هما":
+        return `ي${verb.slice(1)}`
+      case "هن":
+        return `ي${verb.slice(1)}`
+      case "هو":
+        return `ي${verb.slice(1)}`
+      case "هي":
+        return `ت${verb.slice(1)}`
+      default:
+        throw new Error("Invalid subject")
+    }
+  }
+  const subject = chooseRandomElement(arabicSubjects)
+  const action = chooseRandomElement(arabicActions)
+  return `${subject} ${conjugateArabicVerbs(
+    subject,
+    action.verb
+  )} ${chooseRandomElement(action.objects)}`
+}
+const generateRandomJapaneseSentence = function () {
+  const subjects = [
+    "私",
+    "僕",
+    "俺",
+    "私たち",
+    "僕たち",
+    "俺たち",
+    "あなた",
+    "あなたたち",
+    "あなた方",
+    "彼",
+    "彼女",
+    "彼ら",
+    "彼女ら",
+  ]
+  const actions = [
+    { verb: "する", objects: ["仕事", "勉強", "結婚", "練習"] },
+    { verb: "仕事する" },
+    {
+      verb: "作る",
+      objects: [
+        "料理",
+        "絵",
+        "プログラム",
+        "家",
+        "服",
+        "音楽",
+        "映画",
+        "ケーキ",
+        "アート",
+        "デザイン",
+      ],
+    },
+    { verb: "出る", objects: ["家", "店", "学校", "オフィス", "部屋"] },
+    { verb: "勉強する" },
+    { verb: "動く" },
+    { verb: "始まる" },
+    { verb: "寝る" },
+    { verb: "帰る" },
+    { verb: "旅行する" },
+    { verb: "書く" },
+    { verb: "歌う", objects: ["歌", "曲", "メロディー"] },
+    { verb: "止まる" },
+    { verb: "泳ぐ" },
+    {
+      verb: "着る",
+      objects: ["服", "ジャケット", "コート", "ドレス", "ズボン"],
+    },
+    { verb: "知る", objects: ["事実", "情報", "答え", "場所", "人"] },
+    { verb: "笑う" },
+    { verb: "終わる" },
+    { verb: "結婚する" },
+    { verb: "練習する" },
+    { verb: "聞く", objects: ["音楽", "話", "ラジオ", "ニュース"] },
+    {
+      verb: "行く",
+      objects: ["学校", "レストラン", "公園", "映画館", "海", "街"],
+    },
+    { verb: "見る", objects: ["映画", "本", "景色", "テレビ", "絵"] },
+    { verb: "読む", objects: ["新聞", "小説", "詩", "雑誌", "本"] },
+    { verb: "買う", objects: ["服", "本", "食べ物", "商品", "ギフト"] },
+    { verb: "走る", objects: ["マラソン", "コース", "距離", "レース"] },
+    { verb: "起きる" },
+    { verb: "運転する", objects: ["車", "バス", "自動車"] },
+    { verb: "食べる", objects: ["食事", "ご飯", "料理", "フルーツ", "野菜"] },
+    { verb: "飲む", objects: ["水", "お茶", "コーヒー", "ジュース", "酒"] },
+  ]
+  const subject = chooseRandomElement(subjects)
+  const action = chooseRandomElement(actions)
+  const { objects, verb } = action
+  const sentence = objects
+    ? `${subject} は ${chooseRandomElement(objects)} を ${verb}。`
+    : `${subject} は ${verb}。`
+  return sentence
+}
+const generateRandomHebrewSentence = () => {
+  const hebrewSubjects = [
+    "אֲנִי",
+    "אַתָּה",
+    "אַתְּ",
+    "הוּא",
+    "הִיא",
+    "אֲנַחְנוּ",
+    "אַתֶּם",
+    "אַתֶּן",
+    "הֵם",
+    "הֵן",
+  ]
+  const conjugateHebrewVerb = (subject, verb) => {
+    const { ms, fs, mp, fp } = verb
+    switch (subject) {
+      case "אֲנִי":
+        return ms
+      case "אַתָּה":
+        return ms
+      case "אַתְּ":
+        return fs
+      case "הוּא":
+        return ms
+      case "הִיא":
+        return fs
+      case "אֲנַחְנוּ":
+        return mp
+      case "אַתֶּם":
+        return mp
+      case "אַתֶּן":
+        return fp
+      case "הֵם":
+        return ms
+      case "הֵן":
+        return fp
+    }
+  }
+  const hebrewActions = [
+    {
+      verb: {
+        infinitive: "כְּתוֹב",
+        ms: "כּוֹתֵב",
+        fs: "כּוֹתֶבֶת",
+        mp: "כּוֹתְבִים",
+        fp: "כּוֹתְבוֹת",
+      },
+      objects: [
+        "סֵפֶר",
+        "מַכְתֵּב",
+        "דִּבְרֵי תוֹרָה",
+        "יוֹםָן",
+        "מַגָּזִין",
+        "מַשְׁמָעוֹת",
+        "שִׁיר",
+        "רוֹמָן",
+        "מֵאָמַר",
+        "פּוֹסְטֶר",
+      ],
+    },
+    {
+      verb: {
+        infinitive: "לְהוֹסִיף",
+        ms: "מוֹסִיף",
+        fs: "מוֹסִיפָה",
+        mp: "מוֹסִיפִים",
+        fp: "מוֹסִיפוֹת",
+      },
+      objects: [
+        "אִפְשָׁרוּת",
+        "אֶנֶרְגִיָּה",
+        "זְמַן",
+        "יַדְעַן",
+        "כֹּחַ",
+        "מִסְפָּרִים",
+        "מֵידָע",
+        "מֶלַח",
+        "מַסְמֵר",
+        "מַסְפֵּר",
+        "מַסָּה",
+        "פְּרָטִים",
+        "פֵּרוֹת",
+        "צְבָע",
+        "שִׁמְשׁוֹן",
+        "שֶׁקֶל",
+        "שֵׂיבָה",
+        "תַּכְשִׁיטִים",
+        "תַּמְרוּץ",
+        "תַּמְרוּצִים",
+      ],
+    },
+    {
+      verb: {
+        infinitive: "לְהַעֲרִיץ",
+        ms: "מַעֲרִיץ",
+        fs: "מַעֲרִיצָה",
+        mp: "מַעֲרִיצִים",
+        fp: "מַעֲרִיצוֹת",
+      },
+      objects: [
+        "אָדָם",
+        "תַמוּנָה",
+        "יֹצֵר",
+        "צִיּוּן",
+        "יֹופִי",
+        "פְרָטִיוּת",
+        "גְאוֹנֵךְ",
+        "כָּשֵׁר",
+        "קְשָׁרֵיהוּת",
+        "חוּפָּה",
+      ],
+    },
+    {
+      verb: {
+        infinitive: "לְאַרְגֵּן",
+        ms: "מְאַרְגֵּן",
+        fs: "מְאַרְגֶּנֶת",
+        mp: "מְאַרְגְּנִים",
+        fp: "מְאַרְגְּנוֹת",
+      },
+      root: "אדן",
+      objects: [
+        "אִירוּועִים",
+        "אִירוּעִים",
+        "דַּפָּנוֹת",
+        "חִתּוּנוֹת",
+        "חֶדֶר",
+        "יָמִים",
+        "כִּיסוֹאִין",
+        "כְּנִסְיָה",
+        "מִסְדְרִים",
+        "סִדְרֵי",
+        "סִדּוּר",
+        "סֵפֶר",
+        "עֵץ",
+        "פַּרְחֵי",
+        "פַּרְטִים",
+        "פְּעֻלּוֹת",
+        "שֻׁלְחָן",
+        "שׁוֹלֵי",
+        "תְּמוּנָה",
+        "תַּכְנִים",
+      ],
+    },
+    {
+      verb: {
+        infinitive: "מַאֲמִין",
+        ms: "מַאֲמִין",
+        fs: "מַאֲמִינָה",
+        mp: "מַאֲמִינִים",
+        fp: "מַאֲמִינוֹת",
+      },
+      objects: [
+        "אֱמוּנָה",
+        "אַדְמִירְצָה",
+        "אַמּוּנָה",
+        "אָהַבְתָּ",
+        "גִּאוּלָּה",
+        "דְּבָקוּת",
+        "הַבִּטָּחוֹן",
+        "חִיל",
+        "טְמוּנוּת",
+        "תְּקִיָּה",
+        "תְּשׁוּעָה",
+      ],
+    },
+    {
+      verb: {
+        infinitive: "לְהִשְׁתַּייֵּךְ",
+        ms: "מִשְׁתַּיֵּךְ",
+        fs: "מִשְׁתַּיֶּכֶת",
+        mp: "מִשְׁתַּיְּכִים",
+        fp: "מִשְׁתַּיְּכוֹת",
+      },
+      objects: [
+        "דְּת",
+        "זְמַן",
+        "לֵב",
+        "מִשְפָּחָה",
+        "מָקוֹם",
+        "עַם",
+        "קֶהֶל",
+        "קָהָל",
+        "קָהָלִים",
+        "תִּקוּפָה",
+      ],
+    },
+    {
+      verb: {
+        infinitive: "לְהַבְרִישׁ",
+        ms: "מַבְרִישׁ",
+        fs: "מַבְרִישָׁה",
+        mp: "מַבְרִישִׁים",
+        fp: "מַבְרִישׁוֹת",
+      },
+      objects: [
+        "שֵׁיעַר",
+        "שִׁנַּיִם",
+        "בֶּרֶזֶל",
+        "פַּיִס",
+        "מָסָן",
+        "מַשְׁטֵג",
+        "כַּפָּיוֹן",
+        "סַמְרֵטוּט",
+        "צְעֵרֵי",
+        "לַחֲצֵנֵי",
+      ],
+    },
+    {
+      verb: {
+        infinitive: "בוֹנֶה",
+        ms: "בּוֹנֶה",
+        fs: "בּוֹנָה",
+        mp: "בּוֹנִים",
+        fp: "בּוֹנוֹת",
+      },
+      objects: [
+        "בַּיִת",
+        "גַּג",
+        "חָדֵר",
+        "קִיר",
+        "פֶּתַח",
+        "חַלּוֹן",
+        "מִדְרָגָה",
+        "בְּנִיָּין",
+        "עִיצוּב",
+        "מְקוֹמָהוּת",
+      ],
+    },
+    {
+      verb: {
+        infinitive: "קוֹנֶה",
+        ms: "קוֹנֶה",
+        fs: "קוֹנָה",
+        mp: "קוֹנִים",
+        fp: "קוֹנוֹת",
+      },
+      objects: [
+        "אֶלֶפַנִים",
+        "אוֹתָנִי",
+        "בַּגֶּדֶ",
+        "דֶּירָה",
+        "חֲגִים",
+        "חוֹל",
+        "כָּרָמִים",
+        "מִצְבֵּר",
+        "מַזְרֵן",
+        "מַכְלֵל",
+        "מַלְחֶם",
+        "מָשֵׁק",
+        "סֵפֶר",
+        "פֶּרַח",
+        "קְטַנִּיּוֹת",
+        "קְנִיּוֹן",
+        "רֶכֶב",
+        "תְּכוּנָה",
+        "תֵּקֶף",
+      ],
+    },
+    {
+      verb: {
+        infinitive: "קוֹרֵא",
+        ms: "קוֹרֵא",
+        fs: "קוֹרֵאת",
+        mp: "קוֹרְאִים",
+        fp: "קוֹרְאוֹת",
+      },
+      objects: [
+        "אָדָם",
+        "שֵׁם",
+        "טֵלֵפוֹן",
+        "חֲבֵר",
+        "רַחֵל",
+        "מְסִיבָה",
+        "זְמַן",
+        "מִנְיָן",
+        "מְבוֹצָר",
+        "קוֹל",
+      ],
+    },
+    {
+      verb: {
+        infinitive: "לָשֵׂאת",
+        ms: "נוֹשֵׂא",
+        fs: "נוֹשֵׂאת",
+        mp: "נוֹשְׂאִים",
+        fp: "נוֹשְׂאוֹת",
+      },
+      objects: [
+        "אֶבֶן",
+        "אֶגְרוֹף",
+        "דְּבַרִים",
+        "חָפֶז",
+        "כִּיסֵא",
+        "כַּרְטִיס",
+        "מַזְלֵג",
+        "מַשְׁאוֹת",
+        "סֵפֶר",
+        "סֶלַע",
+        "קַרְטוֹן",
+        "קוֹרֵץ",
+        "תְּיקוּ",
+        "תַּיק",
+        "תַּיקָה",
+        "תַּמְרוּת",
+      ],
+    },
+    {
+      verb: {
+        infinitive: "לִלְכּוֹד",
+        ms: "לוֹכֵד",
+        fs: "לוֹכֶדֶת",
+        mp: "לוֹכְדִים",
+        fp: "לוֹכְדוֹת",
+      },
+      objects: [
+        "בַּיָּעִים",
+        "גַּנָּב",
+        "דַּג",
+        "דָּגִים",
+        "זְמַנִּים",
+        "חִטָּה",
+        "חֶבֶר",
+        "חַזִּיר",
+        "חַיָּה",
+        "חַרְקִי",
+        "טֶרֶף",
+        "יָרֵק",
+        "לַקִּידָרוֹן",
+        "עֲטַלֵּף",
+        "פַּרְפַּרֵים",
+        "פּוֹקֵד",
+        "צִפּוֹר",
+        "תַּז",
+        "תַּזְרֵים",
+        "תַּפְרִיטִים",
+      ],
+    },
+    {
+      verb: {
+        infinitive: "לִבְחוֹר",
+        ms: "בּוֹחֵר",
+        fs: "בּוֹחֶרֶת",
+        mp: "בּוֹחֲרִים",
+        fp: "בּוֹחֲרוֹת",
+      },
+      objects: [
+        "אֲפִלּוּ",
+        "בְּאָפְשָׁרוּת",
+        "בְּדֶרֶךְ",
+        "בְּחִבְרִים",
+        "בְּחִרּוּת",
+        "בְּחִרּוּת",
+        "בְּחֵירָה",
+        "בְּמָקוֹם",
+        "בְּסֵפֶר",
+        "בְּצַדִּיקִים",
+        "בְּרֵעִים",
+        "בְּשָׁפְעָה",
+        "דְּרָכִים",
+        "דִּגְלִים",
+        "הַסְּכָּמוֹת",
+        "חַבְרֵי",
+        "מְדַרְגּוֹת",
+        "עִקָּרוֹנוֹת",
+        "צַדִּיקִים",
+        "שְׁפָע",
+      ],
+    },
+    {
+      verb: {
+        infinitive: "מַשְׁוִיעֵר",
+        ms: "מְנַקֶּה",
+        fs: "מְנַקָּה",
+        mp: "מְנַקִּים",
+        fp: "מְנַקּוֹת",
+      },
+      objects: [
+        "בַּיִת",
+        "חֶדֶר",
+        "שֻׁלְחָן",
+        "כִּסֵּא",
+        "אָדָם",
+        "צַלֵּחַת",
+        "כַּף",
+        "מָטְרֵסָה",
+        "כְּרֵיוֹן",
+        "תַּפְרִיטִים",
+      ],
+    },
+    {
+      verb: {
+        infinitive: "לְהַשְׁווֹת",
+        ms: "מַשְׁוֶה",
+        fs: "מַשְׁוָה",
+        mp: "מַשְׁוִים",
+        fp: "מַשְׁווֹת",
+      },
+      objects: [
+        "מְחִירִים",
+        "גוֹדְלִים",
+        "מַרְכֵּזִים",
+        "מִשְׁקָלוֹת",
+        "טַעֲמִים",
+        "קְטַנִּיּוֹת",
+        "מַסִּיבוֹת",
+        "צְבָעִים",
+        "מַסְכְּנוֹת",
+        "סַכָּנוֹת",
+      ],
+    },
+    {
+      verb: {
+        infinitive: "לִשְׁקוֹל",
+        ms: "שׁוֹקֵל",
+        fs: "שׁוֹקֶלֶת",
+        mp: "שׁוֹקְלִים",
+        fp: "שׁוֹקְלוֹת",
+      },
+      objects: [
+        "אֵבֶן",
+        "אוֹכֶל",
+        "דֶּגֶם",
+        "דֶּרֶךְ",
+        "דַּבָּרִים",
+        "דַּעַת",
+        "הַבַּגָּרָה",
+        "זְמַן",
+        "חָמֵר",
+        "טוֹב",
+        "כְּלִי",
+        "מַטְרֵס",
+        "מַסָּכָה",
+        "מָזָל",
+        "עֵץ",
+        "עֵץִים",
+        "צְבָע",
+        "קְטַנִּיּוֹת",
+        "קַדְמִי",
+        "תַּפְרִיט",
+      ],
+    },
+    {
+      verb: {
+        infinitive: "לְהָכִיל",
+        ms: "מֵכִיל",
+        fs: "מְכִילָה",
+        mp: "מְכִילִים",
+        fp: "מְכִילוֹת",
+      },
+      objects: [
+        "אֲוִיר",
+        "אִגְרֵף",
+        "אֵשׁ",
+        "אֹכֶל",
+        "חַיִּים",
+        "חָמֵר",
+        "כַּלִּים",
+        "כֹּחוֹת",
+        "מַחְזֵק",
+        "מַחְצֵב",
+        "מַים",
+        "מָקוֹם",
+        "נַפְט",
+        "פֶּטַח",
+        "קְטַנִּיּוֹת",
+        "קֶדֶר",
+        "קָנֶה",
+        "רוּחוֹת",
+        "שָׁמֶן",
+        "תַּפְרִיטִים",
+      ],
+    },
+    {
+      verb: {
+        infinitive: "לְהַמְשִׁיךְ",
+        ms: "מַמְשִׁיךְ",
+        fs: "מַמְשִׁיכָה",
+        mp: "מַמְשִׁיכִים",
+        fp: "מַמְשִׁיכוֹת",
+      },
+      objects: [
+        "דְּרֶךְ",
+        "זְמַן",
+        "חַיִים",
+        "טוֹבָה",
+        "יוֹם",
+        "מְבוּצַּר",
+        "מַחֲרוּז",
+        "מַכְתִּימִים",
+        "מַרְקוֹם",
+        "מַשְׁתֵּה",
+        "מַשְׂקִיעַ",
+        "נְסִיעָה",
+        "סְרַט",
+        "סִפְרָה",
+        "סוּף",
+        "שִׁיחָה",
+        "תְּקוּפָה",
+        "תַּהֲלִיךְ",
+      ],
+    },
+    {
+      verb: {
+        infinitive: "לַעֲלוֹת",
+        ms: "עוֹלֶה",
+        fs: "עוֹלָה",
+        mp: "עוֹלִים",
+        fp: "עוֹלוֹת",
+      },
+      objects: [
+        "אֲבַקֵּשׁ",
+        "אֲרֻכָּה",
+        "אָפֵּשׁ",
+        "הָזְמָן",
+        "יָקָר",
+        "כֶּסֶף",
+        "מַחֲרוּת",
+        "מַסָּג",
+        "שִׁנָּיִם",
+        "תַּחֲבֵרֵי",
+      ],
+    },
+    {
+      verb: {
+        infinitive: "יוֹצֵר",
+        ms: "יוֹצֵר",
+        fs: "יוֹצֵר",
+        mp: "יוֹצֵר",
+        fp: "יוֹצֵר",
+      },
+      objects: [
+        "עוֹלָם",
+        "יְצִירָה",
+        "דַּעַת",
+        "בְּרִיאוּת",
+        "חֵיִם",
+        "יְצִירוֹת",
+        "מִסְגְּרָה",
+        "יֹוצְרֵי",
+        "שֵׁם",
+        "עֵשֶׂה",
+      ],
+    },
+  ]
+  const subject = chooseRandomElement(hebrewSubjects)
+  const action = chooseRandomElement(hebrewActions)
+  return `${subject} ${conjugateHebrewVerb(
+    subject,
+    action.verb
+  )} ${chooseRandomElement(action.objects)}.`
+}
+export const generateRandomCopy = (
+  sentenceFunc = chooseRandomElement([
+    generateRandomArabicSentence,
+    generateRandomEnglishSentence,
+    generateRandomFinnishSentence,
+    generateRandomGreekSentence,
+    generateRandomHebrewSentence,
+    generateRandomJapaneseSentence,
+  ]),
+  i = randomNumber(),
+  copy = ""
+) =>
+  i <= 0
+    ? copy.trim()
+    : generateRandomCopy(sentenceFunc, i - 1, `${copy} ${sentenceFunc()}`)
+const generateFinnishName = () => {
+  const finnishFirstNames = [
+    "Akseli",
+    "Aleksis",
+    "Alvar",
+    "Antero",
+    "Antti",
+    "Ari",
+    "Armas",
+    "Eero",
+    "Eino",
+    "Erkki",
+    "Esko",
+    "Ilmari",
+    "Jalmari",
+    "Janne",
+    "Jari",
+    "Johannes",
+    "Juha",
+    "Juhani",
+    "Jukka",
+    "Jussi",
+    "Kaarle",
+    "Kalle",
+    "Lauri",
+    "Markku",
+    "Matti",
+    "Mika",
+    "Mikael",
+    "Olavi",
+    "Oskari",
+    "Pekka",
+    "Risto",
+    "Sami",
+    "Tapani",
+    "Tapio",
+    "Teemu",
+    "Timo",
+    "Toivo",
+    "Urho",
+    "Veikko",
+    "Väinö",
+  ]
+  const finnishLastNames = [
+    "Korhonen",
+    "Virtanen",
+    "Mäkinen",
+    "Nieminen",
+    "Häkkinen",
+    "Laine",
+    "Heikkinen",
+    "Koskinen",
+    "Järvinen",
+    "Lehtinen",
+    "Lehtonen",
+    "Saarinen",
+    "Salminen",
+    "Tuominen",
+    "Laitinen",
+    "Lindholm",
+    "Mäkelä",
+    "Hämäläinen",
+    "Lampinen",
+    "Toivonen",
+    "Rantanen",
+    "Heikkilä",
+    "Kinnunen",
+    "Nurmi",
+    "Laitinen",
+    "Kallio",
+    "Salonen",
+    "Mikkonen",
+    "Laaksonen",
+    "Heinonen",
+    "Jokinen",
+    "Koivisto",
+    "Lahtinen",
+    "Hiltunen",
+    "Kettunen",
+    "Mattila",
+    "Koivunen",
+    "Pelkonen",
+    "Karjalainen",
+    "Ojala",
+  ]
+  return `${chooseRandomElement(finnishFirstNames)} ${chooseRandomElement(
+    finnishLastNames
+  )}`
+}
+const generateAmericanName = () => {
+  const americanFirstNames = [
+    "James",
+    "John",
+    "Robert",
+    "Michael",
+    "William",
+    "David",
+    "Richard",
+    "Joseph",
+    "Thomas",
+    "Charles",
+    "Patricia",
+    "Jennifer",
+    "Linda",
+    "Elizabeth",
+    "Susan",
+    "Jessica",
+    "Sarah",
+    "Karen",
+    "Nancy",
+    "Lisa",
+    "Margaret",
+    "Betty",
+    "Sandra",
+    "Ashley",
+    "Dorothy",
+    "Kimberly",
+    "Emily",
+    "Donna",
+    "Michelle",
+    "Carol",
+  ]
+  const americanLastNames = [
+    "Smith",
+    "Johnson",
+    "Williams",
+    "Brown",
+    "Jones",
+    "Garcia",
+    "Miller",
+    "Davis",
+    "Rodriguez",
+    "Martinez",
+    "Hernandez",
+    "Lopez",
+    "Gonzalez",
+    "Wilson",
+    "Anderson",
+    "Thomas",
+    "Taylor",
+    "Moore",
+    "Jackson",
+    "Martin",
+    "Lee",
+    "Perez",
+    "Thompson",
+    "White",
+    "Harris",
+    "Sanchez",
+    "Clark",
+    "Ramirez",
+    "Lewis",
+    "Robinson",
+  ]
+  return `${chooseRandomElement(americanFirstNames)} ${chooseRandomElement(
+    americanLastNames
+  )}`
+}
+export const generateRandomName = () =>
+  chooseRandomElement([generateAmericanName, generateFinnishName])()
+const toEmail = name => {
   const normalized = name.normalize("NFD")
-
-  // Replace special characters like ä and ö with their English equivalents
   const replacedSpecialChars = normalized.replace(/[\u0300-\u036f]/g, "")
-
-  // Convert the name to lowercase
   const lowercaseName = replacedSpecialChars.toLowerCase()
-
-  // Remove non-alphanumeric characters and replace spaces with dots
   const formattedName = lowercaseName
     .replace(/[^a-z0-9 ]/g, "")
     .replace(/\s+/g, ".")
-
   return formattedName + "@example.com"
 }
-
 const randomName = generateRandomName()
-
-console.log(randomName)
-console.log(toEmail(randomName))
-console.log(generateRandomCopy())
-
-/**
-する (suru) - to do
-仕事する (shigoto suru) (しごとする) - to work
-作る (tsukuru) (つくる) - to make, to create
-出る (deru) (でる) - to go out, to leave
-勉強する (benkyou suru) (べんきょうする) - to study
-動く (ugoku) (うごく) - to move
-始まる (hajimaru) (はじまる) - to begin, to start
-寝る (neru) (ねる) - to sleep
-帰る (kaeru) (かえる) - to go back, to return
-旅行する (ryokou suru) (りょこうする) - to travel
-書く (kaku) (かく) - to write
-来る (kuru) (くる) - to come
-歌う (utau) (うたう) - to sing
-止まる (tomaru) (とまる) - to stop
-泳ぐ (oyogu) (およぐ) - to swim
-着る (kiru) (きる) - to wear
-知る (shiru) (しる) - to know
-笑う (warau) (わらう) - to laugh
-終わる (owaru) (おわる) - to end, to finish
-結婚する (kekkon suru) (けっこんする) - to get married
-練習する (renshuu suru) (れんしゅうする) - to practice
-聞く (kiku) (きく) - to listen, to ask
-行く (iku) (いく) - to go
-見る (miru) (みる) - to see, to look at
-読む (yomu) (よむ) - to read
-買う (kau) (かう) - to buy
-走る (hashiru) (はしる) - to run
-起きる (okiru) (おきる) - to wake up, to get up
-運転する (unten suru) (うんてんする) - to drive
-食べる (たべる) - to eat
-飲む (nomu) (のむ) - to drink
-
-const actions = [
-{ verb: "する", objects: ["仕事", "勉強", "結婚", "練習"] },
-{ verb: "仕事する"},
-{ verb: "作る", objects: ["料理", "絵", "プログラム", "家", "服", "音楽", "映画", "ケーキ", "アート", "デザイン"] },
-{ verb: "出る", objects: ["家", "店", "学校", "オフィス", "部屋"] },
-{ verb: "勉強する"},
-{ verb: "動く"},
-{ verb: "始まる"},
-{ verb: "寝る"},
-{ verb: "帰る"},
-{ verb: "旅行する"},
-{ verb: "書く"},
-{ verb: "歌う", objects: ["歌", "曲", "メロディー"] },
-{ verb: "止まる"},
-{ verb: "泳ぐ"},
-{ verb: "着る", objects: ["服", "ジャケット", "コート", "ドレス", "ズボン"] },
-{ verb: "知る", objects: ["事実", "情報", "答え", "場所", "人"] },
-{ verb: "笑う"},
-{ verb: "終わる"},
-{ verb: "結婚する"},
-{ verb: "練習する"},
-{ verb: "聞く", objects: ["音楽", "話", "ラジオ", "ニュース"] },
-{ verb: "行く", objects: ["学校", "レストラン", "公園", "映画館", "海", "街"] },
-{ verb: "見る", objects: ["映画", "本", "景色", "テレビ", "絵"] },
-{ verb: "読む", objects: ["新聞", "小説", "詩", "雑誌", "本"] },
-{ verb: "買う", objects: ["服", "本", "食べ物", "商品", "ギフト"] },
-{ verb: "走る", objects: ["マラソン", "コース", "距離", "レース"] },
-{ verb: "起きる"},
-{ verb: "運転する", objects: ["車", "バス", "自動車"] },
-{ verb: "食べる", objects: ["食事", "ご飯", "料理", "フルーツ", "野菜"] },
-{ verb: "飲む", objects: ["水", "お茶", "コーヒー", "ジュース", "酒"] },
-]
-
-    Singular: 私 (わたし) - I (neutral), 僕 (ぼく) - I (masculine), 俺 (おれ) - I (casual masculine)
-    Plural: 私たち (わたしたち) - we, 僕たち (ぼくたち) - we, 俺たち (おれたち) - we
-
-Second Person:
-
-    Singular: あなた - you (neutral, can be used formally or informally)
-    Plural: あなたたち - you all, あなた方 (あなたかた) - you all (more formal)
-
-Third Person:
-
-    Singular: 彼 (かれ) - he, 彼女 (かのじょ) - she
-    Plural: 彼ら (かれら) - they (masculine), 彼女ら (かのじょら) - they (feminine)
-    
-
-const subjects = ["私", "僕", "俺", "私たち", "僕たち", "俺たち", "あなた", "あなたたち", "あなた方", "彼", "彼女", "彼ら", "彼女ら"]
-
-
-    あなた方 は 帰る。 (Incorrect)
-    あなたたち は 帰る。
-
-    彼女ら は 止まる。 (Incorrect)
-    彼女たち は 止まる。
-
-    彼女ら は 仕事する。 (Incorrect)
-    彼女たち は 仕事する。
- */
+console.info(randomName)
+console.info(toEmail(randomName))
+console.info(generateRandomCopy())
