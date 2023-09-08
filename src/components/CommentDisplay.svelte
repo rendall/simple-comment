@@ -2,15 +2,21 @@
   import { onMount } from "svelte"
   import { isRtl } from "../lib/shared-utilities"
   import {
-    formatDate,
+    longFormatDate,
     idIconDataUrl,
     toParagraphs,
+    shortFormatDate,
   } from "../frontend-utilities"
   import type { Comment, User } from "../lib/simple-comment-types"
   import SkeletonCommentDelete from "./low-level/SkeletonCommentDelete.svelte"
+  import DeleteIcon from "./icons/DeleteIcon.svelte"
   import CommentList from "./CommentList.svelte"
   import CommentInput from "./CommentInput.svelte"
   import CommentEdit from "./CommentEdit.svelte"
+  import {
+    ClosedCaptionAlt as ReplyIcon,
+    Edit as EditIcon,
+  } from "carbon-icons-svelte"
 
   export let comment: (Comment & { isNew?: true }) | undefined = undefined
   export let showReply: string
@@ -97,7 +103,7 @@
       </div>
     </header>
     <article class="comment-body">
-      <p>This comment was deleted {formatDate(comment.dateDeleted)}</p>
+      <p>This comment was deleted {longFormatDate(comment.dateDeleted)}</p>
       <div class="button-row">
         {#if currentUser?.isAdmin && !comment.replies?.length}
           <button on:click={onDeleteClick}> Delete </button>
@@ -116,7 +122,7 @@
         <p class="user-name" dir="auto">
           {comment.user.name ?? "Anonymous"}
         </p>
-        <p class="comment-date" dir="auto">{formatDate(comment.dateCreated)}</p>
+        <p class="comment-date" dir="auto" title="{longFormatDate(comment.dateCreated)}">{shortFormatDate(comment.dateCreated)}</p>
       </div>
     </header>
     <article
@@ -149,27 +155,27 @@
         />
       {:else if !isEditing}
         <div class="button-row comment-footer">
+          <button
+            on:click={onOpenCommentInput(comment.id)}
+            class="comment-reply-button"
+          >
+            <ReplyIcon /> Reply
+          </button>
+
           {#if currentUser && currentUser?.id === comment.user?.id && canEdit(comment)}
             <button
               on:click={() => onEditClick(comment)}
               class="comment-edit-button"
             >
-              Edit
+              <EditIcon /> Edit
             </button>
           {/if}
 
           {#if currentUser?.isAdmin || (currentUser && currentUser?.id === comment.user?.id && !comment?.replies?.length)}
             <button on:click={onDeleteClick} class="comment-delete-button">
-              Delete
+              <DeleteIcon /> Delete
             </button>
           {/if}
-
-          <button
-            on:click={onOpenCommentInput(comment.id)}
-            class="comment-reply-button"
-          >
-            Reply
-          </button>
         </div>
       {/if}
     </article>

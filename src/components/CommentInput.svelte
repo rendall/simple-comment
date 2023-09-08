@@ -212,6 +212,7 @@
     dir="auto"
   />
   <Login {currentUser} />
+  {#if !currentUser || (commentText && commentText.length)}
   <div class="button-row">
     {#if onCancel !== null}
       <button class="comment-cancel-button" type="button" on:click={onCancel}
@@ -220,4 +221,5 @@
     {/if}
     <button class="comment-submit-button" type="submit">{buttonCopy}</button>
   </div>
+  {/if}
 </form>

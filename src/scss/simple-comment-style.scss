@@ -89,7 +89,7 @@ $highlight-text-color: color.scale(
 
   .button-row {
     display: flex;
-    direction: row;
+    flex-direction: row;
     justify-content: flex-end;
     position: relative;
 
@@ -319,7 +319,7 @@ $highlight-text-color: color.scale(
       padding: 0;
       margin: 0;
 
-      &:not(.is-root) {
+      &:not(.is-root):not(.is-deep) {
         margin-left: 2rem;
       }
 
@@ -362,16 +362,16 @@ $highlight-text-color: color.scale(
           .comment-info {
             display: flex;
             flex-direction: row;
-            justify-content: space-between;
+            justify-content: flex-start;
             width: calc(100% - 3rem - 1.3rem);
 
             .user-name {
-              white-space: nowrap;
-              overflow: hidden;
-              text-overflow: ellipsis;
               color: $primary-color;
               font-weight: bold;
               margin-right: 1rem;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
             }
 
             .comment-date {
@@ -401,6 +401,39 @@ $highlight-text-color: color.scale(
 
         .comment-footer {
           margin-bottom: 1rem;
+
+          &.button-row {
+            flex-direction: row;
+            button {
+              border: none;
+              color: $highlight-text-color;
+              display: flex;
+              font-size: 0.8rem;
+              justify-content: space-between;
+              padding: 0;
+              text-transform: uppercase;
+              width: unset;
+
+              svg {
+                margin-right: 0.2rem;
+              }
+
+              &:hover {
+                font-weight: normal;
+                text-decoration: underline;
+              }
+
+              &:first-of-type {
+                margin-right: auto;
+              }
+
+              &.comment-delete-button,
+              &.comment-edit-button {
+                color: $error-red
+              }
+
+            }
+          }
         }
 
         &.is-new {
@@ -411,7 +444,7 @@ $highlight-text-color: color.scale(
         &.has-replies {
           position: relative;
 
-          &::before {
+          &::after {
             border-left: 1px solid #3287e6;
             bottom: -0.5rem;
             content: "";
