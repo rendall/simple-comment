@@ -218,14 +218,19 @@ export const shortFormatDate = (
     now.getMonth() === dateObj.getMonth() &&
     now.getDate() === dateObj.getDate()
 
-  if (isToday) return new Date(date).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
-  else return new Date(date).toLocaleDateString(locale, {
-    year: isThisYear ? undefined : "numeric",
-    month: isToday ? undefined : "short",
-    day: isToday ? undefined : "numeric",
-    hour: isToday ? "numeric" : undefined,
-    minute: isToday ? "numeric" : undefined,
-  })
+  if (isToday)
+    return new Date(date).toLocaleTimeString([], {
+      hour: "numeric",
+      minute: "2-digit",
+    })
+  else
+    return new Date(date).toLocaleDateString(locale, {
+      year: isThisYear ? undefined : "numeric",
+      month: isToday ? undefined : "short",
+      day: isToday ? undefined : "numeric",
+      hour: isToday ? "numeric" : undefined,
+      minute: isToday ? "numeric" : undefined,
+    })
 }
 
 export const longFormatDate = (

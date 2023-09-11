@@ -393,10 +393,6 @@ $highlight-text-color: color.scale(
           p:last-of-type {
             margin-bottom: 1rem;
           }
-
-          &.is-rtl {
-            text-align: right;
-          }
         }
 
         .comment-footer {
@@ -404,11 +400,14 @@ $highlight-text-color: color.scale(
 
           &.button-row {
             flex-direction: row;
+            justify-content: flex-start;
+
             button {
               border: none;
               color: $highlight-text-color;
               display: flex;
-              font-size: 0.8rem;
+              font-size: 1rem;
+              align-items: center;
               justify-content: space-between;
               padding: 0;
               text-transform: uppercase;
@@ -423,15 +422,25 @@ $highlight-text-color: color.scale(
                 text-decoration: underline;
               }
 
-              &:first-of-type {
-                margin-right: auto;
-              }
-
               &.comment-delete-button,
               &.comment-edit-button {
-                color: $error-red
+                color: $error-red;
               }
+            }
 
+            .overflow-menu {
+              display: flex;
+              justify-content: flex-end;
+              flex-grow: 1;
+              overflow: hidden;
+              will-change: max-width;
+
+              button {
+                margin-right: 1rem;
+                &:last-of-type {
+                  margin-right: 0;
+                }
+              }
             }
           }
         }
@@ -525,6 +534,11 @@ $highlight-text-color: color.scale(
             overflow: hidden;
             position: relative;
             margin-bottom: 0;
+          }
+        }
+        &.is-rtl {
+          .comment-body {
+            text-align: right;
           }
         }
       }

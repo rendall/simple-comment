@@ -1,7 +1,7 @@
 /**
  * @jest-environment jsdom
  */
-import { formatDate, threadComments } from "../../frontend-utilities"
+import { longFormatDate, threadComments } from "../../frontend-utilities"
 import { Comment } from "../../lib/simple-comment-types"
 import { mockCommentTree, mockTopic } from "../mockData"
 import { performance } from "perf_hooks"
@@ -134,7 +134,7 @@ describe("debounce", () => {
   })
 })
 
-describe("formatDate", () => {
+describe("longFormatDate", () => {
   const localesArr = [
     ["af-ZA", "23 Julie 2023 13:31"],
     ["ar-SA", "٥ محرم ١٤٤٥ هـ في ١:٣١ م"],
@@ -172,13 +172,13 @@ describe("formatDate", () => {
     "should format %s date to %s",
     (locale, expectedFormat) => {
       const date = new Date(2023, 6, 23, 13, 31) // July 23, 2023 13:31
-      const result = formatDate(date, locale)
+      const result = longFormatDate(date, locale)
       expect(result).toBe(expectedFormat)
     }
   )
 
   it("should handle undefined date", () => {
-    const result = formatDate(undefined)
+    const result = longFormatDate(undefined)
     expect(result).toBe("unknown")
   })
 
@@ -186,14 +186,14 @@ describe("formatDate", () => {
     "should handle string date %s date to %s",
     (locale, expectedFormat) => {
       const date = "2023-07-23T13:31:00" // July 23, 2023 13:31 UTC
-      const result = formatDate(date, locale)
+      const result = longFormatDate(date, locale)
       expect(result).toBe(expectedFormat)
     }
   )
 
   it("should handle invalid date", () => {
     const date = "invalid date"
-    const result = formatDate(date)
+    const result = longFormatDate(date)
     expect(result).toBe("Invalid Date")
   })
 })

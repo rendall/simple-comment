@@ -146,12 +146,12 @@
     else
       switch (select) {
         case LoginTab.signup:
-          return "Sign up"
+          return "Sign up" // Try "Face add", "User follow", "Login" or "Add"
         case LoginTab.login:
-          return "Log in"
+          return "Log in" // "Login" icon
         case LoginTab.guest:
         default:
-          return "Add comment"
+          return "Add comment" // "Add comment" icon
       }
   }
 
@@ -213,13 +213,13 @@
   />
   <Login {currentUser} />
   {#if !currentUser || (commentText && commentText.length)}
-  <div class="button-row">
-    {#if onCancel !== null}
-      <button class="comment-cancel-button" type="button" on:click={onCancel}
-        >Cancel</button
-      >
-    {/if}
-    <button class="comment-submit-button" type="submit">{buttonCopy}</button>
-  </div>
+    <div class="button-row">
+      {#if onCancel !== null}
+        <button class="comment-cancel-button" type="button" on:click={onCancel}
+          >Cancel</button
+        >
+      {/if}
+      <button class="comment-submit-button" type="submit">{buttonCopy}</button>
+    </div>
   {/if}
 </form>
