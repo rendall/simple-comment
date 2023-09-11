@@ -102,7 +102,7 @@
   }
 </script>
 
-<ul class="comment-replies" class:is-root={isRoot}>
+<ul class="comment-replies" class:is-root={isRoot} class:is-deep={depth > 4}>
   {#each replies as comment}
     <CommentDisplay
       {comment}

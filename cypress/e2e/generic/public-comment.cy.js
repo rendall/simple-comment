@@ -42,6 +42,7 @@ describe("Guest comment", { testIsolation: false }, () => {
   it("Edit a comment as a logged-in guest user", () => {
     const loggedInEditText = generateRandomCopy()
     cy.intercept("PUT", ".netlify/functions/comment/*").as("putComment")
+    cy.get(".overflow-menu-button").first().click()
     cy.get(".comment-edit-button").first().click()
     cy.get("form.comment-form .comment-field").clear().type(loggedInEditText)
     cy.get("form.comment-form .comment-update-button").click()
@@ -63,6 +64,7 @@ describe("Guest comment", { testIsolation: false }, () => {
         })
       } else req.reply()
     }).as("putComment")
+    cy.get(".overflow-menu-button").first().click()
     cy.get(".comment-edit-button").first().click()
 
     cy.get("form.comment-form .comment-field").clear().type(errorText)
@@ -79,6 +81,7 @@ describe("Guest comment", { testIsolation: false }, () => {
 
   it("Delete a comment as a logged-in guest user", () => {
     cy.intercept("DELETE", ".netlify/functions/comment/*").as("deleteComment")
+    cy.get(".overflow-menu-button").first().click()
     cy.get(".comment-delete-button").as("deleteButton")
     cy.get("@deleteButton")
       .closest("article.comment-body")

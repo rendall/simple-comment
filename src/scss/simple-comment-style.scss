@@ -89,7 +89,7 @@ $highlight-text-color: color.scale(
 
   .button-row {
     display: flex;
-    direction: row;
+    flex-direction: row;
     justify-content: flex-end;
     position: relative;
 
@@ -319,7 +319,7 @@ $highlight-text-color: color.scale(
       padding: 0;
       margin: 0;
 
-      &:not(.is-root) {
+      &:not(.is-root):not(.is-deep) {
         margin-left: 2rem;
       }
 
@@ -362,16 +362,16 @@ $highlight-text-color: color.scale(
           .comment-info {
             display: flex;
             flex-direction: row;
-            justify-content: space-between;
+            justify-content: flex-start;
             width: calc(100% - 3rem - 1.3rem);
 
             .user-name {
-              white-space: nowrap;
-              overflow: hidden;
-              text-overflow: ellipsis;
               color: $primary-color;
               font-weight: bold;
               margin-right: 1rem;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
             }
 
             .comment-date {
@@ -393,14 +393,56 @@ $highlight-text-color: color.scale(
           p:last-of-type {
             margin-bottom: 1rem;
           }
-
-          &.is-rtl {
-            text-align: right;
-          }
         }
 
         .comment-footer {
           margin-bottom: 1rem;
+
+          &.button-row {
+            flex-direction: row;
+            justify-content: flex-start;
+
+            button {
+              border: none;
+              color: $highlight-text-color;
+              display: flex;
+              font-size: 1rem;
+              align-items: center;
+              justify-content: space-between;
+              padding: 0;
+              text-transform: uppercase;
+              width: unset;
+
+              svg {
+                margin-right: 0.2rem;
+              }
+
+              &:hover {
+                font-weight: normal;
+                text-decoration: underline;
+              }
+
+              &.comment-delete-button,
+              &.comment-edit-button {
+                color: $error-red;
+              }
+            }
+
+            .overflow-menu {
+              display: flex;
+              justify-content: flex-end;
+              flex-grow: 1;
+              overflow: hidden;
+              will-change: max-width;
+
+              button {
+                margin-right: 1rem;
+                &:last-of-type {
+                  margin-right: 0;
+                }
+              }
+            }
+          }
         }
 
         &.is-new {
@@ -411,7 +453,7 @@ $highlight-text-color: color.scale(
         &.has-replies {
           position: relative;
 
-          &::before {
+          &::after {
             border-left: 1px solid #3287e6;
             bottom: -0.5rem;
             content: "";
@@ -492,6 +534,11 @@ $highlight-text-color: color.scale(
             overflow: hidden;
             position: relative;
             margin-bottom: 0;
+          }
+        }
+        &.is-rtl {
+          .comment-body {
+            text-align: right;
           }
         }
       }

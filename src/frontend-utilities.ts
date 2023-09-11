@@ -205,7 +205,38 @@ export const debounceFunc = <T extends (...args: any[]) => void>(
   }
 }
 
-export const formatDate = (date: Date | string | undefined, locale?: string) =>
+export const shortFormatDate = (
+  date: Date | string | undefined,
+  locale?: string
+) => {
+  if (!date) return "unknown"
+  const dateObj = new Date(date)
+  const now = new Date()
+  const isThisYear = now.getFullYear() === dateObj.getFullYear()
+  const isToday =
+    isThisYear &&
+    now.getMonth() === dateObj.getMonth() &&
+    now.getDate() === dateObj.getDate()
+
+  if (isToday)
+    return new Date(date).toLocaleTimeString([], {
+      hour: "numeric",
+      minute: "2-digit",
+    })
+  else
+    return new Date(date).toLocaleDateString(locale, {
+      year: isThisYear ? undefined : "numeric",
+      month: isToday ? undefined : "short",
+      day: isToday ? undefined : "numeric",
+      hour: isToday ? "numeric" : undefined,
+      minute: isToday ? "numeric" : undefined,
+    })
+}
+
+export const longFormatDate = (
+  date: Date | string | undefined,
+  locale?: string
+) =>
   date
     ? new Date(date).toLocaleDateString(locale, {
         year: "numeric",
