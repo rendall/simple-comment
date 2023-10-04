@@ -11,7 +11,7 @@ debug.log
 /cypress/support
 /cypress/screenshots
 /cypress/integration/examples
-/cypress/fixtures
+/cypress/fixtures/example.json
 /RAW
 /.netlify
 /.git

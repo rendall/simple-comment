@@ -26,7 +26,7 @@
     "start": "NODE_ENV=\"development\" NODE_OPTIONS=\"--max-old-space-size=4096\" netlify dev --port 7070 --command \"yarn run start:frontend\"",
     "test": "yarn test:backend && yarn test:frontend",
     "test:backend": "jest --config jest.backend.config.ts",
-    "test:e2e": "concurrently  \"netlify dev --port 7070\" \"cypress run\" --kill-others",
+    "test:cypress": "cypress run",
     "test:frontend": "jest --config jest.frontend.config.ts",
     "watch:backend": "tsc -p tsconfig.netlify.functions.json --listEmittedFiles --watch",
     "watch:frontend": "webpack --watch",
