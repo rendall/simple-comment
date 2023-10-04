@@ -60,7 +60,7 @@ describe("Test guest id utility", () => {
   })
 })
 describe("generateCommentId", () => {
-  const commentPattern = "[a-z0-9]{3}-[a-z0-9]{4}-[a-z0-9]{5}"
+  const commentPattern = "[a-z0-9]{3}-[a-z0-9]{1,4}-[a-z0-9]{5}"
   test("generates a comment ID with a given parent ID", () => {
     const commentId = generateCommentId("topic-1")
     const expectedRegex = new RegExp(`^topic-1_${commentPattern}$`)
@@ -80,6 +80,12 @@ describe("generateCommentId", () => {
 
   test("generates a comment ID without a parent ID", () => {
     const commentId = generateCommentId()
+    const regex = new RegExp(`^${commentPattern}$`)
+    expect(commentId).toMatch(regex)
+  })
+
+  test("generates a valid comment even with Date(0, 0)", () => {
+    const commentId = generateCommentId(undefined, new Date(0, 0))
     const regex = new RegExp(`^${commentPattern}$`)
     expect(commentId).toMatch(regex)
   })

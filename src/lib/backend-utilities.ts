@@ -73,8 +73,8 @@ export const generateGuestId = () =>
   `guest-${generateAlpha(2)}${generateNumeric(3)}-${dateToString()}`
 
 /** Creates an id for a comment */
-export const generateCommentId = (parentId = "") => {
-  const cId = `${generateAlphaNumeric(3)}-${timeToString()}-${dateToString()}`
+export const generateCommentId = (parentId = "", d = new Date()) => {
+  const cId = `${generateAlphaNumeric(3)}-${timeToString(d)}-${dateToString(d)}`
   if (parentId === "") return cId
   const appendIndex = parentId.lastIndexOf("_")
   const pId = parentId.slice(appendIndex + 1)
