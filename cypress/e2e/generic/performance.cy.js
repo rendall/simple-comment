@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-import topicBody from "../../fixtures/mockDiscussion.json";
+import topicBody from "../../fixtures/mockDiscussion.json"
 
 describe("Loading performance", () => {
   it("check page load time", () => {

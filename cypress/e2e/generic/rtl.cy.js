@@ -128,8 +128,10 @@ describe("Simple Comment right-to-left rendering", () => {
       })
     })
     cy.visit("/")
-    cy.get("li#http-localhost-7070_hvh-21s6-c1m6p")
-      .should("have.class", "is-rtl")
+    cy.get("li#http-localhost-7070_hvh-21s6-c1m6p").should(
+      "have.class",
+      "is-rtl"
+    )
   })
 
   it("properly renders LTR", () => {
