@@ -1,6 +1,6 @@
 // const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin
 const CopyWebpackPlugin = require("copy-webpack-plugin")
-const LicensePlugin = require("webpack-license-plugin")
+// const LicensePlugin = require("webpack-license-plugin")
 const MiniCssExtractPlugin = require("mini-css-extract-plugin")
 const TerserPlugin = require("terser-webpack-plugin")
 const path = require("path")
@@ -110,7 +110,7 @@ module.exports = {
   plugins: [
     // new BundleAnalyzerPlugin({ generateStatsFile: true, mode: "json", openAnalyzer:false }),
     new CopyWebpackPlugin({ patterns: [{ from: "src/static", to: "." }] }),
-    new LicensePlugin(),
+    // new LicensePlugin(),
     new MiniCssExtractPlugin({ filename: "css/[name].css" }),
     new webpack.EnvironmentPlugin(["SIMPLE_COMMENT_API_URL"]),
   ],
