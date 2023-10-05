@@ -114,9 +114,10 @@ describe("Simple Comment right-to-left rendering", () => {
       })
     })
     cy.visit("/")
-    cy.get("li#http-localhost-7070_hvh-21s6-c1m6p")
-      .first()
-      .should("have.class", "is-rtl")
+    cy.get("li#http-localhost-7070_hvh-21s6-c1m6p").should(
+      "have.class",
+      "is-rtl"
+    )
   })
 
   it("properly renders Arabic", () => {
@@ -143,9 +144,9 @@ describe("Simple Comment right-to-left rendering", () => {
       })
     })
     cy.visit("/")
-    cy.get("li#http-localhost-7070_hvh-21s6-c1m6p")
-      .children("article.comment-body")
-      .first()
-      .should("not.have.class", "is-rtl")
+    cy.get("li#http-localhost-7070_hvh-21s6-c1m6p").should(
+      "not.have.class",
+      "is-rtl"
+    )
   })
 })

@@ -301,7 +301,10 @@ $highlight-text-color: color.scale(
     margin-bottom: 5rem;
 
     form.comment-form {
+      overflow: hidden;
+      will-change: max-height;
       margin-bottom: 3rem;
+
       .comment-update-button {
         width: 12.5rem;
       }
@@ -537,7 +540,7 @@ $highlight-text-color: color.scale(
           }
         }
         &.is-rtl {
-          .comment-body {
+          > .comment-body {
             text-align: right;
           }
         }

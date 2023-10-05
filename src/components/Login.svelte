@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { fly } from "svelte/transition"
+  import { fade, fly } from "svelte/transition"
   import type {
     AdminSafeUser,
     ServerResponse,
@@ -56,6 +56,7 @@
   const USER_ID_HELPER_TEXT = "This is the user id that uniquely identifies you"
 
   export let currentUser: User | undefined
+  export let isVisible = false
 
   let self: User = currentUser
   let isError = false
@@ -682,7 +683,12 @@
   }
 </script>
 
-<section class="simple-comment-login" class:is-loading={!isLoaded}>
+<section
+  class="simple-comment-login"
+  class:is-loading={!isLoaded}
+  class:is-visible={isVisible}
+  transition:fade
+>
   {#if !self}
     <div class="selection-tabs button-row">
       <button

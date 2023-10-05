@@ -16,10 +16,10 @@
   import {
     ClosedCaptionAlt as ReplyIcon,
     Edit as EditIcon,
-    OverflowMenuHorizontal,
-    ChevronLeft,
+    OverflowMenuHorizontal as OverflowMenuIcon,
+    ChevronLeft as ChevronLeftIcon,
   } from "carbon-icons-svelte"
-  import { linear } from "svelte/easing"
+  import { open } from "../lib/svelte-transitions"
 
   export let comment: (Comment & { isNew?: true }) | undefined = undefined
   export let showReply: string
@@ -92,30 +92,6 @@
 
     if (showReply !== comment.id) isOverflowToggled = false
   }
-
-  const toggleExpand = (
-    _overflowMenu: HTMLElement,
-    params?: {
-      delay: number
-      duration: number
-      easing: (t: number) => number
-      direction: "in" | "out" | "both"
-    }
-  ) => {
-    const { delay = 0, duration = 250, easing = linear } = params
-
-    const css = (t: number, u: number) => {
-      const maxWidth = (1 - u) * 100
-      return `max-width: ${maxWidth}%`
-    }
-
-    return {
-      delay,
-      duration,
-      easing,
-      css,
-    }
-  }
 </script>
 
 <li
@@ -178,7 +154,7 @@
       {#if isEditing}
         <CommentEdit
           placeholder="Your edit"
-          autofocus={isRoot ? true : false}
+          autofocus
           commentId={comment.id}
           commentText={comment.text}
           onCancel={onCancelEditClick}
@@ -192,7 +168,7 @@
       {#if showReply === comment.id && !isEditing}
         <CommentInput
           placeholder="Your reply"
-          autofocus={isRoot ? true : false}
+          autofocus
           commentId={comment.id}
           {currentUser}
           onCancel={onCloseCommentInput}
@@ -211,7 +187,7 @@
             <ReplyIcon size={20} /> Reply
           </button>
           {#if isOverflowToggled}
-            <div class="overflow-menu" in:toggleExpand out:toggleExpand>
+            <div class="overflow-menu" transition:open>
               {#if canEdit(comment)}
                 <button
                   on:click={() => onEditClick(comment)}
@@ -233,7 +209,7 @@
               {/if}
 
               <button on:click={() => (isOverflowToggled = false)}
-                ><ChevronLeft size={20} /></button
+                ><ChevronLeftIcon size={20} /></button
               >
             </div>
           {:else if canEdit(comment) || canDelete(comment)}
@@ -241,7 +217,7 @@
               on:click={() => (isOverflowToggled = true)}
               class="overflow-menu-button"
               title="Click '...' to see more options for this comment"
-              ><OverflowMenuHorizontal size={20} /></button
+              ><OverflowMenuIcon size={20} /></button
             >
           {/if}
         </div>

@@ -1,6 +1,8 @@
 <script lang="ts">
   import Login from "./Login.svelte"
   import SkeletonCommentInput from "./low-level/SkeletonCommentInput.svelte"
+  import { AddComment as AddCommentIcon } from "carbon-icons-svelte"
+  import { CloseOutline as CancelIcon } from "carbon-icons-svelte"
   import type {
     Comment,
     CommentId,
@@ -15,13 +17,16 @@
   import { postComment } from "../apiClient"
   import { useMachine } from "@xstate/svelte"
   import { LoginTab } from "../lib/simple-comment-types"
+  import { open } from "../lib/svelte-transitions"
   export let currentUser: User | undefined
   export let commentId: CommentId
   export let onCancel = null
   export let autofocus = false
   export let placeholder = "Your comment"
+  export let isRoot = false
 
   let commentText = ""
+  let hasEnteredComment = false
   let buttonCopy = "Add comment"
   let loginStateValue
   let textareaRef
@@ -165,6 +170,22 @@
     textAreaHeight = `${blockSize}px`
   })
 
+  const getMaxHeight = () => {
+    if (currentUser) return "10rem"
+    switch (loginTabSelect) {
+      case LoginTab.guest:
+        return "33rem"
+      case LoginTab.signup:
+        return "55rem"
+      case LoginTab.login:
+        return "33rem"
+
+      default:
+        console.error(`Unknown loginTabSelect: ${loginTabSelect}`)
+        return "10rem"
+    }
+  }
+
   onMount(() => {
     resizeObserver.observe(textareaRef)
   })
@@ -193,6 +214,7 @@
   ).includes($state.value)
 
   $: buttonCopy = getButtonCopy(loginTabSelect, commentText, loginStateValue)
+  $: hasEnteredComment = !!commentText?.length
 </script>
 
 <SkeletonCommentInput
@@ -200,7 +222,13 @@
   height={textAreaHeight}
   isHidden={!isProcessing}
 />
-<form class="comment-form" class:is-hidden={isProcessing} on:submit={onSubmit}>
+<form
+  class="comment-form"
+  class:is-hidden={isProcessing}
+  on:submit={onSubmit}
+  in:open={{ axis: "y", duration: 250, max: getMaxHeight() }}
+  out:open={{ axis: "y", delay: 250, duration: 125, max: getMaxHeight() }}
+>
   <!-- svelte-ignore a11y-autofocus -->
   <textarea
     class="comment-field"
@@ -211,15 +239,17 @@
     {placeholder}
     dir="auto"
   />
-  <Login {currentUser} />
-  {#if !currentUser || (commentText && commentText.length)}
-    <div class="button-row">
+  <Login {currentUser} isVisible={hasEnteredComment} />
+  {#if !currentUser || hasEnteredComment}
+    <div class="button-row comment-footer">
+      <button class="comment-submit-button" type="submit"
+        ><AddCommentIcon size={20} />{buttonCopy}</button
+      >
       {#if onCancel !== null}
         <button class="comment-cancel-button" type="button" on:click={onCancel}
-          >Cancel</button
+          ><CancelIcon size={20} />Cancel</button
         >
       {/if}
-      <button class="comment-submit-button" type="submit">{buttonCopy}</button>
     </div>
   {/if}
 </form>
