@@ -2,10 +2,11 @@
  * @jest-environment jsdom
  */
 import { longFormatDate, threadComments } from "../../frontend-utilities"
-import { Comment } from "../../lib/simple-comment-types"
+import { Comment, Discussion } from "../../lib/simple-comment-types"
 import { mockCommentTree, mockTopic } from "../mockData"
 import { performance } from "perf_hooks"
 import { debounceFunc } from "../../frontend-utilities"
+import mockDiscussion from "../mockDiscussion.json"
 
 describe("threadComments", () => {
   it("should thread comments correctly", () => {
@@ -42,11 +43,25 @@ describe("threadComments", () => {
     expect(result).toEqual(expected)
   })
 
+  it("should thread mockDiscussion.json in under 0.1s", () => {
+    const topic = mockDiscussion as unknown as Discussion
+
+    const topicReplies = topic.replies as Comment[]
+
+    const t0 = performance.now()
+
+    threadComments(topic, topicReplies)
+
+    const t1 = performance.now()
+
+    expect(t1 - t0).toBeLessThan(100)
+  })
+
   it("should thread flat array of 2000 comments in under 1s", () => {
     const topic = mockTopic()
     const largeCommentsArray = mockCommentTree(2000, undefined, [
       topic,
-    ]) as Comment[] // replace this with your function to generate a large array of comments
+    ]) as Comment[]
 
     const t0 = performance.now()
 
