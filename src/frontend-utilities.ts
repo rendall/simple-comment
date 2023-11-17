@@ -25,9 +25,10 @@ type MinComment = {
  */
 export const threadComments = <T extends MinComment, U extends MinComment>(
   comment: T,
-  allComments: U[],
+  allComments: U[] | undefined,
   sort: (a: U, b: U) => number = (a, b) => (b.id < a.id ? 0 : 1)
 ): T => {
+  if (!allComments) return { ...comment, replies: [] }
   // Make this robust but warn
   allComments = allComments.filter(reply => {
     if (reply && reply.id) return true

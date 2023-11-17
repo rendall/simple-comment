@@ -36,10 +36,19 @@ module.exports = {
     compress: true,
     port: 5000,
     static: path.join(__dirname, "dist"),
+    historyApiFallback: {
+      rewrites: [
+        { from: /^\/icebreakers\/.*$/, to: "/icebreakers/index.html" },
+      ],
+    },
   },
   devtool: "source-map",
   entry: {
     "simple-comment": path.resolve(__dirname, "src/simple-comment.ts"),
+    "simple-comment-icebreakers": path.resolve(
+      __dirname,
+      "src/simple-comment-icebreakers.ts"
+    ),
     "simple-comment-style": path.resolve(
       __dirname,
       "src/scss/simple-comment-style.scss"

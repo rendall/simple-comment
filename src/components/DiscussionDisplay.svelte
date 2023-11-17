@@ -16,6 +16,13 @@
   export let discussionId: string
   export let title: string = ""
   export let currentUser: User | undefined
+  const emptyTopicMessages = [
+    "Looks like this topic is waiting for its first thoughts. Be the pioneer and start the conversation!",
+    "This space is all yours! Kick off the discussion with your insights.",
+    "No comments yet. Share your perspective and spark the dialogue!",
+    "It's quiet here... Why not break the ice with your viewpoint?",
+    "A fresh topic awaits your input. Lead the way with your comment!",
+  ]
 
   let repliesFlatArray: (Comment & { isNew?: true })[] = []
   let discussion: Discussion = {
@@ -49,9 +56,9 @@
 
   const updateDiscussionDisplay = (
     topic: Discussion,
-    topicReplies: Comment[]
+    topicReplies: Comment[] | undefined
   ) => {
-    repliesFlatArray = topicReplies
+    repliesFlatArray = topicReplies ?? []
     discussion = threadComments(
       topic,
       topicReplies,
@@ -76,12 +83,13 @@
     const { status, statusText, ok, body } = error as ServerResponse
     if (ok) console.warn("Error handler caught an OK response", error)
 
-    if (
-      status === 404 &&
-      statusText === "Not Found" &&
-      body.startsWith("Topic")
-    ) {
-      send("CREATE")
+    const isUnknownTopic =
+      status === 404 && statusText === "Not Found" && body.startsWith("Topic")
+
+    if (isUnknownTopic) {
+      setTimeout(() => {
+        send("CREATE")
+      }, 1)
       return
     }
 
@@ -183,6 +191,13 @@
 </script>
 
 <section class="simple-comment-discussion">
+  {#if !discussion?.replies}
+    <p class="instructions">
+      {emptyTopicMessages[
+        Math.floor(Math.random() * emptyTopicMessages.length)
+      ]}
+    </p>
+  {/if}
   {#if showReply === discussionId}
     <CommentInput
       commentId={discussionId}

@@ -4,18 +4,22 @@ import SimpleComment from "./components/SimpleComment.svelte"
 
 declare global {
   interface Window {
-    setSimpleCommentOptions: (setupOptions: { [key: string]: unknown }) => void
+    loadSimpleComment: (options: Options) => void
     setSimpleCommentDiscussion: (discussionId: string) => void
+    setSimpleCommentOptions: (setupOptions: { [key: string]: unknown }) => void
   }
 }
 
 let simpleComment
 
 let options = {
+  cancel: false,
   discussionId: getDefaultDiscussionId(),
-  title: document.title,
   target: document.getElementById("simple-comment") ?? document.body,
+  title: document.title,
 }
+
+type Options = typeof options
 
 /**
  * Sets the options for the SimpleComment component.
@@ -51,16 +55,25 @@ window.setSimpleCommentOptions = setupOptions =>
 window.setSimpleCommentDiscussion = (discussionId: string) =>
   window.setSimpleCommentOptions({ discussionId })
 
-// Wait for DOMContentLoaded event before initializing SimpleComment
-document.addEventListener("DOMContentLoaded", () => {
+const loadSimpleComment = (setupOptions: Options) => {
+  options = { ...options, ...setupOptions }
   simpleComment = new SimpleComment({
     target: options.target,
     props: { discussionId: options.discussionId, title: options.title },
   })
+}
+
+window.loadSimpleComment = loadSimpleComment
+
+// Wait for DOMContentLoaded event before initializing SimpleComment
+document.addEventListener("DOMContentLoaded", () => {
+  if (options.cancel) return
+  else loadSimpleComment(options)
 })
 
 export default {
   simpleComment,
   setSimpleCommentOptions: window.setSimpleCommentOptions,
   setSimpleCommentDiscussion: window.setSimpleCommentDiscussion,
+  loadSimpleComment: window.loadSimpleComment,
 }
