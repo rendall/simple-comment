@@ -36,6 +36,9 @@ module.exports = {
     compress: true,
     port: 5000,
     static: path.join(__dirname, "dist"),
+    historyApiFallback: {
+      rewrites: [{ from: /^\/topic\/.*$/, to: "/topic/index.html" }],
+    },
   },
   devtool: "source-map",
   entry: {
