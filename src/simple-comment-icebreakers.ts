@@ -3,6 +3,8 @@ declare global {
     getQuestion: (slug: string) => Promise<string>
   }
 }
+const storageKey = "icebreakerQuestions"
+const timeStampKey = "icebreakerQuestionsTimeStamp"
 
 const toSlug = (str: string): string =>
   str
@@ -21,10 +23,7 @@ const reverseSlug = (slug: string, questions: string[]) =>
   questions.find(question => isSlugMatch(slug, question))
 
 const fetchAndStoreQuestions = () =>
-  new Promise<string[]>(async (resolve, reject) => {
-    const storageKey = "icebreakerQuestions"
-    const timeStampKey = "icebreakerQuestionsTimeStamp"
-
+  new Promise<string[]>((resolve, reject) => {
     const currentTimestamp =
       document?.getElementById("questions-time-stamp")?.innerText || "0"
     const storedTimestamp = localStorage.getItem(timeStampKey)
@@ -37,29 +36,33 @@ const fetchAndStoreQuestions = () =>
       resolve(JSON.parse(storedQuestions))
       return
     }
-    try {
-      const questionFile = await fetch(
-        "https://raw.githubusercontent.com/rendall/icebreakers/master/QUESTIONS.md"
-      )
-      const questionsText = await questionFile.text()
-      const questionLines = questionsText.split("\n")
-      const questions = questionLines
-        .filter(line => /^  \* [A-Z]/.test(line))
-        .map(line => line.slice(4))
 
-      localStorage.setItem(storageKey, JSON.stringify(questions))
-      localStorage.setItem(timeStampKey, currentTimestamp)
-      resolve(questions)
-    } catch (error) {
-      reject(error)
-    }
+    fetchQuestions(currentTimestamp, resolve, reject)
   })
+
+const fetchQuestions = async (currentTimestamp, resolve, reject) => {
+  try {
+    const questionFile = await fetch(
+      "https://raw.githubusercontent.com/rendall/icebreakers/master/QUESTIONS.md"
+    )
+    const questionsText = await questionFile.text()
+    const questionLines = questionsText.split("\n")
+    const questions = questionLines
+      .filter(line => /^ {2}\* [A-Z]/.test(line))
+      .map(line => line.slice(4))
+
+    localStorage.setItem(storageKey, JSON.stringify(questions))
+    localStorage.setItem(timeStampKey, currentTimestamp)
+    resolve(questions)
+  } catch (error) {
+    reject(error)
+  }
+}
 
 const getQuestion = (slug: string) =>
   new Promise<string>((resolve, reject) => {
     fetchAndStoreQuestions()
       .then(questions => {
-        console.log(questions.map(toSlug))
         const question = reverseSlug(slug, questions)
         if (question) {
           resolve(question)

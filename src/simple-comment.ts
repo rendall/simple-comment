@@ -55,7 +55,7 @@ window.setSimpleCommentOptions = setupOptions =>
 window.setSimpleCommentDiscussion = (discussionId: string) =>
   window.setSimpleCommentOptions({ discussionId })
 
-const loadSimpleComment = (setupOptions:Options) => {
+const loadSimpleComment = (setupOptions: Options) => {
   options = { ...options, ...setupOptions }
   simpleComment = new SimpleComment({
     target: options.target,
@@ -67,12 +67,9 @@ window.loadSimpleComment = loadSimpleComment
 
 // Wait for DOMContentLoaded event before initializing SimpleComment
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("DOMContentLoaded", {options})
   if (options.cancel) return
   else loadSimpleComment(options)
 })
-
-
 
 export default {
   simpleComment,
