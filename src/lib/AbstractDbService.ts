@@ -16,7 +16,7 @@ import type {
   TokenClaim,
 } from "./simple-comment-types"
 
-export abstract class Service {
+export abstract class AbstractDbService {
   /**
    * Accept a user name and password, return authentication token
    *

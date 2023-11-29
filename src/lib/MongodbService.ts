@@ -22,7 +22,7 @@ import { Action } from "./simple-comment-types"
 import { isUserAllowedTo } from "./policyEnforcement"
 import type { Collection, Db, WithId } from "mongodb"
 import { MongoClient } from "mongodb"
-import { Service } from "./Service"
+import { AbstractDbService } from "./AbstractDbService"
 import {
   adminOnlyModifiableUserProperties,
   generateCommentId,
@@ -91,7 +91,7 @@ if (process.env.JWT_SECRET === undefined)
   throw "JWT_SECRET is not set in environmental variables"
 const jwtSecret = process.env.JWT_SECRET
 
-export class MongodbService extends Service {
+export class MongodbService extends AbstractDbService {
   private isCrossSite = process.env.IS_CROSS_SITE === "true"
   private _client: MongoClient
   private _db: Db
