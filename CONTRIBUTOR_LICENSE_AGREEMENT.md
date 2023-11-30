@@ -2,16 +2,15 @@ Contributor License Agreement ("Agreement")
 
 Thank you for your interest in contributing to Simple Comment ("Project"), a project of rendall.dev Oy ("Company"). This Agreement is between you and the Company, and governs your contribution of any and all content to the Project.
 
-If you agree to be bound by this Agreement, please read and sign below.
+1.  Definitions
 
-1. Definitions
-   "Content" means any and all information or material contributed by you to the Project, including but not limited to source code, documentation, and any modifications or derivative works. "Project" means the open source software project owned by the Company that you are contributing Content to.
+"Content" means any and all information or material contributed by you to the Project, including but not limited to source code, documentation, and any modifications or derivative works. "Project" means the source-available software project owned by the Company that you are contributing Content to.
 
-2. Grant of License
+2.  Grant of License
 
 You hereby grant the Company a perpetual, worldwide, non-exclusive, irrevocable, royalty-free, transferable license to use, copy, modify, and distribute the Content as part of the Project and to sublicense the Content to other users of the Project.
 
-3. Representations and Warranties
+3.  Representations and Warranties
 
 You represent and warrant that:
 The Content is original to you and you have the right to contribute it to the Project.

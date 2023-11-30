@@ -2,7 +2,7 @@
 "This Service Agreement (the 'Agreement') is made between Simple Comment, the provider of the service (hereinafter referred to as 'Simple Comment', 'we', 'us', or 'our') and any individual or entity ('Customer') who accesses or uses Simple Comment's services ('Service')."
 
 2 Service Overview
-Simple Comment is a commenting platform that can be used on any website. The Service is designed to be free, flexible, open-source, private, and scalable.
+Simple Comment is a commenting platform that can be used on any website. The Service is designed to be free, flexible, source-available, private, and scalable.
 
 3 Customer Obligations
 The Customer shall comply with all applicable laws and regulations while using the Service. The Customer shall be responsible for providing accurate and complete information to the Company, and shall not use the Service to post or transmit any material that is unlawful, harmful, threatening, abusive, harassing, defamatory, vulgar, obscene, or otherwise objectionable.
@@ -16,13 +16,13 @@ The Company shall make the Service available to the Customer 24 hours a day, 7 d
 
 5.2 Ownership of Intellectual Property. You acknowledge that all intellectual property rights in the Service and any modifications or improvements thereof, including any software, algorithms, techniques, know-how, and documentation, belong exclusively to us or our licensors. You agree not to contest the validity or ownership of any intellectual property rights of ours in the Service, or assist any third-party in doing so.
 
-5.3 Open Source Software. The Simple Comment backend source code is licensed under the GNU Affero General Public License version 3.0 (AGPLv3), and your use of the Service is subject to the terms and conditions of AGPLv3. You acknowledge and agree that your use of the Service does not grant you any ownership or other rights in the open source software, and that your use of the open source software is subject to the terms and conditions of AGPLv3.
+5.3 Source-Available Software. The Simple Comment backend source code is available for inspection. You acknowledge and agree that your use of the Service does not grant you any ownership or other rights in the source-available software.
 
-5.4 Open Source Contributions. By making any contributions to the Service, including but not limited to source code, bug fixes, or suggestions, you agree to the terms of the [Contributor License Agreement (CLA) located at The Simple Comment repository](./CONTRIBUTOR_LICENSE_AGREEMENT.md). The CLA requires that you grant to us a license to use, reproduce, modify, and distribute your contributions as part of the Service, and represents your agreement that the contributions do not infringe upon the intellectual property rights of any third party.
+5.4 Contributions. By making any contributions to the Service, including but not limited to source code, bug fixes, or suggestions, you agree to the terms of the [Contributor License Agreement (CLA) located at The Simple Comment repository](./CONTRIBUTOR_LICENSE_AGREEMENT.md). The CLA requires that you grant to us a license to use, reproduce, modify, and distribute your contributions as part of the Service, and represents your agreement that the contributions do not infringe upon the intellectual property rights of any third party.
 
-5.4 Feedback. We welcome and encourage feedback from our customers regarding the Service. If you provide us with any feedback or suggestions, you hereby grant to us a non-exclusive, perpetual, irrevocable, royalty-free license to use, reproduce, modify, and distribute such feedback or suggestions for any purpose related to improving and enhancing the Service. By providing us with your feedback or suggestions, you are helping us to better understand your needs and improve our Service for all of our customers.
+5.4 Feedback. We welcome and encourage feedback from our customers regarding the Service. If you provide us with any feedback or suggestions, you hereby grant to us a non-exclusive, perpetual, irrevocable, royalty-free license to use, reproduce, modify, and distribute such feedback or suggestions for any purpose related to improving and enhancing the Service.
 
-5.5 Third-Party Intellectual Property. You acknowledge that the Service may contain or rely on third-party intellectual property, and that we make no representation or warranty with respect to any such third-party intellectual property. We will have no liability for any claim of infringement or misappropriation of any third-party intellectual property in connection with your use of the Service.
+5.5 Third-Party Intellectual Property. You acknowledge that the Service may contain or rely on third-party intellectual property, and that we make no representation or warranty with respect to any such third-party intellectual property.
 
 5.6 Remedies. You acknowledge that a breach of this section may cause us irreparable harm for which we may not have an adequate remedy at law. Accordingly, you agree that we shall be entitled to seek injunctive relief to prevent or remedy any breach or threatened breach of this section, without the necessity of posting a bond or other security.
 
@@ -40,8 +40,8 @@ The Customer shall indemnify and hold harmless the Company, its officers, direct
 9 Termination
 Either party may terminate this Agreement upon written notice to the other party. Upon termination, the Customer shall immediately cease all use of the Service.
 
-10. Governing Law and Jurisdiction
-    This Agreement shall be governed by and construed in accordance with the laws of Finland and the European Union, without giving effect to its conflict of laws provisions. Any legal action arising out of or in connection with this Agreement shall be brought exclusively in the courts located in Helsinki, Finland.
+10 Governing Law and Jurisdiction
+This Agreement shall be governed by and construed in accordance with the laws of Finland and the European Union, without giving effect to its conflict of laws provisions. Any legal action arising out of or in connection with this Agreement shall be brought exclusively in the courts located in Helsinki, Finland.
 
 11 Entire Agreement
 This Agreement constitutes the entire agreement between the parties and supersedes all prior and contemporaneous agreements and understandings, whether written or oral, relating to the subject matter of this Agreement.

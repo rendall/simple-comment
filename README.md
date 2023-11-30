@@ -2,7 +2,7 @@
 
 # Simple Comment
 
-_Simple Comment_ is a commenting platform for any website. Free, flexible, open-source, private, and scalable.
+_Simple Comment_ is a commenting platform for any website. Free, secure, source-available, private, and scalable.
 
 See the demo: <https://simple-comment.netlify.app>
 
