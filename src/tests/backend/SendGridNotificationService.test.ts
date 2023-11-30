@@ -5,7 +5,7 @@ jest.mock("dotenv", () => ({
   config: jest.fn(() => {
     process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL =
       "email1@example.com,email2@example.com,email3@example.com,email4@example.com,email5@example.com,email6@example.com,email7@example.com,email8@example.com,email9@example.com,email10@example.com"
-
+    process.env.SENDGRID_VERIFIED_SENDER = "email@example.com"
     process.env.NOTIFICATION_SERVICE_API_KEY = "SG.from.test.env"
   }),
 }))
@@ -16,8 +16,6 @@ describe("SendGridNotificationService", () => {
 
   const moderatorContactEmails = ["a1@example,com", "test2@example.com"]
   const sendGridTestApiKey = "SG.test"
-
-  const originalEnv = process.env
 
   beforeEach(() => {
     jest.resetModules()
@@ -34,7 +32,7 @@ describe("SendGridNotificationService", () => {
   })
 
   afterEach(() => {
-    process.env = originalEnv
+    jest.resetModules()
   })
 
   it("should set API key", async () => {

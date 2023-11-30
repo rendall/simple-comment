@@ -5,6 +5,10 @@ import { config as dotEnvConfig } from "dotenv"
 dotEnvConfig()
 
 const _sendGridApiKey = process.env.NOTIFICATION_SERVICE_API_KEY
+const sendGridVerifiedSender = process.env.SENDGRID_VERIFIED_SENDER
+
+if (sendGridVerifiedSender === undefined)
+  throw "SENDGRID_VERIFIED_SENDER is not set in environmental variables"
 
 const _moderatorContactEmails = process.env
   .SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL
@@ -41,7 +45,7 @@ export class SendGridNotificationService extends AbstractNotificationService {
   notifyModerators = async (body: string): Promise<Error | Success> => {
     const messages = this._moderatorContactEmails.map(email => ({
       to: email,
-      from: "sender@email.com", // Sender's email address
+      from: sendGridVerifiedSender, // Sender's email address
       subject: "Simple Comment Notification",
       text: `${body}`,
     }))
