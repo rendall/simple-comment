@@ -76,6 +76,7 @@ import {
 import { comparePassword, getAuthToken, hashPassword } from "./crypt"
 import * as jwt from "jsonwebtoken"
 import { isGuestId, isValidResult } from "./shared-utilities"
+import { AbstractNotificationService } from "./AbstractNotificationService"
 
 if (process.env.SIMPLE_COMMENT_MODERATOR_PASSWORD === undefined)
   throw "SIMPLE_COMMENT_MODERATOR_PASSWORD is not set in environmental variables"
@@ -97,6 +98,7 @@ export class MongodbService extends AbstractDbService {
   private _db: Db
   readonly _connectionString: string
   readonly _dbName: string
+  readonly _notificationService?: AbstractNotificationService
 
   getClient = async () => {
     if (this._client) {
@@ -114,10 +116,15 @@ export class MongodbService extends AbstractDbService {
     return this._db
   }
 
-  constructor(connectionString: string, dbName: string) {
+  constructor(
+    connectionString: string,
+    dbName: string,
+    notificationService?: AbstractNotificationService
+  ) {
     super()
     this._connectionString = connectionString
     this._dbName = dbName
+    this._notificationService = notificationService
   }
 
   /**
@@ -599,6 +606,13 @@ export class MongodbService extends AbstractDbService {
           body: "Database insertion error",
         }
       }
+
+      if (this._notificationService) {
+        this._notificationService.notifyModerators(
+          `New comment posted by ${authUser.name} (${authUser.email})`
+        )
+      }
+
       return {
         statusCode: 201,
         body: { ...insertComment, user: adminSafeUser },
