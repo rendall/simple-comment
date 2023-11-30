@@ -22,7 +22,7 @@ import { Action } from "./simple-comment-types"
 import { isUserAllowedTo } from "./policyEnforcement"
 import type { Collection, Db, WithId } from "mongodb"
 import { MongoClient } from "mongodb"
-import { Service } from "./Service"
+import { AbstractDbService } from "./AbstractDbService"
 import {
   adminOnlyModifiableUserProperties,
   generateCommentId,
@@ -76,6 +76,7 @@ import {
 import { comparePassword, getAuthToken, hashPassword } from "./crypt"
 import * as jwt from "jsonwebtoken"
 import { isGuestId, isValidResult } from "./shared-utilities"
+import { AbstractNotificationService } from "./AbstractNotificationService"
 
 if (process.env.SIMPLE_COMMENT_MODERATOR_PASSWORD === undefined)
   throw "SIMPLE_COMMENT_MODERATOR_PASSWORD is not set in environmental variables"
@@ -91,12 +92,13 @@ if (process.env.JWT_SECRET === undefined)
   throw "JWT_SECRET is not set in environmental variables"
 const jwtSecret = process.env.JWT_SECRET
 
-export class MongodbService extends Service {
+export class MongodbService extends AbstractDbService {
   private isCrossSite = process.env.IS_CROSS_SITE === "true"
   private _client: MongoClient
   private _db: Db
   readonly _connectionString: string
   readonly _dbName: string
+  readonly _notificationService?: AbstractNotificationService
 
   getClient = async () => {
     if (this._client) {
@@ -114,10 +116,15 @@ export class MongodbService extends Service {
     return this._db
   }
 
-  constructor(connectionString: string, dbName: string) {
+  constructor(
+    connectionString: string,
+    dbName: string,
+    notificationService?: AbstractNotificationService
+  ) {
     super()
     this._connectionString = connectionString
     this._dbName = dbName
+    this._notificationService = notificationService
   }
 
   /**
@@ -599,6 +606,13 @@ export class MongodbService extends Service {
           body: "Database insertion error",
         }
       }
+
+      if (this._notificationService) {
+        this._notificationService.notifyModerators(
+          `New comment posted by ${authUser.name} (${authUser.email})`
+        )
+      }
+
       return {
         statusCode: 201,
         body: { ...insertComment, user: adminSafeUser },

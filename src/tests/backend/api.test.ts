@@ -16,7 +16,7 @@ import type {
   User,
   UserId,
 } from "../../../src/lib/simple-comment-types"
-import { Service } from "../../../src/lib/Service"
+import { AbstractDbService } from "../../../src/lib/AbstractDbService"
 
 type Method = "get" | "post" | "delete" | "put"
 
@@ -65,7 +65,7 @@ describe("Ensures API specs match controller service", () => {
       []
     )
 
-  class TestService extends Service {
+  class TestService extends AbstractDbService {
     authDELETE = async (): Promise<Success | Error> => {
       throw "Error: not implemented"
     }
@@ -199,19 +199,19 @@ describe("Ensures API specs match controller service", () => {
     }
   }
 
-  // TestService indirectly tests the abstract class Service
-  // This test relies on compile time flagging an error that TestService does not implment Service
+  // TestService indirectly tests the abstract class AbstractDbService
+  // This test relies on compile time flagging an error that TestService does not implment AbstractDbService
   const testService = new TestService()
 
   // Make sure that each entry in serviceMethods has a corresponding
-  // value in the Service instance, `testService`
+  // value in the AbstractDbService instance, `testService`
   serviceMethods.forEach(method => {
-    test(`${method} should be defined in Service`, () => {
+    test(`${method} should be defined in AbstractDbService`, () => {
       expect(testService[method]).toBeDefined()
     })
   })
 
-  test(`non existent method on Service should fail`, () => {
+  test(`non existent method on AbstractDbService should fail`, () => {
     expect(testService["nonexistent"]).toBeUndefined()
   })
 })
