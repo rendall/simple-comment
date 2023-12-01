@@ -38,8 +38,8 @@
   const updateStatusDisplay = (message = "", error = false) =>
     error ? console.error(message) : console.info(message)
 
-  const loadingStateHandler = () => {
-    getOneDiscussion(discussionId)
+  const loadingStateHandler = async () => {
+    await getOneDiscussion(discussionId)
       .then(response => {
         if (isResponseOk(response)) {
           const topic = response.body as Discussion
@@ -67,24 +67,35 @@
     )
   }
 
+  const parseError = (error: ServerResponse | string): ServerResponse => {
+    if (typeof error === "string") {
+      // 404: Topic 'what-is-your-favorite-way-to-stay-active' not found
+      console.error("Error is string:", error)
+      const [statusCode, body] = error.split(":")
+
+      const status = isNaN(parseInt(statusCode)) ? 500 : parseInt(statusCode)
+
+      const statusText = status === 404 ? "Not Found" : "Unknown Error"
+
+      return { status, statusText, body, ok: false }
+    }
+    return error
+  }
+
   const errorStateHandler = () => {
-    const error = $state.context.error
-    if (!error) {
+    const contextError = $state.context.error
+    if (!contextError) {
       console.error("Unknown error")
       console.trace()
       return
     }
 
-    if (typeof error === "string") {
-      console.error(error)
-      return
-    }
+    const error = parseError(contextError)
 
     const { status, statusText, ok, body } = error as ServerResponse
     if (ok) console.warn("Error handler caught an OK response", error)
 
-    const isUnknownTopic =
-      status === 404 && statusText === "Not Found" && body.startsWith("Topic")
+    const isUnknownTopic = status === 404 && body.startsWith("Topic")
 
     if (isUnknownTopic) {
       setTimeout(() => {
@@ -114,8 +125,8 @@
     } else updateStatusDisplay(`${status}:${statusText} ${body}`, true)
   }
 
-  const creatingStateHandler = () => {
-    createNewTopic(discussionId, title)
+  const creatingStateHandler = async () => {
+    await createNewTopic(discussionId, title)
       .then(response => {
         if (isResponseOk(response)) send("SUCCESS")
         else send({ type: "ERROR", error: response })
