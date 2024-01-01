@@ -43,9 +43,13 @@ describe("Guest comment", { testIsolation: false }, () => {
     const loggedInEditText = generateRandomCopy()
     cy.intercept("PUT", ".netlify/functions/comment/*").as("putComment")
     cy.get(".overflow-menu-button").first().click()
-    cy.get(".comment-edit-button").first().click()
-    cy.get("form.comment-form .comment-field").clear().type(loggedInEditText)
-    cy.get("form.comment-form .comment-update-button").click()
+    cy.get(".comment-edit-button").click()
+    cy.get("li.comment.is-open form.comment-form .comment-field")
+      .clear()
+      .type(loggedInEditText)
+    cy.get(
+      "li.comment.is-open form.comment-form .comment-update-button"
+    ).click()
     cy.wait("@putComment").its("response.statusCode").should("eq", 204) // 204
     cy.contains("article.comment-body p", loggedInEditText).should("exist")
   })
@@ -65,13 +69,19 @@ describe("Guest comment", { testIsolation: false }, () => {
       } else req.reply()
     }).as("putComment")
     cy.get(".overflow-menu-button").first().click()
-    cy.get(".comment-edit-button").first().click()
+    cy.get(".comment-edit-button").click()
+    cy.get("li.comment.is-open form.comment-form .comment-field")
+      .clear()
+      .type(errorText)
+    cy.get(
+      "li.comment.is-open form.comment-form .comment-update-button"
+    ).click()
 
-    cy.get("form.comment-form .comment-field").clear().type(errorText)
-    cy.get("form.comment-form .comment-update-button").click()
     cy.wait("@putComment")
 
-    cy.get("form.comment-form .comment-update-button").click()
+    cy.get(
+      "li.comment.is-open form.comment-form .comment-update-button"
+    ).click()
 
     cy.wait("@putComment").then(interception => {
       expect(interception.response.statusCode).to.equal(204)
@@ -102,10 +112,12 @@ describe("Guest comment", { testIsolation: false }, () => {
   })
 
   it("Reply to a comment as a logged-in guest", () => {
-    cy.get("button.comment-reply-button").first().as("replyButton")
-    cy.get("@replyButton").closest("article.comment-body").as("commentBody")
-    cy.get("@replyButton").click()
-    cy.get("form.guest-login-form").should("not.exist")
+    const commentText = generateRandomCopy()
+    cy.get("button.comment-reply-button").first().click()
+    // cy.wait(500)
+    cy.get("textarea.comment-field").should("have.length", 1).type(commentText)
+    cy.get("button.comment-submit-button").click()
+    cy.get("article.comment-body p").contains(commentText).should("exist")
   })
 
   it("Can log out", () => {

@@ -20,9 +20,8 @@
 
   $: {
     isProcessing =
-      loginStateValue === "verifying" ||
-      loginStateValue === "loggingIn" ||
-      loginStateValue === "loggingOut"
+      // loginStateValue === "verifying" ||
+      loginStateValue === "loggingIn" || loginStateValue === "loggingOut"
   }
   const onLogoutClick = (e: Event) => {
     e.preventDefault()

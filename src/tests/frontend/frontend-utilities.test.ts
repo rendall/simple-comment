@@ -1,8 +1,12 @@
 /**
  * @jest-environment jsdom
  */
-import { longFormatDate, threadComments } from "../../frontend-utilities"
 import { Comment, Discussion } from "../../lib/simple-comment-types"
+import {
+  longFormatDate,
+  shortFormatDate,
+  threadComments,
+} from "../../frontend-utilities"
 import { mockCommentTree, mockTopic } from "../mockData"
 import { performance } from "perf_hooks"
 import { debounceFunc } from "../../frontend-utilities"
@@ -148,45 +152,156 @@ describe("debounce", () => {
     setTimeout(endTest, 500)
   })
 })
+describe("shortFormatDate", () => {
+  const thisYearLocalesArr = [
+    ["af-ZA", "15 Jul."],
+    ["ar-SA", "٢٧ ذو الحجة"],
+    ["de-DE", "15. Juli"],
+    ["el-GR", "15 Ιουλ"],
+    ["en-AU", "15 July"],
+    ["en-GB", "15 Jul"],
+    ["en-IN", "15 Jul"],
+    ["en-US", "Jul 15"],
+    ["es-ES", "15 jul"],
+    ["es-MX", "15 jul"],
+    ["fi-FI", "15. heinäk."],
+    ["fr-CA", "15 juill."],
+    ["fr-FR", "15 juil."],
+    ["he-IL", "15 ביולי"],
+    ["hi-IN", "15 जुल॰"],
+    ["id-ID", "15 Jul"],
+    ["it-IT", "15 lug"],
+    ["ja-JP", "7月15日"],
+    ["ko-KR", "7월 15일"],
+    ["nl-NL", "15 jul."],
+    ["pl-PL", "15 lip"],
+    ["pt-BR", "15 de jul."],
+    ["pt-PT", "15/07"],
+    ["ru-RU", "15 июл."],
+    ["sv-SE", "15 juli"],
+    ["th-TH", "15 ก.ค."],
+    ["tr-TR", "15 Tem"],
+    ["vi-VN", "15 thg 7"],
+    ["zh-CN", "7月15日"],
+    ["zh-TW", "7月15日"],
+  ]
+
+  const year2022LocalesArr = [
+    ["af-ZA", "15 Jul. 2022"],
+    ["ar-SA", "١٦ ذو الحجة ١٤٤٣ هـ"],
+    ["de-DE", "15. Juli 2022"],
+    ["el-GR", "15 Ιουλ 2022"],
+    ["en-AU", "15 July 2022"],
+    ["en-GB", "15 Jul 2022"],
+    ["en-IN", "15 Jul 2022"],
+    ["en-US", "Jul 15, 2022"],
+    ["es-ES", "15 jul 2022"],
+    ["es-MX", "15 jul 2022"],
+    ["fi-FI", "15. heinäk. 2022"],
+    ["fr-CA", "15 juill. 2022"],
+    ["fr-FR", "15 juil. 2022"],
+    ["he-IL", "15 ביולי 2022"],
+    ["hi-IN", "15 जुल॰ 2022"],
+    ["id-ID", "15 Jul 2022"],
+    ["it-IT", "15 lug 2022"],
+    ["ja-JP", "2022年7月15日"],
+    ["ko-KR", "2022년 7월 15일"],
+    ["nl-NL", "15 jul. 2022"],
+    ["pl-PL", "15 lip 2022"],
+    ["pt-BR", "15 de jul. de 2022"],
+    ["pt-PT", "15/07/2022"],
+    ["ru-RU", "15 июл. 2022 г."],
+    ["sv-SE", "15 juli 2022"],
+    ["th-TH", "15 ก.ค. 2565"],
+    ["tr-TR", "15 Tem 2022"],
+    ["vi-VN", "15 thg 7, 2022"],
+    ["zh-CN", "2022年7月15日"],
+    ["zh-TW", "2022年7月15日"],
+  ]
+
+  it.each(thisYearLocalesArr)(
+    "should format this year %s date to %s",
+    (locale, expectedFormat) => {
+      const thisYear = new Date().getFullYear()
+      const date = new Date(thisYear, 6, 15, 13, 31) // July 15, 2023 13:31
+      const result = shortFormatDate(date, locale)
+      expect(result).toBe(expectedFormat)
+    }
+  )
+
+  it.each(year2022LocalesArr)(
+    "should format year 2022 %s date to %s",
+    (locale, expectedFormat) => {
+      const date = new Date(2022, 6, 15, 13, 31) // July 15, 2023 13:31
+      const result = shortFormatDate(date, locale)
+      expect(result).toBe(expectedFormat)
+    }
+  )
+
+  it("formats today as time only", () => {
+    const now = new Date()
+    expect(shortFormatDate(now, "en-US")).toMatch(/1?\d:\d{2} [A|P]M/)
+  })
+
+  it("should handle undefined date", () => {
+    const result = shortFormatDate(undefined)
+    expect(result).toBe("unknown")
+  })
+
+  it.each(thisYearLocalesArr)(
+    "should handle string date %s date to %s",
+    (locale, expectedFormat) => {
+      const date = "2023-07-15T13:31:00" // July 15, 2023 13:31 UTC
+      const result = shortFormatDate(date, locale)
+      expect(result).toBe(expectedFormat)
+    }
+  )
+
+  it("should handle invalid date", () => {
+    const date = "invalid date"
+    const result = shortFormatDate(date)
+    expect(result).toBe("Invalid Date")
+  })
+})
 
 describe("longFormatDate", () => {
   const localesArr = [
-    ["af-ZA", "23 Julie 2023 13:31"],
-    ["ar-SA", "٥ محرم ١٤٤٥ هـ في ١:٣١ م"],
-    ["de-DE", "23. Juli 2023 um 13:31"],
-    ["el-GR", "23 Ιουλίου 2023 - 1:31 μ.μ."],
-    ["en-AU", "23 July 2023 at 1:31 pm"],
-    ["en-GB", "23 July 2023 at 13:31"],
-    ["en-IN", "23 July 2023 at 1:31 pm"],
-    ["en-US", "July 23, 2023 at 1:31 PM"],
-    ["es-ES", "23 de julio de 2023, 13:31"],
-    ["es-MX", "23 de julio de 2023, 13:31"],
-    ["fi-FI", "23. heinäkuuta 2023 klo 13.31"],
-    ["fr-CA", "23 juillet 2023 à 13 h 31"],
-    ["fr-FR", "23 juillet 2023 à 13:31"],
-    ["he-IL", "23 ביולי 2023 בשעה 13:31"],
-    ["hi-IN", "23 जुलाई 2023 को 1:31 pm"],
-    ["id-ID", "23 Juli 2023 13.31"],
-    ["it-IT", "23 luglio 2023 13:31"],
-    ["ja-JP", "2023年7月23日 13:31"],
-    ["ko-KR", "2023년 7월 23일 오후 1:31"],
-    ["nl-NL", "23 juli 2023 om 13:31"],
-    ["pl-PL", "23 lipca 2023 13:31"],
-    ["pt-BR", "23 de julho de 2023 13:31"],
-    ["pt-PT", "23 de julho de 2023 às 13:31"],
-    ["ru-RU", "23 июля 2023 г., 13:31"],
-    ["sv-SE", "23 juli 2023 13:31"],
-    ["th-TH", "23 กรกฎาคม 2566 13:31"],
-    ["tr-TR", "23 Temmuz 2023 13:31"],
-    ["vi-VN", "13:31 23 tháng 7, 2023"],
-    ["zh-CN", "2023年7月23日 13:31"],
-    ["zh-TW", "2023年7月23日 下午1:31"],
+    ["af-ZA", "15 Julie 2023 13:31"],
+    ["ar-SA", "٢٧ ذو الحجة ١٤٤٤ هـ في ١:٣١ م"],
+    ["de-DE", "15. Juli 2023 um 13:31"],
+    ["el-GR", "15 Ιουλίου 2023 - 1:31 μ.μ."],
+    ["en-AU", "15 July 2023 at 1:31 pm"],
+    ["en-GB", "15 July 2023 at 13:31"],
+    ["en-IN", "15 July 2023 at 1:31 pm"],
+    ["en-US", "July 15, 2023 at 1:31 PM"],
+    ["es-ES", "15 de julio de 2023, 13:31"],
+    ["es-MX", "15 de julio de 2023, 13:31"],
+    ["fi-FI", "15. heinäkuuta 2023 klo 13.31"],
+    ["fr-CA", "15 juillet 2023 à 13 h 31"],
+    ["fr-FR", "15 juillet 2023 à 13:31"],
+    ["he-IL", "15 ביולי 2023 בשעה 13:31"],
+    ["hi-IN", "15 जुलाई 2023 को 1:31 pm"],
+    ["id-ID", "15 Juli 2023 13.31"],
+    ["it-IT", "15 luglio 2023 13:31"],
+    ["ja-JP", "2023年7月15日 13:31"],
+    ["ko-KR", "2023년 7월 15일 오후 1:31"],
+    ["nl-NL", "15 juli 2023 om 13:31"],
+    ["pl-PL", "15 lipca 2023 13:31"],
+    ["pt-BR", "15 de julho de 2023 13:31"],
+    ["pt-PT", "15 de julho de 2023 às 13:31"],
+    ["ru-RU", "15 июля 2023 г., 13:31"],
+    ["sv-SE", "15 juli 2023 13:31"],
+    ["th-TH", "15 กรกฎาคม 2566 13:31"],
+    ["tr-TR", "15 Temmuz 2023 13:31"],
+    ["vi-VN", "13:31 15 tháng 7, 2023"],
+    ["zh-CN", "2023年7月15日 13:31"],
+    ["zh-TW", "2023年7月15日 下午1:31"],
   ]
 
   it.each(localesArr)(
     "should format %s date to %s",
     (locale, expectedFormat) => {
-      const date = new Date(2023, 6, 23, 13, 31) // July 23, 2023 13:31
+      const date = new Date(2023, 6, 15, 13, 31) // July 15, 2023 13:31
       const result = longFormatDate(date, locale)
       expect(result).toBe(expectedFormat)
     }
@@ -200,7 +315,7 @@ describe("longFormatDate", () => {
   it.each(localesArr)(
     "should handle string date %s date to %s",
     (locale, expectedFormat) => {
-      const date = "2023-07-23T13:31:00" // July 23, 2023 13:31 UTC
+      const date = "2023-07-15T13:31:00" // July 15, 2023 13:31 UTC
       const result = longFormatDate(date, locale)
       expect(result).toBe(expectedFormat)
     }

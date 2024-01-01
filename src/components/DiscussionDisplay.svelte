@@ -212,6 +212,7 @@
   {#if showReply === discussionId}
     <CommentInput
       commentId={discussionId}
+      isRoot={true}
       {currentUser}
       on:posted={onCommentPosted}
     />
