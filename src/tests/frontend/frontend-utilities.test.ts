@@ -181,34 +181,34 @@ describe("longFormatDate", () => {
     ["vi-VN", "lúc 13:31 23 tháng 7, 2023"],
     ["zh-CN", "2023年7月23日 13:31"],
     ["zh-TW", "2023年7月23日 下午1:31"],
-  ];
+  ]
 
   it.each(localesArr)(
     "should format %s date to %s",
     (locale, expectedFormat) => {
-      const date = new Date(2023, 6, 23, 13, 31); // July 23, 2023 13:31
-      const result = longFormatDate(date, locale);
-      expect(result).toBe(expectedFormat);
+      const date = new Date(2023, 6, 23, 13, 31) // July 23, 2023 13:31
+      const result = longFormatDate(date, locale)
+      expect(result).toBe(expectedFormat)
     }
-  );
+  )
 
   it("should handle undefined date", () => {
-    const result = longFormatDate(undefined);
-    expect(result).toBe("unknown");
-  });
+    const result = longFormatDate(undefined)
+    expect(result).toBe("unknown")
+  })
 
   it.each(localesArr)(
     "should handle string date %s date to %s",
     (locale, expectedFormat) => {
-      const date = "2023-07-23T13:31:00"; // July 23, 2023 13:31 UTC
-      const result = longFormatDate(date, locale);
-      expect(result).toBe(expectedFormat);
+      const date = "2023-07-23T13:31:00" // July 23, 2023 13:31 UTC
+      const result = longFormatDate(date, locale)
+      expect(result).toBe(expectedFormat)
     }
-  );
+  )
 
   it("should handle invalid date", () => {
-    const date = "invalid date";
-    const result = longFormatDate(date);
-    expect(result).toBe("Invalid Date");
-  });
-});
+    const date = "invalid date"
+    const result = longFormatDate(date)
+    expect(result).toBe("Invalid Date")
+  })
+})
