@@ -150,7 +150,7 @@ describe("debounce", () => {
 })
 
 describe("longFormatDate", () => {
-  const localesArr = [
+  const localesArr = [ // ISO 8601
     ["af-ZA", "23 Julie 2023 om 13:31"],
     ["ar-SA", "٥ محرم ١٤٤٥ هـ في ١:٣١ م"],
     ["de-DE", "23. Juli 2023 um 13:31"],
@@ -160,7 +160,7 @@ describe("longFormatDate", () => {
     ["en-IN", "23 July 2023 at 1:31 pm"],
     ["en-US", "July 23, 2023 at 1:31 PM"],
     ["es-ES", "23 de julio de 2023, 13:31"],
-    ["es-MX", "23 de julio de 2023, 13:31"],
+    ["es-MX", "23 de julio de 2023, 1:31 p.m."],
     ["fi-FI", "23. heinäkuuta 2023 klo 13.31"],
     ["fr-CA", "23 juillet 2023 à 13 h 31"],
     ["fr-FR", "23 juillet 2023 à 13:31"],
@@ -181,34 +181,41 @@ describe("longFormatDate", () => {
     ["vi-VN", "lúc 13:31 23 tháng 7, 2023"],
     ["zh-CN", "2023年7月23日 13:31"],
     ["zh-TW", "2023年7月23日 下午1:31"],
-  ];
+  ]
 
   it.each(localesArr)(
     "should format %s date to %s",
     (locale, expectedFormat) => {
-      const date = new Date(2023, 6, 23, 13, 31); // July 23, 2023 13:31
-      const result = longFormatDate(date, locale);
-      expect(result).toBe(expectedFormat);
+      const date = new Date(2023, 6, 23, 13, 31) // July 23, 2023 13:31
+      const result = longFormatDate(date, locale)
+      expect(result).toBe(expectedFormat)
     }
-  );
+  )
 
   it("should handle undefined date", () => {
-    const result = longFormatDate(undefined);
-    expect(result).toBe("unknown");
-  });
+    const result = longFormatDate(undefined)
+    expect(result).toBe("unknown")
+  })
 
   it.each(localesArr)(
     "should handle string date %s date to %s",
     (locale, expectedFormat) => {
-      const date = "2023-07-23T13:31:00"; // July 23, 2023 13:31 UTC
-      const result = longFormatDate(date, locale);
-      expect(result).toBe(expectedFormat);
+      const date = "2023-07-23T13:31:00" // July 23, 2023 13:31 UTC
+      const result = longFormatDate(date, locale)
+      expect(result).toBe(expectedFormat)
     }
-  );
+  )
 
   it("should handle invalid date", () => {
-    const date = "invalid date";
-    const result = longFormatDate(date);
-    expect(result).toBe("Invalid Date");
-  });
-});
+    const date = "invalid date"
+    const result = longFormatDate(date)
+    expect(result).toBe("Invalid Date")
+  })
+
+  it("should handle incorrect string date format", () => {
+    const date = "2023-07-32" // Invalidly formatted date
+    const result = longFormatDate(date)
+    expect(result).toBe("Invalid Date")
+  })
+
+})
