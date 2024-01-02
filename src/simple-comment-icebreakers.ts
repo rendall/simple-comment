@@ -23,7 +23,7 @@ const reverseSlug = (slug: string, questions: string[]) =>
   questions.find(question => isSlugMatch(slug, question))
 
 const fetchAndStoreQuestions = () =>
-  new Promise<string[]>((resolve: (questions: string[]) => void, reject: (reason?: any) => void) => {
+  new Promise<string[]>((resolve, reject) => {
     const currentTimestamp: string =
       document?.getElementById("questions-time-stamp")?.innerText || "0"
     const storedTimestamp = localStorage.getItem(timeStampKey)
@@ -43,7 +43,7 @@ const fetchAndStoreQuestions = () =>
 const fetchQuestions = async (
   currentTimestamp: string,
   resolve: (questions: string[]) => void,
-  reject: (reason?: any) => void
+  reject: (reason?: unknown) => void
 ) => {
   try {
     const questionFile = await fetch(
@@ -64,7 +64,7 @@ const fetchQuestions = async (
 }
 
 const getQuestion = (slug: string) =>
-  new Promise<string>((resolve: (question: string) => void, reject: (reason?: any) => void) => {
+  new Promise<string>((resolve, reject) => {
     fetchAndStoreQuestions()
       .then(questions => {
         const question = reverseSlug(slug, questions)
