@@ -13,10 +13,13 @@ describe("Test crypt", () => {
   it("Test auth token", async () => {
     const name = "Rendall"
     const token = getAuthToken(name)
-
+  
+    // Use a defined JWT_SECRET or a default for testing
+    const jwtSecret = process.env.JWT_SECRET || "default_test_secret"
+  
     const claim: TokenClaim = (await jwt.verify(
       token,
-      process.env.JWT_SECRET
+      jwtSecret
     )) as {
       user: UserId
       exp: number

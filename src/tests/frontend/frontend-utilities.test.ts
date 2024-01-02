@@ -150,35 +150,35 @@ describe("debounce", () => {
 })
 
 describe("longFormatDate", () => {
-  const localesArr = [
-    ["af-ZA", "23 Julie 2023 13:31"],
+  const localesArr = [ // ISO 8601
+    ["af-ZA", "23 Julie 2023 om 13:31"],
     ["ar-SA", "٥ محرم ١٤٤٥ هـ في ١:٣١ م"],
     ["de-DE", "23. Juli 2023 um 13:31"],
-    ["el-GR", "23 Ιουλίου 2023 - 1:31 μ.μ."],
+    ["el-GR", "23 Ιουλίου 2023 στις 1:31 μ.μ."],
     ["en-AU", "23 July 2023 at 1:31 pm"],
     ["en-GB", "23 July 2023 at 13:31"],
     ["en-IN", "23 July 2023 at 1:31 pm"],
     ["en-US", "July 23, 2023 at 1:31 PM"],
     ["es-ES", "23 de julio de 2023, 13:31"],
-    ["es-MX", "23 de julio de 2023, 13:31"],
+    ["es-MX", "23 de julio de 2023, 1:31 p.m."],
     ["fi-FI", "23. heinäkuuta 2023 klo 13.31"],
     ["fr-CA", "23 juillet 2023 à 13 h 31"],
     ["fr-FR", "23 juillet 2023 à 13:31"],
     ["he-IL", "23 ביולי 2023 בשעה 13:31"],
-    ["hi-IN", "23 जुलाई 2023 को 1:31 pm"],
-    ["id-ID", "23 Juli 2023 13.31"],
-    ["it-IT", "23 luglio 2023 13:31"],
+    ["hi-IN", "23 जुलाई 2023 को 1:31 pm बजे"],
+    ["id-ID", "23 Juli 2023 pukul 13.31"],
+    ["it-IT", "23 luglio 2023 alle ore 13:31"],
     ["ja-JP", "2023年7月23日 13:31"],
     ["ko-KR", "2023년 7월 23일 오후 1:31"],
     ["nl-NL", "23 juli 2023 om 13:31"],
     ["pl-PL", "23 lipca 2023 13:31"],
-    ["pt-BR", "23 de julho de 2023 13:31"],
+    ["pt-BR", "23 de julho de 2023 às 13:31"],
     ["pt-PT", "23 de julho de 2023 às 13:31"],
-    ["ru-RU", "23 июля 2023 г., 13:31"],
-    ["sv-SE", "23 juli 2023 13:31"],
-    ["th-TH", "23 กรกฎาคม 2566 13:31"],
+    ["ru-RU", "23 июля 2023 г. в 13:31"],
+    ["sv-SE", "23 juli 2023 kl. 13:31"],
+    ["th-TH", "23 กรกฎาคม 2566 เวลา 13:31"],
     ["tr-TR", "23 Temmuz 2023 13:31"],
-    ["vi-VN", "13:31 23 tháng 7, 2023"],
+    ["vi-VN", "lúc 13:31 23 tháng 7, 2023"],
     ["zh-CN", "2023年7月23日 13:31"],
     ["zh-TW", "2023年7月23日 下午1:31"],
   ]
@@ -211,4 +211,11 @@ describe("longFormatDate", () => {
     const result = longFormatDate(date)
     expect(result).toBe("Invalid Date")
   })
+
+  it("should handle incorrect string date format", () => {
+    const date = "2023-07-32" // Invalidly formatted date
+    const result = longFormatDate(date)
+    expect(result).toBe("Invalid Date")
+  })
+
 })

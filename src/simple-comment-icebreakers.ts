@@ -6,15 +6,15 @@ declare global {
 const storageKey = "icebreakerQuestions"
 const timeStampKey = "icebreakerQuestionsTimeStamp"
 
-const toSlug = (str: string): string =>
-  str
-    .toLowerCase()
-    .replace(/ /g, "-")
-    .replace(/[^\w-]+/g, "")
-    .replace(/_/g, "")
-    .replace(/-{2,}/g, "-")
-    .replace(/-$/, "")
-    .replace(/^-/, "")
+const toSlug = (str: string): string => {
+  return str
+    .toLowerCase() // Convert to lower case
+    .trim() // Remove leading and trailing spaces
+    .replace(/_/g, "-") // Replace underscores with dashes
+    .replace(/\s+/g, "-") // Replace all spaces with dashes
+    .replace(/[^a-z0-9-]/g, "") // Remove characters that are not lowercase letters, numbers, or dashes
+    .replace(/-+/g, "-") // Merge consecutive dashes into a single dash
+}
 
 const isSlugMatch = (slug: string, question: string) =>
   slug === toSlug(question)
@@ -24,7 +24,7 @@ const reverseSlug = (slug: string, questions: string[]) =>
 
 const fetchAndStoreQuestions = () =>
   new Promise<string[]>((resolve, reject) => {
-    const currentTimestamp =
+    const currentTimestamp: string =
       document?.getElementById("questions-time-stamp")?.innerText || "0"
     const storedTimestamp = localStorage.getItem(timeStampKey)
 
@@ -40,7 +40,11 @@ const fetchAndStoreQuestions = () =>
     fetchQuestions(currentTimestamp, resolve, reject)
   })
 
-const fetchQuestions = async (currentTimestamp, resolve, reject) => {
+const fetchQuestions = async (
+  currentTimestamp: string,
+  resolve: (questions: string[]) => void,
+  reject: (reason?: unknown) => void
+) => {
   try {
     const questionFile = await fetch(
       "https://raw.githubusercontent.com/rendall/icebreakers/master/QUESTIONS.md"
