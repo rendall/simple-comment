@@ -76,7 +76,7 @@
     "sass": "^1.63.6",
     "sass-loader": "^13.3.2",
     "style-loader": "^3.3.3",
-    "svelte": "^3.0.0",
+    "svelte": "^5.51.5",
     "svelte-loader": "^3.1.9",
     "svelte-preprocess": "^5.0.4",
     "ts-jest": "^29.1.1",
