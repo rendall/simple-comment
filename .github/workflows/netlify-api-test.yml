@@ -9,12 +9,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Use Node.js 16.x
-        uses: actions/setup-node@v3
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v4
         with:
-          node-version: "16"
+          node-version: "22"
 
       - name: Install
         run: |
@@ -31,6 +31,10 @@ jobs:
         run: yarn run build:netlify
 
       - name: Test Netlify functions
+        env:
+          # @shelf/jest-mongodb's bundled mongodb-memory-server version in this repo
+          # does not support MONGOMS_DISTRO; pin a known-valid download URL instead.
+          MONGOMS_DOWNLOAD_URL: https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu2204-6.0.14.tgz
         run: |
           node ./scripts/createTestEnv.mjs 
-          yarn test
+          yarn test:backend

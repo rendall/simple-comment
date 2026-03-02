@@ -17,7 +17,6 @@ export default {
       "ts-jest",
       {
         tsconfig: "tsconfig.frontend.json",
-        isolatedModules: true,
         useESM: true,
       },
     ],
