@@ -139,6 +139,11 @@ Repeat this loop until stop conditions are met.
 
 Dependency loop was executed as isolated units with validation gates (`yarn lint`, `yarn test:frontend`, `yarn test:backend` with generated test `.env`) before each commit.
 
+Validation interpretation used in this phase:
+
+- `lint` and backend test suite required green for each unit.
+- Frontend test suite retained a known pre-existing locale/ICU assertion failure set; no additional failures were introduced by Phase 01 changes.
+
 Completed units:
 
 1. `e0c67c2` CI/runtime action alignment (Node 22 + workflow action upgrades).
