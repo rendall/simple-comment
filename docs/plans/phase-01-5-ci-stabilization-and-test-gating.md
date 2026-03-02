@@ -86,14 +86,21 @@ Stabilize CI gating immediately after Phase 01 so merges are reliably blocked on
 
 ## Phase notes for PR narrative
 
-Capture these Phase 01.5 notes in the PR body:
+Use the following notes in the Phase 01.5 implementation PR:
 
-- CI failure cause (OpenSSL/runtime and archive-resolution mismatch summary).
-- Why `MONGOMS_DOWNLOAD_URL` pinning was chosen for current `@shelf/jest-mongodb` version.
-- Verification evidence used for the pinned URL (for example, successful backend CI run and archive reachability check).
-- Temporary gating policy rationale (backend required, frontend locale determinism deferred).
-- Clear retirement condition for temporary policy (Phase 03 restores deterministic frontend assertions and required frontend gate).
-- Fallback update procedure if pinned URL becomes unavailable (select new supported archive URL, verify reachability, re-run backend CI).
+- CI failure cause:
+  - in-memory Mongo startup/linkage mismatch on `ubuntu-latest` and archive-resolution mismatch for auto-selected `ubuntu2404` artifacts.
+- Pin rationale:
+  - keep compatibility with the current `@shelf/jest-mongodb`/`mongodb-memory-server` behavior by setting `MONGOMS_DOWNLOAD_URL` directly in workflow.
+- Verification evidence:
+  - pinned URL reachability check returned `HTTP 200` on 2026-03-02 for `https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu2204-6.0.14.tgz`.
+  - workflow test step is backend-scoped (`yarn test:backend`) in `.github/workflows/netlify-api-test.yml`.
+- Temporary gating rationale:
+  - backend CI remains required while known frontend locale assertion instability is deferred.
+- Retirement condition:
+  - Phase 03 restores deterministic frontend assertions and reinstates required frontend CI gating (`yarn test:frontend`).
+- Fallback update procedure:
+  - if pinned URL becomes unavailable, choose a new supported Mongo archive URL, verify reachability, update workflow env value, and re-run backend CI.
 
 ## Risk and mitigation
 
