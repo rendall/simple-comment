@@ -20,7 +20,7 @@ Each phase has its own plan file and acceptance criteria.
 
 Dependency and platform upgrades are Phase 1 per team direction.  
 This is reasonable, with one guardrail: we keep behavior changes out of Phase 1 so we can isolate upgrade risk.  
-Confirmed runtime logic defects are then handled in Phase 2.
+A short Phase 1.5 stabilizes CI test gating after platform changes, then runtime logic defects are handled in Phase 2.
 
 ---
 
@@ -80,7 +80,8 @@ Confirmed runtime logic defects are then handled in Phase 2.
 
 ## Program phases
 
-- [Phase 01 - Dependency and Platform Upgrade](./phase-01-dependency-and-platform-upgrade.md)
+- [Phase 01 - Dependency and Platform Upgrade](../archive/phase-01-dependency-and-platform-upgrade.md)
+- [Phase 01.5 - CI Stabilization and Test Gating](./phase-01-5-ci-stabilization-and-test-gating.md)
 - [Phase 02 - Backend Correctness and CORS](./phase-02-backend-correctness-and-cors.md)
 - [Phase 03 - Test Determinism and CI Hardening](./phase-03-test-determinism-and-ci-hardening.md)
 - [Phase 04 - Type Safety and Environment Handling](./phase-04-type-safety-and-env-handling.md)
