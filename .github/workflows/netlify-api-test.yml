@@ -32,9 +32,9 @@ jobs:
 
       - name: Test Netlify functions
         env:
-          # ubuntu-latest no longer provides OpenSSL 1.1; force a distro/binary combo
-          # that links against OpenSSL 3 for mongodb-memory-server.
-          MONGOMS_DISTRO: ubuntu-22.04
+          # @shelf/jest-mongodb's bundled mongodb-memory-server version in this repo
+          # does not support MONGOMS_DISTRO; pin a known-valid download URL instead.
+          MONGOMS_DOWNLOAD_URL: https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu2204-6.0.14.tgz
         run: |
           node ./scripts/createTestEnv.mjs 
           yarn test
