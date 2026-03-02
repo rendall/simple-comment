@@ -37,4 +37,4 @@ jobs:
           MONGOMS_DOWNLOAD_URL: https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu2204-6.0.14.tgz
         run: |
           node ./scripts/createTestEnv.mjs 
-          yarn test
+          yarn test:backend
