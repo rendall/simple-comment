@@ -97,4 +97,5 @@ Confirmed runtime logic defects are then handled in Phase 2.
   - Implementation notes
   - Validation evidence
   - Rollback approach
+- Validation evidence is mandatory, but test steps do not need to appear as atomic checklist items when `docs/norms/checklist.md` exclusions apply; execution/testing is governed by `docs/norms/implementation.md`.
 - Keep release notes per phase in the PR description.
