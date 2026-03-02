@@ -1047,7 +1047,9 @@ export class MongodbService extends AbstractDbService {
       }
 
       const allowedOrigins = getAllowedOrigins()
-      const normalizedAllowedOrigins = allowedOrigins.map(normalizeAllowedOrigin)
+      const normalizedAllowedOrigins = allowedOrigins.map(
+        normalizeAllowedOrigin
+      )
       const isAllowed = isAllowedReferer(newTopic.referer, allowedOrigins)
 
       if (!isAllowed) {
