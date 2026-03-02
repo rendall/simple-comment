@@ -34,9 +34,9 @@
     "watch:test": "jest --watch --noStackTrace"
   },
   "dependencies": {
-    "@babel/core": "^7.22.9",
-    "@babel/preset-env": "^7.22.9",
-    "@babel/preset-typescript": "^7.12.7",
+    "@babel/core": "^7.29.0",
+    "@babel/preset-env": "^7.29.0",
+    "@babel/preset-typescript": "^7.28.5",
     "@netlify/functions": "^1.0.0",
     "@sendgrid/mail": "^7.7.0",
     "@tsconfig/svelte": "^5.0.0",
