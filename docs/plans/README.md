@@ -27,8 +27,8 @@ Confirmed runtime logic defects are then handled in Phase 2.
 ## Current baseline (observed)
 
 - Runtime/tooling:
-  - Node pinned to `18.12.1` in `.nvmrc`.
-  - CI workflow uses Node `16` in `.github/workflows/netlify-api-test.yml`.
+  - Node pinned to `22.22.0` in `.nvmrc`.
+  - CI workflow uses Node `22` in `.github/workflows/netlify-api-test.yml`.
   - Yarn classic (`1.22.x`) lockfile.
   - Svelte `^3.0.0`, Webpack 5 custom frontend and functions bundling.
 - Lint:
@@ -36,7 +36,7 @@ Confirmed runtime logic defects are then handled in Phase 2.
   - ESLint config is legacy `.eslintrc` format in `src/.eslintrc.json`.
 - Tests:
   - `yarn test:backend` fails locally without `.env` and with import-time env validation.
-  - `yarn test:frontend` has locale-string assertion failures and `ts-jest` deprecation warnings.
+  - `yarn test:frontend` has locale-string assertion failures across ICU/CLDR variants.
 
 ---
 
@@ -73,8 +73,8 @@ Confirmed runtime logic defects are then handled in Phase 2.
 7. Frequent string throws for env/runtime failures.
    - Present across functions and libs (example: `src/lib/backend-utilities.ts:36`, `src/functions/auth.ts:23`).
 
-8. ts-jest deprecation warning.
-   - `jest.frontend.config.ts:20` sets deprecated `isolatedModules` in transformer options.
+8. (Resolved in Phase 01) ts-jest deprecation warning.
+   - `isolatedModules` was moved to tsconfig-based configuration during Phase 01 implementation.
 
 ---
 

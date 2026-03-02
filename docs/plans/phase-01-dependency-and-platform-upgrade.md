@@ -1,6 +1,6 @@
 # Phase 01 - Dependency and Platform Upgrade
 
-Status: Planned
+Status: Implemented (pending PR)
 
 ## Goal
 
@@ -123,6 +123,53 @@ Repeat this loop until stop conditions are met.
 
 3. Issue: Loop steps did not explicitly gate commit on test results per iteration.
    Decision: Add an explicit loop item for targeted/full checks and block per-unit commit when checks fail.
+
+## Implementation Outcome (2026-03-02)
+
+### Node/runtime decision
+
+- Latest LTS attempt (`nvm install --lts && nvm use --lts`) selected Node `24.14.0`, but local execution failed with `Exec format error`.
+- Applied fallback rule and selected Node `22.x` for Phase 1.
+- Implemented baseline:
+  - `.nvmrc` set to `22.22.0`.
+  - CI updated to Node `22` in `.github/workflows/netlify-api-test.yml`.
+  - Actions upgraded to current supported majors (`checkout@v4`, `setup-node@v4`, `codeql-action/*@v3`).
+
+### Loop execution summary
+
+Dependency loop was executed as isolated units with validation gates (`yarn lint`, `yarn test:frontend`, `yarn test:backend` with generated test `.env`) before each commit.
+
+Completed units:
+
+1. `e0c67c2` CI/runtime action alignment (Node 22 + workflow action upgrades).
+2. `a91c1ea` + `ea513cf` ts-jest deprecation path cleanup (`isolatedModules` moved to tsconfig; jest-compatible TS option fix).
+3. `f0b6680` `netlify-cli` upgrade to `^24.0.1`.
+4. `3ca4246` Babel core/preset upgrades.
+5. `cf1d2dc` `@sendgrid/mail` upgrade to `^8.1.6` (pulls modern `axios`).
+6. `5796765` `webpack-dev-server` upgrade to `^5.2.3`.
+7. `e0e4de3` `jsonwebtoken` patch uplift.
+8. `f923f71` lockfile uplift to `mongodb@5.9.2` within existing `^5.8.0` range.
+
+Attempted-but-deferred in Phase 1:
+
+- `mongodb` major upgrade to `6.x` caused backend behavior regressions in `MongodbService` update paths (HTTP `500` in multiple API tests). This crossed the Phase 1 no-runtime-behavior-change boundary and was not adopted.
+
+### Audit delta
+
+Using `yarn audit --json`:
+
+- Baseline summary: `low=53`, `moderate=90`, `high=107`, `critical=42`.
+- Current summary: `low=46`, `moderate=81`, `high=94`, `critical=42`.
+
+### Residual advisory classification (Phase 1 stop condition)
+
+No remaining critical/high advisories were accepted as production-runtime reachable in this phase. Remaining items are classified as:
+
+- `dev/test/optional` tooling paths (for example `jest`, `babel-jest`, `@shelf/jest-mongodb`, `mongodb-memory-server`, `cypress`, `netlify-cli`, `eslint`, `rimraf`).
+- `compile-time` risk paths requiring attacker-controlled source compilation context (`@babel/traverse` advisory family).
+- `no-patch` advisories in transitive dependencies where Phase 1-safe runtime migration is not available (`ip` advisories reported under `mongodb` and test tooling).
+
+These are explicitly deferred to follow-up modernization phases where larger dependency-family migrations are in scope.
 
 ## Risk and mitigation
 
