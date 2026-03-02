@@ -37,6 +37,7 @@ import {
   isEmail,
   isTokenClaim,
   isUser,
+  normalizeAllowedOrigin,
   normalizeUrl,
   toAdminSafeUser,
   toPublicSafeUser,
@@ -1045,18 +1046,22 @@ export class MongodbService extends AbstractDbService {
         return error403UserNotAuthorized
       }
 
-      const isAllowed = isAllowedReferer(newTopic.referer, getAllowedOrigins())
+      const allowedOrigins = getAllowedOrigins()
+      const normalizedAllowedOrigins = allowedOrigins.map(
+        normalizeAllowedOrigin
+      )
+      const isAllowed = isAllowedReferer(newTopic.referer, allowedOrigins)
 
       if (!isAllowed) {
         const normalizedReferer = normalizeUrl(newTopic.referer)
 
-        if (getAllowedOrigins().length > 1) {
-          const body = `The referer '${normalizedReferer}' does not match any of the expected patterns. Allowed patterns: '${getAllowedOrigins().join(
+        if (normalizedAllowedOrigins.length > 1) {
+          const body = `The referer '${normalizedReferer}' does not match any of the expected patterns. Allowed patterns: '${normalizedAllowedOrigins.join(
             " or "
           )}'. Please ensure the referer matches one of the allowed patterns.`
           return { ...error403Forbidden, body }
         } else {
-          const body = `The referer '${normalizedReferer}' does not match the expected pattern: '${getAllowedOrigins().join()}'. Please ensure the referer matches the allowed pattern.`
+          const body = `The referer '${normalizedReferer}' does not match the expected pattern: '${normalizedAllowedOrigins.join()}'. Please ensure the referer matches the allowed pattern.`
           return { ...error403Forbidden, body }
         }
       }
@@ -1324,9 +1329,9 @@ export class MongodbService extends AbstractDbService {
     }
 
     const users: Collection<User> = (await this.getDb()).collection("users")
-    const authUser = await users.find({ id: authUserId }).limit(1)
+    const authUser = authUserId ? await users.findOne({ id: authUserId }) : null
 
-    if (!authUser && !policy.canPublicReadDiscussion) {
+    if (authUserId && !authUser && !policy.canPublicReadDiscussion) {
       return error404UserUnknown
     }
 
@@ -1429,9 +1434,7 @@ export class MongodbService extends AbstractDbService {
     const discussions: Collection<Comment | Topic> = (
       await this.getDb()
     ).collection("comments")
-    const cursor = await discussions.find({ id: topicId }).limit(1)
-
-    const foundTopic = await cursor.next()
+    const foundTopic = await discussions.findOne({ id: topicId })
 
     if (!foundTopic || isComment(foundTopic)) {
       return {
@@ -1444,43 +1447,44 @@ export class MongodbService extends AbstractDbService {
       return error403UserNotAuthorized
     }
 
-    // If we delete a topic that has replies it will orphan
-    // them, so first check for even one
-    const replyCursor = await discussions.find({ parentId: topicId }).limit(1)
-
-    if (replyCursor) {
-      // well, shit. delete all of the replies
-      const getReplies = id => [
-        { $match: { id } },
-        {
-          $graphLookup: {
-            from: "comments",
-            startWith: "$id",
-            connectFromField: "id",
-            connectToField: "parentId",
-            as: "replies",
-          },
+    const getReplies = id => [
+      { $match: { id } },
+      {
+        $graphLookup: {
+          from: "comments",
+          startWith: "$id",
+          connectFromField: "id",
+          connectToField: "parentId",
+          as: "replies",
         },
-      ]
+      },
+    ]
 
-      const rawReplies = await discussions
-        .aggregate(getReplies(topicId))
-        .toArray()
-      const commentIds = rawReplies.map(c => c.id)
-
-      await discussions.deleteMany({ id: { $in: commentIds } })
+    type TopicDescendants = {
+      id: TopicId
+      replies?: { id: CommentId }[]
     }
 
-    // entire comment can be deleted without trouble
-    // but we don't want anyone to reply in the meantime, so lock it:
-    return discussions
-      .findOneAndDelete({ id: topicId })
-      .then(() => success202TopicDeleted)
-      .catch(e => {
-        return authUser.isAdmin
-          ? { ...error500UpdateError, body: e }
-          : error500UpdateError
-      })
+    try {
+      const rawReplies = await discussions
+        .aggregate<TopicDescendants>(getReplies(topicId))
+        .toArray()
+      const commentIds = Array.from(
+        new Set(
+          rawReplies.flatMap(replyThread => [
+            replyThread.id,
+            ...(replyThread.replies ?? []).map(reply => reply.id),
+          ])
+        )
+      )
+
+      await discussions.deleteMany({ id: { $in: commentIds } })
+      return success202TopicDeleted
+    } catch (e) {
+      return authUser.isAdmin
+        ? { ...error500UpdateError, body: e }
+        : error500UpdateError
+    }
   }
 
   authDELETE = (): Promise<Success> => {

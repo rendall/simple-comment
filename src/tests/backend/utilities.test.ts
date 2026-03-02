@@ -225,7 +225,7 @@ describe("isAllowedReferer with advanced patterns", () => {
     expect(isAllowedReferer(url, allowedOriginArray)).toBe(false)
   })
 
-  // never use these as allowed origins
+  // normalization now allows these variants to match
   test.each([
     "https://example.com", // protocol is stripped by normalization
     "http://example.com", // protocol is stripped by normalization
@@ -234,8 +234,8 @@ describe("isAllowedReferer with advanced patterns", () => {
     "example.com/index.html", // directory index is stripped by normalization
     "example.com?foo=bar", // query parameters are stripped by normalization
     "example.com#foo", // hash is stripped by normalization
-  ])("allowed origin %s will not match", (url: string) => {
-    expect(isAllowedReferer(url, [url])).toBe(false)
+  ])("allowed origin %s should match after normalization", (url: string) => {
+    expect(isAllowedReferer(url, [url])).toBe(true)
   })
 })
 

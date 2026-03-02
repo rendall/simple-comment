@@ -217,7 +217,11 @@ export const addHeaders = (
 
 const getOrigin = (headers: Headers) => getHeaderValue(headers, "origin")
 
-export const getAllowedOrigins = () => allowOrigin.split(",")
+export const getAllowedOrigins = () =>
+  allowOrigin
+    .split(",")
+    .map(origin => origin.trim())
+    .filter(origin => origin.length > 0)
 
 /** Normalize a url for allowedReferer test
  * - strips hash and query parameters
@@ -231,6 +235,9 @@ export const normalizeUrl = (url: string) =>
     removeQueryParameters: true,
     removeDirectoryIndex: true,
   })
+
+export const normalizeAllowedOrigin = (allowedOriginPattern: string) =>
+  normalizeUrl(allowedOriginPattern.trim())
 
 /**
  * Return true if `url` matches any of the patterns in `allowedPatterns`
@@ -246,7 +253,14 @@ export const normalizeUrl = (url: string) =>
 export const isAllowedReferer = (
   url: string,
   allowedPatterns: string[] = getAllowedOrigins()
-) => picomatch.isMatch(normalizeUrl(url), allowedPatterns)
+) =>
+  picomatch.isMatch(
+    normalizeUrl(url),
+    [
+      ...allowedPatterns.map(pattern => pattern.trim()),
+      ...allowedPatterns.map(normalizeAllowedOrigin),
+    ].filter(pattern => pattern.length > 0)
+  )
 
 /** Returns the proper headers for Access-Control-Allow-Origin
  * as set in .env and as determined by the Request Origin header

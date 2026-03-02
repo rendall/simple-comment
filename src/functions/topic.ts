@@ -41,9 +41,9 @@ const service: MongodbService = new MongodbService(
 
 const getAllowHeaders = (event: APIGatewayEvent) => {
   const allowHeaders = {
-    "Access-Control-Allow-Methods": "GET,OPTIONS",
+    "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
     "Access-Control-Allow-Credentials": "true",
-    "Access-Control-Allow-Headers": "Cookie,Referrer-Policy",
+    "Access-Control-Allow-Headers": "Cookie,Authorization",
   }
   const eventHeaders = toDefinedHeaders(event.headers)
   const allowedOriginHeaders = getAllowOriginHeaders(
@@ -101,7 +101,9 @@ export const handler = async (event: APIGatewayEvent) => {
       case "DELETE":
         return service.topicDELETE(targetId, authUserId)
       case "OPTIONS":
-        return new Promise<Success>(resolve => resolve(success200OK))
+        return new Promise<Success>(resolve =>
+          resolve({ ...success200OK, headers })
+        )
       default:
         return new Promise<Error>(resolve => resolve(error405MethodNotAllowed))
     }
