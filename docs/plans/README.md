@@ -80,7 +80,7 @@ A short Phase 1.5 stabilizes CI test gating after platform changes, then runtime
 
 ## Program phases
 
-- [Phase 01 - Dependency and Platform Upgrade](./phase-01-dependency-and-platform-upgrade.md)
+- [Phase 01 - Dependency and Platform Upgrade](../archive/phase-01-dependency-and-platform-upgrade.md)
 - [Phase 01.5 - CI Stabilization and Test Gating](./phase-01-5-ci-stabilization-and-test-gating.md)
 - [Phase 02 - Backend Correctness and CORS](./phase-02-backend-correctness-and-cors.md)
 - [Phase 03 - Test Determinism and CI Hardening](./phase-03-test-determinism-and-ci-hardening.md)

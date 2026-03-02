@@ -43,6 +43,58 @@ Stabilize CI gating immediately after Phase 01 so merges are reliably blocked on
 5. Add handoff note to Phase 03:
    - Phase 03 owns refactoring locale assertions to deterministic expectations and restoring frontend test gating in CI.
 
+## Temporary test-gating policy (Phase 01.5)
+
+- Required merge gate for this phase:
+  - backend CI workflow (`.github/workflows/netlify-api-test.yml`) with lint, build, generated test env, and `yarn test:backend`.
+- Explicitly deferred merge gate for this phase:
+  - frontend locale-string assertions in `src/tests/frontend/frontend-utilities.test.ts`.
+- Exit criteria for this temporary policy:
+  - Phase 03 completes deterministic locale assertion refactor and restores frontend CI gating (`yarn test:frontend` required).
+
+## Checklist QC Decisions (2026-03-02)
+
+1. Issue: Documentation-oriented checklist items were partially ambiguous (what exact text/section should exist), which reduced checkability.
+   Decision: Require explicit section names and handoff statement text targets in Phase 01.5 and Phase 03 docs.
+
+2. Issue: Jest Mongo config item could pass even if a conflicting `jest-mongodb-config.ts` file reappears later.
+   Decision: Define `jest-mongodb-config.js` as canonical and explicitly require no root-level `jest-mongodb-config.ts` in this phase.
+
+3. Issue: Mongo download pinning had no explicit fallback/rotation note if the upstream URL changes.
+   Decision: Require PR phase notes to include pin rationale, verification method, and update procedure for URL rotation.
+
+## Checklist integration pass (2026-03-02)
+
+- Verified checklist items reflect QC decisions:
+  - explicit section targets and text targets for docs handoff items
+  - canonical Jest Mongo config expectation with no competing TS config
+  - explicit CI download pin and note requirements
+- Verified dependency chain consistency:
+  - C03 depends on C02
+  - C05 depends on C03/C04
+  - C06 depends on C05
+  - C08 depends on C03/C04/C05/C06/C07
+- Integration finding:
+  - `docs/plans/README.md` Phase 01 link still pointed to `docs/plans/phase-01-dependency-and-platform-upgrade.md` after archive move.
+  - Decision: repoint Phase 01 link to `docs/archive/phase-01-dependency-and-platform-upgrade.md`.
+
+## Checklist sanity pass (2026-03-02)
+
+- No remaining blockers for Phase 01.5 implementation.
+- CI/backend stabilization controls are present (`MONGOMS_DOWNLOAD_URL`, backend-scoped test command).
+- Documentation handoff path to Phase 03 is now explicit.
+
+## Phase notes for PR narrative
+
+Capture these Phase 01.5 notes in the PR body:
+
+- CI failure cause (OpenSSL/runtime and archive-resolution mismatch summary).
+- Why `MONGOMS_DOWNLOAD_URL` pinning was chosen for current `@shelf/jest-mongodb` version.
+- Verification evidence used for the pinned URL (for example, successful backend CI run and archive reachability check).
+- Temporary gating policy rationale (backend required, frontend locale determinism deferred).
+- Clear retirement condition for temporary policy (Phase 03 restores deterministic frontend assertions and required frontend gate).
+- Fallback update procedure if pinned URL becomes unavailable (select new supported archive URL, verify reachability, re-run backend CI).
+
 ## Risk and mitigation
 
 - Risk: frontend regressions could go undetected if frontend tests are not gated.

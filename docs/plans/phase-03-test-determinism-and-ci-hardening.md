@@ -24,6 +24,12 @@ Make test runs reproducible across local and CI environments.
 - Frontend failure source:
   - exact locale strings in `src/tests/frontend/frontend-utilities.test.ts:186+` fail across Intl data variants.
 
+## Phase 1.5 handoff
+
+Phase 03 owns the frontend locale-determinism refactor: replace brittle exact
+locale-string assertions with deterministic assertions and restore frontend CI
+gating by making `yarn test:frontend` a required check.
+
 ## Implementation steps
 
 1. Define test env strategy:
