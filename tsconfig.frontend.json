@@ -15,6 +15,7 @@
     "target": "es6",
     "module": "ESNext",
     "lib": ["es6", "dom"],
+    "isolatedModules": true,
     "skipLibCheck": true,
     "outDir": "./",
     "rootDir": "./src/",
