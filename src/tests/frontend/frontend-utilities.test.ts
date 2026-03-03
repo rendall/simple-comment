@@ -205,30 +205,24 @@ describe("longFormatDate", () => {
     }
   )
 
-  it.each(locales)(
-    "formats %s for Date input",
-    locale => {
-      const result = longFormatDate(utcDate, locale)
-      const formatter = new Intl.DateTimeFormat(locale, dateFormatOptions)
+  it.each(locales)("formats %s for Date input", locale => {
+    const result = longFormatDate(utcDate, locale)
+    const formatter = new Intl.DateTimeFormat(locale, dateFormatOptions)
 
-      expect(result).toBe(formatter.format(utcDate))
-    }
-  )
+    expect(result).toBe(formatter.format(utcDate))
+  })
 
   it("should handle undefined date", () => {
     const result = longFormatDate(undefined)
     expect(result).toBe("unknown")
   })
 
-  it.each(locales)(
-    "formats %s for ISO UTC string input",
-    locale => {
-      const result = longFormatDate(utcDateString, locale)
-      const formatter = new Intl.DateTimeFormat(locale, dateFormatOptions)
+  it.each(locales)("formats %s for ISO UTC string input", locale => {
+    const result = longFormatDate(utcDateString, locale)
+    const formatter = new Intl.DateTimeFormat(locale, dateFormatOptions)
 
-      expect(result).toBe(formatter.format(new Date(utcDateString)))
-    }
-  )
+    expect(result).toBe(formatter.format(new Date(utcDateString)))
+  })
 
   it("should handle invalid date", () => {
     const date = "invalid date"
