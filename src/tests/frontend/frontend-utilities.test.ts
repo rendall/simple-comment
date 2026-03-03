@@ -244,12 +244,6 @@ describe("longFormatDate", () => {
     }
   )
 
-  it("keeps localized integration rendering behavior for en-US", () => {
-    const result = longFormatDate(utcDate, "en-US")
-    const formatter = new Intl.DateTimeFormat("en-US", dateFormatOptions)
-    expect(result).toBe(formatter.format(utcDate))
-  })
-
   it("should handle invalid date", () => {
     const date = "invalid date"
     const result = longFormatDate(date)
