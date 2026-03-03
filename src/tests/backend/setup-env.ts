@@ -8,6 +8,11 @@ const deterministicSecretValue = (key: string) =>
 const isSecretOrPassword = (key: string) =>
   key.includes("SECRET") || key.includes("PASSWORD")
 
+type EnvEntry = { key: string; value: string }
+
+const isEnvEntry = (entry: EnvEntry | undefined): entry is EnvEntry =>
+  entry !== undefined
+
 const parseExampleEnv = () =>
   readFileSync(exampleEnvPath, "utf8")
     .replace(/\r/g, "\n")
@@ -22,7 +27,7 @@ const parseExampleEnv = () =>
       const value = line.slice(separatorIndex + 1).trim()
       return { key, value }
     })
-    .filter(entry => entry !== undefined)
+    .filter(isEnvEntry)
 
 parseExampleEnv().forEach(({ key, value }) => {
   if (isSecretOrPassword(key)) {
