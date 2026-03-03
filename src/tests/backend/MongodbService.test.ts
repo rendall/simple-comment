@@ -957,15 +957,22 @@ describe("Full API service test", () => {
     })
   })
 
-  test("GET to /topic/{topicId} should return a topic and descendent comments", () => {
-    const targetTopicId = chooseRandomElement(testTopicsWithComments()).id
-    return service
-      .topicGET(targetTopicId)
-      .then((res: Success<Discussion> | Error) => {
-        const resbody = res.body as { id: string }
-        expect(resbody.id).toBe(targetTopicId)
-        expect(res.body).toHaveProperty("replies")
+  test("GET to /topic/{topicId} should return a topic and descendent comments", async () => {
+    const commentsCollection = db.collection("comments")
+    const seededTopicIds = testTopics.map(topic => topic.id)
+    const topicIdsWithReplies = (
+      await commentsCollection.distinct("parentId", {
+        parentId: { $in: seededTopicIds },
       })
+    ).filter((id): id is string => Boolean(id))
+
+    expect(topicIdsWithReplies.length).toBeGreaterThan(0)
+
+    const targetTopicId = chooseRandomElement(topicIdsWithReplies)
+    const res = await service.topicGET(targetTopicId)
+    const resbody = res.body as { id: string; replies: unknown[] }
+    expect(resbody.id).toBe(targetTopicId)
+    expect(Array.isArray(resbody.replies)).toBe(true)
   })
 
   // Discussion Update
