@@ -194,7 +194,7 @@ export const addHeaders = (
     body?: unknown
     headers?: Record<string, string>
   },
-  headers
+  headers: Headers
 ) => {
   const resHeaders = res?.headers ?? {}
 
@@ -357,7 +357,7 @@ export const getCookieToken = (
 export const hasBearerScheme = (
   headers: Headers,
   parse?: { scheme: string; credentials: string }
-) =>
+): boolean =>
   parse === undefined
     ? hasHeader(headers, AUTHORIZATION_HEADER)
       ? hasBearerScheme(
@@ -368,7 +368,7 @@ export const hasBearerScheme = (
     : parse.scheme.toLowerCase() === BEARER_SCHEME.toLowerCase()
 
 /** decodeAuthHeader expects a string of the form `Basic someBase64String==` and returns its plaintext decode */
-const decodeAuthHeader = authHeaderValue =>
+const decodeAuthHeader = (authHeaderValue: string) =>
   Buffer.from(authHeaderValue.slice(6), "base64").toString()
 
 /** parseAuthHeader expects a string of the form `user:password` and returns an object of the form {user, password} Will fail if the : character is in the user name */
@@ -383,11 +383,8 @@ const parseAuthHeader = (
         password: plainText.slice(colonIndex + 1),
       }
 
-export const getUserIdPassword = eventHeaders =>
-  [getAuthHeaderValue, decodeAuthHeader, parseAuthHeader].reduce(
-    (acc, func) => func(acc),
-    eventHeaders
-  )
+export const getUserIdPassword = (eventHeaders: Headers) =>
+  parseAuthHeader(decodeAuthHeader(getAuthHeaderValue(eventHeaders) as string))
 
 export const isTokenClaim = <T>(claim: T | TokenClaim): claim is TokenClaim =>
   (claim as TokenClaim).user !== undefined
@@ -522,7 +519,7 @@ export class HeaderList {
   constructor(headers?: Headers) {
     this._headers = headers ?? {}
   }
-  add = (header, value) => {
+  add = (header: string, value: string) => {
     this._headers = { ...this._headers, ...{ [header]: value } }
   }
   get headers() {

@@ -62,7 +62,9 @@ export const handler = async (event: APIGatewayEvent) => {
       headers
     )
 
-  const handleMethod = (method): Promise<Success | Error> => {
+  const handleMethod = (
+    method: APIGatewayEvent["httpMethod"]
+  ): Promise<Success | Error> => {
     switch (method) {
       case "POST":
         return handleAuth(event)

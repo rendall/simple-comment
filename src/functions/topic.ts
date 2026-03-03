@@ -70,7 +70,7 @@ export const handler = async (event: APIGatewayEvent) => {
   const targetId = getTargetId(event.path, "topic") as TopicId
 
   const handleMethod = (
-    method
+    method: APIGatewayEvent["httpMethod"]
   ): Promise<Success<Discussion> | Success<Topic[]> | Error> => {
     switch (method) {
       case "GET":

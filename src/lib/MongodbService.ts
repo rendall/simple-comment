@@ -961,12 +961,13 @@ export class MongodbService extends AbstractDbService {
     const reply = await comments.findOne({ parentId: targetId })
 
     if (reply) {
+      const commentToDelete = foundComment as Comment
       const deletedComment = {
-        ...foundComment,
-        userId: null,
-        text: null,
+        ...commentToDelete,
+        userId: null as null,
+        text: null as null,
         dateDeleted: new Date(),
-      }
+      } as DeletedComment
 
       try {
         await comments.updateOne(
@@ -1447,7 +1448,7 @@ export class MongodbService extends AbstractDbService {
       return error403UserNotAuthorized
     }
 
-    const getReplies = id => [
+    const getReplies = (id: TopicId) => [
       { $match: { id } },
       {
         $graphLookup: {
