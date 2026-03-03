@@ -6,7 +6,7 @@ const MONGO_URI = global.__MONGO_URI__
 const MONGO_DB = global.__MONGO_DB_NAME__
 
 describe("insert", () => {
-  let connection
+  let connection: MongoClient
   let db: Db
 
   beforeAll(async () => {

@@ -83,7 +83,7 @@ describe("SendGridNotificationService", () => {
 
   it("should send notification to moderators", async () => {
     const body = "Test message"
-    const clientResponse = {
+    const clientResponse: ClientResponse = {
       statusCode: 202,
       body: {},
       headers: undefined,
@@ -103,7 +103,7 @@ describe("SendGridNotificationService", () => {
 
   it("should send mulitple emails given comma-separated SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL", async () => {
     const body = "Test message"
-    const clientResponse = {
+    const clientResponse: ClientResponse = {
       statusCode: 202,
       body: {},
       headers: undefined,

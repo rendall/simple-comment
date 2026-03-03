@@ -207,11 +207,13 @@ describe("Ensures API specs match controller service", () => {
   // value in the AbstractDbService instance, `testService`
   serviceMethods.forEach(method => {
     test(`${method} should be defined in AbstractDbService`, () => {
-      expect(testService[method]).toBeDefined()
+      const serviceRecord = testService as unknown as Record<string, unknown>
+      expect(serviceRecord[method]).toBeDefined()
     })
   })
 
   test(`non existent method on AbstractDbService should fail`, () => {
-    expect(testService["nonexistent"]).toBeUndefined()
+    const serviceRecord = testService as unknown as Record<string, unknown>
+    expect(serviceRecord["nonexistent"]).toBeUndefined()
   })
 })

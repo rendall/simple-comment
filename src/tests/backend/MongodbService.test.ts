@@ -409,7 +409,7 @@ describe("Full API service test", () => {
       .then((res: Success<AdminSafeUser[] | PublicSafeUser[]> | Error) => {
         if (res instanceof Error) return // Type guard. This will never be an Error in practice, which would instead by passed to .catch
 
-        const resBody = res.body as { id: string }[]
+        const resBody = res.body as Record<string, unknown>[]
 
         expect(res.statusCode).toBe(200)
         expect(resBody.map(u => u.id)).toEqual(
@@ -426,7 +426,7 @@ describe("Full API service test", () => {
       .userListGET(adminUserTest.id)
       .then((res: Success<AdminSafeUser[] | PublicSafeUser[]> | Error) => {
         if (res instanceof Error) return // type guard only, res will never be Error here
-        const resbody = res.body as { id: string }[]
+        const resbody = res.body as Record<string, unknown>[]
         expect(res.statusCode).toBe(200)
         expect(resbody.map(u => u.id)).toEqual(
           expect.arrayContaining(testAllUsers.map(u => u.id))
@@ -957,15 +957,22 @@ describe("Full API service test", () => {
     })
   })
 
-  test("GET to /topic/{topicId} should return a topic and descendent comments", () => {
-    const targetTopicId = chooseRandomElement(testTopicsWithComments()).id
-    return service
-      .topicGET(targetTopicId)
-      .then((res: Success<Discussion> | Error) => {
-        const resbody = res.body as { id: string }
-        expect(resbody.id).toBe(targetTopicId)
-        expect(res.body).toHaveProperty("replies")
+  test("GET to /topic/{topicId} should return a topic and descendent comments", async () => {
+    const commentsCollection = db.collection("comments")
+    const seededTopicIds = testTopics.map(topic => topic.id)
+    const topicIdsWithReplies = (
+      await commentsCollection.distinct("parentId", {
+        parentId: { $in: seededTopicIds },
       })
+    ).filter((id): id is string => Boolean(id))
+
+    expect(topicIdsWithReplies.length).toBeGreaterThan(0)
+
+    const targetTopicId = chooseRandomElement(topicIdsWithReplies)
+    const res = await service.topicGET(targetTopicId)
+    const resbody = res.body as { id: string; replies: unknown[] }
+    expect(resbody.id).toBe(targetTopicId)
+    expect(Array.isArray(resbody.replies)).toBe(true)
   })
 
   // Discussion Update

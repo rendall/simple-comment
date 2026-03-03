@@ -5,10 +5,9 @@ dotenv.config()
 let exampleEnvEntries: string[]
 
 /**
- * Simple Comment uses a .env file to keep secrets
- * It is not tracked in git
  * example.env is tracked in git and shows the
- * environmental variables expected in .env
+ * environmental variables expected at runtime.
+ * Test setup injects deterministic values for CI/local tests.
  *
  * This test file ensures that:
  * - `example.env` exists
@@ -17,16 +16,6 @@ let exampleEnvEntries: string[]
  **/
 
 describe("Ensures secrets are secret", () => {
-  test("warn if local .env is missing (non-blocking)", () => {
-    const envExists = fs.existsSync(`${process.cwd()}/.env`)
-    if (!envExists) {
-      console.warn(
-        "Local setup note: .env is missing. Tests use injected env defaults from example.env. Create .env for local runtime usage."
-      )
-    }
-    expect(true).toBe(true)
-  })
-
   test("example.env exists", () => {
     const exampleEnvExists = fs.existsSync(`${process.cwd()}/example.env`)
     expect(exampleEnvExists).toBe(true)

@@ -73,7 +73,7 @@ export const handler: Handler = async (event: APIGatewayEvent) => {
   }
 
   const handleMethod = (
-    method
+    method: APIGatewayEvent["httpMethod"]
   ): Promise<Success<TokenClaim> | Success | Error> => {
     // This is going to throw an error. q.v. https://github.com/auth0/node-jsonwebtoken#errors--codes
     const token = hasCookie

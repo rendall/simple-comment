@@ -59,7 +59,7 @@ export const handler = async (event: APIGatewayEvent) => {
   const targetId = getTargetId(event.path, "user") as UserId
 
   const handleMethod = (
-    method
+    method: APIGatewayEvent["httpMethod"]
   ): Promise<
     | Success<
         (PublicSafeUser | AdminSafeUser) | (AdminSafeUser[] | PublicSafeUser[])

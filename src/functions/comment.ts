@@ -67,7 +67,9 @@ export const handler = async (event: APIGatewayEvent) => {
   const authUserId = getUserId(eventHeaders) ?? undefined
   const targetId = getTargetId(event.path, "comment") as CommentId
 
-  const handleMethod = (method): Promise<Success<Comment> | Error> => {
+  const handleMethod = (
+    method: APIGatewayEvent["httpMethod"]
+  ): Promise<Success<Comment> | Error> => {
     switch (method) {
       case "GET":
         return service.commentGET(targetId, authUserId)

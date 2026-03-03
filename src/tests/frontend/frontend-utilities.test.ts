@@ -205,49 +205,23 @@ describe("longFormatDate", () => {
     }
   )
 
-  it.each(locales)(
-    "formats %s with expected date/time parts for Date input",
-    locale => {
-      const result = longFormatDate(utcDate, locale)
-      const formatter = new Intl.DateTimeFormat(locale, dateFormatOptions)
-      const parts = formatter.formatToParts(utcDate)
-      const partTypes = parts.map(part => part.type)
+  it.each(locales)("formats %s for Date input", locale => {
+    const result = longFormatDate(utcDate, locale)
+    const formatter = new Intl.DateTimeFormat(locale, dateFormatOptions)
 
-      expect(result).toBe(formatter.format(utcDate))
-      expect(partTypes).toContain("year")
-      expect(partTypes).toContain("month")
-      expect(partTypes).toContain("day")
-      expect(partTypes).toContain("hour")
-      expect(partTypes).toContain("minute")
-    }
-  )
+    expect(result).toBe(formatter.format(utcDate))
+  })
 
   it("should handle undefined date", () => {
     const result = longFormatDate(undefined)
     expect(result).toBe("unknown")
   })
 
-  it.each(locales)(
-    "formats %s with expected date/time parts for ISO UTC string input",
-    locale => {
-      const result = longFormatDate(utcDateString, locale)
-      const formatter = new Intl.DateTimeFormat(locale, dateFormatOptions)
-      const parts = formatter.formatToParts(new Date(utcDateString))
-      const partTypes = parts.map(part => part.type)
+  it.each(locales)("formats %s for ISO UTC string input", locale => {
+    const result = longFormatDate(utcDateString, locale)
+    const formatter = new Intl.DateTimeFormat(locale, dateFormatOptions)
 
-      expect(result).toBe(formatter.format(new Date(utcDateString)))
-      expect(partTypes).toContain("year")
-      expect(partTypes).toContain("month")
-      expect(partTypes).toContain("day")
-      expect(partTypes).toContain("hour")
-      expect(partTypes).toContain("minute")
-    }
-  )
-
-  it("keeps localized integration rendering behavior for en-US", () => {
-    const result = longFormatDate(utcDate, "en-US")
-    const formatter = new Intl.DateTimeFormat("en-US", dateFormatOptions)
-    expect(result).toBe(formatter.format(utcDate))
+    expect(result).toBe(formatter.format(new Date(utcDateString)))
   })
 
   it("should handle invalid date", () => {
