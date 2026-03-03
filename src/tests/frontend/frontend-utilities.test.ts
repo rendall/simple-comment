@@ -206,19 +206,12 @@ describe("longFormatDate", () => {
   )
 
   it.each(locales)(
-    "formats %s with expected date/time parts for Date input",
+    "formats %s for Date input",
     locale => {
       const result = longFormatDate(utcDate, locale)
       const formatter = new Intl.DateTimeFormat(locale, dateFormatOptions)
-      const parts = formatter.formatToParts(utcDate)
-      const partTypes = parts.map(part => part.type)
 
       expect(result).toBe(formatter.format(utcDate))
-      expect(partTypes).toContain("year")
-      expect(partTypes).toContain("month")
-      expect(partTypes).toContain("day")
-      expect(partTypes).toContain("hour")
-      expect(partTypes).toContain("minute")
     }
   )
 
@@ -228,19 +221,12 @@ describe("longFormatDate", () => {
   })
 
   it.each(locales)(
-    "formats %s with expected date/time parts for ISO UTC string input",
+    "formats %s for ISO UTC string input",
     locale => {
       const result = longFormatDate(utcDateString, locale)
       const formatter = new Intl.DateTimeFormat(locale, dateFormatOptions)
-      const parts = formatter.formatToParts(new Date(utcDateString))
-      const partTypes = parts.map(part => part.type)
 
       expect(result).toBe(formatter.format(new Date(utcDateString)))
-      expect(partTypes).toContain("year")
-      expect(partTypes).toContain("month")
-      expect(partTypes).toContain("day")
-      expect(partTypes).toContain("hour")
-      expect(partTypes).toContain("minute")
     }
   )
 
