@@ -107,3 +107,12 @@ Phase 04 will be executed incrementally:
   - `yarn run typecheck`, `yarn test:backend`, and `yarn test:frontend` are green.
   - No `TODO(phase-04.2)` suppressions were added in Phase 4.1.
 - Decision: proceed to Phase 4.2 evaluation with `strictNullChecks` as the next strictness candidate.
+
+
+## Phase 4.3 gate note (2026-03-03)
+
+- Phase 4.2 outcome:
+  - `strictNullChecks` enabled in `tsconfig.netlify.functions.json` with `noImplicitAny` still enabled and no broader `strict` toggle.
+  - `yarn run typecheck` is green after null-safe typing/guard remediations in Phase 4.2 scope.
+  - No `TODO(phase-04.3)` suppressions were added in Phase 4.2.
+- Decision: proceed to broader `strict` evaluation in Phase 4.3.

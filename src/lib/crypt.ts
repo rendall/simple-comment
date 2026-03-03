@@ -31,4 +31,7 @@ export const comparePassword = async (
 export const getAuthToken = (
   user: string,
   exp: number = getExpirationTime(YEAR_SECONDS)
-): string => jwt.sign({ user, exp }, process.env.JWT_SECRET)
+): string => {
+  const jwtSecret = process.env.JWT_SECRET as jwt.Secret
+  return jwt.sign({ user, exp }, jwtSecret)
+}
