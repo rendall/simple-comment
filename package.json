@@ -29,6 +29,7 @@
     "test:backend": "jest --config jest.backend.config.ts",
     "test:cypress": "cypress run",
     "test:frontend": "cross-env TZ=UTC jest --config jest.frontend.config.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.frontend.json && tsc --noEmit -p tsconfig.netlify.functions.json",
     "watch:backend": "tsc -p tsconfig.netlify.functions.json --listEmittedFiles --watch",
     "watch:frontend": "webpack --watch",
     "watch:lint": "esw -w ./src/**/*.ts --color --clear --changed",
