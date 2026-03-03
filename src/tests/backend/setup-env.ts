@@ -36,4 +36,3 @@ parseExampleEnv().forEach(({ key, value }) => {
     process.env[key] = value
   }
 })
-
