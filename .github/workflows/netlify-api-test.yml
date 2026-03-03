@@ -30,11 +30,12 @@ jobs:
       - name: Build Netlify functions
         run: yarn run build:netlify
 
-      - name: Test Netlify functions
+      - name: Test Netlify functions and frontend
         env:
           # @shelf/jest-mongodb's bundled mongodb-memory-server version in this repo
           # does not support MONGOMS_DISTRO; pin a known-valid download URL instead.
           MONGOMS_DOWNLOAD_URL: https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu2204-6.0.14.tgz
+          TZ: UTC
         run: |
-          node ./scripts/createTestEnv.mjs 
           yarn test:backend
+          yarn test:frontend

@@ -28,6 +28,7 @@ If there is no approved checklist created under `docs/norms/checklist.md` conven
 5. Run broader/full tests at natural checkpoints.
 6. Mark completed checklist items.
 7. Commit with a short, imperative message.
+8. Before opening a PR, run `yarn run fix` as a clean pass to normalize formatting and avoid CI failures on out-of-format files.
 
 ## Commit Hygiene
 
