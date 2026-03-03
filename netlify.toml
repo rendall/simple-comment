@@ -2,4 +2,8 @@
   command = "yarn run build"
   functions = "functions"
   publish = "dist"
+
+[build.environment]
+  # TypeScript compilation during build requires @types packages from devDependencies.
+  YARN_FLAGS = "--production=false"
   
