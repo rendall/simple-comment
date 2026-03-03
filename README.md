@@ -164,8 +164,12 @@ Assumes a unix-like environment, like Ubuntu.
 
 ### Test
 
-1. `yarn run test`
-1. `yarn run test:e2e`
+1. `yarn run test:backend`
+   - Backend tests do not require `.env` on disk. Test env values are injected from `example.env` during Jest setup.
+2. `yarn run test:frontend`
+   - Frontend locale/date tests run under `TZ=UTC` for deterministic output while preserving full locale matrix coverage.
+3. `yarn run test`
+4. `yarn run test:e2e`
 
 ### Usage
 

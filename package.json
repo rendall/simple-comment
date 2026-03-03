@@ -4,7 +4,8 @@
     "@types/bcryptjs": "^2.4.2",
     "@types/jest": "^29.5.3",
     "@types/jsonwebtoken": "^8.5.0",
-    "@types/picomatch": "^2.3.0"
+    "@types/picomatch": "^2.3.0",
+    "cross-env": "^7.0.3"
   },
   "optionalDependencies": {
     "cypress": "^12.17.4",
@@ -27,7 +28,7 @@
     "test": "yarn test:backend && yarn test:frontend",
     "test:backend": "jest --config jest.backend.config.ts",
     "test:cypress": "cypress run",
-    "test:frontend": "jest --config jest.frontend.config.ts",
+    "test:frontend": "cross-env TZ=UTC jest --config jest.frontend.config.ts",
     "watch:backend": "tsc -p tsconfig.netlify.functions.json --listEmittedFiles --watch",
     "watch:frontend": "webpack --watch",
     "watch:lint": "esw -w ./src/**/*.ts --color --clear --changed",

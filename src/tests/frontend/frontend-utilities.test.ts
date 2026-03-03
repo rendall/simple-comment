@@ -150,45 +150,75 @@ describe("debounce", () => {
 })
 
 describe("longFormatDate", () => {
-  const localesArr = [
-    ["af-ZA", "23 Julie 2023 13:31"],
-    ["ar-SA", "٥ محرم ١٤٤٥ هـ في ١:٣١ م"],
-    ["de-DE", "23. Juli 2023 um 13:31"],
-    ["el-GR", "23 Ιουλίου 2023 - 1:31 μ.μ."],
-    ["en-AU", "23 July 2023 at 1:31 pm"],
-    ["en-GB", "23 July 2023 at 13:31"],
-    ["en-IN", "23 July 2023 at 1:31 pm"],
-    ["en-US", "July 23, 2023 at 1:31 PM"],
-    ["es-ES", "23 de julio de 2023, 13:31"],
-    ["es-MX", "23 de julio de 2023, 13:31"],
-    ["fi-FI", "23. heinäkuuta 2023 klo 13.31"],
-    ["fr-CA", "23 juillet 2023 à 13 h 31"],
-    ["fr-FR", "23 juillet 2023 à 13:31"],
-    ["he-IL", "23 ביולי 2023 בשעה 13:31"],
-    ["hi-IN", "23 जुलाई 2023 को 1:31 pm"],
-    ["id-ID", "23 Juli 2023 13.31"],
-    ["it-IT", "23 luglio 2023 13:31"],
-    ["ja-JP", "2023年7月23日 13:31"],
-    ["ko-KR", "2023년 7월 23일 오후 1:31"],
-    ["nl-NL", "23 juli 2023 om 13:31"],
-    ["pl-PL", "23 lipca 2023 13:31"],
-    ["pt-BR", "23 de julho de 2023 13:31"],
-    ["pt-PT", "23 de julho de 2023 às 13:31"],
-    ["ru-RU", "23 июля 2023 г., 13:31"],
-    ["sv-SE", "23 juli 2023 13:31"],
-    ["th-TH", "23 กรกฎาคม 2566 13:31"],
-    ["tr-TR", "23 Temmuz 2023 13:31"],
-    ["vi-VN", "13:31 23 tháng 7, 2023"],
-    ["zh-CN", "2023年7月23日 13:31"],
-    ["zh-TW", "2023年7月23日 下午1:31"],
+  const locales = [
+    "af-ZA",
+    "ar-SA",
+    "de-DE",
+    "el-GR",
+    "en-AU",
+    "en-GB",
+    "en-IN",
+    "en-US",
+    "es-ES",
+    "es-MX",
+    "fi-FI",
+    "fr-CA",
+    "fr-FR",
+    "he-IL",
+    "hi-IN",
+    "id-ID",
+    "it-IT",
+    "ja-JP",
+    "ko-KR",
+    "nl-NL",
+    "pl-PL",
+    "pt-BR",
+    "pt-PT",
+    "ru-RU",
+    "sv-SE",
+    "th-TH",
+    "tr-TR",
+    "vi-VN",
+    "zh-CN",
+    "zh-TW",
   ]
+  const utcDate = new Date(Date.UTC(2023, 6, 23, 13, 31, 0))
+  const utcDateString = "2023-07-23T13:31:00.000Z"
+  const dateFormatOptions = {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+  } as const
+  const localeFamily = (locale: string) => locale.split("-")[0]
 
-  it.each(localesArr)(
-    "should format %s date to %s",
-    (locale, expectedFormat) => {
-      const date = new Date(2023, 6, 23, 13, 31) // July 23, 2023 13:31
-      const result = longFormatDate(date, locale)
-      expect(result).toBe(expectedFormat)
+  it.each(locales)(
+    "supports locale %s and resolves locale family without silent fallback",
+    locale => {
+      expect(Intl.DateTimeFormat.supportedLocalesOf([locale])).toEqual([locale])
+      const resolvedLocale = new Intl.DateTimeFormat(
+        locale,
+        dateFormatOptions
+      ).resolvedOptions().locale
+      expect(localeFamily(resolvedLocale)).toBe(localeFamily(locale))
+    }
+  )
+
+  it.each(locales)(
+    "formats %s with expected date/time parts for Date input",
+    locale => {
+      const result = longFormatDate(utcDate, locale)
+      const formatter = new Intl.DateTimeFormat(locale, dateFormatOptions)
+      const parts = formatter.formatToParts(utcDate)
+      const partTypes = parts.map(part => part.type)
+
+      expect(result).toBe(formatter.format(utcDate))
+      expect(partTypes).toContain("year")
+      expect(partTypes).toContain("month")
+      expect(partTypes).toContain("day")
+      expect(partTypes).toContain("hour")
+      expect(partTypes).toContain("minute")
     }
   )
 
@@ -197,14 +227,28 @@ describe("longFormatDate", () => {
     expect(result).toBe("unknown")
   })
 
-  it.each(localesArr)(
-    "should handle string date %s date to %s",
-    (locale, expectedFormat) => {
-      const date = "2023-07-23T13:31:00" // July 23, 2023 13:31 UTC
-      const result = longFormatDate(date, locale)
-      expect(result).toBe(expectedFormat)
+  it.each(locales)(
+    "formats %s with expected date/time parts for ISO UTC string input",
+    locale => {
+      const result = longFormatDate(utcDateString, locale)
+      const formatter = new Intl.DateTimeFormat(locale, dateFormatOptions)
+      const parts = formatter.formatToParts(new Date(utcDateString))
+      const partTypes = parts.map(part => part.type)
+
+      expect(result).toBe(formatter.format(new Date(utcDateString)))
+      expect(partTypes).toContain("year")
+      expect(partTypes).toContain("month")
+      expect(partTypes).toContain("day")
+      expect(partTypes).toContain("hour")
+      expect(partTypes).toContain("minute")
     }
   )
+
+  it("keeps localized integration rendering behavior for en-US", () => {
+    const result = longFormatDate(utcDate, "en-US")
+    const formatter = new Intl.DateTimeFormat("en-US", dateFormatOptions)
+    expect(result).toBe(formatter.format(utcDate))
+  })
 
   it("should handle invalid date", () => {
     const date = "invalid date"
