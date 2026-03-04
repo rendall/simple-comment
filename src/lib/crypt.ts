@@ -6,6 +6,10 @@ dotenv.config()
 
 const YEAR_SECONDS = 60 * 60 * 24 * 365 // 60s * 1 hour * 24 hours * 365 days
 
+if (process.env.JWT_SECRET === undefined)
+  throw "JWT_SECRET is not set in the environment variables"
+const jwtSecret = process.env.JWT_SECRET
+
 /** Return a date in *seconds from epoch*
  * some number of (input) seconds in the future
  * This is the format JWT wants */
@@ -31,7 +35,4 @@ export const comparePassword = async (
 export const getAuthToken = (
   user: string,
   exp: number = getExpirationTime(YEAR_SECONDS)
-): string => {
-  const jwtSecret = process.env.JWT_SECRET as jwt.Secret
-  return jwt.sign({ user, exp }, jwtSecret)
-}
+): string => jwt.sign({ user, exp }, jwtSecret)
