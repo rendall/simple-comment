@@ -169,7 +169,10 @@ Assumes a unix-like environment, like Ubuntu.
 2. `yarn run test:frontend`
    - Frontend locale/date tests run under `TZ=UTC` for deterministic output while preserving full locale matrix coverage.
 3. `yarn run test`
-4. `yarn run test:e2e`
+4. `yarn run ci:local`
+   - Mirrors dependency-resolution + validation parity for `.github/workflows/netlify-api-test.yml`.
+   - Out of scope: CodeQL parity and CI runner/bootstrap parity (`actions/checkout`, `actions/setup-node`, global `npm install yarn@^1 -g`).
+5. `yarn run test:e2e`
 
 ### Usage
 
