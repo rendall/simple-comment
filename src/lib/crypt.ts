@@ -1,3 +1,4 @@
+import "./process-env"
 import { hash, compare } from "bcryptjs"
 import * as jwt from "jsonwebtoken"
 import * as dotenv from "dotenv"

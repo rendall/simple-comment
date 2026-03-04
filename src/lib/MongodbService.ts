@@ -218,27 +218,39 @@ export class MongodbService extends AbstractDbService {
       }
     }
 
-    if (newUser.id === process.env.SIMPLE_COMMENT_MODERATOR_ID) {
+    if (!newUser.id) {
+      return {
+        ...error400BadRequest,
+        body: `Invalid user id '${newUser.id}'`,
+      }
+    }
+
+    const completeNewUser: Omit<CreateUserPayload, "id"> & { id: UserId } = {
+      ...newUser,
+      id: newUser.id,
+    }
+
+    if (completeNewUser.id === process.env.SIMPLE_COMMENT_MODERATOR_ID) {
       return {
         ...error403ForbiddenToModify,
         body: "Cannot modify root credentials",
       }
     }
 
-    if (isGuestId(newUser.id) && authUserId !== newUser.id) {
+    if (isGuestId(completeNewUser.id) && authUserId !== completeNewUser.id) {
       return {
         ...error403Forbidden,
         body: "New user id must not be in a guest id format",
       }
     }
 
-    if (!isGuestId(newUser.id) && !newUser.password) {
+    if (!isGuestId(completeNewUser.id) && !completeNewUser.password) {
       return error400PasswordMissing
     }
 
-    const userCheck = isGuestId(newUser.id)
-      ? validateGuestUser(newUser, authUserId)
-      : validateUser(newUser)
+    const userCheck = isGuestId(completeNewUser.id)
+      ? validateGuestUser(completeNewUser, authUserId)
+      : validateUser(completeNewUser)
     if (!isValidResult(userCheck)) {
       return {
         ...error400BadRequest,
@@ -274,20 +286,20 @@ export class MongodbService extends AbstractDbService {
       }
     }
 
-    const oldUser = await users.find({ id: newUser.id }).limit(1).next()
+    const oldUser = await users.find({ id: completeNewUser.id }).limit(1).next()
 
     if (oldUser) {
-      return { ...error409UserExists, body: `UserId '${newUser.id}' exists` }
+      return { ...error409UserExists, body: `UserId '${completeNewUser.id}' exists` }
     }
 
-    const hash = isGuestId(newUser.id)
+    const hash = isGuestId(completeNewUser.id)
       ? ""
-      : await hashPassword(newUser.password)
+      : await hashPassword(completeNewUser.password)
     const adminSafeUser = {
-      ...toAdminSafeUser(newUser),
-      name: newUser.name.trim(),
+      ...toAdminSafeUser(completeNewUser),
+      name: completeNewUser.name.trim(),
     }
-    const user: User = isGuestId(newUser.id)
+    const user: User = isGuestId(completeNewUser.id)
       ? { ...adminSafeUser, challenge: generateGuestChallenge() }
       : ({ ...adminSafeUser, hash } as User)
 
@@ -495,7 +507,7 @@ export class MongodbService extends AbstractDbService {
    **/
   userDELETE = async (
     userId: UserId,
-    authUserId?: UserId
+    authUserId?: UserId | null
   ): Promise<Success | Error> => {
     if (!authUserId || isGuestId(authUserId)) {
       return error401UserNotAuthenticated
@@ -545,7 +557,7 @@ export class MongodbService extends AbstractDbService {
   commentPOST = async (
     parentId: TopicId | CommentId,
     text: string,
-    authUserId?: UserId
+    authUserId?: UserId | null
   ): Promise<Success<Comment> | Error> => {
     if (!authUserId) {
       return error401UserNotAuthenticated
@@ -640,7 +652,7 @@ export class MongodbService extends AbstractDbService {
    **/
   commentGET = async (
     targetId: TopicId | CommentId,
-    authUserId?: UserId
+    authUserId?: UserId | null
   ): Promise<Success<Comment> | Error> => {
     if (!targetId) {
       return error404CommentNotFound
@@ -858,9 +870,14 @@ export class MongodbService extends AbstractDbService {
   commentPUT = async (
     targetId: CommentId,
     text: string,
-    authUserId?: UserId
+    authUserId?: UserId | null
   ): Promise<Success<Comment> | Error> => {
     const users: Collection<User> = (await this.getDb()).collection("users")
+
+    if (!authUserId) {
+      return error401UserNotAuthenticated
+    }
+
     const authUser = await users.find({ id: authUserId }).limit(1).next()
 
     if (!authUser) {
@@ -928,7 +945,7 @@ export class MongodbService extends AbstractDbService {
    **/
   commentDELETE = async (
     targetId: CommentId,
-    authUserId?: UserId
+    authUserId?: UserId | null
   ): Promise<Success | Error> => {
     if (!authUserId) {
       return error401UserNotAuthenticated
