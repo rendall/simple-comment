@@ -17,6 +17,9 @@ jobs:
           node-version: "22"
 
       - name: Install
+        # CI/local parity governance: any mirrored CI step/env change in this
+        # workflow MUST be reflected in scripts/ci-local.sh / yarn run ci:local.
+        # Source of truth: docs/norms/ci-parity.md
         run: |
           npm install yarn@^1 --no-package-lock -g
           yarn --frozen-lockfile --production=false --ignore-optional
