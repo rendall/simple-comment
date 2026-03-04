@@ -1,9 +1,18 @@
-import "./process-env"
 import { hash, compare } from "bcryptjs"
 import * as jwt from "jsonwebtoken"
 import * as dotenv from "dotenv"
 
 dotenv.config()
+
+/* eslint-disable @typescript-eslint/no-namespace */
+declare global {
+  namespace NodeJS {
+    interface ProcessEnv {
+      JWT_SECRET: string
+    }
+  }
+}
+/* eslint-enable @typescript-eslint/no-namespace */
 
 const YEAR_SECONDS = 60 * 60 * 24 * 365 // 60s * 1 hour * 24 hours * 365 days
 
