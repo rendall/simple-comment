@@ -17,7 +17,7 @@
     "build:frontend": "webpack --config ./webpack.frontend.js",
     "build:netlify": "webpack --config ./webpack.netlify.functions.js",
     "build:style": "webpack --config ./webpack.style.js",
-    "ci:local": "./scripts/ci-local.sh",
+    "ci:local": "bash ./scripts/ci-local.sh",
     "fix": "eslint . --fix && prettier . --write",
     "lint": "eslint .",
     "posttest": "rimraf ./globalConfig.json",
