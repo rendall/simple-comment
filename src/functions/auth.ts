@@ -108,7 +108,7 @@ const handleAuth = async (
       },
     }
   else {
-    const { user, password } = getUserIdPassword(event.headers)
+    const { user, password } = getUserIdPassword(eventHeaders)
     const authUser = await service.authPOST(user, password)
 
     if (authUser instanceof Error) return authUser

@@ -13,11 +13,14 @@ describe("Test crypt", () => {
   it("Test auth token", async () => {
     const name = "Rendall"
     const token = getAuthToken(name)
+    const jwtSecret = process.env.JWT_SECRET
+    if (jwtSecret === undefined)
+      throw "JWT_SECRET is not set in the environment variables"
 
     const claim: TokenClaim = (await jwt.verify(
       token,
-      process.env.JWT_SECRET
-    )) as {
+      jwtSecret
+    )) as unknown as {
       user: UserId
       exp: number
     }

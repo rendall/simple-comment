@@ -22,7 +22,9 @@ const parseExampleEnv = () =>
       const value = line.slice(separatorIndex + 1).trim()
       return { key, value }
     })
-    .filter(entry => entry !== undefined)
+    .filter(
+      (entry): entry is { key: string; value: string } => entry !== undefined
+    )
 
 parseExampleEnv().forEach(({ key, value }) => {
   if (isSecretOrPassword(key)) {

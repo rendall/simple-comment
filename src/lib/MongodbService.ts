@@ -177,7 +177,7 @@ export class MongodbService extends AbstractDbService {
               resolve({ ...success200OK, body: authToken })
             } else reject(error401BadCredentials)
           } else {
-            const isSame = await comparePassword(password, user.hash)
+            const isSame = await comparePassword(password, user.hash ?? "")
             if (!isSame) reject(error401BadCredentials)
             else {
               const authToken = getAuthToken(user.id)
