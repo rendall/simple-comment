@@ -28,7 +28,16 @@ If there is no approved checklist created under `docs/norms/checklist.md` conven
 5. Run broader/full tests at natural checkpoints.
 6. Mark completed checklist items.
 7. Commit with a short, imperative message.
-8. Before opening a PR, run `yarn run fix` as a clean pass to normalize formatting and avoid CI failures on out-of-format files.
+8. Before opening a PR, run the repository local CI parity command (currently `yarn run ci:local`).
+9. If lint/format checks fail, run `yarn run fix` (or targeted fixes), then re-run `yarn run ci:local`.
+
+## PR Readiness
+
+- Approved checklist items are completed or explicitly deferred with rationale.
+- Local CI parity command (`yarn run ci:local`) passes, or a concrete blocker is documented in PR validation notes.
+- Formatting/lint issues are resolved (`yarn run fix` only when needed).
+- Branch is clean and commits are pushed.
+- PR description includes scope summary and validation evidence.
 
 ## Commit Hygiene
 
