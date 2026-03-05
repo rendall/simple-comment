@@ -243,14 +243,16 @@ describe("Full API service test", () => {
 
   test("POST to /user without id should return 400: Invalid user id 'undefined'", () => {
     const adminUser = getAuthUser(u => u.isAdmin!)
-    const testUserWithoutId = { ...testNewUser }
+    const testUserWithoutId = { ...testNewUser } as Partial<CreateUserPayload>
     delete testUserWithoutId.id
-    return service.userPOST(testUserWithoutId, adminUser.id).then(value => {
-      expect(value).toEqual({
-        "body": "Invalid user id 'undefined'",
-        "statusCode": 400,
+    return service
+      .userPOST(testUserWithoutId as CreateUserPayload, adminUser.id)
+      .then(value => {
+        expect(value).toEqual({
+          "body": "Invalid user id 'undefined'",
+          "statusCode": 400,
+        })
       })
-    })
   })
 
   test("POST to /user with guest id and admin credentials should fail", async () => {
@@ -714,7 +716,7 @@ describe("Full API service test", () => {
     const postResponse = await service.commentPOST(
       newCommentTest.parentId,
       newCommentTest.text!,
-      newCommentTest.userId
+      newCommentTest.userId!
     )
 
     const resbody = postResponse.body as Comment
@@ -737,7 +739,7 @@ describe("Full API service test", () => {
     const e = await service.commentPOST(
       newCommentTest.parentId,
       newCommentTest.text!,
-      newCommentTest.userId
+      newCommentTest.userId!
     )
     expect(e).toBe(error409DuplicateComment)
   })
@@ -836,8 +838,8 @@ describe("Full API service test", () => {
   })
   test("PUT comment to /comment/{commentId} should return the edited comment with 202 Comment updated", () => {
     const targetComment = chooseRandomElement(
-      testComments.filter(isComment)
-    ) as Comment
+      testComments.filter(isComment).filter(c => c.userId !== null)
+    ) as Comment & { userId: string }
     const updatedComment = {
       id: targetComment.id,
       text: randomString(alphaUserInput, 500),
@@ -904,7 +906,7 @@ describe("Full API service test", () => {
         .filter(c => c.userId === selfUser.id)
     )
     return service
-      .commentDELETE(targetComment.id, targetComment.userId)
+      .commentDELETE(targetComment.id, targetComment.userId!)
       .then(value => expect(value).toHaveProperty("statusCode", 202))
   })
 

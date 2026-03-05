@@ -5,10 +5,11 @@ import { config as dotEnvConfig } from "dotenv"
 dotEnvConfig()
 
 const _sendGridApiKey = process.env.NOTIFICATION_SERVICE_API_KEY
-const sendGridVerifiedSender = process.env.SENDGRID_VERIFIED_SENDER
+const _sendGridVerifiedSender = process.env.SENDGRID_VERIFIED_SENDER
 
-if (sendGridVerifiedSender === undefined)
+if (_sendGridVerifiedSender === undefined)
   throw "SENDGRID_VERIFIED_SENDER is not set in environmental variables"
+const sendGridVerifiedSender = _sendGridVerifiedSender
 
 const _moderatorContactEmails = process.env
   .SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL

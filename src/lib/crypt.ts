@@ -28,7 +28,14 @@ export const comparePassword = async (
   hash: string
 ) => await compare(plainTextPassword, hash).catch(() => false)
 
+const getJwtSecret = (): string => {
+  const jwtSecret = process.env.JWT_SECRET
+  if (jwtSecret === undefined)
+    throw "JWT_SECRET is not set in the environment variables"
+  return jwtSecret
+}
+
 export const getAuthToken = (
   user: string,
   exp: number = getExpirationTime(YEAR_SECONDS)
-): string => jwt.sign({ user, exp }, process.env.JWT_SECRET)
+): string => jwt.sign({ user, exp }, getJwtSecret())
