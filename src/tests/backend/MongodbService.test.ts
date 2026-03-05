@@ -838,13 +838,13 @@ describe("Full API service test", () => {
   })
   test("PUT comment to /comment/{commentId} should return the edited comment with 202 Comment updated", () => {
     const targetComment = chooseRandomElement(
-      testComments.filter(isComment)
-    ) as Comment
+      testComments.filter(isComment).filter(c => c.userId !== null)
+    ) as Comment & { userId: string }
     const updatedComment = {
       id: targetComment.id,
       text: randomString(alphaUserInput, 500),
     }
-    const userId = targetComment.userId!
+    const userId = targetComment.userId
     return service
       .commentPUT(updatedComment.id, updatedComment.text, userId)
       .then((res: Success<Comment> | Error) => {
