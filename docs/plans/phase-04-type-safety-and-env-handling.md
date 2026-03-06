@@ -14,7 +14,14 @@ Phase 04 is executed incrementally:
 - Phase 04.2 (completed on 2026-03-05): enabled `strictNullChecks` and remediated surfaced findings.
 - Phase 04.3 (next): evaluate broader backend/functions `strict` enablement using checklist-scoped remediation.
 
-## Scope
+## Current scope (Phase 4.3)
+
+- Enable broader backend/functions `strict` in `tsconfig.netlify.functions.json`.
+- Remediate only diagnostics surfaced by the first post-toggle `yarn run typecheck` baseline in `src/functions/**/*.ts` and directly involved runtime dependencies in `src/lib/**/*.ts`.
+- Keep API behavior unchanged where possible and avoid unrelated refactors.
+- Defer environment/runtime error-clarity architecture hardening to a dedicated follow-on checklist phase.
+
+## Scope (Phase 4.1 baseline)
 
 - Phase 04.1 strictness change:
   - Enable `noImplicitAny` in backend/functions TypeScript config.
@@ -54,7 +61,15 @@ Phase 04 is executed incrementally:
   - avoid broad refactors while remediating type errors
   - if temporary suppressions are unavoidable, require explicit TODO and follow-up issue
 
-## Acceptance criteria
+## Current acceptance criteria (Phase 4.3)
+
+- `"strict": true` is enabled in `tsconfig.netlify.functions.json` with existing strictness gains preserved.
+- Post-toggle strictness findings are either remediated in scope or explicitly deferred via narrow suppressions with inline `TODO(phase-04.4)` and documented hotspots.
+- A Phase 4.4 gate decision is documented with one of:
+  - create `docs/plans/phase-4_4-checklist.md` for environment/runtime error-clarity hardening, or
+  - pause strictness escalation and record unresolved blockers.
+
+## Acceptance criteria (Phase 4.1 baseline)
 
 - `noImplicitAny` is enabled in `tsconfig.netlify.functions.json`.
 - `yarn run typecheck` passes.
@@ -120,4 +135,9 @@ Phase 04 is executed incrementally:
 ## Phase 4.3 checklist integration (2026-03-06)
 
 - Checklist created: `docs/plans/phase-4_3-checklist.md`.
-- Intent: execute broader backend/functions `strict` evaluation with explicit scope guardrails and deferred-hotspot tracking.
+- Intent: execute broader backend/functions `strict` evaluation with explicit strict-closure criteria and deferred-hotspot tracking.
+
+## Phase 4.4 checklist integration (2026-03-06)
+
+- Checklist created: `docs/plans/phase-4_4-checklist.md`.
+- Intent: harden centralized environment contract usage and make startup/runtime failures clearer and more actionable.
