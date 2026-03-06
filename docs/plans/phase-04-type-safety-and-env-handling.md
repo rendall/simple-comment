@@ -12,14 +12,15 @@ Phase 04 is executed incrementally:
 
 - Phase 04.1 (completed on 2026-03-03): enabled `noImplicitAny` and remediated surfaced findings.
 - Phase 04.2 (completed on 2026-03-05): enabled `strictNullChecks` and remediated surfaced findings.
-- Phase 04.3 (next): evaluate broader backend/functions `strict` enablement using checklist-scoped remediation.
+- Phase 04.3 (completed on 2026-03-06): enabled broader backend/functions `strict` and remediated surfaced findings.
+- Phase 04.4 (next): harden environment contract usage and startup/runtime error clarity.
 
-## Current scope (Phase 4.3)
+## Current scope (Phase 4.4)
 
-- Enable broader backend/functions `strict` in `tsconfig.netlify.functions.json`.
-- Remediate only diagnostics surfaced by the first post-toggle `yarn run typecheck` baseline in `src/functions/**/*.ts` and directly involved runtime dependencies in `src/lib/**/*.ts`.
-- Keep API behavior unchanged where possible and avoid unrelated refactors.
-- Defer environment/runtime error-clarity architecture hardening to a dedicated follow-on checklist phase.
+- Add centralized backend environment contract accessors.
+- Migrate scoped backend/functions modules from ad-hoc `process.env` reads to centralized accessors.
+- Replace env-related string throws in scoped backend/functions paths with structured `Error` objects and actionable messages.
+- Keep API behavior unchanged and avoid unrelated frontend/database-logic refactors.
 
 ## Scope (Phase 4.1 baseline)
 
@@ -61,13 +62,12 @@ Phase 04 is executed incrementally:
   - avoid broad refactors while remediating type errors
   - if temporary suppressions are unavoidable, require explicit TODO and follow-up issue
 
-## Current acceptance criteria (Phase 4.3)
+## Current acceptance criteria (Phase 4.4)
 
-- `"strict": true` is enabled in `tsconfig.netlify.functions.json` with existing strictness gains preserved.
-- Post-toggle strictness findings are either remediated in scope or explicitly deferred via narrow suppressions with inline `TODO(phase-04.4)` and documented hotspots.
-- A Phase 4.4 gate decision is documented with one of:
-  - create `docs/plans/phase-4_4-checklist.md` for environment/runtime error-clarity hardening, or
-  - pause strictness escalation and record unresolved blockers.
+- Centralized env contract module is in place and used by scoped backend/functions runtime paths.
+- Env/startup error surfaces in scoped files no longer rely on string throws.
+- `example.env` and `README.md` reflect authoritative env contract semantics.
+- A Phase 4.5 gate decision is documented with closure or scoped follow-up.
 
 ## Acceptance criteria (Phase 4.1 baseline)
 
@@ -136,6 +136,14 @@ Phase 04 is executed incrementally:
 
 - Checklist created: `docs/plans/phase-4_3-checklist.md`.
 - Intent: execute broader backend/functions `strict` evaluation with explicit strict-closure criteria and deferred-hotspot tracking.
+
+## Phase 4.4 gate note (2026-03-06)
+
+- Phase 4.3 outcome:
+  - `"strict": true` enabled in `tsconfig.netlify.functions.json` while preserving `noImplicitAny` and `strictNullChecks`.
+  - `yarn run typecheck`, `yarn test:backend`, and `yarn test:frontend` are green.
+  - No `TODO(phase-04.4)` suppressions were added in Phase 4.3.
+- Decision: proceed to Phase 4.4 environment contract and runtime error-clarity hardening using `docs/plans/phase-4_4-checklist.md`.
 
 ## Phase 4.4 checklist integration (2026-03-06)
 
