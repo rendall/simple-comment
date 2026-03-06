@@ -3,6 +3,7 @@ import type { APIGatewayEvent } from "aws-lambda"
 import { MongodbService } from "../lib/MongodbService"
 import type { Success, Error, AuthToken } from "../lib/simple-comment-types"
 import {
+  error500InternalServerError,
   error401UserNotAuthenticated,
   error404CommentNotFound,
   error405MethodNotAllowed,
@@ -15,6 +16,7 @@ import {
   getAllowOriginHeaders,
   getAllowedOrigins,
   addHeaders,
+  toApiError,
   toDefinedHeaders,
 } from "../lib/backend-utilities"
 dotenv.config()
@@ -85,7 +87,7 @@ export const handler = async (event: APIGatewayEvent) => {
     const response = await handleMethod(event.httpMethod)
     return addHeaders(response, headers)
   } catch (error) {
-    return addHeaders(error, headers)
+    return addHeaders(toApiError(error, error500InternalServerError), headers)
   }
 }
 
