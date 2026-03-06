@@ -1,6 +1,6 @@
 # Phase 04 - Type Safety and Environment Handling
 
-Status: Planned
+Status: In progress
 
 ## Goal
 
@@ -8,10 +8,11 @@ Increase type safety and make startup/runtime errors clearer and easier to reaso
 
 ## Execution model
 
-Phase 04 will be executed incrementally:
+Phase 04 is executed incrementally:
 
-- Phase 04.1 (current): enable `noImplicitAny` only and remediate surfaced issues.
-- Phase 04.2+ (future): consider additional strictness (`strictNullChecks`, then broader `strict`) only after a post-merge gate review.
+- Phase 04.1 (completed on 2026-03-03): enabled `noImplicitAny` and remediated surfaced findings.
+- Phase 04.2 (completed on 2026-03-05): enabled `strictNullChecks` and remediated surfaced findings.
+- Phase 04.3 (next): evaluate broader backend/functions `strict` enablement using checklist-scoped remediation.
 
 ## Scope
 
@@ -115,3 +116,8 @@ Phase 04 will be executed incrementally:
   - `yarn run typecheck`, `yarn test:backend`, and `yarn test:frontend` are green.
   - No `TODO(phase-04.3)` suppressions were added in Phase 4.2.
 - Decision: proceed to broader `strict` evaluation for Phase 4.3.
+
+## Phase 4.3 checklist integration (2026-03-06)
+
+- Checklist created: `docs/plans/phase-4_3-checklist.md`.
+- Intent: execute broader backend/functions `strict` evaluation with explicit scope guardrails and deferred-hotspot tracking.
