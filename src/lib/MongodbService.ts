@@ -40,6 +40,7 @@ import {
   normalizeAllowedOrigin,
   normalizeUrl,
   toAdminSafeUser,
+  toErrorBody,
   toPublicSafeUser,
   toSafeUser,
   toTopic,
@@ -95,8 +96,8 @@ const jwtSecret = process.env.JWT_SECRET
 
 export class MongodbService extends AbstractDbService {
   private isCrossSite = process.env.IS_CROSS_SITE === "true"
-  private _client: MongoClient
-  private _db: Db
+  private _client?: MongoClient
+  private _db?: Db
   readonly _connectionString: string
   readonly _dbName: string
   readonly _notificationService?: AbstractNotificationService
@@ -530,7 +531,7 @@ export class MongodbService extends AbstractDbService {
       return success202UserDeleted
     } catch (e) {
       return authUser.isAdmin
-        ? { ...error500UpdateError, body: e }
+        ? { ...error500UpdateError, body: toErrorBody(e) }
         : error500UpdateError
     }
   }
@@ -625,7 +626,7 @@ export class MongodbService extends AbstractDbService {
     } catch (e) {
       console.error(e)
       return authUser.isAdmin
-        ? { ...error500UpdateError, body: e }
+        ? { ...error500UpdateError, body: toErrorBody(e) }
         : error500UpdateError
     }
   }
@@ -981,7 +982,7 @@ export class MongodbService extends AbstractDbService {
         return { ...success202CommentDeleted }
       } catch (e) {
         return authUser.isAdmin
-          ? { ...error500UpdateError, body: e }
+          ? { ...error500UpdateError, body: toErrorBody(e) }
           : error500UpdateError
       }
     } else {
@@ -990,7 +991,7 @@ export class MongodbService extends AbstractDbService {
         return success202CommentDeleted
       } catch (e) {
         return authUser.isAdmin
-          ? { ...error500UpdateError, body: e }
+          ? { ...error500UpdateError, body: toErrorBody(e) }
           : error500UpdateError
       }
     }
@@ -1487,7 +1488,7 @@ export class MongodbService extends AbstractDbService {
       return success202TopicDeleted
     } catch (e) {
       return authUser.isAdmin
-        ? { ...error500UpdateError, body: e }
+        ? { ...error500UpdateError, body: toErrorBody(e) }
         : error500UpdateError
     }
   }
@@ -1512,15 +1513,13 @@ export class MongodbService extends AbstractDbService {
       else return { ...success200OK, body: claim }
     } catch (error) {
       console.error(error)
-      switch (error.name) {
-        case "TokenExpiredError":
-          return {
-            ...error403Forbidden,
-            body: `token expired at ${error.expiredAt}`,
-          }
-        default:
-          return error400BadRequest
+      if (error instanceof jwt.TokenExpiredError) {
+        return {
+          ...error403Forbidden,
+          body: `token expired at ${error.expiredAt}`,
+        }
       }
+      return error400BadRequest
     }
   }
 
