@@ -527,7 +527,8 @@ export const toErrorBody = (error: unknown): string => {
   if (typeof error === "string") return error
   if (error instanceof globalThis.Error) return error.message
   try {
-    return JSON.stringify(error)
+    const json = JSON.stringify(error)
+    return json === undefined ? String(error) : json
   } catch {
     return String(error)
   }

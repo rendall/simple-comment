@@ -359,6 +359,8 @@ describe("backend error utilities", () => {
     expect(toErrorBody({ reason: "failure" })).toBe(
       JSON.stringify({ reason: "failure" })
     )
+    expect(toErrorBody(undefined)).toBe("undefined")
+    expect(toErrorBody(Symbol("boom"))).toBe("Symbol(boom)")
   })
 })
 
