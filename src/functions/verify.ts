@@ -9,10 +9,12 @@ import {
   getCookieToken,
   hasBearerScheme,
   hasTokenCookie,
+  toApiError,
   toDefinedHeaders,
 } from "../lib/backend-utilities"
 import type { Success, TokenClaim, Error } from "../lib/simple-comment-types"
 import {
+  error500InternalServerError,
   error401UserNotAuthenticated,
   error404NotFound,
   error405MethodNotAllowed,
@@ -94,6 +96,6 @@ export const handler: Handler = async (event: APIGatewayEvent) => {
     const response = await handleMethod(event.httpMethod)
     return addHeaders(response, headers)
   } catch (error) {
-    return addHeaders(error, headers)
+    return addHeaders(toApiError(error, error500InternalServerError), headers)
   }
 }

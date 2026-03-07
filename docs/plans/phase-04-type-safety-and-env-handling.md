@@ -1,6 +1,6 @@
 # Phase 04 - Type Safety and Environment Handling
 
-Status: Planned
+Status: In progress
 
 ## Goal
 
@@ -8,12 +8,21 @@ Increase type safety and make startup/runtime errors clearer and easier to reaso
 
 ## Execution model
 
-Phase 04 will be executed incrementally:
+Phase 04 is executed incrementally:
 
-- Phase 04.1 (current): enable `noImplicitAny` only and remediate surfaced issues.
-- Phase 04.2+ (future): consider additional strictness (`strictNullChecks`, then broader `strict`) only after a post-merge gate review.
+- Phase 04.1 (completed on 2026-03-03): enabled `noImplicitAny` and remediated surfaced findings.
+- Phase 04.2 (completed on 2026-03-05): enabled `strictNullChecks` and remediated surfaced findings.
+- Phase 04.3 (completed on 2026-03-06): enabled broader backend/functions `strict` and remediated surfaced findings.
+- Phase 04.4 (next): harden environment contract usage and startup/runtime error clarity.
 
-## Scope
+## Current scope (Phase 4.4)
+
+- Add centralized backend environment contract accessors.
+- Migrate scoped backend/functions modules from ad-hoc `process.env` reads to centralized accessors.
+- Replace env-related string throws in scoped backend/functions paths with structured `Error` objects and actionable messages.
+- Keep API behavior unchanged and avoid unrelated frontend/database-logic refactors.
+
+## Scope (Phase 4.1 baseline)
 
 - Phase 04.1 strictness change:
   - Enable `noImplicitAny` in backend/functions TypeScript config.
@@ -53,7 +62,14 @@ Phase 04 will be executed incrementally:
   - avoid broad refactors while remediating type errors
   - if temporary suppressions are unavoidable, require explicit TODO and follow-up issue
 
-## Acceptance criteria
+## Current acceptance criteria (Phase 4.4)
+
+- Centralized env contract module is in place and used by scoped backend/functions runtime paths.
+- Env/startup error surfaces in scoped files no longer rely on string throws.
+- `example.env` and `README.md` reflect authoritative env contract semantics.
+- A Phase 4.5 gate decision is documented with closure or scoped follow-up.
+
+## Acceptance criteria (Phase 4.1 baseline)
 
 - `noImplicitAny` is enabled in `tsconfig.netlify.functions.json`.
 - `yarn run typecheck` passes.
@@ -115,3 +131,21 @@ Phase 04 will be executed incrementally:
   - `yarn run typecheck`, `yarn test:backend`, and `yarn test:frontend` are green.
   - No `TODO(phase-04.3)` suppressions were added in Phase 4.2.
 - Decision: proceed to broader `strict` evaluation for Phase 4.3.
+
+## Phase 4.3 checklist integration (2026-03-06)
+
+- Checklist created: `docs/plans/phase-4_3-checklist.md`.
+- Intent: execute broader backend/functions `strict` evaluation with explicit strict-closure criteria and deferred-hotspot tracking.
+
+## Phase 4.4 gate note (2026-03-06)
+
+- Phase 4.3 outcome:
+  - `"strict": true` enabled in `tsconfig.netlify.functions.json` while preserving `noImplicitAny` and `strictNullChecks`.
+  - `yarn run typecheck`, `yarn test:backend`, and `yarn test:frontend` are green.
+  - No `TODO(phase-04.4)` suppressions were added in Phase 4.3.
+- Decision: proceed to Phase 4.4 environment contract and runtime error-clarity hardening using `docs/plans/phase-4_4-checklist.md`.
+
+## Phase 4.4 checklist integration (2026-03-06)
+
+- Checklist created: `docs/plans/phase-4_4-checklist.md`.
+- Intent: harden centralized environment contract usage and make startup/runtime failures clearer and more actionable.

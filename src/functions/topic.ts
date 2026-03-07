@@ -10,6 +10,7 @@ import {
   getUpdateTopicInfo,
   getUserId,
   isDefined,
+  toApiError,
   toDefinedHeaders,
 } from "../lib/backend-utilities"
 import type {
@@ -21,6 +22,7 @@ import type {
 } from "../lib/simple-comment-types"
 import {
   error400BadRequest,
+  error500InternalServerError,
   error404TopicNotFound,
   error405MethodNotAllowed,
   success200OK,
@@ -114,7 +116,10 @@ export const handler = async (event: APIGatewayEvent) => {
     const response = addHeaders(ret, headers)
     return response
   } catch (error) {
-    const retError = addHeaders(error, headers)
+    const retError = addHeaders(
+      toApiError(error, error500InternalServerError),
+      headers
+    )
     return retError
   }
 }

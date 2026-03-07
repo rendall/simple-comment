@@ -511,6 +511,29 @@ export const getUpdateTopicInfo = (body: string): Topic =>
 export const isError = (res: Success | Error): res is Error =>
   res.statusCode >= 400
 
+export const isApiError = (error: unknown): error is Error => {
+  if (!isDefined(error) || typeof error !== "object") return false
+  const maybeError = error as { statusCode?: unknown; body?: unknown }
+  return (
+    typeof maybeError.statusCode === "number" &&
+    typeof maybeError.body === "string"
+  )
+}
+
+export const toApiError = (error: unknown, fallback: Error): Error =>
+  isApiError(error) ? error : fallback
+
+export const toErrorBody = (error: unknown): string => {
+  if (typeof error === "string") return error
+  if (error instanceof globalThis.Error) return error.message
+  try {
+    const json = JSON.stringify(error)
+    return json === undefined ? String(error) : json
+  } catch {
+    return String(error)
+  }
+}
+
 export const isDiscussion = (c: Comment | Discussion): c is Discussion =>
   (c as Comment).parentId === undefined
 

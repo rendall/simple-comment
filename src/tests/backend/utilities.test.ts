@@ -3,8 +3,11 @@ import {
   generateGuestId,
   getAllowOriginHeaders,
   generateCommentId,
+  isApiError,
   isAllowedReferer,
   parseQuery,
+  toApiError,
+  toErrorBody,
 } from "../../../src/lib/backend-utilities"
 import type { Email } from "../../../src/lib/simple-comment-types"
 import {
@@ -329,6 +332,35 @@ describe("addHeaders", () => {
         "Content-Type": "text/plain",
       },
     })
+  })
+})
+
+describe("backend error utilities", () => {
+  test("isApiError should detect API-style error objects", () => {
+    expect(isApiError({ statusCode: 400, body: "Bad Request" })).toBe(true)
+    expect(isApiError(new Error("boom"))).toBe(false)
+    expect(isApiError({ statusCode: 400, body: { nope: true } })).toBe(false)
+  })
+
+  test("toApiError should return fallback for unknown errors", () => {
+    const fallback = { statusCode: 500, body: "Internal Server Error" }
+    expect(toApiError("boom", fallback)).toEqual(fallback)
+  })
+
+  test("toApiError should keep API-style errors", () => {
+    const apiError = { statusCode: 401, body: "Unauthorized" }
+    const fallback = { statusCode: 500, body: "Internal Server Error" }
+    expect(toApiError(apiError, fallback)).toEqual(apiError)
+  })
+
+  test("toErrorBody should normalize unknown values to strings", () => {
+    expect(toErrorBody("boom")).toBe("boom")
+    expect(toErrorBody(new Error("nope"))).toBe("nope")
+    expect(toErrorBody({ reason: "failure" })).toBe(
+      JSON.stringify({ reason: "failure" })
+    )
+    expect(toErrorBody(undefined)).toBe("undefined")
+    expect(toErrorBody(Symbol("boom"))).toBe("Symbol(boom)")
   })
 })
 

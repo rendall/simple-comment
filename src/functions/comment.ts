@@ -9,6 +9,7 @@ import type {
 import { MongodbService } from "../lib/MongodbService"
 import {
   error400BadRequest,
+  error500InternalServerError,
   error404CommentNotFound,
   error405MethodNotAllowed,
   success200OK,
@@ -20,6 +21,7 @@ import {
   getTargetId,
   getUserId,
   isDefined,
+  toApiError,
   toDefinedHeaders,
 } from "../lib/backend-utilities"
 dotenv.config()
@@ -96,6 +98,6 @@ export const handler = async (event: APIGatewayEvent) => {
     const response = await handleMethod(event.httpMethod)
     return addHeaders(response, headers)
   } catch (error) {
-    return addHeaders(error, headers)
+    return addHeaders(toApiError(error, error500InternalServerError), headers)
   }
 }
