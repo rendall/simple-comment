@@ -14,7 +14,7 @@ import {
 } from "../lib/backend-utilities"
 import type { Success, TokenClaim, Error } from "../lib/simple-comment-types"
 import {
-  error400BadRequest,
+  error500InternalServerError,
   error401UserNotAuthenticated,
   error404NotFound,
   error405MethodNotAllowed,
@@ -96,6 +96,6 @@ export const handler: Handler = async (event: APIGatewayEvent) => {
     const response = await handleMethod(event.httpMethod)
     return addHeaders(response, headers)
   } catch (error) {
-    return addHeaders(toApiError(error, error400BadRequest), headers)
+    return addHeaders(toApiError(error, error500InternalServerError), headers)
   }
 }
