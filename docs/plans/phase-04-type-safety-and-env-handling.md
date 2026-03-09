@@ -1,6 +1,6 @@
 # Phase 04 - Type Safety and Environment Handling
 
-Status: In progress
+Status: Complete
 
 ## Goal
 
@@ -13,7 +13,7 @@ Phase 04 is executed incrementally:
 - Phase 04.1 (completed on 2026-03-03): enabled `noImplicitAny` and remediated surfaced findings.
 - Phase 04.2 (completed on 2026-03-05): enabled `strictNullChecks` and remediated surfaced findings.
 - Phase 04.3 (completed on 2026-03-06): enabled broader backend/functions `strict` and remediated surfaced findings.
-- Phase 04.4 (next): harden environment contract usage and startup/runtime error clarity.
+- Phase 04.4 (completed on 2026-03-09): hardened environment contract usage and startup/runtime error clarity.
 
 ## Current scope (Phase 4.4)
 
@@ -149,3 +149,14 @@ Phase 04 is executed incrementally:
 
 - Checklist created: `docs/plans/phase-4_4-checklist.md`.
 - Intent: harden centralized environment contract usage and make startup/runtime failures clearer and more actionable.
+
+## Phase 4.5 gate note (2026-03-09)
+
+- Phase 4.4 outcome:
+  - Centralized backend env contract module added at `src/lib/env.ts`.
+  - Scoped backend/functions modules now use centralized env accessors instead of direct ad-hoc `process.env` reads.
+  - Env-related string throws in scoped Phase 4.4 paths were replaced with structured `Error` objects (`EnvContractError` included).
+  - `example.env` and `README.md` were updated to reflect required/optional env semantics and notification key pairing.
+  - `yarn run typecheck`, `yarn run test:backend`, `yarn run test:frontend`, and `yarn run ci:local` are green.
+  - No `TODO(phase-04.5)` deferments were added.
+- Decision: close Phase 04 as complete and proceed with Phase 05 planning/execution.

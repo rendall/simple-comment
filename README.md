@@ -106,14 +106,20 @@ Follow these instructions. If anything is unclear, please [create a new issue](h
 1. [Fork this repository](https://docs.github.com/en/get-started/quickstart/fork-a-repo) to your own account
 1. [Clone your fork](https://docs.github.com/en/get-started/quickstart/fork-a-repo#cloning-your-forked-repository)
 1. Copy [`example.env`](example.env) into the same, project root directory and rename it to be `.env`
-1. In `.env`, enter your own (made up or randomly generated), secret values for these entries (i.e. replace everything to the right of `=` in each line).
-   - SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL
-   - SIMPLE_COMMENT_MODERATOR_ID
-   - SIMPLE_COMMENT_MODERATOR_PASSWORD
-   - JWT_SECRET
+1. In `.env`, enter your own values for the required backend runtime variables (replace everything to the right of `=`):
+   - `DB_CONNECTION_STRING`
+   - `DATABASE_NAME`
+   - `JWT_SECRET`
+   - `ALLOW_ORIGIN`
+   - `SIMPLE_COMMENT_MODERATOR_ID`
+   - `SIMPLE_COMMENT_MODERATOR_PASSWORD`
+   - `SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL`
+   - Optional:
+   - `IS_CROSS_SITE` (`true` only when API/client are on different sites; otherwise `false`)
+   - `NOTIFICATION_SERVICE_API_KEY` and `SENDGRID_VERIFIED_SENDER` must be set together when SendGrid notifications are enabled
 1. sign up for a free MongoDB Atlas account
    1. [Follow these instructions](docs/MONGODB_ATLAS.md)
-   1. In `.env` add the proper `DB_CONNECION_STRING`
+   1. In `.env` add the proper `DB_CONNECTION_STRING`
 1. Sign up for a Netlify account, begin a new website, and link your repository
    to the new website
    1. Review [Netlify's Build environment variables](https://docs.netlify.com/configure-builds/environment-variables/#environment-variables-in-the-build-environment) page
@@ -128,6 +134,28 @@ Follow these instructions. If anything is unclear, please [create a new issue](h
       1. `<div id="simple-comment-display"></div>`
    1. Upload the `simple-comment.js` file to your website's script folder
 1. It should now be possible to leave and read comments on your website
+
+### Environment Contract (Backend/Functions Runtime)
+
+Required variables:
+
+- `DB_CONNECTION_STRING`
+- `DATABASE_NAME`
+- `JWT_SECRET`
+- `ALLOW_ORIGIN`
+- `SIMPLE_COMMENT_MODERATOR_ID`
+- `SIMPLE_COMMENT_MODERATOR_PASSWORD`
+- `SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL`
+
+Optional variables:
+
+- `IS_CROSS_SITE` (parsed as `true` only when the value is exactly `"true"`; all other values are treated as `false`)
+- `NOTIFICATION_SERVICE_API_KEY`
+- `SENDGRID_VERIFIED_SENDER`
+
+Notification pair rule:
+
+- `NOTIFICATION_SERVICE_API_KEY` and `SENDGRID_VERIFIED_SENDER` are a pair. If one is set, the other must also be set.
 
 ### Troubleshooting
 

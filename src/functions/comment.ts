@@ -1,4 +1,3 @@
-import * as dotenv from "dotenv"
 import type { APIGatewayEvent } from "aws-lambda"
 import type {
   CommentId,
@@ -24,16 +23,13 @@ import {
   toApiError,
   toDefinedHeaders,
 } from "../lib/backend-utilities"
-dotenv.config()
+import { getBackendEnv } from "../lib/env"
 
-if (process.env.DB_CONNECTION_STRING === undefined)
-  throw "DB_CONNECTION_STRING is not set in environment variables"
-if (process.env.DATABASE_NAME === undefined)
-  throw "DATABASE_NAME is not set in environment variables"
+const { dbConnectionString, databaseName } = getBackendEnv()
 
 const service: MongodbService = new MongodbService(
-  process.env.DB_CONNECTION_STRING,
-  process.env.DATABASE_NAME
+  dbConnectionString,
+  databaseName
 )
 
 const getAllowHeaders = (event: APIGatewayEvent) => {
