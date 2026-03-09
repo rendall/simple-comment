@@ -46,34 +46,37 @@ export type BackendEnv = Readonly<{
   sendGridVerifiedSender?: string
 }>
 
-export const getBackendEnv = (source: NodeJS.ProcessEnv = process.env) =>
-  ({
-    dbConnectionString: getRequiredEnv(source, "DB_CONNECTION_STRING"),
-    databaseName: getRequiredEnv(source, "DATABASE_NAME"),
-    jwtSecret: getRequiredEnv(source, "JWT_SECRET"),
-    allowOrigin: getRequiredEnv(source, "ALLOW_ORIGIN"),
-    moderatorId: getRequiredEnv(source, "SIMPLE_COMMENT_MODERATOR_ID"),
-    moderatorPassword: getRequiredEnv(
-      source,
-      "SIMPLE_COMMENT_MODERATOR_PASSWORD"
-    ),
+export const getBackendEnv = (source?: NodeJS.ProcessEnv) => {
+  const env = source ?? process.env
+
+  return {
+    dbConnectionString: getRequiredEnv(env, "DB_CONNECTION_STRING"),
+    databaseName: getRequiredEnv(env, "DATABASE_NAME"),
+    jwtSecret: getRequiredEnv(env, "JWT_SECRET"),
+    allowOrigin: getRequiredEnv(env, "ALLOW_ORIGIN"),
+    moderatorId: getRequiredEnv(env, "SIMPLE_COMMENT_MODERATOR_ID"),
+    moderatorPassword: getRequiredEnv(env, "SIMPLE_COMMENT_MODERATOR_PASSWORD"),
     moderatorContactEmail: getRequiredEnv(
-      source,
+      env,
       "SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL"
     ),
-    isCrossSite: source.IS_CROSS_SITE === "true",
-    notificationServiceApiKey: source.NOTIFICATION_SERVICE_API_KEY,
-    sendGridVerifiedSender: source.SENDGRID_VERIFIED_SENDER,
-  } as BackendEnv)
+    isCrossSite: env.IS_CROSS_SITE === "true",
+    notificationServiceApiKey: env.NOTIFICATION_SERVICE_API_KEY,
+    sendGridVerifiedSender: env.SENDGRID_VERIFIED_SENDER,
+  } as BackendEnv
+}
 
 export const getOptionalNotificationEnv = (
-  source: NodeJS.ProcessEnv = process.env
+  source: NodeJS.ProcessEnv | undefined = process.env,
+  notificationServiceApiKeyOverride?: string
 ): {
   notificationServiceApiKey?: string
   sendGridVerifiedSender?: string
 } => {
-  const notificationServiceApiKey = source.NOTIFICATION_SERVICE_API_KEY
-  const sendGridVerifiedSender = source.SENDGRID_VERIFIED_SENDER
+  const env = source ?? process.env
+  const notificationServiceApiKey =
+    notificationServiceApiKeyOverride ?? env.NOTIFICATION_SERVICE_API_KEY
+  const sendGridVerifiedSender = env.SENDGRID_VERIFIED_SENDER
 
   const hasApiKey = notificationServiceApiKey !== undefined
   const hasVerifiedSender = sendGridVerifiedSender !== undefined
@@ -87,4 +90,20 @@ export const getOptionalNotificationEnv = (
   }
 
   return { notificationServiceApiKey, sendGridVerifiedSender }
+}
+
+export const getOptionalModeratorContactEmails = (
+  source: NodeJS.ProcessEnv | undefined = process.env
+): string[] | undefined => {
+  const env = source ?? process.env
+  const rawContactEmails = env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL
+
+  if (rawContactEmails === undefined) {
+    return undefined
+  }
+
+  return rawContactEmails
+    .split(",")
+    .map(email => email.trim())
+    .filter(email => email.length > 0)
 }

@@ -81,6 +81,46 @@ describe("SendGridNotificationService", () => {
     )
   })
 
+  it("should allow moderator contact email override when env value is missing", () => {
+    const previousModeratorEmails =
+      process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL
+    delete process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL
+
+    expect(
+      () =>
+        new SendGridNotificationService(
+          mailServiceMock,
+          sendGridTestApiKey,
+          moderatorContactEmails
+        )
+    ).not.toThrow()
+
+    if (previousModeratorEmails === undefined)
+      delete process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL
+    else
+      process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL =
+        previousModeratorEmails
+  })
+
+  it("should allow API key override when env API key is missing", () => {
+    const previousApiKey = process.env.NOTIFICATION_SERVICE_API_KEY
+    delete process.env.NOTIFICATION_SERVICE_API_KEY
+
+    expect(
+      () =>
+        new SendGridNotificationService(
+          mailServiceMock,
+          sendGridTestApiKey,
+          moderatorContactEmails
+        )
+    ).not.toThrow()
+    expect(mailServiceMock.setApiKey).toHaveBeenCalledWith(sendGridTestApiKey)
+
+    if (previousApiKey === undefined)
+      delete process.env.NOTIFICATION_SERVICE_API_KEY
+    else process.env.NOTIFICATION_SERVICE_API_KEY = previousApiKey
+  })
+
   it("should send notification to moderators", async () => {
     const body = "Test message"
     const clientResponse: ClientResponse = {

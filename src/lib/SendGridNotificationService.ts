@@ -3,7 +3,7 @@ import { Error, Success } from "./simple-comment-types"
 import { MailService } from "@sendgrid/mail"
 import {
   EnvContractError,
-  getBackendEnv,
+  getOptionalModeratorContactEmails,
   getOptionalNotificationEnv,
 } from "./env"
 
@@ -20,9 +20,8 @@ export class SendGridNotificationService extends AbstractNotificationService {
   ) {
     super()
 
-    const { moderatorContactEmail } = getBackendEnv()
     const { notificationServiceApiKey, sendGridVerifiedSender } =
-      getOptionalNotificationEnv()
+      getOptionalNotificationEnv(undefined, sendGridApiKey)
 
     const apiKey = sendGridApiKey ?? notificationServiceApiKey
     if (apiKey === undefined)
@@ -39,10 +38,7 @@ export class SendGridNotificationService extends AbstractNotificationService {
       )
     this._sendGridVerifiedSender = sendGridVerifiedSender
 
-    const envModeratorContactEmails = moderatorContactEmail
-      .split(",")
-      .map(email => email.trim())
-      .filter(email => email.length > 0)
+    const envModeratorContactEmails = getOptionalModeratorContactEmails()
     const emails = moderatorContactEmails ?? envModeratorContactEmails
 
     if (emails === undefined || emails.length === 0)
