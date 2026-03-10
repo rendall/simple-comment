@@ -6,6 +6,7 @@ DIST_DIR="${1:-dist}"
 required_files=(
   "$DIST_DIR/js/simple-comment.js"
   "$DIST_DIR/js/simple-comment-icebreakers.js"
+  "$DIST_DIR/css/simple-comment.css"
   "$DIST_DIR/css/simple-comment-style.css"
   "$DIST_DIR/css/index.css"
   "$DIST_DIR/index.html"

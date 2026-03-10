@@ -43,6 +43,7 @@
   - Artifact contract check passed for required outputs:
     - `js/simple-comment.js`
     - `js/simple-comment-icebreakers.js`
+    - `css/simple-comment.css`
     - `css/simple-comment-style.css`
     - static assets (`index.html`, `icebreakers/index.html`, `css/index.css`, `img/*`, `font/*`)
 
