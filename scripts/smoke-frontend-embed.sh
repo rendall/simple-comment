@@ -34,14 +34,14 @@ curl -fsS "${BASE_URL}/icebreakers/index.html" >"$icebreakers_html"
 curl -fsS "${BASE_URL}/js/simple-comment.js" >"$simple_comment_js"
 curl -fsS "${BASE_URL}/js/simple-comment-icebreakers.js" >"$icebreakers_js"
 
-rg -q 'id="simple-comment-display"' "$index_html"
-rg -q 'src="./js/simple-comment.js"' "$index_html"
-rg -q 'src="/js/simple-comment.js"' "$icebreakers_html"
-rg -q 'src="/js/simple-comment-icebreakers.js"' "$icebreakers_html"
+grep -q 'id="simple-comment-display"' "$index_html"
+grep -q 'src="./js/simple-comment.js"' "$index_html"
+grep -q 'src="/js/simple-comment.js"' "$icebreakers_html"
+grep -q 'src="/js/simple-comment-icebreakers.js"' "$icebreakers_html"
 
 # Baseline runtime wiring checks
-rg -q 'window\.loadSimpleComment' "$simple_comment_js"
-rg -q '/verify|/topic/|/auth|/comment/' "$simple_comment_js"
-rg -q 'window\.getQuestion' "$icebreakers_js"
+grep -q 'window\.loadSimpleComment' "$simple_comment_js"
+grep -Eq '/verify|/topic/|/auth|/comment/' "$simple_comment_js"
+grep -q 'window\.getQuestion' "$icebreakers_js"
 
 echo "Frontend embed smoke check passed (${BASE_URL})"
