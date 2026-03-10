@@ -1,15 +1,21 @@
 import path from "path"
-import { defineConfig } from "vite"
+import { defineConfig, loadEnv } from "vite"
 import sveltePreprocess from "svelte-preprocess"
 
 const mode = process.env.NODE_ENV ?? "development"
 const isProduction = mode === "production"
 
-export default defineConfig(async () => {
+export default defineConfig(async ({ mode }) => {
   const { svelte } = await import("@sveltejs/vite-plugin-svelte")
+  const env = loadEnv(mode, process.cwd(), "")
+  const frontendApiUrl =
+    env.VITE_SIMPLE_COMMENT_API_URL ?? env.SIMPLE_COMMENT_API_URL ?? ""
 
   return {
     publicDir: "src/static",
+    define: {
+      "process.env.SIMPLE_COMMENT_API_URL": JSON.stringify(frontendApiUrl),
+    },
     plugins: [
       svelte({
         emitCss: false,

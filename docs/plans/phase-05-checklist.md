@@ -45,7 +45,7 @@ Source plan: `docs/plans/phase-05-frontend-build-modernization.md`
     - "style bundle/static assets" (In Scope)
     - "Port static asset handling and env variable wiring." (Implementation steps)
 
-- [ ] C04 `[frontend]` Port frontend env variable wiring to the Vite-based build path in `vite.config.ts` and `src/apiClient.ts`.
+- [x] C04 `[frontend]` Port frontend env variable wiring to the Vite-based build path in `vite.config.ts` and `src/apiClient.ts`.
   - Depends on: C02.
   - Validation: T03; T06 (if logic changes in test-covered modules).
   - Trace:

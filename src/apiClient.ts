@@ -25,12 +25,15 @@ export const toSlug = (x: string) => {
   const slug = x.toLowerCase().replace(/[^a-z0-9]+/g, "-")
   return cleanSlug(slug)
 }
-// Set SIMPLE_COMMENT_API_URL variable in the .env file, following example.env
+// Set VITE_SIMPLE_COMMENT_API_URL (or SIMPLE_COMMENT_API_URL legacy fallback)
+// in local environment config, following example.env.
 const SIMPLE_COMMENT_API_URL = process.env.SIMPLE_COMMENT_API_URL
 
 const getSimpleCommentURL = () => {
   if (SIMPLE_COMMENT_API_URL === undefined)
-    throw new Error("Simple comment URL is not set in .env file")
+    throw new Error(
+      "Simple comment URL is not set (VITE_SIMPLE_COMMENT_API_URL/SIMPLE_COMMENT_API_URL)"
+    )
   else return SIMPLE_COMMENT_API_URL
 }
 
