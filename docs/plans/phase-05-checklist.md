@@ -73,7 +73,7 @@ Source plan: `docs/plans/phase-05-frontend-build-modernization.md`
     - "Verify frontend build/dev default paths no longer depend on `webpack.frontend.js`" (Implementation steps)
     - "Keep backend Netlify-functions bundling unchanged." (In Scope)
 
-- [ ] T03 `[validation]` Validate contract/parity for required artifacts: `simple-comment`, `simple-comment-icebreakers`, and style/static assets.
+- [x] T03 `[validation]` Validate contract/parity for required artifacts: `simple-comment`, `simple-comment-icebreakers`, and style/static assets.
   - Depends on: C03, C07.
   - Trace:
     - "Generated artifacts required by current embedding remain compatible: `simple-comment`, `simple-comment-icebreakers`, and frontend style/static assets." (Acceptance criteria)

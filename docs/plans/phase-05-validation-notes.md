@@ -31,3 +31,17 @@
   - Validation run reached ready state (`VITE v5.4.21 ready`, local URL `http://localhost:5000/`).
 - Backend bundling path:
   - `package.json` `build:netlify` remains `webpack --config ./webpack.netlify.functions.js` (unchanged in this phase).
+
+## Contract/Parity Validation
+
+- Date: 2026-03-10
+- Command:
+  - `yarn run build:frontend`
+  - `./scripts/validate-frontend-artifacts.sh`
+- Result:
+  - Frontend build passed with Vite.
+  - Artifact contract check passed for required outputs:
+    - `js/simple-comment.js`
+    - `js/simple-comment-icebreakers.js`
+    - `css/simple-comment-style.css`
+    - static assets (`index.html`, `icebreakers/index.html`, `css/index.css`, `img/*`, `font/*`)
