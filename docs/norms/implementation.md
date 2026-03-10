@@ -45,12 +45,25 @@ becomes something like:
 
 `Confirm scope is limited to CI-parity command`
 
+## Validation Selection
+
+Select the primary validation approach for each checklist item from plan/checklist requirements:
+
+- behavior/contract logic change: prefer fail-first unit/integration tests
+- build/tooling migration: prefer contract/parity harness checks plus runtime smoke checks
+- docs/governance-only change: validate references, commands, and cited evidence consistency
+
+Do not rely on tool-internal assertions when behavior-level evidence is available.
+
 ## Working Loop
 
 1. Take the first incomplete checklist item.
-2. If appropriate, build a fail-first test for the item.
+2. Prepare the item validation path:
+   - run existing checklist-cited validation commands/tests first when they already satisfy required evidence
+   - use fail-first tests for behavior/contract changes when appropriate
+   - use harness/parity/smoke validation for build/tooling migration items
 3. Implement the item.
-4. Drive the implementation to green by changing production code first; only change the test to correct invalid assumptions, never to mask a failing implementation.
+4. Drive the implementation to green by changing production code first; only change tests to correct invalid assumptions, never to mask a failing implementation.
 5. Run broad tests to detect regressions. If regressions appear, attempt to fix only the in-scope implementation code for the current item. If green cannot be restored without changing tests or out-of-scope code, stop coding and request direction.
 6. Mark completed checklist item and commit the implementation with a short, imperative message per rules, above.
 7. Continue with the loop until the checklist is complete.

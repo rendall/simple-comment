@@ -31,7 +31,7 @@ Include whatever sections are necessary to surface goal and intent clearly. More
 A formal plan must include:
 
 - `Goal` (plain-language objective)
-- `Plain-Language Intent` (human-readable statement of what success means, without jargon)
+- `Intent` (Plain-language, human-readable statement of what success means, without jargon)
 - `In Scope`
 - `Out of Scope`
 - `Acceptance Criteria`
@@ -43,6 +43,7 @@ A formal plan may include:
 - `Constraints` (technical/process constraints)
 - `Risks and Mitigations`
 - `Open Questions / Assumptions`
+- `Validation Strategy` *required* when the plan changes behavior, contracts, or build outputs
 
 ## Plain-Language Intent Standard
 
@@ -71,6 +72,19 @@ Any unresolved ambiguity must be either:
 - resolved in the plan text, or
 - captured as an explicit deferment with owner/follow-up phase.
 
+## Validation Strategy (When Required)
+
+When a plan changes behavior, contracts, or build outputs, include a `Validation Strategy` section that states required evidence.
+
+The strategy should specify applicable evidence levels:
+
+- unit
+- integration/smoke
+- contract/parity
+- non-functional checks (performance/size/timing), only when in scope
+
+For each required evidence type, define what is considered pass/fail in plain language.
+
 ## Plan QC Modes
 
 Two QC modes are supported:
@@ -83,6 +97,7 @@ Conformance QC output format:
 - `Intent clarity issues`
 - `Missing required sections`
 - `Ambiguities/assumptions to resolve`
+- `Validation strategy gaps`
 - `Traceability readiness`
 - `Pass/Fail: ready for checklist authoring`
 
@@ -95,5 +110,6 @@ Checklist authoring under `docs/norms/checklist.md` may begin only when:
 - required plan sections are present
 - plan text contains clear, quoteable statements under stable section headings so checklist items can cite source intent directly
 - acceptance criteria are explicit and testable/checkable
+- if required, `Validation Strategy` defines checkable evidence expectations
 - plain-language intent is approved by collaborators
 - conformance QC result is `Pass`
