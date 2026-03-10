@@ -27,8 +27,12 @@
   - `package.json` `build:frontend` now uses `vite build --config ./vite.config.ts`.
   - Validation run: `yarn run build:frontend` passed.
 - Frontend dev path:
-  - `package.json` `start:frontend` now uses `vite --config ./vite.config.ts --host --port 5000`.
-  - Validation run reached ready state (`VITE v5.4.21 ready`, local URL `http://localhost:5000/`).
+  - `package.json` `start:frontend` now serves built `dist` artifacts via `scripts/start-frontend-dist.sh` (`vite build --watch` + `http-server`).
+  - Validation run served expected embed/dev paths with `200`:
+    - `/`
+    - `/index.html`
+    - `/js/simple-comment.js`
+    - `/js/simple-comment-icebreakers.js`
 - Backend bundling path:
   - `package.json` `build:netlify` remains `webpack --config ./webpack.netlify.functions.js` (unchanged in this phase).
 
