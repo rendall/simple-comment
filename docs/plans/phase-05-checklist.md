@@ -23,7 +23,7 @@ Source plan: `docs/plans/phase-05-frontend-build-modernization.md`
     - "Keep backend Netlify-functions bundling unchanged." (In Scope)
     - "Svelte major-version upgrades and frontend framework/runtime modernization (handled in Phase 06)." (Out of Scope)
 
-- [ ] T02 `[validation]` Capture pre-migration local frontend dev startup timing baseline using the same machine and method that will be used post-migration.
+- [x] T02 `[validation]` Capture pre-migration local frontend dev startup timing baseline using the same machine and method that will be used post-migration.
   - Depends on: C01.
   - Trace:
     - "Local frontend dev startup timing is measured before/after migration using the same machine/method" (Acceptance criteria)
