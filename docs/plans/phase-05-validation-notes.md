@@ -19,3 +19,15 @@
   - Exit status: `2`
   - Elapsed: `25470 ms`
   - Outcome: webpack dev server did not reach a ready state; failed with webpack-dev-server schema error (`Invalid options object`).
+
+## Frontend/Backend Flow Verification
+
+- Date: 2026-03-10
+- Frontend build path:
+  - `package.json` `build:frontend` now uses `vite build --config ./vite.config.ts`.
+  - Validation run: `yarn run build:frontend` passed.
+- Frontend dev path:
+  - `package.json` `start:frontend` now uses `vite --config ./vite.config.ts --host --port 5000`.
+  - Validation run reached ready state (`VITE v5.4.21 ready`, local URL `http://localhost:5000/`).
+- Backend bundling path:
+  - `package.json` `build:netlify` remains `webpack --config ./webpack.netlify.functions.js` (unchanged in this phase).

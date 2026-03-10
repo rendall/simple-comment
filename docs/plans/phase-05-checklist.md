@@ -66,7 +66,7 @@ Source plan: `docs/plans/phase-05-frontend-build-modernization.md`
     - "Switch the frontend build and local dev workflow from Webpack to Vite" (Plain-Language Intent)
     - "Verify frontend build/dev default paths no longer depend on `webpack.frontend.js` and that normal contributor flows use Vite." (Implementation steps)
 
-- [ ] C07 `[tooling]` Verify normal frontend build/dev flows no longer require `webpack.frontend.js` while backend Netlify-functions bundling remains unchanged.
+- [x] C07 `[tooling]` Verify normal frontend build/dev flows no longer require `webpack.frontend.js` while backend Netlify-functions bundling remains unchanged.
   - Depends on: C05, C06.
   - Validation: T03, T04, T05.
   - Trace:
