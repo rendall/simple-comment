@@ -103,7 +103,7 @@ Source plan: `docs/plans/phase-05-frontend-build-modernization.md`
     - "Rework frontend scripts and contributor docs around the new bundler workflow." (In Scope)
     - "keeping comment embeds working the same way for host sites and end users." (Goal)
 
-- [ ] C09 `[docs]` Record Phase 06 handoff note that defers framework/runtime upgrades and lists residual upgrade hotspots found during Phase 05.
+- [x] C09 `[docs]` Record Phase 06 handoff note that defers framework/runtime upgrades and lists residual upgrade hotspots found during Phase 05.
   - Depends on: T03, T04, T05, T06, C08.
   - Trace:
     - "Record Phase 06 handoff note for frontend framework/runtime upgrades after Vite parity is stable." (Implementation steps)

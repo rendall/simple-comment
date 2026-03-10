@@ -74,6 +74,17 @@ Switch the frontend build and local dev workflow from Webpack to Vite without ch
   - Measure local frontend dev startup timing before and after migration using the same machine/method.
   - Pass when timing results are documented in phase/PR validation notes.
 
+## Phase 06 Handoff (Framework/Runtime Upgrade)
+
+Framework/runtime upgrade work remains deferred to Phase 06.
+
+Residual hotspots discovered during Phase 05:
+
+- Svelte runtime remains on the legacy major line in this phase; upgrade planning/execution remains a separate concern for Phase 06.
+- Frontend API URL wiring currently preserves `process.env.SIMPLE_COMMENT_API_URL` compatibility via Vite define replacement; Phase 06 should evaluate migration to native `import.meta.env` conventions.
+- Vite build logs show CJS Node API deprecation notice; Phase 06 should update tooling/runtime integration to remove compatibility shims and deprecated pathways.
+- Frontend output includes an additional generated CSS asset (`dist/assets/simple-comment-*.css`) alongside expected bundle outputs; Phase 06 should decide whether to keep, rename, or eliminate this artifact as part of framework/runtime modernization.
+
 ## Rollback
 
 - Keep Webpack config in branch history until Vite parity is fully validated.
