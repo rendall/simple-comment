@@ -26,7 +26,7 @@
     "prebuild": "rimraf ./functions && rimraf ./dist/js && mkdir -p ./dist/js",
     "start:db": "sudo systemctl start mongod",
     "start:backend": "netlify dev --port 7070",
-    "start:frontend": "webpack-dev-server --config ./webpack.frontend.js",
+    "start:frontend": "vite --config ./vite.config.ts --host --port 5000",
     "start": "NODE_ENV=\"development\" NODE_OPTIONS=\"--max-old-space-size=4096\" netlify dev --port 7070 --command \"yarn run start:frontend\"",
     "test": "yarn test:backend && yarn test:frontend",
     "test:backend": "jest --config jest.backend.config.ts",
@@ -34,7 +34,7 @@
     "test:frontend": "cross-env TZ=UTC jest --config jest.frontend.config.ts",
     "typecheck": "tsc --noEmit -p tsconfig.frontend.json && tsc --noEmit -p tsconfig.netlify.functions.json",
     "watch:backend": "tsc -p tsconfig.netlify.functions.json --listEmittedFiles --watch",
-    "watch:frontend": "webpack --watch",
+    "watch:frontend": "vite build --config ./vite.config.ts --watch",
     "watch:lint": "esw -w ./src/**/*.ts --color --clear --changed",
     "watch:test": "jest --watch --noStackTrace"
   },

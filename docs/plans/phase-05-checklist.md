@@ -59,7 +59,7 @@ Source plan: `docs/plans/phase-05-frontend-build-modernization.md`
     - "Rework frontend scripts and contributor docs around the new bundler workflow." (In Scope)
     - "Verify frontend build/dev default paths no longer depend on `webpack.frontend.js`" (Implementation steps)
 
-- [ ] C06 `[tooling]` Update `package.json` frontend dev scripts so normal local frontend workflow uses Vite.
+- [x] C06 `[tooling]` Update `package.json` frontend dev scripts so normal local frontend workflow uses Vite.
   - Depends on: C05.
   - Validation: C07; T05.
   - Trace:
