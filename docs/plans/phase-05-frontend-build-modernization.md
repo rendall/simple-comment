@@ -87,5 +87,4 @@ Residual hotspots discovered during Phase 05:
 
 ## Rollback
 
-- Keep Webpack config in branch history until Vite parity is fully validated.
 - Revert migration PR if integration compatibility is not met.
