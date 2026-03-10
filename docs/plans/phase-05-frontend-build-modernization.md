@@ -4,9 +4,13 @@ Status: Planned
 
 ## Goal
 
-Modernize frontend bundling/dev tooling by replacing the custom frontend Webpack setup with Vite, while preserving runtime behavior and embed compatibility.
+Modernize frontend bundling/dev tooling by replacing the custom frontend Webpack setup with Vite, while keeping comment embeds working the same way for host sites and end users.
 
-## Scope
+## Plain-Language Intent
+
+Switch the frontend build and local dev workflow from Webpack to Vite without changing what host sites load or how embeds behave. We are doing this to reduce custom build complexity, speed up local frontend iteration, and make build tooling easier to maintain. After this phase, contributors should use Vite for normal frontend build/dev work, while backend function bundling and framework upgrades remain outside this phase.
+
+## In Scope
 
 - Migrate frontend build/dev flows from `webpack.frontend.js` to Vite.
 - Preserve current build outputs/entry behavior:
@@ -33,7 +37,7 @@ Modernize frontend bundling/dev tooling by replacing the custom frontend Webpack
 2. Port static asset handling and env variable wiring.
 3. Update npm/yarn scripts and local dev docs.
 4. Validate output compatibility against existing embedding instructions.
-5. Complete frontend build migration from `webpack.frontend.js` to Vite and verify Webpack frontend config is no longer required for normal frontend build/dev flows.
+5. Verify frontend build/dev default paths no longer depend on `webpack.frontend.js` and that normal contributor flows use Vite.
 6. Record Phase 06 handoff note for frontend framework/runtime upgrades after Vite parity is stable.
 
 ## Risk and mitigation
@@ -51,8 +55,8 @@ Modernize frontend bundling/dev tooling by replacing the custom frontend Webpack
 ## Acceptance criteria
 
 - Frontend build succeeds with Vite.
-- Generated artifacts remain compatible with current deployment/embedding model.
-- Local frontend dev startup is faster and documented.
+- Generated artifacts required by current embedding remain compatible: `simple-comment`, `simple-comment-icebreakers`, and frontend style/static assets.
+- Local frontend dev startup timing is measured before/after migration using the same machine/method, and results are documented.
 - Phase 05 artifacts/docs clearly defer frontend framework/runtime upgrades to Phase 06.
 
 ## Rollback
