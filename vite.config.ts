@@ -2,10 +2,8 @@ import path from "path"
 import { defineConfig, loadEnv } from "vite"
 import sveltePreprocess from "svelte-preprocess"
 
-const mode = process.env.NODE_ENV ?? "development"
-const isProduction = mode === "production"
-
 export default defineConfig(async ({ mode }) => {
+  const isProduction = mode === "production"
   const { svelte } = await import("@sveltejs/vite-plugin-svelte")
   const env = loadEnv(mode, process.cwd(), "")
   const frontendApiUrl =
