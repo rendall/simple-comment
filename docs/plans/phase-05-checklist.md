@@ -91,7 +91,7 @@ Source plan: `docs/plans/phase-05-frontend-build-modernization.md`
     - "Local frontend dev startup timing is measured before/after migration using the same machine/method, and results are documented." (Acceptance criteria)
     - "Pass when timing results are documented in phase/PR validation notes." (Validation Strategy)
 
-- [ ] T06 `[validation]` If migration changes logic in test-covered modules, update/run impacted unit tests and record results in validation notes.
+- [x] T06 `[validation]` If migration changes logic in test-covered modules, update/run impacted unit tests and record results in validation notes.
   - Depends on: C03, C04.
   - Trace:
     - "Add or update unit tests only when migration changes logic in test-covered modules." (Validation Strategy)

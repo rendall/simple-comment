@@ -73,3 +73,14 @@
 - After (post-migration / Vite):
   - Outcome: reached ready state (`VITE v5.4.21 ready`, local URL `http://localhost:5000/`).
   - Elapsed: `3129 ms` (time to ready).
+
+## Unit Validation (Conditional)
+
+- Date: 2026-03-10
+- Condition check:
+  - Migration touched frontend bundler config and frontend API URL wiring (`src/apiClient.ts`).
+  - No dedicated unit test module currently targets `src/apiClient.ts` behavior directly.
+- Command:
+  - `yarn run test:frontend`
+- Result:
+  - Passed: 7/7 frontend test suites, 159/159 tests.
