@@ -86,6 +86,7 @@ A short Phase 1.5 stabilizes CI test gating after platform changes, then runtime
 - [Phase 03 - Test Determinism and CI Hardening](./phase-03-test-determinism-and-ci-hardening.md)
 - [Phase 04 - Type Safety and Environment Handling](./phase-04-type-safety-and-env-handling.md)
 - [Phase 05 - Frontend Build Modernization](./phase-05-frontend-build-modernization.md)
+- [Phase 06 - Frontend Upgrade](./phase-06-frontend-upgrade.md)
 
 ---
 

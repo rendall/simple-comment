@@ -1,0 +1,91 @@
+# Phase 05 Validation Notes
+
+## Scope Boundary Confirmation
+
+- In scope: frontend bundler/dev-flow migration from `webpack.frontend.js` to Vite.
+- In scope: preserve required frontend artifact roles (`simple-comment`, `simple-comment-icebreakers`, style/static assets).
+- In scope: frontend scripts/docs updates required for Vite-based contributor workflows.
+- Out of scope: Svelte/framework/runtime upgrades (deferred to Phase 06).
+- Out of scope: backend Netlify-functions bundling changes (`webpack.netlify.functions.js` remains unchanged in this phase).
+
+## Local Frontend Startup Timing Baseline (Pre-Migration)
+
+- Date: 2026-03-10
+- Machine/method:
+  - Command: `yarn run start:frontend`
+  - Measurement: wall-clock elapsed milliseconds from command start to terminal exit.
+  - Log capture: `/tmp/phase05-webpack-startup-baseline.log`
+- Result:
+  - Exit status: `2`
+  - Elapsed: `25470 ms`
+  - Outcome: webpack dev server did not reach a ready state; failed with webpack-dev-server schema error (`Invalid options object`).
+
+## Frontend/Backend Flow Verification
+
+- Date: 2026-03-10
+- Frontend build path:
+  - `package.json` `build:frontend` now uses `vite build --config ./vite.config.ts`.
+  - Validation run: `yarn run build:frontend` passed.
+- Frontend dev path:
+  - `package.json` `start:frontend` now serves built `dist` artifacts via `scripts/start-frontend-dist.sh` (`vite build --watch` + `http-server`).
+  - Validation run served expected embed/dev paths with `200`:
+    - `/`
+    - `/index.html`
+    - `/js/simple-comment.js`
+    - `/js/simple-comment-icebreakers.js`
+- Backend bundling path:
+  - `package.json` `build:netlify` remains `webpack --config ./webpack.netlify.functions.js` (unchanged in this phase).
+
+## Contract/Parity Validation
+
+- Date: 2026-03-10
+- Command:
+  - `yarn run build:frontend`
+  - `./scripts/validate-frontend-artifacts.sh`
+- Result:
+  - Frontend build passed with Vite.
+  - Artifact contract check passed for required outputs:
+    - `js/simple-comment.js`
+    - `js/simple-comment-icebreakers.js`
+    - `css/simple-comment.css`
+    - `css/simple-comment-style.css`
+    - static assets (`index.html`, `icebreakers/index.html`, `css/index.css`, `img/*`, `font/*`)
+
+## Integration/Smoke Validation
+
+- Date: 2026-03-10
+- Command:
+  - `./scripts/smoke-frontend-embed.sh dist 5051`
+- Result:
+  - Sample embed pages loaded from `dist` via local static server.
+  - Frontend module bundles were fetchable (`js/simple-comment.js`, `js/simple-comment-icebreakers.js`).
+  - Smoke assertions passed for baseline wiring indicators:
+    - script references in `index.html` and `icebreakers/index.html`
+    - `window.loadSimpleComment` in `simple-comment` bundle
+    - `window.getQuestion` in `simple-comment-icebreakers` bundle
+    - baseline API-path references in `simple-comment` bundle
+
+## Local Frontend Startup Timing (Before/After)
+
+- Date: 2026-03-10
+- Same machine/method:
+  - Command path: `yarn run start:frontend`
+  - Measurement: wall-clock elapsed milliseconds from command start to observed outcome.
+- Before (pre-migration / webpack-dev-server):
+  - Outcome: failed before ready state (`Invalid options object`).
+  - Exit status: `2`
+  - Elapsed: `25470 ms` (time to failure).
+- After (post-migration / Vite):
+  - Outcome: reached ready state (`VITE v5.4.21 ready`, local URL `http://localhost:5000/`).
+  - Elapsed: `3129 ms` (time to ready).
+
+## Unit Validation (Conditional)
+
+- Date: 2026-03-10
+- Condition check:
+  - Migration touched frontend bundler config and frontend API URL wiring (`src/apiClient.ts`).
+  - No dedicated unit test module currently targets `src/apiClient.ts` behavior directly.
+- Command:
+  - `yarn run test:frontend`
+- Result:
+  - Passed: 7/7 frontend test suites, 159/159 tests.
