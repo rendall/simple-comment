@@ -20,7 +20,7 @@ Switch the frontend build and local dev workflow from Webpack to Vite without ch
 - Rework frontend scripts and contributor docs around the new bundler workflow.
 - Keep backend Netlify-functions bundling unchanged.
 
-## Out of scope
+## Out of Scope
 
 - Svelte major-version upgrades and frontend framework/runtime modernization (handled in Phase 06).
 - Frontend feature redesigns unrelated to bundler migration parity.
@@ -58,6 +58,21 @@ Switch the frontend build and local dev workflow from Webpack to Vite without ch
 - Generated artifacts required by current embedding remain compatible: `simple-comment`, `simple-comment-icebreakers`, and frontend style/static assets.
 - Local frontend dev startup timing is measured before/after migration using the same machine/method, and results are documented.
 - Phase 05 artifacts/docs clearly defer frontend framework/runtime upgrades to Phase 06.
+
+## Validation Strategy
+
+- Unit:
+  - Add or update unit tests only when migration changes logic in test-covered modules.
+  - Pass when touched module tests stay green.
+- Integration/smoke:
+  - Validate script load, mount/render, and baseline API-call wiring on a sample embed page.
+  - Pass when smoke checks succeed for the migrated build outputs.
+- Contract/parity:
+  - Validate required output artifact roles remain compatible (`simple-comment`, `simple-comment-icebreakers`, and style/static assets).
+  - Pass when artifact and embedding checks show no unintended behavior change for host-site integration.
+- Non-functional (in-scope):
+  - Measure local frontend dev startup timing before and after migration using the same machine/method.
+  - Pass when timing results are documented in phase/PR validation notes.
 
 ## Rollback
 
