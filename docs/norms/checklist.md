@@ -13,6 +13,9 @@ Before drafting checklist items, extract and lock from the approved plan:
 - in-scope statements
 - out-of-scope statements
 - acceptance criteria
+- validation strategy and required evidence expectations (if present)
+
+If the plan changes behavior, contracts, or build outputs and does not include the required `Validation Strategy` section, stop and fail conformance QC before checklist drafting.
 
 ## Traceability (Required)
 
@@ -44,6 +47,17 @@ Scope-control rules:
 - If an out-of-plan item is proposed, label it `Proposed Add-on (Not in Plan)` and include a one-line rationale.
 - `Proposed Add-on (Not in Plan)` items are advisory only until explicit approval is recorded in writing (issue, PR, or thread comment).
 - Do not convert a `Proposed Add-on (Not in Plan)` item into a normal checklist item until that approval exists.
+
+## Validation Mapping (Required When Plan Requires Evidence)
+
+When the source plan includes a `Validation Strategy` or acceptance criteria that require explicit evidence:
+
+- include dedicated validation items (for example `Txx`) or cite existing test commands/files that satisfy that evidence
+- ensure each implementation item (`Cxx`) has an explicit validation path:
+  - inline validation in the item text, or
+  - dependency on one or more `Txx` items
+- keep validation scope tied to approved plan intent; out-of-plan validation work must use `Proposed Add-on (Not in Plan)`
+- for build/tooling migrations, prefer contract/parity and smoke validation over bundler-internal assertions
 
 ## Item Quality
 
@@ -84,13 +98,19 @@ QC output format:
 - `Missing from plan`
 - `Extra beyond plan`
 - `Atomicity fixes needed`
+- `Validation mapping gaps`
 - `Pass/Fail: checklist achieves plan goals`
 
 If advisory suggestions are included, place them in a separate `Advisory` section after conformance results.
 
 ## Exclusions
 
-Unless a task explicitly requests testing steps, do not include test-writing/execution steps in the checklist itself.
+Do not add speculative testing work.
+
+Include test/validation items only when:
+
+- the approved plan/acceptance criteria require evidence, or
+- the user explicitly requests testing work.
 
 ## Behavior Slices
 
