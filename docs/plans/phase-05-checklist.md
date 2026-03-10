@@ -29,7 +29,7 @@ Source plan: `docs/plans/phase-05-frontend-build-modernization.md`
     - "Local frontend dev startup timing is measured before/after migration using the same machine/method" (Acceptance criteria)
     - "Measure local frontend dev startup timing before and after migration using the same machine/method." (Validation Strategy)
 
-- [ ] C02 `[frontend]` Add `vite.config.ts` with frontend entry/output configuration for `simple-comment` and `simple-comment-icebreakers`.
+- [x] C02 `[frontend]` Add `vite.config.ts` with frontend entry/output configuration for `simple-comment` and `simple-comment-icebreakers`.
   - Depends on: C01.
   - Validation: T03.
   - Trace:

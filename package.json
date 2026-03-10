@@ -1,11 +1,13 @@
 {
   "devDependencies": {
     "@shelf/jest-mongodb": "^4.1.7",
+    "@sveltejs/vite-plugin-svelte": "^2.5.3",
     "@types/bcryptjs": "^2.4.2",
     "@types/jest": "^29.5.3",
     "@types/jsonwebtoken": "^8.5.0",
     "@types/picomatch": "^2.3.0",
-    "cross-env": "^7.0.3"
+    "cross-env": "^7.0.3",
+    "vite": "^5.4.14"
   },
   "optionalDependencies": {
     "cypress": "^12.17.4",
