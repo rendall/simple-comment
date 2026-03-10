@@ -2,9 +2,15 @@
 
 Source plan: `docs/plans/phase-05-frontend-build-modernization.md`
 
+## Execution Locks
+
+- Phase 05 validation evidence levels are locked to plan `Validation Strategy`: `Unit`, `Integration/smoke`, `Contract/parity`, and `Non-functional (in-scope)`.
+- Framework/runtime upgrade assertions remain out of scope for Phase 05.
+- Build/runtime validation must assert behavior and artifact contracts, not bundler-internal implementation details.
+
 ## Checklist
 
-- [ ] T01 `[governance]` Confirm Phase 05 validation scope and evidence levels from `Validation Strategy` are locked for execution.
+- [x] T01 `[governance]` Confirm Phase 05 validation scope and evidence levels from `Validation Strategy` are locked for execution.
   - Depends on: none.
   - Trace:
     - "Switch the frontend build and local dev workflow from Webpack to Vite without changing what host sites load or how embeds behave." (Plain-Language Intent)
