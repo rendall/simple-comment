@@ -7,12 +7,14 @@ export default defineConfig(async ({ mode }) => {
   const { svelte } = await import("@sveltejs/vite-plugin-svelte")
   const env = loadEnv(mode, process.cwd(), "")
   const frontendApiUrl =
-    env.VITE_SIMPLE_COMMENT_API_URL ?? env.SIMPLE_COMMENT_API_URL ?? ""
+    env.VITE_SIMPLE_COMMENT_API_URL ?? env.SIMPLE_COMMENT_API_URL
+  const frontendApiUrlDefine =
+    frontendApiUrl === undefined ? "undefined" : JSON.stringify(frontendApiUrl)
 
   return {
     publicDir: "src/static",
     define: {
-      "process.env.SIMPLE_COMMENT_API_URL": JSON.stringify(frontendApiUrl),
+      "process.env.SIMPLE_COMMENT_API_URL": frontendApiUrlDefine,
     },
     plugins: [
       svelte({
