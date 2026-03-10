@@ -9,8 +9,10 @@ export default defineConfig(async () => {
   const { svelte } = await import("@sveltejs/vite-plugin-svelte")
 
   return {
+    publicDir: "src/static",
     plugins: [
       svelte({
+        emitCss: false,
         preprocess: [sveltePreprocess()],
         compilerOptions: { dev: !isProduction },
       }),
@@ -22,13 +24,22 @@ export default defineConfig(async () => {
       rollupOptions: {
         input: {
           "simple-comment": path.resolve(__dirname, "src/simple-comment.ts"),
-          "simple-comment-icebreakers": path.resolve(
+        "simple-comment-icebreakers": path.resolve(
             __dirname,
             "src/simple-comment-icebreakers.ts"
+          ),
+          "simple-comment-style": path.resolve(
+            __dirname,
+            "src/scss/simple-comment-style.scss"
           ),
         },
         output: {
           entryFileNames: "js/[name].js",
+          assetFileNames: assetInfo => {
+            const name = assetInfo.name ?? ""
+            if (name.endsWith(".css")) return "css/[name][extname]"
+            return "assets/[name][extname]"
+          },
         },
       },
     },

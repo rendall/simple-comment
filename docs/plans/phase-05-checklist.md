@@ -38,7 +38,7 @@ Source plan: `docs/plans/phase-05-frontend-build-modernization.md`
     - "`simple-comment`" (In Scope)
     - "`simple-comment-icebreakers`" (In Scope)
 
-- [ ] C03 `[frontend]` Configure style/static asset handling in `vite.config.ts` so frontend output roles remain compatible with current embedding expectations.
+- [x] C03 `[frontend]` Configure style/static asset handling in `vite.config.ts` so frontend output roles remain compatible with current embedding expectations.
   - Depends on: C02.
   - Validation: T03.
   - Trace:
