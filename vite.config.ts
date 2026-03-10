@@ -30,7 +30,7 @@ export default defineConfig(async ({ mode }) => {
       rollupOptions: {
         input: {
           "simple-comment": path.resolve(__dirname, "src/simple-comment.ts"),
-        "simple-comment-icebreakers": path.resolve(
+          "simple-comment-icebreakers": path.resolve(
             __dirname,
             "src/simple-comment-icebreakers.ts"
           ),
