@@ -45,3 +45,17 @@
     - `js/simple-comment-icebreakers.js`
     - `css/simple-comment-style.css`
     - static assets (`index.html`, `icebreakers/index.html`, `css/index.css`, `img/*`, `font/*`)
+
+## Integration/Smoke Validation
+
+- Date: 2026-03-10
+- Command:
+  - `./scripts/smoke-frontend-embed.sh dist 5051`
+- Result:
+  - Sample embed pages loaded from `dist` via local static server.
+  - Frontend module bundles were fetchable (`js/simple-comment.js`, `js/simple-comment-icebreakers.js`).
+  - Smoke assertions passed for baseline wiring indicators:
+    - script references in `index.html` and `icebreakers/index.html`
+    - `window.loadSimpleComment` in `simple-comment` bundle
+    - `window.getQuestion` in `simple-comment-icebreakers` bundle
+    - baseline API-path references in `simple-comment` bundle

@@ -79,7 +79,7 @@ Source plan: `docs/plans/phase-05-frontend-build-modernization.md`
     - "Generated artifacts required by current embedding remain compatible: `simple-comment`, `simple-comment-icebreakers`, and frontend style/static assets." (Acceptance criteria)
     - "Validate required output artifact roles remain compatible (`simple-comment`, `simple-comment-icebreakers`, and style/static assets)." (Validation Strategy)
 
-- [ ] T04 `[validation]` Run integration/smoke checks on a sample embed page for script load, mount/render, and baseline API-call wiring.
+- [x] T04 `[validation]` Run integration/smoke checks on a sample embed page for script load, mount/render, and baseline API-call wiring.
   - Depends on: C07.
   - Trace:
     - "validate with sample embed page and cypress flows" (Risk and mitigation)
