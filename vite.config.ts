@@ -25,7 +25,7 @@ export default defineConfig(async ({ mode }) => {
     ],
     build: {
       outDir: "dist",
-      emptyOutDir: false,
+      emptyOutDir: true,
       sourcemap: true,
       rollupOptions: {
         input: {
