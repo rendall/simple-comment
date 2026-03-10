@@ -59,3 +59,17 @@
     - `window.loadSimpleComment` in `simple-comment` bundle
     - `window.getQuestion` in `simple-comment-icebreakers` bundle
     - baseline API-path references in `simple-comment` bundle
+
+## Local Frontend Startup Timing (Before/After)
+
+- Date: 2026-03-10
+- Same machine/method:
+  - Command path: `yarn run start:frontend`
+  - Measurement: wall-clock elapsed milliseconds from command start to observed outcome.
+- Before (pre-migration / webpack-dev-server):
+  - Outcome: failed before ready state (`Invalid options object`).
+  - Exit status: `2`
+  - Elapsed: `25470 ms` (time to failure).
+- After (post-migration / Vite):
+  - Outcome: reached ready state (`VITE v5.4.21 ready`, local URL `http://localhost:5000/`).
+  - Elapsed: `3129 ms` (time to ready).

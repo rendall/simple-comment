@@ -85,7 +85,7 @@ Source plan: `docs/plans/phase-05-frontend-build-modernization.md`
     - "validate with sample embed page and cypress flows" (Risk and mitigation)
     - "Validate script load, mount/render, and baseline API-call wiring on a sample embed page." (Validation Strategy)
 
-- [ ] T05 `[validation]` Measure post-migration local frontend dev startup timing with the same machine/method as baseline and document before/after results.
+- [x] T05 `[validation]` Measure post-migration local frontend dev startup timing with the same machine/method as baseline and document before/after results.
   - Depends on: C06, T02.
   - Trace:
     - "Local frontend dev startup timing is measured before/after migration using the same machine/method, and results are documented." (Acceptance criteria)
