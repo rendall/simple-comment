@@ -208,6 +208,15 @@ Assumes a unix-like environment, like Ubuntu.
 1. `yarn run start`
 1. open http://localhost:7070/
 
+### Frontend build/dev workflow
+
+- `yarn run build:frontend` uses Vite (`vite.config.ts`) and emits frontend artifacts to `dist`.
+- `yarn run start:frontend` runs the frontend dev server on `http://localhost:5000/`.
+- Embed integration paths remain unchanged for host pages:
+  - `./js/simple-comment.js`
+  - `/js/simple-comment.js`
+  - `/js/simple-comment-icebreakers.js`
+
 ## API
 
 The API specification is described by the file [simple-comment-openapi3.json](./src/schema/simple-comment-openapi3.json) in Open API 3 format and is designed to be interchangeable with any backend, frontend and identification system

@@ -97,7 +97,7 @@ Source plan: `docs/plans/phase-05-frontend-build-modernization.md`
     - "Add or update unit tests only when migration changes logic in test-covered modules." (Validation Strategy)
     - "Pass when touched module tests stay green." (Validation Strategy)
 
-- [ ] C08 `[docs]` Update contributor-facing docs (`README.md` and any impacted Phase 05 docs) for Vite-based frontend build/dev workflow and unchanged embed behavior expectations.
+- [x] C08 `[docs]` Update contributor-facing docs (`README.md` and any impacted Phase 05 docs) for Vite-based frontend build/dev workflow and unchanged embed behavior expectations.
   - Depends on: C05, C06.
   - Trace:
     - "Rework frontend scripts and contributor docs around the new bundler workflow." (In Scope)
