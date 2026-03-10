@@ -52,7 +52,7 @@ Source plan: `docs/plans/phase-05-frontend-build-modernization.md`
     - "Port static asset handling and env variable wiring." (Implementation steps)
     - "Migrate frontend build/dev flows from `webpack.frontend.js` to Vite." (In Scope)
 
-- [ ] C05 `[tooling]` Update `package.json` frontend build scripts so normal frontend build flow uses Vite.
+- [x] C05 `[tooling]` Update `package.json` frontend build scripts so normal frontend build flow uses Vite.
   - Depends on: C03, C04.
   - Validation: C07.
   - Trace:
