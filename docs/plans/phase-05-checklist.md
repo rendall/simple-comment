@@ -16,7 +16,7 @@ Source plan: `docs/plans/phase-05-frontend-build-modernization.md`
     - "Switch the frontend build and local dev workflow from Webpack to Vite without changing what host sites load or how embeds behave." (Plain-Language Intent)
     - "Validate required output artifact roles remain compatible (`simple-comment`, `simple-comment-icebreakers`, and style/static assets)." (Validation Strategy)
 
-- [ ] C01 `[governance]` Confirm and document Phase 05 scope boundaries: frontend bundler migration only, backend Netlify-functions bundling unchanged, and framework/runtime upgrades deferred to Phase 06.
+- [x] C01 `[governance]` Confirm and document Phase 05 scope boundaries: frontend bundler migration only, backend Netlify-functions bundling unchanged, and framework/runtime upgrades deferred to Phase 06.
   - Depends on: none.
   - Trace:
     - "Migrate frontend build/dev flows from `webpack.frontend.js` to Vite." (In Scope)
