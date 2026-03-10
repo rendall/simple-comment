@@ -2,37 +2,63 @@
 
 Use this as a practical execution guide when implementing an approved checklist.
 
-Implementation is step 2 of a lightweight 2-step process:
+Implementation is step 3 of a lightweight 3-step process:
 
-1. Create/approve a checklist using `docs/norms/checklist.md`.
-2. Execute that checklist using this document.
+1. Refine/approve a plan using `docs/norms/plan.md`.
+2. Create/approve a checklist using `docs/norms/checklist.md`.
+3. Execute that checklist using this document.
 
 If there is no approved checklist created under `docs/norms/checklist.md` conventions, stop and ask.
 
 ## Start State
 
 - Run relevant tests to understand baseline behavior.
-- Check `git status`.
-- If unrelated files are dirty and scope is unclear, pause and confirm before proceeding.
-- Checkout a new branch named as `<verb>-<optionalAdj>-<noun>` to describe intent.
+- Check out a new branch named as `<verb>-<optionalAdj>-<noun>` to describe intent.
   - This pattern is mandatory for new work branches.
   - Use lowercase kebab-case tokens.
   - Examples: `fix-auth-cookie`, `upgrade-core-dependencies`, `refactor-comment-pipeline`.
+- Check `git status`.
+- If dirty files exist:
+  - If they are directly related to the approved phase governance context
+    (for example: phase checklist, phase plan, or norms updates required for execution), commit them first with a short setup commit message (for example `Init <phase>`).
+  - If they are outside approved phase scope, stop and ask.
+
+
+## Rules
+
+- Each checklist item must be completed in its own atomic commit.
+- Do not include multiple checklist items in one commit.
+- Each item commit must include:
+  - only that checked item in the list (i.e. `[ ]` => `[x]`)
+  - that checklist item's atomic implementation (if any)
+- If an item cannot be completed atomically during implementation, stop and request checklist revision; do not batch partial work across items.
+- The commit message must be the checklist copy in imperative form, edited for length (less than 50 characters) and clarity.
+- Do not include tags or checklist ids in the message.
+
+e.g. The commit message for this item
+
+```md
+- [x] C01 `[governance]` Confirm scope is limited to adding a local CI-parity command path for the existing PR gate workflow (`.github/workflows/netlify-api-test.yml`) and is aligned to `docs/norms/ci-parity.md`: dependency-resolution + validation parity (install with lockfile/options, lint, prettier check, `build:netlify`, `test:backend`, `test:frontend`) without changing workflow behavior, adding CodeQL-local emulation, or mirroring CI runner/bootstrap steps (`actions/checkout`, `actions/setup-node`, global `npm install yarn@^1 -g`).
+```
+
+becomes something like:
+
+`Confirm scope is limited to CI-parity command`
 
 ## Working Loop
 
-1. Take the first incomplete checklist item (or its required prerequisite).
-2. Group dependent items into one behavior slice when they form one coherent change.
-3. Implement the slice.
-4. Run targeted tests for touched scope.
-5. Run broader/full tests at natural checkpoints.
-6. Mark completed checklist items.
-7. Commit with a short, imperative message.
-8. Before opening a PR, run the repository local CI parity command (currently `yarn run ci:local`).
-9. If lint/format checks fail, run `yarn run fix` (or targeted fixes), then re-run `yarn run ci:local`.
+1. Take the first incomplete checklist item.
+2. If appropriate, build a fail-first test for the item.
+3. Implement the item.
+4. Drive the implementation to green by changing production code first; only change the test to correct invalid assumptions, never to mask a failing implementation.
+5. Run broad tests to detect regressions. If regressions appear, attempt to fix only the in-scope implementation code for the current item. If green cannot be restored without changing tests or out-of-scope code, stop coding and request direction.
+6. Mark completed checklist item and commit the implementation with a short, imperative message per rules, above.
+7. Continue with the loop until the checklist is complete.
 
 ## PR Readiness
 
+- Before opening a PR, run the repository local CI parity command (currently `yarn run ci:local`).
+- If lint/format checks fail, run `yarn run fix` (or targeted fixes), then re-run `yarn run ci:local`.
 - Approved checklist items are completed or explicitly deferred with rationale.
 - Local CI parity command (`yarn run ci:local`) passes, or a concrete blocker is documented in PR validation notes.
 - Formatting/lint issues are resolved (`yarn run fix` only when needed).
