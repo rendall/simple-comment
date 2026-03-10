@@ -1,8 +1,6 @@
 import { hash, compare } from "bcryptjs"
 import * as jwt from "jsonwebtoken"
-import * as dotenv from "dotenv"
-
-dotenv.config()
+import { getBackendEnv } from "./env"
 
 const YEAR_SECONDS = 60 * 60 * 24 * 365 // 60s * 1 hour * 24 hours * 365 days
 
@@ -29,9 +27,7 @@ export const comparePassword = async (
 ) => await compare(plainTextPassword, hash).catch(() => false)
 
 const getJwtSecret = (): string => {
-  const jwtSecret = process.env.JWT_SECRET
-  if (jwtSecret === undefined)
-    throw "JWT_SECRET is not set in the environment variables"
+  const { jwtSecret } = getBackendEnv()
   return jwtSecret
 }
 

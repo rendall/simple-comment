@@ -1,4 +1,3 @@
-import * as dotenv from "dotenv"
 import type { APIGatewayEvent } from "aws-lambda"
 import { MongodbService } from "../lib/MongodbService"
 import type { Success, Error, AuthToken } from "../lib/simple-comment-types"
@@ -19,19 +18,14 @@ import {
   toApiError,
   toDefinedHeaders,
 } from "../lib/backend-utilities"
-dotenv.config()
-
-if (process.env.DB_CONNECTION_STRING === undefined)
-  throw "DB_CONNECTION_STRING is not set in environment variables"
-if (process.env.DATABASE_NAME === undefined)
-  throw "DATABASE_NAME is not set in environment variables"
+import { getBackendEnv } from "../lib/env"
 
 const YEAR_SECONDS = 60 * 60 * 24 * 365 // 60s * 1 hour * 24 hours * 365 days
-const isCrossSite = process.env.IS_CROSS_SITE === "true"
+const { dbConnectionString, databaseName, isCrossSite } = getBackendEnv()
 
 const service: MongodbService = new MongodbService(
-  process.env.DB_CONNECTION_STRING,
-  process.env.DATABASE_NAME
+  dbConnectionString,
+  databaseName
 )
 
 const getAllowHeaders = (event: APIGatewayEvent) => {

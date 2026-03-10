@@ -1,7 +1,6 @@
 /** Server-side utilities.  Using any of these in the front end will lead to darkness and despair. */
 import crypto from "crypto"
 import * as jwt from "jsonwebtoken"
-import * as dotenv from "dotenv"
 import * as picomatch from "picomatch"
 import type {
   AdminSafeUser,
@@ -29,16 +28,9 @@ import {
   validateEmail,
   validateUserId,
 } from "./shared-utilities"
+import { getBackendEnv } from "./env"
 
-dotenv.config()
-
-if (process.env.ALLOW_ORIGIN === undefined)
-  throw "ALLOW_ORIGIN is not set in the environment variables"
-const allowOrigin = process.env.ALLOW_ORIGIN
-
-if (process.env.JWT_SECRET === undefined)
-  throw "JWT_SECRET is not set in the environment variables"
-const jwtSecret = process.env.JWT_SECRET
+const { allowOrigin, jwtSecret } = getBackendEnv()
 
 export const REALM = "Access to restricted resources"
 const AUTHORIZATION_HEADER = "Authorization"

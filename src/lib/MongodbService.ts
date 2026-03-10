@@ -79,23 +79,18 @@ import { comparePassword, getAuthToken, hashPassword } from "./crypt"
 import * as jwt from "jsonwebtoken"
 import { isGuestId, isValidResult } from "./shared-utilities"
 import { AbstractNotificationService } from "./AbstractNotificationService"
+import { getBackendEnv } from "./env"
 
-if (process.env.SIMPLE_COMMENT_MODERATOR_PASSWORD === undefined)
-  throw "SIMPLE_COMMENT_MODERATOR_PASSWORD is not set in environmental variables"
-const simpleCommentModeratorPassword =
-  process.env.SIMPLE_COMMENT_MODERATOR_PASSWORD
-
-if (process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL === undefined)
-  throw "SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL is not set in enviornmental variables"
-const simpleCommentModeratorEmail =
-  process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL
-
-if (process.env.JWT_SECRET === undefined)
-  throw "JWT_SECRET is not set in environmental variables"
-const jwtSecret = process.env.JWT_SECRET
+const {
+  isCrossSite,
+  jwtSecret,
+  moderatorContactEmail: simpleCommentModeratorEmail,
+  moderatorId: simpleCommentModeratorId,
+  moderatorPassword: simpleCommentModeratorPassword,
+} = getBackendEnv()
 
 export class MongodbService extends AbstractDbService {
-  private isCrossSite = process.env.IS_CROSS_SITE === "true"
+  private isCrossSite = isCrossSite
   private _client?: MongoClient
   private _db?: Db
   readonly _connectionString: string
@@ -146,7 +141,7 @@ export class MongodbService extends AbstractDbService {
         .then(async user => {
           if (!isUser(user)) {
             // User is unknown. Reject them unless they claim to be Big Moderator
-            if (identification !== process.env.SIMPLE_COMMENT_MODERATOR_ID) {
+            if (identification !== simpleCommentModeratorId) {
               reject(error404UserUnknown)
               return
             }
@@ -218,7 +213,7 @@ export class MongodbService extends AbstractDbService {
       }
     }
 
-    if (newUser.id === process.env.SIMPLE_COMMENT_MODERATOR_ID) {
+    if (newUser.id === simpleCommentModeratorId) {
       return {
         ...error403ForbiddenToModify,
         body: "Cannot modify root credentials",
@@ -329,8 +324,7 @@ export class MongodbService extends AbstractDbService {
 
     if (!user) {
       const isModerator =
-        authUserId === targetUserId &&
-        authUserId === process.env.SIMPLE_COMMENT_MODERATOR_ID
+        authUserId === targetUserId && authUserId === simpleCommentModeratorId
 
       if (!isModerator) {
         return {
@@ -437,7 +431,7 @@ export class MongodbService extends AbstractDbService {
       return error403ForbiddenToModify
     }
 
-    if (authUserId === process.env.SIMPLE_COMMENT_MODERATOR_ID) {
+    if (authUserId === simpleCommentModeratorId) {
       const cannotModify: (keyof UpdateUser)[] = [
         "password",
         "isAdmin",
@@ -503,7 +497,7 @@ export class MongodbService extends AbstractDbService {
 
     const users: Collection<User> = (await this.getDb()).collection("users")
 
-    if (userId === process.env.SIMPLE_COMMENT_MODERATOR_ID) {
+    if (userId === simpleCommentModeratorId) {
       return error403Forbidden
     }
 
