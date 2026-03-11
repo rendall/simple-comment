@@ -1,5 +1,7 @@
 # Phase 4.2 Checklist - strictNullChecks Baseline
 
+Status: Complete
+
 Source plan: `docs/plans/phase-04-type-safety-and-env-handling.md`
 
 ## Checklist

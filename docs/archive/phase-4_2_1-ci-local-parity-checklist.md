@@ -1,5 +1,7 @@
 # Phase 4.2.1 Checklist - Local CI Parity Command
 
+Status: Complete
+
 Source intent: mirror the pull-request workflow in `.github/workflows/netlify-api-test.yml` with a local command for pre-push validation.
 
 ## Checklist
