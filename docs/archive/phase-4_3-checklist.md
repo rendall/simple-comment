@@ -1,5 +1,7 @@
 # Phase 4.3 Checklist - Backend `strict` Baseline
 
+Status: Complete
+
 Source plan: `docs/plans/phase-04-type-safety-and-env-handling.md`
 
 ## Checklist

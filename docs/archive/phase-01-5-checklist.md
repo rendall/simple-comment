@@ -1,5 +1,7 @@
 # Phase 01.5 Checklist - CI Stabilization and Test Gating
 
+Status: Complete
+
 Source plan: `docs/plans/phase-01-5-ci-stabilization-and-test-gating.md`
 
 ## Checklist
