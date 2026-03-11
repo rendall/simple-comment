@@ -1,6 +1,6 @@
 # Phase 04 - Type Safety and Environment Handling
 
-Status: Complete
+Status: Complete and archived
 
 ## Goal
 

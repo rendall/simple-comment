@@ -1,5 +1,7 @@
 # Phase 03 Checklist - Test Determinism and CI Hardening
 
+Status: Complete
+
 Source plan: `docs/plans/phase-03-test-determinism-and-ci-hardening.md`
 
 ## Checklist

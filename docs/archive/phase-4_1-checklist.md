@@ -1,5 +1,7 @@
 # Phase 4.1 Checklist - noImplicitAny Baseline
 
+Status: Complete
+
 Source plan: `docs/plans/phase-04-type-safety-and-env-handling.md`
 
 ## Checklist

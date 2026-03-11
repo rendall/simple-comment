@@ -1,5 +1,7 @@
 # Phase 01 Checklist - Dependency and Platform Upgrade
 
+Status: Complete
+
 Source plan: `docs/plans/phase-01-dependency-and-platform-upgrade.md`
 
 ## Checklist
