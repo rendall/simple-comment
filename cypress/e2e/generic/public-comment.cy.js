@@ -135,7 +135,7 @@ describe("Guest comment", { testIsolation: false }, () => {
     cy.getAllLocalStorage().then(localStorageMap => {
       const key = "simple_comment_user"
       const storedUser = window.localStorage.getItem(key)
-      const cyStoredUser = localStorageMap["http://localhost:7070"][key]
+      const cyStoredUser = localStorageMap["http://localhost:5000"][key]
       expect(storedUser).to.deep.equal(cyStoredUser)
       const parsedUser = JSON.parse(storedUser)
       const { id, name, email } = parsedUser

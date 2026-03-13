@@ -9,7 +9,7 @@ describe("Signup Functionality", () => {
     })
     cy.intercept(
       "GET",
-      "/.netlify/functions/topic/http-localhost-7070",
+      "/.netlify/functions/topic/http-localhost-5000",
       req => {
         req.reply({ statusCode: 200 })
       }

@@ -35,9 +35,8 @@ curl -fsS "${BASE_URL}/js/simple-comment.js" >"$simple_comment_js"
 curl -fsS "${BASE_URL}/js/simple-comment-icebreakers.js" >"$icebreakers_js"
 
 grep -q 'id="simple-comment-display"' "$index_html"
-grep -q 'src="./js/simple-comment.js"' "$index_html"
-grep -q 'src="/js/simple-comment.js"' "$icebreakers_html"
-grep -q 'src="/js/simple-comment-icebreakers.js"' "$icebreakers_html"
+grep -q 'src="/js/index.js"' "$index_html"
+grep -q 'src="/js/icebreakers.js"' "$icebreakers_html"
 
 # Baseline runtime wiring checks
 grep -q 'window\.loadSimpleComment' "$simple_comment_js"

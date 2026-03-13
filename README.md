@@ -214,8 +214,9 @@ Assumes a unix-like environment, like Ubuntu.
 - `yarn run start:backend` serves Netlify Functions only at `http://localhost:9999/.netlify/functions/`.
 - `yarn run start:frontend` rebuilds the frontend and serves the built `dist` artifacts at `http://localhost:5000/` via `vite preview`.
 - `yarn run start` runs `start:backend` and `start:frontend` concurrently, so it serves the built `dist` frontend on `http://localhost:5000/` and proxies backend function requests to `http://localhost:9999/` without HMR.
-- `yarn run dev` runs Netlify Dev at `http://localhost:8888/` and proxies requests to the Vite dev server on `http://localhost:5000/` with HMR enabled.
-- For local first-visit topic creation, `ALLOW_ORIGIN` must include the frontend origin you are using, for example `http://localhost:5000` for `start` or `http://localhost:8888` for `dev`.
+- `yarn run dev` runs the backend webpack bundle watcher together with Netlify Dev at `http://localhost:5000/`; Netlify Dev starts the Vite dev server on `http://localhost:5173/`, so frontend HMR remains enabled while backend function bundles rebuild on change.
+- Vite-managed HTML entry pages now live under `src/entry`; `src/static` is reserved for copied public assets.
+- For local first-visit topic creation, `ALLOW_ORIGIN` must include the frontend origin you are using, for example `http://localhost:5000` for both `start` and `dev`.
 - Embed integration paths remain unchanged for host pages:
   - `./js/simple-comment.js`
   - `/js/simple-comment.js`

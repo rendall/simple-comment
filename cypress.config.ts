@@ -10,7 +10,7 @@ export default defineConfig({
     setupNodeEvents(on, config) {
       return require("./cypress/plugins/index.js")(on, config)
     },
-    baseUrl: "http://localhost:7070",
+    baseUrl: "http://localhost:5000",
     // baseUrl: "https://simple-comment.netlify.app",
     excludeSpecPattern: "**/examples/*.spec.js",
     experimentalRunAllSpecs: true,
