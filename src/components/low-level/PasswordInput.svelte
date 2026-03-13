@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { View, ViewOff } from "carbon-icons-svelte"
+  import View from "carbon-icons-svelte/lib/View.svelte"
+  import ViewOff from "carbon-icons-svelte/lib/ViewOff.svelte"
   import InputField from "./InputField.svelte"
 
   export let value

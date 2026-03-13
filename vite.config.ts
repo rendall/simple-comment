@@ -49,5 +49,16 @@ export default defineConfig(async ({ mode }) => {
         },
       },
     },
+    server: {
+      host: "0.0.0.0",
+      port: 5000,
+      proxy: {
+        "/.netlify/functions": {
+          target: "http://localhost:7070",
+          changeOrigin: true,
+        },
+      },
+    },
+
   }
 })

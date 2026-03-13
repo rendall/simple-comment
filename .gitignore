@@ -22,3 +22,4 @@ debug.log
 !/docs/**/*.js
 !/dist/css/simple-comment-style.css
 !/cypress/**/*.js
+deno.lock

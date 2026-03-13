@@ -16,8 +16,7 @@ Bring the frontend onto a supported Svelte upgrade path without changing what th
 - Upgrade frontend framework/runtime dependencies required for the selected path.
 - Make the minimum frontend code changes required to restore compile-time and runtime compatibility.
 - Preserve existing embed/client behavior and API usage semantics while upgrading.
-- Audit the existing Cypress frontend coverage and keep only the minimum generic/embed flows needed to validate the upgrade path.
-- Refresh or repair a small set of Cypress flows only where current coverage is stale or broken for the existing frontend baseline.
+- Consume the approved pre-upgrade Cypress/embed baseline from [Phase 06.1 - Cypress Embed Baseline and Contract Alignment](./phase-06-1-cypress-embed-baseline.md) and keep those flows passing on the upgraded stack.
 - Update contributor-facing frontend documentation to reflect the upgraded stack, commands, and known constraints.
 - Record phase-close evidence and any explicitly deferred follow-up work discovered during the upgrade.
 
@@ -42,6 +41,7 @@ Bring the frontend onto a supported Svelte upgrade path without changing what th
 - Existing frontend test suites (`yarn test:frontend`) cover stores, utilities, and state machines.
 - Embed compatibility depends on preserving output behavior and API integration semantics.
 - Phase 05 is expected to provide the stabilized frontend build-tool baseline this phase builds on.
+- Phase 06.1 is intended to provide the approved pre-upgrade Cypress/embed browser baseline this phase will use for regression detection.
 
 ## Risks and Mitigations
 
@@ -176,6 +176,7 @@ The preserved user-visible behavior for this phase is limited to core shipped cl
 Preservation for this phase is validated by contract/parity checks, embed smoke checks, and a small set of baseline Cypress generic/embed flows. If the upgrade requires changing the public embed bootstrap contract, emitted artifact paths, or API usage semantics, implementation must stop and return to plan/checklist refinement.
 
 Note: repository documentation and Cypress assumptions currently reference `#simple-comment-display` in places. Those references should be updated to the `#simple-comment` contract during this phase's documentation and validation alignment work.
+That documentation and baseline-alignment work is expected to land in [Phase 06.1 - Cypress Embed Baseline and Contract Alignment](./phase-06-1-cypress-embed-baseline.md) before Phase 06 implementation begins.
 
 ### Cypress Generic/Embed Validation Flows
 

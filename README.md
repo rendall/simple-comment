@@ -211,7 +211,8 @@ Assumes a unix-like environment, like Ubuntu.
 ### Frontend build/dev workflow
 
 - `yarn run build:frontend` uses Vite (`vite.config.ts`) and emits frontend artifacts to `dist`.
-- `yarn run start:frontend` runs the frontend dev server on `http://localhost:5000/`.
+- `yarn run start:frontend` rebuilds the frontend and serves the built `dist` artifacts at `http://localhost:5000/` via `vite preview`.
+- `yarn run start` runs `start:backend` and `start:frontend` concurrently, so it serves the backend on `http://localhost:7070/` and the built `dist` frontend on `http://localhost:5000/` without HMR.
 - Embed integration paths remain unchanged for host pages:
   - `./js/simple-comment.js`
   - `/js/simple-comment.js`
