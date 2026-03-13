@@ -6,6 +6,7 @@ export default defineConfig(async ({ mode }) => {
   const isProduction = mode === "production"
   const { svelte } = await import("@sveltejs/vite-plugin-svelte")
   const env = loadEnv(mode, process.cwd(), "")
+  const backendTarget = "http://localhost:9999"
   const frontendApiUrl =
     env.VITE_SIMPLE_COMMENT_API_URL ?? env.SIMPLE_COMMENT_API_URL
   const frontendApiUrlDefine =
@@ -54,11 +55,20 @@ export default defineConfig(async ({ mode }) => {
       port: 5000,
       proxy: {
         "/.netlify/functions": {
-          target: "http://localhost:7070",
+          target: backendTarget,
           changeOrigin: true,
         },
       },
     },
-
+    preview: {
+      host: "0.0.0.0",
+      port: 5000,
+      proxy: {
+        "/.netlify/functions": {
+          target: backendTarget,
+          changeOrigin: true,
+        },
+      },
+    },
   }
 })
