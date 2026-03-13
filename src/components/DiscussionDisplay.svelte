@@ -104,6 +104,20 @@
       return
     }
 
+    const isAllowOriginMismatch =
+      status === 403 &&
+      body.includes("referer") &&
+      body.includes("does not match")
+
+    if (isAllowOriginMismatch) {
+      const currentOrigin = window.location.origin
+      updateStatusDisplay(
+        `Oops! It looks like this discussion topic could not be created because the backend may not allow this frontend URL yet. Check that ALLOW_ORIGIN includes '${currentOrigin}', then restart the backend and try again.`,
+        true
+      )
+      return
+    }
+
     const errorMessages = [
       [
         403,
