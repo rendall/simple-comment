@@ -44,6 +44,12 @@
     - Observed outcome:
       - `PASS src/tests/frontend/svelte-stores.test.ts`
       - `2` tests passed
+  - `yarn test:frontend --runTestsByPath src/tests/frontend/frontend-utilities.test.ts --runInBand`
+    - Result: passed
+    - Purpose: verify the Stage 2 `threadComments` shape fix resolves the previously failing utility suite without modifying tests
+    - Observed outcome:
+      - `PASS src/tests/frontend/frontend-utilities.test.ts`
+      - `100` tests passed
 
 - `yarn test:frontend`:
   - Not run yet in Stage 2

@@ -28,7 +28,12 @@ export const threadComments = <T extends MinComment, U extends MinComment>(
   allComments: U[] | undefined,
   sort: (a: U, b: U) => number = (a, b) => (b.id < a.id ? 0 : 1)
 ): T => {
-  if (!allComments) return { ...comment, replies: [] }
+  const commentWithoutReplies = <W extends MinComment>(comment: W): W => {
+    const { replies: _replies, ...commentWithNoReplies } = comment
+    return commentWithNoReplies as W
+  }
+
+  if (!allComments) return commentWithoutReplies(comment)
   // Make this robust but warn
   allComments = allComments.filter(reply => {
     if (reply && reply.id) return true
@@ -60,7 +65,7 @@ export const threadComments = <T extends MinComment, U extends MinComment>(
         replies: replies.map(reply => threadCommentsWithMap(reply)).sort(sort),
       }
     } else {
-      return { ...comment, replies: [] }
+      return commentWithoutReplies(comment)
     }
   }
 

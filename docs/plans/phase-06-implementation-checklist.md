@@ -37,7 +37,7 @@ Source plan: `docs/plans/phase-06-frontend-upgrade.md`
     - "Frontend compiles and runs on the upgraded framework/runtime dependencies for the selected path." (Acceptance Criteria)
     - "`yarn test:frontend` passes on the upgraded stack." (Acceptance Criteria)
 
-- [ ] C02 `[frontend]` Update `threadComments` in [src/frontend-utilities.ts](/mnt/c/workspace/projects/simple-comment/src/frontend-utilities.ts) so removing stale child state preserves the existing optional `replies` shape instead of materializing empty `replies: []` arrays on leaf nodes.
+- [x] C02 `[frontend]` Update `threadComments` in [src/frontend-utilities.ts](/mnt/c/workspace/projects/simple-comment/src/frontend-utilities.ts) so removing stale child state preserves the existing optional `replies` shape instead of materializing empty `replies: []` arrays on leaf nodes.
   - Depends on: T01, C00.
   - Validation: T02.
   - Trace:
