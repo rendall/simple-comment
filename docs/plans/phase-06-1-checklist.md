@@ -77,7 +77,7 @@ Source plan: `docs/plans/phase-06-1-cypress-embed-baseline.md`
     - "Authenticated login/verify flow." (Detailed Planning Notes)
     - "any excluded or optional flow is documented with a concrete reason and explicit deferment." (Acceptance Criteria)
 
-- [ ] T02 `[validation]` Run the existing frontend artifact and embed smoke checks on the current frontend after documentation and Cypress baseline alignment work, and record results in `docs/plans/phase-06-1-validation-notes.md`.
+- [x] T02 `[validation]` Run the existing frontend artifact and embed smoke checks on the current frontend after documentation and Cypress baseline alignment work, and record results in `docs/plans/phase-06-1-validation-notes.md`.
   - Depends on: C01, C04, C05, C06, C07, C08.
   - Trace:
     - "existing frontend artifact and embed smoke checks continue to pass on the current frontend after any test/documentation alignment work." (Validation Strategy)
