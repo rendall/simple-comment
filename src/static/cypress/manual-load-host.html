@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Manual Load Host</title>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="/css/simple-comment-style.css"
+    />
+    <link rel="stylesheet" type="text/css" href="/css/simple-comment.css" />
+  </head>
+  <body>
+    <button id="manual-load-button" type="button">Load comments</button>
+    <div id="simple-comment"></div>
+    <script type="module" src="/js/simple-comment.js"></script>
+    <script type="module">
+      window.setSimpleCommentOptions({
+        cancel: true,
+        discussionId: "manual-load-discussion",
+      })
+
+      document
+        .getElementById("manual-load-button")
+        .addEventListener("click", () => {
+          window.loadSimpleComment({
+            cancel: true,
+            discussionId: "manual-load-discussion",
+            target: document.getElementById("simple-comment"),
+            title: document.title,
+          })
+        })
+    </script>
+  </body>
+</html>
