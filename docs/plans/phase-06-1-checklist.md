@@ -19,7 +19,7 @@ Source plan: `docs/plans/phase-06-1-cypress-embed-baseline.md`
     - "Treat `#simple-comment` as the embed host-element contract for this phase" (Constraints)
     - "the evidence must show both current-browser behavior and documentation/test alignment" (Validation Strategy)
 
-- [ ] C01 `[docs]` Align embed contract references in `README.md` and `docs/CYPRESS.md` to the `#simple-comment` host-element contract and current Cypress layout/config conventions.
+- [x] C01 `[docs]` Align embed contract references in `README.md` and `docs/CYPRESS.md` to the `#simple-comment` host-element contract and current Cypress layout/config conventions.
   - Depends on: T01.
   - Validation: T04.
   - Trace:
