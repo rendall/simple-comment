@@ -1,6 +1,6 @@
 # Phase 06.1 Checklist - Cypress Embed Baseline and Contract Alignment
 
-Status: Draft
+Status: Completed
 
 Source plan: `docs/plans/phase-06-1-cypress-embed-baseline.md`
 
@@ -26,7 +26,7 @@ Source plan: `docs/plans/phase-06-1-cypress-embed-baseline.md`
     - "Align repository documentation and Cypress assumptions that still refer to `#simple-comment-display` so they match the `#simple-comment` contract." (In Scope)
     - "Repository documentation and Cypress assumptions are aligned to the `#simple-comment` embed contract." (Acceptance Criteria)
 
-- [x] C02 `[cypress]` Audit the current generic Cypress spec inventory in `cypress/e2e/generic` against the five approved baseline flows and record file ownership, known gaps, and setup constraints in `docs/plans/phase-06-1-validation-notes.md`.
+- [x] C02 `[cypress]` Audit the current generic Cypress spec inventory in `cypress/e2e/generic` against the five approved baseline flows and record file ownership, known gaps, and setup constraints in `docs/archive/phase-06-1-validation-notes.md`.
   - Depends on: T01.
   - Validation: T04.
   - Trace:
@@ -34,7 +34,7 @@ Source plan: `docs/plans/phase-06-1-cypress-embed-baseline.md`
     - "Record any explicitly deferred flows, known gaps, or setup constraints discovered during this baseline work." (In Scope)
     - "The phase records an approved minimal Cypress/embed baseline flow set for pre-upgrade validation." (Acceptance Criteria)
 
-- [x] C03 `[cypress]` Restore Cypress 12 baseline execution by adding a supported `cypress/support/e2e` file or equivalent config in `cypress.config.ts`, and record the chosen approach in `docs/plans/phase-06-1-validation-notes.md`.
+- [x] C03 `[cypress]` Restore Cypress 12 baseline execution by adding a supported `cypress/support/e2e` file or equivalent config in `cypress.config.ts`, and record the chosen approach in `docs/archive/phase-06-1-validation-notes.md`.
   - Depends on: C01, C02.
   - Validation: T03.
   - Trace:
@@ -77,13 +77,13 @@ Source plan: `docs/plans/phase-06-1-cypress-embed-baseline.md`
     - "Authenticated login/verify flow." (Detailed Planning Notes)
     - "any excluded or optional flow is documented with a concrete reason and explicit deferment." (Acceptance Criteria)
 
-- [x] T02 `[validation]` Run the existing frontend artifact and embed smoke checks on the current frontend after documentation and Cypress baseline alignment work, and record results in `docs/plans/phase-06-1-validation-notes.md`.
+- [x] T02 `[validation]` Run the existing frontend artifact and embed smoke checks on the current frontend after documentation and Cypress baseline alignment work, and record results in `docs/archive/phase-06-1-validation-notes.md`.
   - Depends on: C01, C04, C05, C06, C07, C08.
   - Trace:
     - "existing frontend artifact and embed smoke checks continue to pass on the current frontend after any test/documentation alignment work." (Validation Strategy)
     - "Existing frontend artifact and smoke tooling already validate required built outputs and embed wiring outside Cypress." (Inputs and Evidence)
 
-- [x] T03 `[validation]` Run the approved baseline Cypress/embed flows on the current pre-upgrade frontend and record pass/fail evidence, setup constraints, and any explicit deferments in `docs/plans/phase-06-1-validation-notes.md`.
+- [x] T03 `[validation]` Run the approved baseline Cypress/embed flows on the current pre-upgrade frontend and record pass/fail evidence, setup constraints, and any explicit deferments in `docs/archive/phase-06-1-validation-notes.md`.
   - Depends on: C03, C04, C05, C06, C07, C08.
   - Trace:
     - "the approved baseline Cypress/embed flows pass on the current pre-upgrade frontend." (Validation Strategy)
