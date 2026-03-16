@@ -12,7 +12,7 @@ Source plan: `docs/plans/phase-06-1-cypress-embed-baseline.md`
 
 ## Checklist
 
-- [ ] T01 `[governance]` Confirm Phase 06.1 scope, embed contract, and validation evidence levels are locked for execution.
+- [x] T01 `[governance]` Confirm Phase 06.1 scope, embed contract, and validation evidence levels are locked for execution.
   - Depends on: none.
   - Trace:
     - "Establish a pre-upgrade Cypress/embed validation baseline for the current frontend and align documentation and test assumptions to the `#simple-comment` embed contract" (Goal)
