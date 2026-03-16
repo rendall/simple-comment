@@ -1,6 +1,6 @@
 # Phase 06 Implementation Checklist - Svelte 4 Frontend Upgrade
 
-Status: Draft
+Status: Approved
 
 Source plan: `docs/plans/phase-06-frontend-upgrade.md`
 
@@ -15,7 +15,7 @@ Source plan: `docs/plans/phase-06-frontend-upgrade.md`
 
 ## Checklist
 
-- [ ] T01 `[governance]` Confirm that this checklist is limited to the approved Stage 2 implementation scope, the recorded discovery findings in `docs/plans/phase-06-discovery-notes.md` with `D03` and `D04` as the first in-phase blocking work items, `D05` as the already-green browser baseline evidence, the archived Phase 06.1 baseline artifacts, and the no-test-change execution rule.
+- [x] T01 `[governance]` Confirm that this checklist is limited to the approved Stage 2 implementation scope, the recorded discovery findings in `docs/plans/phase-06-discovery-notes.md` with `D03` and `D04` as the first in-phase blocking work items, `D05` as the already-green browser baseline evidence, the archived Phase 06.1 baseline artifacts, and the no-test-change execution rule.
   - Depends on: none.
   - Trace:
     - "Implementation against approved findings." (Execution Staging)
