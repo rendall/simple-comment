@@ -13,7 +13,7 @@ window
   .then(question => {
     document.title = `${question} | Simple Comment`
     const questionP = document.querySelector(".question-of-the-day")
-    questionP.textContent = question
+    if (questionP) questionP.textContent = question
     window.loadSimpleComment({
       cancel: true,
       discussionId,
