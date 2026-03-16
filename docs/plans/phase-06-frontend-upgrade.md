@@ -35,6 +35,7 @@ Bring the frontend onto a supported Svelte upgrade path without changing what th
 - Use merged code and tests on `master` as the runtime source of truth for current behavior.
 - Treat the completed Phase 06.1 baseline as the comparison point for build, test, and embed/client behavior.
 - Do not modify any tests during upgrade implementation. Their purpose in this phase is to reveal regressions on the upgraded stack rather than being adapted to fit upgrade breakage.
+- Before stopping on a blocking failed item during Stage 1 discovery, record the exact failure and its dependency impact in the discovery notes artifact for that checklist.
 - If a checklist item cannot be made to run green:
   - stop if the failing item is a dependency for later behavior in the approved checklist
   - continue only when the failing item is not a dependency for later approved checklist behavior
