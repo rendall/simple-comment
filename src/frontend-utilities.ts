@@ -60,7 +60,7 @@ export const threadComments = <T extends MinComment, U extends MinComment>(
         replies: replies.map(reply => threadCommentsWithMap(reply)).sort(sort),
       }
     } else {
-      return comment
+      return { ...comment, replies: [] }
     }
   }
 
