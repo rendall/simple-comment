@@ -45,7 +45,7 @@ Source plan: `docs/plans/phase-06-frontend-upgrade.md`
     - "Preserve existing embed/client behavior and API usage semantics while upgrading." (In Scope)
     - "Embed/client behavior remains compatible with existing API usage patterns and current backend contracts." (Acceptance Criteria)
 
-- [ ] T02 `[validation]` Run `yarn test:frontend` on the Svelte 4 implementation state and record pass/fail evidence in `docs/plans/phase-06-validation-notes.md`.
+- [x] T02 `[validation]` Run `yarn test:frontend` on the Svelte 4 implementation state and record pass/fail evidence in `docs/plans/phase-06-validation-notes.md`.
   - Depends on: C01, C02.
   - Trace:
     - "Unit evidence: `yarn test:frontend` passes on the upgraded stack." (Validation Strategy)

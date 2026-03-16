@@ -52,7 +52,12 @@
       - `100` tests passed
 
 - `yarn test:frontend`:
-  - Not run yet in Stage 2
+  - Result: passed
+  - Observed outcome:
+    - `7` test suites passed
+    - `159` tests passed
+    - `0` failures
+    - completed in `92.62s`
 - `yarn run build:frontend`:
   - Not run yet in Stage 2
 - Phase 06.1 unchanged Cypress baseline:
