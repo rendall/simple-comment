@@ -22,7 +22,7 @@ Source plan: `docs/plans/phase-06-frontend-upgrade.md`
     - "Limit implementation items to work directly supported by the approved discovery outputs and the existing phase scope." (Execution Staging)
     - "Do not modify any tests during upgrade implementation." (Constraints)
 
-- [ ] C00 `[docs]` Create `docs/plans/phase-06-validation-notes.md` as the Stage 2 implementation evidence artifact for final dependency-path confirmation, validation command outcomes, known warnings, and any explicitly approved deferments.
+- [x] C00 `[docs]` Create `docs/plans/phase-06-validation-notes.md` as the Stage 2 implementation evidence artifact for final dependency-path confirmation, validation command outcomes, known warnings, and any explicitly approved deferments.
   - Depends on: T01.
   - Validation: T06.
   - Trace:
