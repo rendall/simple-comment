@@ -62,7 +62,7 @@ Source plan: `docs/plans/phase-06-1-cypress-embed-baseline.md`
     - "Implement, refresh, or repair the selected Cypress flows against the current frontend behavior." (In Scope)
     - "Comment submission flow." (Detailed Planning Notes)
 
-- [ ] C07 `[cypress]` Implement or repair the reply submission baseline flow in `cypress/e2e/generic/reply.cy.js`.
+- [x] C07 `[cypress]` Implement or repair the reply submission baseline flow in `cypress/e2e/generic/reply.cy.js`.
   - Depends on: C01, C02, C03.
   - Validation: T03.
   - Trace:
