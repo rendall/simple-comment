@@ -3,7 +3,7 @@
 ## Scope Confirmation
 
 - Date: 2026-03-16
-- Source checklist: [phase-06-implementation-checklist.md](/mnt/c/workspace/projects/simple-comment/docs/plans/phase-06-implementation-checklist.md)
+- Source checklist: [phase-06-implementation-checklist.md](./phase-06-implementation-checklist.md)
 - Stage: Phase 06 Stage 2 implementation
 - Execution constraints carried into implementation:
   - do not modify tests
@@ -21,12 +21,12 @@
 
 ## Carried Discovery Findings
 
-- Discovery notes source: [phase-06-discovery-notes.md](/mnt/c/workspace/projects/simple-comment/docs/plans/phase-06-discovery-notes.md)
+- Discovery notes source: [phase-06-discovery-notes.md](./phase-06-discovery-notes.md)
 - Browser baseline already green on the Svelte 4 trial stack:
-  - [basic.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/basic.cy.js)
-  - [public-comment.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/public-comment.cy.js)
-  - [reply.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/reply.cy.js)
-  - [login.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/login.cy.js)
+  - [basic.cy.js](../../cypress/e2e/generic/basic.cy.js)
+  - [public-comment.cy.js](../../cypress/e2e/generic/public-comment.cy.js)
+  - [reply.cy.js](../../cypress/e2e/generic/reply.cy.js)
+  - [login.cy.js](../../cypress/e2e/generic/login.cy.js)
 - First in-phase implementation blockers carried from discovery:
   - `D03`: frontend Jest cannot currently load Svelte 4 ESM runtime imports
   - `D04`: `threadComments` currently materializes `replies: []` on leaf nodes, conflicting with existing optional `replies` shape expectations
@@ -70,10 +70,10 @@
   - Result: passed
   - Command: `yarn run test:cypress --spec cypress/e2e/generic/basic.cy.js,cypress/e2e/generic/public-comment.cy.js,cypress/e2e/generic/reply.cy.js,cypress/e2e/generic/login.cy.js`
   - Observed outcome:
-    - [basic.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/basic.cy.js): `2 passing`
-    - [public-comment.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/public-comment.cy.js): `1 passing`
-    - [reply.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/reply.cy.js): `1 passing`
-    - [login.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/login.cy.js): `1 passing`
+    - [basic.cy.js](../../cypress/e2e/generic/basic.cy.js): `2 passing`
+    - [public-comment.cy.js](../../cypress/e2e/generic/public-comment.cy.js): `1 passing`
+    - [reply.cy.js](../../cypress/e2e/generic/reply.cy.js): `1 passing`
+    - [login.cy.js](../../cypress/e2e/generic/login.cy.js): `1 passing`
     - aggregate result: `5 passing`, `0 failing`
     - completed in `55.66s`
 - `yarn run ci:local`:
