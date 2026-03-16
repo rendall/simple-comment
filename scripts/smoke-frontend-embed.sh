@@ -34,7 +34,7 @@ curl -fsS "${BASE_URL}/icebreakers/index.html" >"$icebreakers_html"
 curl -fsS "${BASE_URL}/js/simple-comment.js" >"$simple_comment_js"
 curl -fsS "${BASE_URL}/js/simple-comment-icebreakers.js" >"$icebreakers_js"
 
-grep -q 'id="simple-comment-display"' "$index_html"
+grep -q 'id="simple-comment"' "$index_html"
 grep -q 'src="/js/index.js"' "$index_html"
 grep -q 'src="/js/icebreakers.js"' "$icebreakers_html"
 

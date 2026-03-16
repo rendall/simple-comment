@@ -7,7 +7,12 @@ describe("Simple Comment frontend", () => {
   })
 
   it("is a Simple Comment frontend", () => {
-    cy.get("#simple-comment-display")
+    cy.get("#simple-comment")
+      .should("exist")
+      .within(() => {
+        cy.get("textarea.comment-field")
+        cy.get("button.comment-submit-button")
+      })
   })
 
   it("has a comment reply field", () => {

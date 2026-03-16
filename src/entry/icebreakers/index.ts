@@ -19,7 +19,7 @@ window
       cancel: true,
       discussionId,
       target:
-        document.getElementById("simple-comment-display") ?? document.body,
+        document.getElementById("simple-comment") ?? document.body,
       title: question,
     })
   })

@@ -131,7 +131,7 @@ Follow these instructions. If anything is unclear, please [create a new issue](h
 1. Modify your website. These are simple instructions, but feel free to hack away
    1. In the HTML for each page on your website where you want Simple Comment to run, add these two tags:
       1. `<script src="[path-to]/simple-comment.js" defer></script>` (`src` must point to the `simple-comment.js` file)
-      1. `<div id="simple-comment-display"></div>`
+      1. `<div id="simple-comment"></div>`
    1. Upload the `simple-comment.js` file to your website's script folder
 1. It should now be possible to leave and read comments on your website
 
