@@ -90,4 +90,10 @@
 
 ## Deferments / Blockers
 
-- None recorded yet in Stage 2 beyond the carried discovery findings above.
+- Approved Phase 06 deferment candidate:
+  - `yarn run ci:local` is still blocked by pre-existing lint findings in [index.ts](/mnt/c/workspace/projects/simple-comment/src/entry/icebreakers/index.ts#L10) and [MongodbService.test.ts](/mnt/c/workspace/projects/simple-comment/src/tests/backend/MongodbService.test.ts#L107).
+  - Current classification: non-phase parity blocker, because Stage 2 Svelte 4 implementation work did not introduce a new parity failure beyond the discovery finding.
+  - Current Phase 06 implementation state:
+    - `yarn test:frontend`: passed
+    - `yarn run build:frontend`: passed
+    - unchanged Phase 06.1 Cypress baseline: passed

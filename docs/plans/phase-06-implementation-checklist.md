@@ -70,7 +70,7 @@ Source plan: `docs/plans/phase-06-frontend-upgrade.md`
     - "Build/parity evidence: the local parity command for the repository passes (`yarn run ci:local`), or any blocker outside this phase is documented with concrete failure evidence and explicit deferment." (Validation Strategy)
     - "`yarn run ci:local` passes, or any non-phase blocker is documented with explicit failure evidence and deferment." (Acceptance Criteria)
 
-- [ ] C03 `[docs]` Update contributor-facing frontend documentation and `docs/plans/phase-06-validation-notes.md` to reflect the final approved Svelte 4 stack, execution constraints, validation outcomes, and any explicitly deferred non-phase blockers discovered during implementation.
+- [x] C03 `[docs]` Update contributor-facing frontend documentation and `docs/plans/phase-06-validation-notes.md` to reflect the final approved Svelte 4 stack, execution constraints, validation outcomes, and any explicitly deferred non-phase blockers discovered during implementation.
   - Depends on: T02, T03, T04, T05.
   - Validation: T06.
   - Trace:
