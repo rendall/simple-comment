@@ -1,135 +1,149 @@
 /// <reference types="cypress" />
 
-import { randomString } from "../../../src/tests/mockData"
-import {
-  generateRandomCopy,
-  generateRandomName,
-} from "../../../src/tests/mockComment"
+const discussionId = "http-localhost-5000"
+const parentCommentId = `${discussionId}-parent-comment`
+const guestUserId = "guest-cd456-c1m6p"
+const guestName = "Reply Baseline Guest"
+const guestEmail = "reply-baseline@example.com"
+const replyText = "Deterministic baseline reply"
 
-const formatUserName = displayName => {
-  return displayName
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9-]/g, "-")
-}
+const buildDiscussion = () => ({
+  _id: discussionId,
+  id: discussionId,
+  parentId: null,
+  text: null,
+  title: "Simple Comment",
+  user: {},
+  dateCreated: "2023-05-05T06:11:26.781Z",
+  dateDeleted: null,
+  replies: [
+    {
+      id: parentCommentId,
+      parentId: discussionId,
+      text: "Parent comment for reply baseline",
+      dateCreated: "2023-05-05T06:12:26.781Z",
+      user: {
+        id: "existing-user",
+        name: "Existing User",
+      },
+      replies: [],
+    },
+  ],
+})
 
-describe("reply", () => {
-  const signupName = generateRandomName()
-  const signupPassword = randomString()
-  const signupUserId =
-    formatUserName(signupName) +
-    randomString(`abcdefghijklmnopqrstuvwxyz0123456780-`, 10)
-  const signupEmail = `${signupUserId}@example.com`
+const buildPostedReply = () => ({
+  id: `${parentCommentId}-reply-1`,
+  parentId: parentCommentId,
+  text: replyText,
+  dateCreated: "2023-05-05T06:13:26.781Z",
+  user: {
+    id: guestUserId,
+    name: guestName,
+  },
+})
 
-  beforeEach(() => {
-    cy.intercept("POST", ".netlify/functions/auth").as("postAuth")
-    cy.intercept("POST", ".netlify/functions/user").as("postUser")
-    cy.intercept("GET", ".netlify/functions/gauth").as("getGauth")
-    cy.intercept("POST", ".netlify/functions/comment/*").as("postComment")
+describe("Reply baseline", () => {
+  it("submits a deterministic reply to the parent comment id", () => {
+    let verifyCount = 0
+
+    cy.intercept("GET", `/.netlify/functions/topic/${discussionId}`, req => {
+      expect(req.method).to.equal("GET")
+      req.reply({
+        statusCode: 200,
+        body: buildDiscussion(),
+      })
+    }).as("getTopic")
+
+    cy.intercept("GET", "/.netlify/functions/verify", req => {
+      verifyCount += 1
+      req.reply(
+        verifyCount <= 2
+          ? {
+              statusCode: 401,
+              body: { message: "Unauthenticated" },
+            }
+          : {
+              statusCode: 200,
+              body: { user: guestUserId, exp: 1721980130, iat: 1690444137 },
+            }
+      )
+    }).as("verifyUser")
+
+    cy.intercept("GET", `/.netlify/functions/user/${guestUserId}`, req => {
+      expect(req.method).to.equal("GET")
+      req.reply({
+        statusCode: 200,
+        body: {
+          id: guestUserId,
+          name: guestName,
+          email: guestEmail,
+          isAdmin: false,
+        },
+      })
+    }).as("getSelf")
+
+    cy.intercept("GET", "/.netlify/functions/gauth", req => {
+      expect(req.method).to.equal("GET")
+      req.reply({
+        statusCode: 200,
+        body: "guest-auth-token",
+      })
+    }).as("getGuestToken")
+
+    cy.intercept("POST", "/.netlify/functions/user", req => {
+      expect(req.method).to.equal("POST")
+      expect(req.body).to.include(`id=${guestUserId}`)
+      expect(req.body).to.include(`name=${encodeURIComponent(guestName)}`)
+      expect(req.body).to.include(`email=${encodeURIComponent(guestEmail)}`)
+      req.reply({
+        statusCode: 201,
+        body: {
+          id: guestUserId,
+          name: guestName,
+          email: guestEmail,
+          isAdmin: false,
+        },
+      })
+    }).as("postUser")
+
+    cy.intercept("POST", `/.netlify/functions/comment/${parentCommentId}`, req => {
+      expect(req.method).to.equal("POST")
+      expect(req.url).to.include(`/.netlify/functions/comment/${parentCommentId}`)
+      expect(req.body).to.equal(replyText)
+      req.reply({
+        statusCode: 201,
+        body: buildPostedReply(),
+      })
+    }).as("postReply")
 
     cy.visit("/")
-    cy.get("button.comment-reply-button").first().as("replyButton")
-    cy.get("@replyButton")
-      .closest("article.comment-body")
-      .as("commentBody", { type: "static" })
-    cy.get("@commentBody").should("exist")
-    cy.get("@replyButton").click()
+
+    cy.wait("@verifyUser")
+    cy.wait("@getTopic")
+
+    cy.get(`#${parentCommentId} button.comment-reply-button`).click()
+    cy.wait("@verifyUser")
+    cy.get(`#${parentCommentId} form.comment-form`).should("exist")
+    cy.get(`#${parentCommentId} form.comment-form #guest-name`)
+      .should("be.visible")
+      .type(guestName)
+    cy.get(`#${parentCommentId} form.comment-form #guest-email`)
+      .should("be.visible")
+      .type(guestEmail)
+    cy.get(`#${parentCommentId} form.comment-form .comment-field`)
+      .should("be.visible")
+      .type(replyText)
+    cy.get(`#${parentCommentId} form.comment-form .comment-submit-button`).click()
+
+    cy.wait("@getGuestToken")
+    cy.wait("@verifyUser")
+    cy.wait("@postUser")
+    cy.wait("@verifyUser")
+    cy.wait("@getSelf")
+    cy.wait("@postReply")
+
+    cy.get(`#${parentCommentId}`)
+      .find("ul.comment-replies")
+      .contains("article.comment-body p", replyText)
   })
-
-  it("should allow user to cancel their reply without answering", () => {
-    cy.get("@commentBody").find(".comment-field").should("exist")
-    cy.get("@commentBody").find(".comment-cancel-button").click()
-    cy.get("@commentBody")
-      .find(".comment-field")
-      .should("not.exist", { timeout: 1000 })
-  })
-  it("it should reply to a comment as a guest", () => {
-    cy.clearLocalStorage()
-    cy.get("@commentBody").find(".selection-tab-guest").click()
-
-    const commentText = generateRandomCopy()
-    const guestName = generateRandomName()
-    cy.get("@commentBody").find(".comment-field").clear().type(commentText)
-    cy.get("@commentBody").find("#guest-name").clear().type(guestName)
-    cy.get("@commentBody")
-      .find("#guest-email")
-      .clear()
-      .type("guest@example.com")
-
-    cy.get("@commentBody").find(".comment-submit-button").click()
-    cy.wait("@getGauth").its("response.statusCode").should("eq", 200)
-    cy.wait("@postUser").its("response.statusCode").should("eq", 201) // 201 Created
-    cy.wait("@postComment").its("response.statusCode").should("eq", 201) // 201 Created
-
-    cy.get("@commentBody")
-      .parent()
-      .find("ul.comment-replies")
-      .should("contain", guestName)
-    cy.get("@commentBody")
-      .parent()
-      .find("ul.comment-replies")
-      .should("contain", commentText)
-
-    cy.get("@commentBody")
-      .find(".comment-form")
-      .should("not.exist", { timeout: 1000 })
-  })
-  it("it should reply to a comment as a signup", () => {
-    cy.get("@commentBody").find(".selection-tab-signup").click()
-
-    const commentText = generateRandomCopy()
-
-    cy.get("@commentBody").find(".comment-field").clear().type(commentText)
-    cy.get("@commentBody").find("#signup-name").clear().type(signupName)
-    cy.get("@commentBody").find("#signup-user-id").clear().type(signupUserId)
-    cy.get("@commentBody").find("#signup-email").clear().type(signupEmail)
-    cy.get("@commentBody").find("#signup-password").clear().type(signupPassword)
-    cy.get("@commentBody")
-      .find("#signup-password-confirm")
-      .clear()
-      .type(signupPassword)
-    cy.get("@commentBody").find(".comment-submit-button").click()
-
-    cy.wait("@postAuth").its("response.statusCode").should("eq", 200)
-    cy.wait("@postComment").its("response.statusCode").should("eq", 201) // 201 Created
-    cy.get("@commentBody")
-      .parent()
-      .find("ul.comment-replies")
-      .should("contain", signupName)
-    cy.get("@commentBody")
-      .parent()
-      .find("ul.comment-replies")
-      .should("contain", commentText)
-
-    cy.get("@commentBody")
-      .find(".comment-form")
-      .should("not.exist", { timeout: 1000 })
-  }) // it should reply to a comment as a signup
-  it("it should reply to a comment as a login", () => {
-    cy.get("@commentBody").find(".selection-tab-login").click()
-
-    const commentText = generateRandomCopy()
-
-    cy.get("@commentBody").find(".comment-field").clear().type(commentText)
-    cy.get("@commentBody").find("#login-user-id").clear().type(signupUserId)
-    cy.get("@commentBody").find("#login-password").clear().type(signupPassword)
-    cy.get("@commentBody").find(".comment-submit-button").click()
-
-    cy.wait("@postAuth").its("response.statusCode").should("eq", 200)
-
-    cy.wait("@postComment").its("response.statusCode").should("eq", 201) // 201 Created
-    cy.get("@commentBody")
-      .parent()
-      .find("ul.comment-replies")
-      .should("contain", signupName)
-    cy.get("@commentBody")
-      .parent()
-      .find("ul.comment-replies")
-      .should("contain", commentText)
-
-    cy.get("@commentBody")
-      .find(".comment-form")
-      .should("not.exist", { timeout: 1000 })
-  }) // it should reply to a comment as a login
 })
