@@ -14,9 +14,9 @@ Bring the frontend onto a supported Svelte upgrade path without changing what th
 
 - Audit the current frontend dependency graph and select a supported Svelte upgrade path for this phase.
 - Upgrade frontend framework/runtime dependencies required for the selected path.
-- Make the minimum frontend code changes required to restore compile-time and runtime compatibility.
+- Make only the frontend code changes required to restore compile-time and runtime compatibility and satisfy the approved Phase 06.1 validation evidence.
 - Preserve existing embed/client behavior and API usage semantics while upgrading.
-- Consume the approved pre-upgrade Cypress/embed baseline from [Phase 06.1 - Cypress Embed Baseline and Contract Alignment](./phase-06-1-cypress-embed-baseline.md) and keep those flows passing on the upgraded stack.
+- Consume the approved pre-upgrade Cypress/embed baseline recorded in [Phase 06.1 Checklist](../archive/phase-06-1-checklist.md) and [Phase 06.1 Validation Notes](../archive/phase-06-1-validation-notes.md), and keep those flows passing on the upgraded stack.
 - Update contributor-facing frontend documentation to reflect the upgraded stack, commands, and known constraints.
 - Record phase-close evidence and any explicitly deferred follow-up work discovered during the upgrade.
 
@@ -33,7 +33,12 @@ Bring the frontend onto a supported Svelte upgrade path without changing what th
 - Preserve current API-consumption behavior unless a separate approved phase changes the contract.
 - Keep changes reversible in small slices so regressions can be isolated and reverted without unwinding unrelated work.
 - Use merged code and tests on `master` as the runtime source of truth for current behavior.
-- Treat the post-Phase-05 frontend baseline as the comparison point for build, test, and embed/client behavior.
+- Treat the completed Phase 06.1 baseline as the comparison point for build, test, and embed/client behavior.
+- Do not modify any tests during upgrade implementation. Their purpose in this phase is to reveal regressions on the upgraded stack rather than being adapted to fit upgrade breakage.
+- If a checklist item cannot be made to run green:
+  - stop if the failing item is a dependency for later behavior in the approved checklist
+  - continue only when the failing item is not a dependency for later approved checklist behavior
+  - do not change tests to work around the failure; return to plan/checklist refinement if test changes appear necessary
 
 ## Inputs and Evidence
 
@@ -41,7 +46,7 @@ Bring the frontend onto a supported Svelte upgrade path without changing what th
 - Existing frontend test suites (`yarn test:frontend`) cover stores, utilities, and state machines.
 - Embed compatibility depends on preserving output behavior and API integration semantics.
 - Phase 05 is expected to provide the stabilized frontend build-tool baseline this phase builds on.
-- Phase 06.1 is intended to provide the approved pre-upgrade Cypress/embed browser baseline this phase will use for regression detection.
+- Phase 06.1 has already provided the approved pre-upgrade Cypress/embed browser baseline and recorded it in archived checklist and validation artifacts.
 
 ## Risks and Mitigations
 
@@ -55,11 +60,13 @@ Bring the frontend onto a supported Svelte upgrade path without changing what th
 ## Open Questions / Assumptions
 
 - Recommended target path for this phase: upgrade the frontend from Svelte 3 to Svelte 4. A direct Svelte 5 upgrade is deferred unless dependency audit and baseline validation show it does not add material compatibility or migration risk.
-- Assumption: the current frontend tests plus targeted smoke checks are sufficient to detect meaningful embed/client regressions for this phase. If that assumption fails during refinement, additional validation work must be added before implementation.
+- Assumption: the completed Phase 06.1 browser baseline, the existing frontend unit tests, and the existing smoke/parity checks are sufficient to detect meaningful embed/client regressions for this phase. If that assumption fails during refinement, additional validation work must be added before implementation.
 
 ## Execution Staging
 
 This phase should not use a single checklist that assumes all required implementation work is already known.
+
+The next required artifact for this phase is the Stage 1 discovery checklist; implementation checklist authoring must wait until those discovery findings are reviewed and approved.
 
 Instead, checklist authoring and execution should proceed in two stages:
 
@@ -78,8 +85,8 @@ This staging is required because the exact breakage set is not fully knowable be
 This phase changes frontend dependencies and may change build outputs, so validation evidence is required before the phase can be considered complete.
 
 - Unit evidence: `yarn test:frontend` passes on the upgraded stack. Fail if existing frontend unit/state tests regress without an approved scope change.
-- Integration/smoke evidence: the embed/client frontend can build and run through the key comment-loading and submission flows used today. Fail if the upgraded client cannot complete those flows or shows changed user-visible behavior not called out in scope.
-- Integration/browser evidence: the existing generic Cypress frontend flows required for embed confidence pass on the upgraded stack, limited to baseline load/render and core comment interaction paths. Fail if those flows require broad test-suite expansion or expose behavior changes outside approved scope.
+- Integration/smoke evidence: the embed/client frontend can build and run through the approved Phase 06.1 baseline behavior set: auto-init mount/discussion load, configured discussion bootstrap, top-level comment submission, reply submission, and authenticated login/verify plus authenticated action. Fail if the upgraded client cannot complete those flows or shows changed user-visible behavior not called out in scope.
+- Integration/browser evidence: the approved Phase 06.1 Cypress baseline flows pass on the upgraded stack without modifying those tests. Fail if those flows regress, require broad test-suite expansion, or require test edits to mask behavior changes outside approved scope.
 - Contract/parity evidence: frontend requests and API usage semantics remain compatible with the current backend contract. Fail if the upgraded frontend requires backend contract changes or diverges from existing endpoint usage.
 - Build/parity evidence: the local parity command for the repository passes (`yarn run ci:local`), or any blocker outside this phase is documented with concrete failure evidence and explicit deferment. Fail if no such evidence exists.
 
@@ -90,7 +97,7 @@ This phase changes frontend dependencies and may change build outputs, so valida
 - Frontend compiles and runs on the upgraded framework/runtime dependencies for the selected path.
 - `yarn test:frontend` passes on the upgraded stack.
 - `yarn run ci:local` passes, or any non-phase blocker is documented with explicit failure evidence and deferment.
-- A small approved set of baseline Cypress generic/embed flows passes on the selected upgrade target, or any excluded flow is documented with a concrete reason and explicit deferment.
+- The approved Phase 06.1 baseline Cypress generic/embed flows pass on the selected upgrade target, or any excluded flow is documented with a concrete reason and explicit deferment.
 - Embed/client behavior remains compatible with existing API usage patterns and current backend contracts.
 - Contributor documentation reflects the upgraded frontend stack, workflow, and any approved follow-up constraints.
 
@@ -154,7 +161,7 @@ The preserved artifact and embed-delivery contract is:
 - The frontend continues to emit the current embed-facing artifacts required by host pages:
   - `dist/js/simple-comment.js`
   - `dist/js/simple-comment-icebreakers.js`
-  - current required CSS outputs
+  - the current required compiled CSS outputs generated from the frontend SCSS source, including `dist/css/simple-comment-style.css`
   - current sample/static embed pages used for validation
 - Existing embed script paths and sample-page wiring remain compatible unless a later approved plan update changes them explicitly.
 
@@ -175,8 +182,7 @@ The preserved user-visible behavior for this phase is limited to core shipped cl
 
 Preservation for this phase is validated by contract/parity checks, embed smoke checks, and a small set of baseline Cypress generic/embed flows. If the upgrade requires changing the public embed bootstrap contract, emitted artifact paths, or API usage semantics, implementation must stop and return to plan/checklist refinement.
 
-Note: repository documentation and Cypress assumptions currently reference `#simple-comment-display` in places. Those references should be updated to the `#simple-comment` contract during this phase's documentation and validation alignment work.
-That documentation and baseline-alignment work is expected to land in [Phase 06.1 - Cypress Embed Baseline and Contract Alignment](./phase-06-1-cypress-embed-baseline.md) before Phase 06 implementation begins.
+Note: repository documentation and Cypress assumptions that previously referenced `#simple-comment-display` were aligned to `#simple-comment` in completed Phase 06.1 work. Phase 06 should use the archived Phase 06.1 artifacts as the pre-upgrade source of truth rather than re-opening that contract-alignment work during upgrade execution.
 
 ### Cypress Generic/Embed Validation Flows
 
@@ -197,8 +203,6 @@ The required Cypress/embed validation flows for this phase are:
 4. Reply submission flow.
    - Open the existing reply UI for a comment and submit a reply.
    - Assert the expected network request shape and successful rendering of the reply in the thread.
-
-The optional fifth flow for this phase is:
 
 5. Authenticated login/verify flow.
    - Exercise the shipped login/verify path used by the frontend client.
