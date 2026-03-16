@@ -216,7 +216,7 @@ Assumes a unix-like environment, like Ubuntu.
   - `vite@^5`
   - `svelte-preprocess@^5`
 - `yarn run build:frontend` uses Vite (`vite.config.ts`) and emits frontend artifacts to `dist`.
-- `yarn run start:backend` serves Netlify Functions only at `http://localhost:9999/.netlify/functions/`.
+- `yarn run start:backend` builds the backend functions once and then serves them at `http://localhost:9999/.netlify/functions/`.
 - `yarn run start:frontend` rebuilds the frontend and serves the built `dist` artifacts at `http://localhost:5000/` via `vite preview`.
 - `yarn run start` runs `start:backend` and `start:frontend` concurrently, so it serves the built `dist` frontend on `http://localhost:5000/` and proxies backend function requests to `http://localhost:9999/` without HMR.
 - `yarn run dev` runs the backend webpack bundle watcher together with Netlify Dev at `http://localhost:5000/`; Netlify Dev starts the Vite dev server on `http://localhost:5173/`, so frontend HMR remains enabled while backend function bundles rebuild on change.
