@@ -78,7 +78,7 @@ Source plan: `docs/plans/phase-06-frontend-upgrade.md`
     - "Record phase-close evidence and any explicitly deferred follow-up work discovered during the upgrade." (In Scope)
     - "Contributor documentation reflects the upgraded frontend stack, workflow, and any approved follow-up constraints." (Acceptance Criteria)
 
-- [ ] T06 `[validation]` Verify that [phase-06-validation-notes.md](/mnt/c/workspace/projects/simple-comment/docs/plans/phase-06-validation-notes.md) records the final Svelte 4 dependency path, passing unit/build/browser evidence, `ci:local` outcome, carried-forward discovery warnings, and any explicitly approved deferments needed for phase close.
+- [x] T06 `[validation]` Verify that [phase-06-validation-notes.md](/mnt/c/workspace/projects/simple-comment/docs/plans/phase-06-validation-notes.md) records the final Svelte 4 dependency path, passing unit/build/browser evidence, `ci:local` outcome, carried-forward discovery warnings, and any explicitly approved deferments needed for phase close.
   - Depends on: C03.
   - Trace:
     - "Record phase-close evidence and any explicitly deferred follow-up work discovered during the upgrade." (In Scope)
