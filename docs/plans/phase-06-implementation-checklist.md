@@ -51,7 +51,7 @@ Source plan: `docs/plans/phase-06-frontend-upgrade.md`
     - "Unit evidence: `yarn test:frontend` passes on the upgraded stack." (Validation Strategy)
     - "`yarn test:frontend` passes on the upgraded stack." (Acceptance Criteria)
 
-- [ ] T03 `[validation]` Run `yarn run build:frontend` on the Svelte 4 implementation state and record pass/fail evidence in `docs/plans/phase-06-validation-notes.md`.
+- [x] T03 `[validation]` Run `yarn run build:frontend` on the Svelte 4 implementation state and record pass/fail evidence in `docs/plans/phase-06-validation-notes.md`.
   - Depends on: C01, C02.
   - Trace:
     - "Frontend compiles and runs on the upgraded framework/runtime dependencies for the selected path." (Acceptance Criteria)

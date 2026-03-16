@@ -59,7 +59,13 @@
     - `0` failures
     - completed in `92.62s`
 - `yarn run build:frontend`:
-  - Not run yet in Stage 2
+  - Result: passed with warnings
+  - Observed outcome:
+    - Vite CJS Node API deprecation warning emitted
+    - `vite-plugin-svelte` warning emitted for `carbon-icons-svelte@12.1.0`
+    - `/css/simple-comment-style.css doesn't exist at build time, it will remain unchanged to be resolved at runtime`
+    - emitted `dist/css/simple-comment-style.css` and `dist/js/simple-comment.js`
+    - completed in `26.00s`
 - Phase 06.1 unchanged Cypress baseline:
   - Discovery status: passed on the Svelte 4 trial stack
   - Stage 2 rerun status: not run yet
