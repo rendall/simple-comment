@@ -64,7 +64,7 @@ Source plan: `docs/plans/phase-06-frontend-upgrade.md`
     - "Integration/browser evidence: the approved Phase 06.1 Cypress baseline flows pass on the upgraded stack without modifying those tests." (Validation Strategy)
     - "The approved Phase 06.1 baseline Cypress generic/embed flows pass on the selected upgrade target" (Acceptance Criteria)
 
-- [ ] T05 `[validation]` Run `yarn run ci:local` on the Svelte 4 implementation state, or record the exact non-phase blocker and deferment evidence in `docs/plans/phase-06-validation-notes.md` if it cannot be made green within this phase.
+- [x] T05 `[validation]` Run `yarn run ci:local` on the Svelte 4 implementation state, or record the exact non-phase blocker and deferment evidence in `docs/plans/phase-06-validation-notes.md` if it cannot be made green within this phase.
   - Depends on: T02, T03.
   - Trace:
     - "Build/parity evidence: the local parity command for the repository passes (`yarn run ci:local`), or any blocker outside this phase is documented with concrete failure evidence and explicit deferment." (Validation Strategy)

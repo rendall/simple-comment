@@ -77,8 +77,16 @@
     - aggregate result: `5 passing`, `0 failing`
     - completed in `55.66s`
 - `yarn run ci:local`:
-  - Discovery status: failed at lint before frontend parity
-  - Stage 2 rerun status: not run yet
+  - Result: failed before parity reached frontend tests
+  - Observed outcome:
+    - dependency install step reported `success Already up-to-date.`
+    - parity failed during `yarn run lint`
+  - Failure details:
+    - [index.ts](/mnt/c/workspace/projects/simple-comment/src/entry/icebreakers/index.ts#L10): `Unexpected console statement  no-console`
+    - [MongodbService.test.ts](/mnt/c/workspace/projects/simple-comment/src/tests/backend/MongodbService.test.ts#L107): `warning  'testTopicsWithComments' is assigned a value but never used`
+  - Classification:
+    - currently treated as a non-phase blocker carried forward from discovery
+    - did not reveal a new Svelte 4-specific parity failure after the Stage 2 frontend fixes
 
 ## Deferments / Blockers
 
