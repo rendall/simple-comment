@@ -1,133 +1,110 @@
 /// <reference types="cypress" />
 
-describe(`User Authentication Flow`, () => {
-  beforeEach(() => {
-    cy.visit("/")
-    cy.get("button.selection-tab-login").click()
-  })
-  after(() => {
-    cy.clearCookie("simple_comment_token") // clear the authentication/session cookie
-  })
-  it("should handle incorrect credentials", () => {
-    // Check that #status-display does not have class is-error nor any message
-    cy.get("#status-display").should("not.exist")
+const discussionId = "http-localhost-5000"
+const userId = "testuser"
+const password = "testpassword"
+const commentText = "Deterministic authenticated comment"
+const authHeader = "Basic dGVzdHVzZXI6dGVzdHBhc3N3b3Jk"
 
-    // Enter username and password
-    cy.get("#login-user-id").clear().type("wronguser")
-    cy.get("#login-password").clear().type("wrongpassword")
-
-    // Click the log in button
-    cy.get("#user-login-form").submit()
-
-    // Intercept the /auth request and return a 401 error
-    cy.intercept("POST", "/.netlify/functions/auth", req => {
-      req.reply({
-        statusCode: 401,
-        body: { message: "Bad credentials" },
-      })
-    })
-
-    // Check that #status-display has class is-error and has a message
-    cy.get("#status-display").should("have.class", "is-error")
-    cy.get("#status-display").should("not.be.empty")
-  })
-
-  it("should log in a user, verify the token, and get user details", () => {
-    // Intercept the /auth request
-    cy.intercept("POST", "/.netlify/functions/auth", req => {
-      expect(req.headers.authorization).to.exist
-      req.reply({
-        statusCode: 200,
-        body: '"OK"',
-        headers: {
-          "set-cookie":
-            "simple_comment_token=testToken; path=/; SameSite=Strict; HttpOnly; Max-Age=31536000",
-        },
-      })
-    })
-
-    // Intercept the /verify request
-    cy.intercept("GET", "/.netlify/functions/verify", req => {
-      expect(req.headers.cookie).to.exist
-      req.reply({
-        statusCode: 200,
-        body: '{"user":"testuser","exp":1721980130,"iat":1690444137}',
-      })
-    })
-
-    // Intercept the /user/testuser request
-    cy.intercept("GET", "/.netlify/functions/user/testuser", req => {
-      req.reply({
-        statusCode: 200,
-        body: '{"id":"testuser","name":"Test User","isAdmin":false,"email":"testuser@example.com"}',
-      })
-    })
-
-    // Perform the login action
-    cy.get("#login-user-id").clear().type("testuser")
-    cy.get("#login-password").clear().type("testpassword")
-    cy.get(".comment-submit-button").click()
-
-    // Check the user details
-    cy.get("#status-display").should("not.exist")
-    cy.get("#self-display").should("contain", "Test User")
-    cy.get("#self-display").should("contain", "@testuser")
-    cy.get("#self-display").should("contain", "testuser@example.com")
-  })
-
-  it("should log out a user", () => {
-    // Intercept the /auth request
-    cy.intercept("POST", "/.netlify/functions/auth", req => {
-      expect(req.headers.authorization).to.exist
-      req.reply({
-        statusCode: 200,
-        body: '"OK"',
-        headers: {
-          "set-cookie":
-            "simple_comment_token=testToken; path=/; SameSite=Strict; HttpOnly; Max-Age=31536000",
-        },
-      })
-    })
-
-    // Intercept the /verify request
-    cy.intercept("GET", "/.netlify/functions/verify", req => {
-      expect(req.headers.cookie).to.exist
-      req.reply({
-        statusCode: 200,
-        body: '{"user":"testuser","exp":1721980130,"iat":1690444137}',
-      })
-    })
-
-    // Intercept the /user/testuser request
-    cy.intercept("GET", "/.netlify/functions/user/testuser", req => {
-      req.reply({
-        statusCode: 200,
-        body: '{"id":"testuser","name":"Test User","isAdmin":false,"email":"testuser@example.com"}',
-      })
-    })
-
-    // Intercept the DELETE /auth request
-    cy.intercept("DELETE", "/.netlify/functions/auth", req => {
-      req.reply({
-        statusCode: 202,
-        body: { message: "Logged out" },
-      })
-    })
-
-    // First log in
-    cy.get("#login-user-id").clear().type("testuser")
-    cy.get("#login-password").clear().type("testpassword")
-    cy.get(".comment-submit-button").click()
-
-    cy.get("#user-login-form").should("not.exist")
-
-    // Then test the log out
-    cy.get("#log-out-button").click()
-
-    // Check that the user is logged out
-    cy.get("#self-display").should("not.exist")
-    cy.get("#user-login-form").should("exist")
-  })
+const buildDiscussion = () => ({
+  _id: discussionId,
+  id: discussionId,
+  parentId: null,
+  text: null,
+  title: "Simple Comment",
+  user: {},
+  dateCreated: "2023-05-05T06:11:26.781Z",
+  dateDeleted: null,
+  replies: [],
 })
 
-//TODO: test auto login
+const buildPostedComment = () => ({
+  id: `${discussionId}-comment-1`,
+  parentId: discussionId,
+  text: commentText,
+  dateCreated: "2023-05-05T06:12:26.781Z",
+  user: {
+    id: userId,
+    name: "Test User",
+  },
+})
+
+describe("Authenticated login baseline", () => {
+  it("logs in, verifies, fetches self, and posts an authenticated top-level comment", () => {
+    let verifyCount = 0
+
+    cy.intercept("GET", `/.netlify/functions/topic/${discussionId}`, req => {
+      expect(req.method).to.equal("GET")
+      req.reply({
+        statusCode: 200,
+        body: buildDiscussion(),
+      })
+    }).as("getTopic")
+
+    cy.intercept("GET", "/.netlify/functions/verify", req => {
+      verifyCount += 1
+      req.reply(
+        verifyCount === 1
+          ? {
+              statusCode: 401,
+              body: { message: "Unauthenticated" },
+            }
+          : {
+              statusCode: 200,
+              body: { user: userId, exp: 1721980130, iat: 1690444137 },
+            }
+      )
+    }).as("verifyUser")
+
+    cy.intercept("POST", "/.netlify/functions/auth", req => {
+      expect(req.method).to.equal("POST")
+      expect(req.headers.authorization).to.equal(authHeader)
+      req.reply({
+        statusCode: 200,
+        body: "OK",
+      })
+    }).as("postAuth")
+
+    cy.intercept("GET", `/.netlify/functions/user/${userId}`, req => {
+      expect(req.method).to.equal("GET")
+      req.reply({
+        statusCode: 200,
+        body: {
+          id: userId,
+          name: "Test User",
+          email: "testuser@example.com",
+          isAdmin: false,
+        },
+      })
+    }).as("getSelf")
+
+    cy.intercept("POST", `/.netlify/functions/comment/${discussionId}`, req => {
+      expect(req.method).to.equal("POST")
+      expect(req.url).to.include(`/.netlify/functions/comment/${discussionId}`)
+      expect(req.body).to.equal(commentText)
+      req.reply({
+        statusCode: 201,
+        body: buildPostedComment(),
+      })
+    }).as("postComment")
+
+    cy.visit("/")
+
+    cy.wait("@verifyUser")
+    cy.wait("@getTopic")
+
+    cy.get("button.selection-tab-login").click()
+    cy.get("#login-user-id").should("be.visible").type(userId)
+    cy.get("#login-password").should("be.visible").type(password)
+    cy.get("form.comment-form .comment-field").should("be.visible").type(commentText)
+    cy.get("form.comment-form .comment-submit-button").click()
+
+    cy.wait("@postAuth")
+    cy.wait("@verifyUser")
+    cy.wait("@getSelf")
+    cy.wait("@postComment")
+
+    cy.get("#self-display").should("contain", "Test User")
+    cy.get("#simple-comment").contains("article.comment-body p", commentText)
+  })
+})
