@@ -121,8 +121,8 @@
     - dependency install step reported `success Already up-to-date.`
     - parity failed during `yarn run lint`
   - Failure details:
-    - [index.ts](/mnt/c/workspace/projects/simple-comment/src/entry/icebreakers/index.ts#L10) triggers `Unexpected console statement  no-console`
-    - [MongodbService.test.ts](/mnt/c/workspace/projects/simple-comment/src/tests/backend/MongodbService.test.ts#L107) triggers `warning  'testTopicsWithComments' is assigned a value but never used`
+    - discovery-time lint failures included a `no-console` violation in the icebreakers entrypoint and an unused-variable warning in the backend MongoDB test file
+    - those specific lint findings were later removed during follow-up cleanup on this branch; current parity status is recorded in [phase-06-validation-notes.md](/mnt/c/workspace/projects/simple-comment/docs/plans/phase-06-validation-notes.md)
   - Dependency impact:
     - prevents `ci:local` from reaching backend/frontend test parity steps on the current worktree
     - does not invalidate the already-passing Svelte 4 browser baseline evidence
@@ -146,7 +146,7 @@
   - The unchanged Phase 06.1 Cypress baseline passes completely on the Svelte 4 trial stack.
   - This indicates the core embed/bootstrap/comment/reply/auth browser boundary remains compatible despite the current frontend unit-test blockers.
 - Finding D06:
-  - `yarn run ci:local` currently fails in the lint step on a pre-existing `console.log` in [index.ts](/mnt/c/workspace/projects/simple-comment/src/entry/icebreakers/index.ts#L10) and an existing unused-variable warning in [MongodbService.test.ts](/mnt/c/workspace/projects/simple-comment/src/tests/backend/MongodbService.test.ts#L107).
+  - At discovery time, `yarn run ci:local` failed in the lint step on a pre-existing `no-console` violation in the icebreakers entrypoint and an unused-variable warning in the backend MongoDB test file.
   - The failure occurs before parity reaches frontend test execution, so it does not add a new Svelte 4-specific blocker beyond `D03` and `D04`.
 
 ## Blocker Classification
