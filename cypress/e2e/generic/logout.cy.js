@@ -65,6 +65,8 @@ describe("Explicit logout", () => {
 
     cy.wait("@deleteAuth")
     cy.get("#self-display").should("not.exist")
-    cy.get("#user-login-form").should("exist")
+    cy.get(".simple-comment-login")
+      .should("exist")
+      .and("not.have.class", "is-loading")
   })
 })
