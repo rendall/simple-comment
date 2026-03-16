@@ -104,13 +104,6 @@ const testDeleteTopicComments = mockCommentTree(20, testUsers, [
 const testTopics: Topic[] = mockTopicsArray()
 const testComments = mockCommentTree(500, testUsers, testTopics)
 
-const testTopicsWithComments = () =>
-  testTopics.filter(topic =>
-    testComments.some(
-      comment => isComment(comment) && comment.parentId === topic.id
-    )
-  )
-
 // This user tests that login happens
 const authUserTest = {
   ...mockUser("auth-"),

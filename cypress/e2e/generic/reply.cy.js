@@ -106,15 +106,21 @@ describe("Reply baseline", () => {
       })
     }).as("postUser")
 
-    cy.intercept("POST", `/.netlify/functions/comment/${parentCommentId}`, req => {
-      expect(req.method).to.equal("POST")
-      expect(req.url).to.include(`/.netlify/functions/comment/${parentCommentId}`)
-      expect(req.body).to.equal(replyText)
-      req.reply({
-        statusCode: 201,
-        body: buildPostedReply(),
-      })
-    }).as("postReply")
+    cy.intercept(
+      "POST",
+      `/.netlify/functions/comment/${parentCommentId}`,
+      req => {
+        expect(req.method).to.equal("POST")
+        expect(req.url).to.include(
+          `/.netlify/functions/comment/${parentCommentId}`
+        )
+        expect(req.body).to.equal(replyText)
+        req.reply({
+          statusCode: 201,
+          body: buildPostedReply(),
+        })
+      }
+    ).as("postReply")
 
     cy.visit("/")
 
@@ -133,7 +139,9 @@ describe("Reply baseline", () => {
     cy.get(`#${parentCommentId} form.comment-form .comment-field`)
       .should("be.visible")
       .type(replyText)
-    cy.get(`#${parentCommentId} form.comment-form .comment-submit-button`).click()
+    cy.get(
+      `#${parentCommentId} form.comment-form .comment-submit-button`
+    ).click()
 
     cy.wait("@getGuestToken")
     cy.wait("@verifyUser")

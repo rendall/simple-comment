@@ -18,7 +18,8 @@ export default defineConfig(async ({ mode }) => {
     env.VITE_SIMPLE_COMMENT_API_URL ?? env.SIMPLE_COMMENT_API_URL
   const frontendApiUrlDefine =
     frontendApiUrl === undefined ? "undefined" : JSON.stringify(frontendApiUrl)
-  const toFsPath = (targetPath: string) => `/@fs/${targetPath.replace(/\\/g, "/")}`
+  const toFsPath = (targetPath: string) =>
+    `/@fs/${targetPath.replace(/\\/g, "/")}`
   const sourceStyleLink = `<link rel="stylesheet" type="text/css" href="${toFsPath(
     sourceCssPath
   )}" />`

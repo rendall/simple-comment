@@ -96,7 +96,9 @@ describe("Authenticated login baseline", () => {
     cy.get("button.selection-tab-login").click()
     cy.get("#login-user-id").should("be.visible").type(userId)
     cy.get("#login-password").should("be.visible").type(password)
-    cy.get("form.comment-form .comment-field").should("be.visible").type(commentText)
+    cy.get("form.comment-form .comment-field")
+      .should("be.visible")
+      .type(commentText)
     cy.get("form.comment-form .comment-submit-button").click()
 
     cy.wait("@postAuth")

@@ -7,7 +7,6 @@ const getTopicSlug = (url: string) =>
   new URL(url).pathname.slice("/icebreakers/".length)
 
 const discussionId = getTopicSlug(window.location.href)
-console.log("discussionId", discussionId)
 
 window
   .getQuestion(discussionId)
@@ -18,8 +17,7 @@ window
     window.loadSimpleComment({
       cancel: true,
       discussionId,
-      target:
-        document.getElementById("simple-comment") ?? document.body,
+      target: document.getElementById("simple-comment") ?? document.body,
       title: question,
     })
   })
