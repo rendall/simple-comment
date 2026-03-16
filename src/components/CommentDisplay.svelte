@@ -13,12 +13,10 @@
   import CommentList from "./CommentList.svelte"
   import CommentInput from "./CommentInput.svelte"
   import CommentEdit from "./CommentEdit.svelte"
-  import {
-    ClosedCaptionAlt as ReplyIcon,
-    Edit as EditIcon,
-    OverflowMenuHorizontal,
-    ChevronLeft,
-  } from "carbon-icons-svelte"
+  import ReplyIcon from "carbon-icons-svelte/lib/ClosedCaptionAlt.svelte"
+  import EditIcon from "carbon-icons-svelte/lib/Edit.svelte"
+  import OverflowMenuHorizontal from "carbon-icons-svelte/lib/OverflowMenuHorizontal.svelte"
+  import ChevronLeft from "carbon-icons-svelte/lib/ChevronLeft.svelte"
   import { linear } from "svelte/easing"
 
   export let comment: (Comment & { isNew?: true }) | undefined = undefined

@@ -11,8 +11,17 @@ index_html="/tmp/phase05-embed-index.html"
 icebreakers_html="/tmp/phase05-embed-icebreakers.html"
 simple_comment_js="/tmp/phase05-simple-comment.js"
 icebreakers_js="/tmp/phase05-simple-comment-icebreakers.js"
+index_entry_js="/tmp/phase05-index-entry.js"
+icebreakers_entry_js="/tmp/phase05-icebreakers-entry.js"
 
-rm -f "$server_log" "$index_html" "$icebreakers_html" "$simple_comment_js" "$icebreakers_js"
+rm -f \
+  "$server_log" \
+  "$index_html" \
+  "$icebreakers_html" \
+  "$simple_comment_js" \
+  "$icebreakers_js" \
+  "$index_entry_js" \
+  "$icebreakers_entry_js"
 
 npx http-server "$DIST_DIR" -a "$HOST" -p "$PORT" >"$server_log" 2>&1 &
 server_pid=$!
@@ -33,11 +42,12 @@ done
 curl -fsS "${BASE_URL}/icebreakers/index.html" >"$icebreakers_html"
 curl -fsS "${BASE_URL}/js/simple-comment.js" >"$simple_comment_js"
 curl -fsS "${BASE_URL}/js/simple-comment-icebreakers.js" >"$icebreakers_js"
+curl -fsS "${BASE_URL}/js/index.js" >"$index_entry_js"
+curl -fsS "${BASE_URL}/js/icebreakers.js" >"$icebreakers_entry_js"
 
-grep -q 'id="simple-comment-display"' "$index_html"
-grep -q 'src="./js/simple-comment.js"' "$index_html"
-grep -q 'src="/js/simple-comment.js"' "$icebreakers_html"
-grep -q 'src="/js/simple-comment-icebreakers.js"' "$icebreakers_html"
+grep -q 'id="simple-comment"' "$index_html"
+grep -q 'src="/js/index.js"' "$index_html"
+grep -q 'src="/js/icebreakers.js"' "$icebreakers_html"
 
 # Baseline runtime wiring checks
 grep -q 'window\.loadSimpleComment' "$simple_comment_js"

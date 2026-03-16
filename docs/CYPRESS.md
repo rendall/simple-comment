@@ -1,36 +1,57 @@
-# Cypress testing module
+# Cypress Testing Module
 
-Simple Comment uses <https://cypress.io> for its frontend testing. 
+Simple Comment uses <https://cypress.io> for frontend browser validation.
 
-## Writing tests
+## Current Layout
 
-Writing tests is an entire discipline in itself, but this page has a good introduction: <https://docs.cypress.io/guides/getting-started/writing-your-first-test.html#Write-a-real-test>
+- Cypress config: [cypress.config.ts](/mnt/c/workspace/projects/simple-comment/cypress.config.ts)
+- Support file: [e2e.js](/mnt/c/workspace/projects/simple-comment/cypress/support/e2e.js)
+- Generic/embed specs: [generic](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic)
 
-### Create a frontend client
+The generic/embed specs are written against the public embed contract and current host-page conventions:
 
-Simple Comment has a robust backend, and is designed to accommodate any client or framework. You might find that none of the current suite of clients suite your needs, and so want to write your own.
+- embed host element: `#simple-comment`
+- spec file naming: `*.cy.js`
+- E2E spec root: `cypress/e2e`
 
-Tests in `/cypress/integration/generic` are designed to test any frontend platform by including only basic functionality. It looks for elements with specific ids like `#simple-comment-display`, `#reply-field` and `#reply-submit-button`.  While the Simple Comment backend API will communicate successfully even without these specific elements, you could leverage these tests to ensure your new frontent client behaves as expected without writing new generic tests by using these ids with the elements that contain that functionality. You can also *ignore* these tests by adding `**/generic/*.spec.js` to the `ignoreTestFiles` array field in the `cypress.json` config file, if necessary.
+## Writing Tests
 
-### Adding a new feature to the frontend
+Writing tests is an entire discipline in itself, but this page has a good introduction:
+<https://docs.cypress.io/guides/getting-started/writing-your-first-test.html#Write-a-real-test>
 
-First write a test for the new feature in `/cypress/integration/` (either choosing a previous folder and file or creating a new one). Really take some time with it. The test should test the functionality of the new feature, but it will fail because the new feature has not yet been added. After the feature is added, the new test should pass.
+## Create a Frontend Client
+
+Simple Comment has a robust backend and is designed to accommodate different frontend clients.
+
+Tests in `cypress/e2e/generic` are intended to validate browser-visible embed behavior with minimal assumptions. If you build another client and want to reuse the generic suite, align the host page and interactive elements with the current public contract rather than the older `#simple-comment-display` scaffolding.
+
+## Adding a New Feature to the Frontend
+
+Add new browser specs under `cypress/e2e/`, either in an existing folder or in a new one that matches the feature area. Keep generic/embed coverage under `cypress/e2e/generic` focused on shared browser-boundary behavior that should remain stable across frontend changes.
 
 ## Config
 
-`/cypress.json` is the config file for Simple Comment's Cypress instance
+The Cypress config file for this repository is [cypress.config.ts](/mnt/c/workspace/projects/simple-comment/cypress.config.ts).
 
-## Code completion
+Current conventions include:
+
+- `baseUrl: "http://localhost:5000"`
+- `supportFile: "cypress/support/e2e.js"`
+- `excludeSpecPattern: "**/examples/*.spec.js"`
+
+## Code Completion
 
 To enable code completion for Cypress test files, add this line to the top of the file:
 
 `/// <reference types="cypress" />`
 
-## Ignoring 'examples'
+## Ignoring Examples
 
-Cypress installs example tests in the `/cypress/integration/examples` folder by default. Simple Comment excludes these via `cypress.json` config file. Remove the value `**/examples/*.spec.js` from the array `"ignoreTestFiles":["**/examples/*.spec.js"]` to include these files.
+Cypress example specs are excluded through `excludeSpecPattern` in [cypress.config.ts](/mnt/c/workspace/projects/simple-comment/cypress.config.ts).
 
-## SPEC FILES
+## Spec Files
 
-* `basic.spec.js` contain tests that should pass when the app begins with no interaction
-* `public-comment.spec.js`: tests basic public comment functionality
+- `basic.cy.js` covers the embed auto-init and configured bootstrap baseline.
+- `public-comment.cy.js` covers deterministic guest top-level comment submission.
+- `reply.cy.js` covers deterministic reply submission.
+- `login.cy.js` covers authenticated login/verify plus an authenticated action.

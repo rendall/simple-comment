@@ -6,4 +6,11 @@
 [build.environment]
   # TypeScript compilation during build requires @types packages from devDependencies.
   YARN_FLAGS = "--production=false"
-  
+
+[dev]
+  framework = "#custom"
+  command = "yarn run dev:frontend"
+  targetPort = 5173
+  port = 5000
+  publish = "dist"
+  autoLaunch = false

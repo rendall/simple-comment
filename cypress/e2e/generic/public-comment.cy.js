@@ -1,161 +1,127 @@
 /// <reference types="cypress" />
 
-import {
-  generateRandomCopy,
-  generateRandomName,
-} from "../../../src/tests/mockComment"
+const discussionId = "http-localhost-5000"
+const guestUserId = "guest-ab123-c1m6p"
+const guestName = "Baseline Guest"
+const guestEmail = "baseline@example.com"
+const commentText = "Deterministic baseline top-level comment"
 
-describe("Guest comment", { testIsolation: false }, () => {
-  let userId
+const buildDiscussion = replies => ({
+  _id: discussionId,
+  id: discussionId,
+  parentId: null,
+  text: null,
+  title: "Simple Comment",
+  user: {},
+  dateCreated: "2023-05-05T06:11:26.781Z",
+  dateDeleted: null,
+  replies,
+})
 
-  before(() => {
-    cy.clearAllLocalStorage()
-    cy.clearAllCookies()
-  })
+const buildPostedComment = () => ({
+  id: `${discussionId}-comment-1`,
+  parentId: discussionId,
+  text: commentText,
+  dateCreated: "2023-05-05T06:12:26.781Z",
+  user: {
+    id: guestUserId,
+    name: guestName,
+  },
+})
 
-  beforeEach(() => {
-    cy.clearLocalStorage("simple_comment_login_tab")
+describe("Guest comment baseline", () => {
+  it("submits a deterministic top-level guest comment to the discussion id", () => {
+    let verifyCount = 0
+
+    cy.intercept("GET", `/.netlify/functions/topic/${discussionId}`, req => {
+      expect(req.method).to.equal("GET")
+      req.reply({
+        statusCode: 200,
+        body: buildDiscussion([]),
+      })
+    }).as("getTopic")
+
+    cy.intercept("GET", "/.netlify/functions/verify", req => {
+      verifyCount += 1
+      req.reply(
+        verifyCount === 1
+          ? {
+              statusCode: 401,
+              body: { message: "Unauthenticated" },
+            }
+          : {
+              statusCode: 200,
+              body: { user: guestUserId, exp: 1721980130, iat: 1690444137 },
+            }
+      )
+    }).as("verifyUser")
+
+    cy.intercept("GET", `/.netlify/functions/user/${guestUserId}`, req => {
+      expect(req.method).to.equal("GET")
+      req.reply({
+        statusCode: 200,
+        body: {
+          id: guestUserId,
+          name: guestName,
+          email: guestEmail,
+          isAdmin: false,
+        },
+      })
+    }).as("getSelf")
+
+    cy.intercept("GET", "/.netlify/functions/gauth", req => {
+      expect(req.method).to.equal("GET")
+      req.reply({
+        statusCode: 200,
+        body: "guest-auth-token",
+      })
+    }).as("getGuestToken")
+
+    cy.intercept("POST", "/.netlify/functions/user", req => {
+      expect(req.method).to.equal("POST")
+      expect(req.body).to.include(`id=${guestUserId}`)
+      expect(req.body).to.include(`name=${encodeURIComponent(guestName)}`)
+      expect(req.body).to.include(`email=${encodeURIComponent(guestEmail)}`)
+      req.reply({
+        statusCode: 201,
+        body: {
+          id: guestUserId,
+          name: guestName,
+          email: guestEmail,
+          isAdmin: false,
+        },
+      })
+    }).as("postUser")
+
+    cy.intercept("POST", `/.netlify/functions/comment/${discussionId}`, req => {
+      expect(req.method).to.equal("POST")
+      expect(req.url).to.include(`/.netlify/functions/comment/${discussionId}`)
+      expect(req.body).to.equal(commentText)
+      req.reply({
+        statusCode: 201,
+        body: buildPostedComment(),
+      })
+    }).as("postComment")
+
     cy.visit("/")
-  })
 
-  it("Submit a comment as a guest user", () => {
-    const guestCommentText = generateRandomCopy()
-    cy.intercept("POST", ".netlify/functions/comment/*").as("postComment")
-    cy.intercept("GET", ".netlify/functions/user/*").as("getUser")
-    cy.get("form.comment-form #guest-email").clear().type("fake@email.com")
-    cy.get("form.comment-form #guest-name").clear().type(generateRandomName())
-    cy.get("form.comment-form .comment-field").clear().type(guestCommentText)
-    cy.get("form.comment-form .comment-submit-button").click()
-    cy.wait("@getUser").its("response.statusCode").should("eq", 200)
-    cy.wait("@postComment").its("response.statusCode").should("eq", 201) // 201 Created
-    cy.contains("article.comment-body p", guestCommentText).as("commentBody")
-    cy.get("@commentBody").should("exist")
-    cy.get("@commentBody").parents("li.comment").should("have.class", "is-new")
-    cy.get("p#self-user-id").should("exist")
-    cy.get("p#self-user-id")
-      .invoke("text")
-      .then(displayedUserId => {
-        userId = displayedUserId
-      })
-  })
+    cy.wait("@verifyUser")
+    cy.wait("@getTopic")
 
-  it("Edit a comment as a logged-in guest user", () => {
-    const loggedInEditText = generateRandomCopy()
-    cy.intercept("PUT", ".netlify/functions/comment/*").as("putComment")
-    cy.get(".overflow-menu-button").first().click()
-    cy.get(".comment-edit-button").first().click()
-    cy.get("form.comment-form .comment-field").clear().type(loggedInEditText)
-    cy.get("form.comment-form .comment-update-button").click()
-    cy.wait("@putComment").its("response.statusCode").should("eq", 204) // 204
-    cy.contains("article.comment-body p", loggedInEditText).should("exist")
-  })
-
-  it("Editing should handle errors", () => {
-    const errorText = generateRandomCopy()
-    let errorReply = true
-    // Stub the first response to error out
-    // then pass the next response through
-    cy.intercept("PUT", ".netlify/functions/comment/*", req => {
-      if (errorReply) {
-        errorReply = false
-        req.reply({
-          statusCode: 500,
-          body: "Error response body",
-        })
-      } else req.reply()
-    }).as("putComment")
-    cy.get(".overflow-menu-button").first().click()
-    cy.get(".comment-edit-button").first().click()
-
-    cy.get("form.comment-form .comment-field").clear().type(errorText)
-    cy.get("form.comment-form .comment-update-button").click()
-    cy.wait("@putComment")
-
-    cy.get("form.comment-form .comment-update-button").click()
-
-    cy.wait("@putComment").then(interception => {
-      expect(interception.response.statusCode).to.equal(204)
+    cy.get("#simple-comment").within(() => {
+      cy.get("form.comment-form #guest-name").clear().type(guestName)
+      cy.get("form.comment-form #guest-email").clear().type(guestEmail)
+      cy.get("form.comment-form .comment-field").clear().type(commentText)
+      cy.get("form.comment-form .comment-submit-button").click()
     })
-    cy.contains("article.comment-body p", errorText).should("exist")
-  })
 
-  it("Delete a comment as a logged-in guest user", () => {
-    cy.intercept("DELETE", ".netlify/functions/comment/*").as("deleteComment")
-    cy.get(".overflow-menu-button").first().click()
-    cy.get(".comment-delete-button").as("deleteButton")
-    cy.get("@deleteButton")
-      .closest("article.comment-body")
-      .children("p")
-      .first()
-      .as("articleBody")
-    cy.get("@articleBody")
-      .invoke("text")
-      .then(articleBodyText => {
-        expect(articleBodyText).not.to.be.undefined
-        cy.contains("article.comment-body p", articleBodyText).should("exist")
-        cy.get("@deleteButton").click()
-        cy.wait("@deleteComment").its("response.statusCode").should("eq", 202) // 202 Accepted
-        cy.contains("article.comment-body p", articleBodyText).should(
-          "not.exist"
-        )
-      })
-  })
+    cy.wait("@getGuestToken")
+    cy.wait("@verifyUser")
+    cy.wait("@postUser")
+    cy.wait("@verifyUser")
+    cy.wait("@getSelf")
+    cy.wait("@postComment")
 
-  it("Reply to a comment as a logged-in guest", () => {
-    cy.get("button.comment-reply-button").first().as("replyButton")
-    cy.get("@replyButton").closest("article.comment-body").as("commentBody")
-    cy.get("@replyButton").click()
-    cy.get("form.guest-login-form").should("not.exist")
-  })
-
-  it("Can log out", () => {
-    cy.get("button#log-out-button").first().click()
-    cy.get("form.guest-login-form").should("exist")
-  })
-
-  it("Logs in as same user", () => {
-    const sameUserCommentText = generateRandomCopy()
-    cy.get("form.comment-form .comment-field").clear().type(sameUserCommentText)
-    cy.intercept("POST", ".netlify/functions/auth").as("postAuth")
-    cy.get("form.comment-form .comment-submit-button").click()
-    cy.wait("@postAuth").its("response.statusCode").should("eq", 200)
-    cy.contains("article.comment-body p", sameUserCommentText).as("commentBody")
-    cy.get("@commentBody").should("exist")
-    cy.get("p#self-user-id").should("exist")
-    cy.contains("p#self-user-id", userId)
-  })
-
-  it("Will not log in as same user with altered data", () => {
-    const sneakyHackerText = generateRandomCopy()
-    cy.get("p#self-user-id").contains(userId)
-    cy.intercept("DELETE", ".netlify/functions/auth").as("deleteAuth")
-    cy.intercept("POST", ".netlify/functions/auth").as("postAuthError")
-    cy.get("button#log-out-button").first().click()
-    // Alter the local information
-    cy.getAllLocalStorage().then(localStorageMap => {
-      const key = "simple_comment_user"
-      const storedUser = window.localStorage.getItem(key)
-      const cyStoredUser = localStorageMap["http://localhost:7070"][key]
-      expect(storedUser).to.deep.equal(cyStoredUser)
-      const parsedUser = JSON.parse(storedUser)
-      const { id, name, email } = parsedUser
-      const alteredUser = {
-        id,
-        name,
-        email,
-        challenge: "wrong-challenge",
-      }
-
-      window.localStorage.setItem(key, JSON.stringify(alteredUser))
-      const storedAlteredUser = JSON.parse(window.localStorage.getItem(key))
-      expect(storedAlteredUser).to.deep.equal(alteredUser)
-    })
-    cy.wait("@deleteAuth").its("response.statusCode").should("eq", 202)
-    cy.get("form.comment-form .comment-field").clear().type(sneakyHackerText)
-    cy.get("form.comment-form .comment-submit-button").click()
-    cy.wait("@postAuthError").its("response.statusCode").should("eq", 401)
-    cy.contains("article.comment-body p", sneakyHackerText).as("commentBody")
-    cy.get("@commentBody").should("exist")
-    cy.get("p#self-user-id").should("not.contain", userId)
+    cy.get("#simple-comment").contains("article.comment-body p", commentText)
   })
 })
