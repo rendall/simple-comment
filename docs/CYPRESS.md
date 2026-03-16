@@ -4,9 +4,9 @@ Simple Comment uses <https://cypress.io> for frontend browser validation.
 
 ## Current Layout
 
-- Cypress config: [cypress.config.ts](/mnt/c/workspace/projects/simple-comment/cypress.config.ts)
-- Support file: [e2e.js](/mnt/c/workspace/projects/simple-comment/cypress/support/e2e.js)
-- Generic/embed specs: [generic](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic)
+- Cypress config: [cypress.config.ts](../cypress.config.ts)
+- Support file: [e2e.js](../cypress/support/e2e.js)
+- Generic/embed specs: [generic](../cypress/e2e/generic)
 
 The generic/embed specs are written against the public embed contract and current host-page conventions:
 
@@ -31,7 +31,7 @@ Add new browser specs under `cypress/e2e/`, either in an existing folder or in a
 
 ## Config
 
-The Cypress config file for this repository is [cypress.config.ts](/mnt/c/workspace/projects/simple-comment/cypress.config.ts).
+The Cypress config file for this repository is [cypress.config.ts](../cypress.config.ts).
 
 Current conventions include:
 
@@ -47,7 +47,7 @@ To enable code completion for Cypress test files, add this line to the top of th
 
 ## Ignoring Examples
 
-Cypress example specs are excluded through `excludeSpecPattern` in [cypress.config.ts](/mnt/c/workspace/projects/simple-comment/cypress.config.ts).
+Cypress example specs are excluded through `excludeSpecPattern` in [cypress.config.ts](../cypress.config.ts).
 
 ## Spec Files
 
