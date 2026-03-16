@@ -33,7 +33,7 @@
 - Carried non-phase / warning findings:
   - `D01`: optional `unix-dgram` native build warning under Node `22.22.0`
   - `D02`: non-blocking build warnings from Vite / `vite-plugin-svelte`
-  - `D06`: `ci:local` currently stops at pre-existing lint failures before parity reaches frontend tests
+  - `D06`: at discovery time, `ci:local` stopped at pre-existing lint failures before parity reached frontend tests
 
 ## Implementation Validation Log
 
