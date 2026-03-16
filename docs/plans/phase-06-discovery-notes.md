@@ -3,7 +3,7 @@
 ## Scope Lock Confirmation
 
 - Date: 2026-03-16
-- Checklist: [phase-06-discovery-checklist.md](/mnt/c/workspace/projects/simple-comment/docs/plans/phase-06-discovery-checklist.md)
+- Checklist: [phase-06-discovery-checklist.md](./phase-06-discovery-checklist.md)
 - Discovery scope is limited to:
   - dependency-path confirmation
   - baseline validation capture
@@ -17,17 +17,17 @@
 
 ## Phase 06.1 Baseline References
 
-- Checklist baseline source: [phase-06-1-checklist.md](/mnt/c/workspace/projects/simple-comment/docs/archive/phase-06-1-checklist.md)
-- Validation baseline source: [phase-06-1-validation-notes.md](/mnt/c/workspace/projects/simple-comment/docs/archive/phase-06-1-validation-notes.md)
+- Checklist baseline source: [phase-06-1-checklist.md](../archive/phase-06-1-checklist.md)
+- Validation baseline source: [phase-06-1-validation-notes.md](../archive/phase-06-1-validation-notes.md)
 - Required unchanged browser baseline for discovery:
-  - [basic.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/basic.cy.js)
-  - [public-comment.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/public-comment.cy.js)
-  - [reply.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/reply.cy.js)
-  - [login.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/login.cy.js)
+  - [basic.cy.js](../../cypress/e2e/generic/basic.cy.js)
+  - [public-comment.cy.js](../../cypress/e2e/generic/public-comment.cy.js)
+  - [reply.cy.js](../../cypress/e2e/generic/reply.cy.js)
+  - [login.cy.js](../../cypress/e2e/generic/login.cy.js)
 
 ## Current Frontend Dependency Graph
 
-- Current repo versions from [package.json](/mnt/c/workspace/projects/simple-comment/package.json):
+- Current repo versions from [package.json](../../package.json):
   - `svelte`: `^3.0.0`
   - `@sveltejs/vite-plugin-svelte`: `^2.5.3`
   - `vite`: `^5.4.14`
@@ -109,10 +109,10 @@
   - Result: passed
   - Command: `yarn run test:cypress --spec cypress/e2e/generic/basic.cy.js,cypress/e2e/generic/public-comment.cy.js,cypress/e2e/generic/reply.cy.js,cypress/e2e/generic/login.cy.js`
   - Observed behavior:
-    - [basic.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/basic.cy.js): `2 passing`
-    - [public-comment.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/public-comment.cy.js): `1 passing`
-    - [reply.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/reply.cy.js): `1 passing`
-    - [login.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/login.cy.js): `1 passing`
+    - [basic.cy.js](../../cypress/e2e/generic/basic.cy.js): `2 passing`
+    - [public-comment.cy.js](../../cypress/e2e/generic/public-comment.cy.js): `1 passing`
+    - [reply.cy.js](../../cypress/e2e/generic/reply.cy.js): `1 passing`
+    - [login.cy.js](../../cypress/e2e/generic/login.cy.js): `1 passing`
     - aggregate baseline result: `5 passing`, `0 failing`
     - completed in `51.74s`
 - `yarn run ci:local`:
@@ -122,7 +122,7 @@
     - parity failed during `yarn run lint`
   - Failure details:
     - discovery-time lint failures included a `no-console` violation in the icebreakers entrypoint and an unused-variable warning in the backend MongoDB test file
-    - those specific lint findings were later removed during follow-up cleanup on this branch; current parity status is recorded in [phase-06-validation-notes.md](/mnt/c/workspace/projects/simple-comment/docs/plans/phase-06-validation-notes.md)
+    - those specific lint findings were later removed during follow-up cleanup on this branch; current parity status is recorded in [phase-06-validation-notes.md](./phase-06-validation-notes.md)
   - Dependency impact:
     - prevents `ci:local` from reaching backend/frontend test parity steps on the current worktree
     - does not invalidate the already-passing Svelte 4 browser baseline evidence
@@ -138,9 +138,9 @@
   - The warnings do not block downstream unit, browser, or parity validation on this dependency state.
 - Blocking finding D03:
   - `yarn test:frontend` fails on the Svelte 4 trial stack because the current Jest frontend test pipeline does not handle Svelte 4's ESM `svelte/store` runtime import.
-  - Affected surfaces include the frontend Jest config and transform path plus [svelte-stores.test.ts](/mnt/c/workspace/projects/simple-comment/src/tests/frontend/svelte-stores.test.ts).
+  - Affected surfaces include the frontend Jest config and transform path plus [svelte-stores.test.ts](../../src/tests/frontend/svelte-stores.test.ts).
 - Blocking finding D04:
-  - `yarn test:frontend` also fails [frontend-utilities.test.ts](/mnt/c/workspace/projects/simple-comment/src/tests/frontend/frontend-utilities.test.ts) because the current received threaded-comment shape now includes explicit empty `replies` arrays on leaf nodes while the test expectation does not.
+  - `yarn test:frontend` also fails [frontend-utilities.test.ts](../../src/tests/frontend/frontend-utilities.test.ts) because the current received threaded-comment shape now includes explicit empty `replies` arrays on leaf nodes while the test expectation does not.
   - This is an additional blocking unit failure on the current trial dependency state.
 - Finding D05:
   - The unchanged Phase 06.1 Cypress baseline passes completely on the Svelte 4 trial stack.
