@@ -48,7 +48,7 @@ Source plan: `docs/plans/phase-06-1-cypress-embed-baseline.md`
     - "Implement, refresh, or repair the selected Cypress flows against the current frontend behavior." (In Scope)
     - "Auto-init mount and discussion load." (Detailed Planning Notes)
 
-- [ ] C05 `[cypress]` Implement or repair the configured discussion bootstrap baseline flow in `cypress/e2e/generic/basic.cy.js`.
+- [x] C05 `[cypress]` Implement or repair the configured discussion bootstrap baseline flow in `cypress/e2e/generic/basic.cy.js`.
   - Depends on: C01, C02, C03.
   - Validation: T03.
   - Trace:
