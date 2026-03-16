@@ -26,7 +26,7 @@ Source plan: `docs/plans/phase-06-1-cypress-embed-baseline.md`
     - "Align repository documentation and Cypress assumptions that still refer to `#simple-comment-display` so they match the `#simple-comment` contract." (In Scope)
     - "Repository documentation and Cypress assumptions are aligned to the `#simple-comment` embed contract." (Acceptance Criteria)
 
-- [ ] C02 `[cypress]` Audit the current generic Cypress spec inventory in `cypress/e2e/generic` against the five approved baseline flows and record file ownership, known gaps, and setup constraints in `docs/plans/phase-06-1-validation-notes.md`.
+- [x] C02 `[cypress]` Audit the current generic Cypress spec inventory in `cypress/e2e/generic` against the five approved baseline flows and record file ownership, known gaps, and setup constraints in `docs/plans/phase-06-1-validation-notes.md`.
   - Depends on: T01.
   - Validation: T04.
   - Trace:

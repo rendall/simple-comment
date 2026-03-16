@@ -37,10 +37,38 @@ Additional Cypress coverage added during this phase, but not required to satisfy
 
 ## Cypress Inventory / Setup Notes
 
+Current generic spec inventory under [generic](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic):
+
+- Required Phase 06.1 baseline ownership:
+  - [basic.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/basic.cy.js)
+  - [public-comment.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/public-comment.cy.js)
+  - [reply.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/reply.cy.js)
+  - [login.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/login.cy.js)
+- Additional generic coverage retained outside the minimum baseline:
+  - [authenticated-reply.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/authenticated-reply.cy.js)
+  - [auto-login.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/auto-login.cy.js)
+  - [delete.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/delete.cy.js)
+  - [edit.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/edit.cy.js)
+  - [embed-options.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/embed-options.cy.js)
+  - [error-recovery.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/error-recovery.cy.js)
+  - [input-validation.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/input-validation.cy.js)
+  - [logout.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/logout.cy.js)
+  - [manual-init.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/manual-init.cy.js)
+  - [performance.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/performance.cy.js)
+  - [rtl.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/rtl.cy.js)
+  - [signup.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/signup.cy.js)
+
 - Cypress 12 support-file execution was restored using [cypress.config.ts](/mnt/c/workspace/projects/simple-comment/cypress.config.ts) with `supportFile: "cypress/support/e2e.js"`.
 - The support file exists at [e2e.js](/mnt/c/workspace/projects/simple-comment/cypress/support/e2e.js).
 - The baseline spec set is intentionally deterministic and relies on stubbed browser-boundary network interactions rather than live backend state.
 - Dedicated static host pages were added under [src/static/cypress](/mnt/c/workspace/projects/simple-comment/src/static/cypress) for embed-contract scenarios that must configure globals before `DOMContentLoaded`.
+- Setup constraints:
+  - artifact/smoke validation runs against built `dist` output
+  - browser baseline specs expect a frontend available at the configured Cypress `baseUrl`
+  - baseline specs use stubbed network responses for determinism rather than live backend data
+- Known gaps / deferments at close:
+  - no required Phase 06.1 baseline flow remains deferred
+  - additional generic coverage exists outside the minimum baseline set and is retained as non-blocking coverage rather than part of the phase acceptance gate
 
 ## Documentation / Traceability Alignment
 
