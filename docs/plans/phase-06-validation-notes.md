@@ -67,8 +67,15 @@
     - emitted `dist/css/simple-comment-style.css` and `dist/js/simple-comment.js`
     - completed in `26.00s`
 - Phase 06.1 unchanged Cypress baseline:
-  - Discovery status: passed on the Svelte 4 trial stack
-  - Stage 2 rerun status: not run yet
+  - Result: passed
+  - Command: `yarn run test:cypress --spec cypress/e2e/generic/basic.cy.js,cypress/e2e/generic/public-comment.cy.js,cypress/e2e/generic/reply.cy.js,cypress/e2e/generic/login.cy.js`
+  - Observed outcome:
+    - [basic.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/basic.cy.js): `2 passing`
+    - [public-comment.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/public-comment.cy.js): `1 passing`
+    - [reply.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/reply.cy.js): `1 passing`
+    - [login.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/login.cy.js): `1 passing`
+    - aggregate result: `5 passing`, `0 failing`
+    - completed in `55.66s`
 - `yarn run ci:local`:
   - Discovery status: failed at lint before frontend parity
   - Stage 2 rerun status: not run yet

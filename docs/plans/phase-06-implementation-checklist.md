@@ -57,7 +57,7 @@ Source plan: `docs/plans/phase-06-frontend-upgrade.md`
     - "Frontend compiles and runs on the upgraded framework/runtime dependencies for the selected path." (Acceptance Criteria)
     - "Integration/smoke evidence: the embed/client frontend can build and run" (Validation Strategy)
 
-- [ ] T04 `[validation]` Run the approved unchanged Phase 06.1 Cypress baseline command on the Svelte 4 implementation state and record pass/fail evidence in `docs/plans/phase-06-validation-notes.md`.
+- [x] T04 `[validation]` Run the approved unchanged Phase 06.1 Cypress baseline command on the Svelte 4 implementation state and record pass/fail evidence in `docs/plans/phase-06-validation-notes.md`.
   - Depends on: T02, T03.
   - Trace:
     - "Consume the approved pre-upgrade Cypress/embed baseline recorded in [Phase 06.1 Checklist](../archive/phase-06-1-checklist.md) and [Phase 06.1 Validation Notes](../archive/phase-06-1-validation-notes.md), and keep those flows passing on the upgraded stack." (In Scope)
