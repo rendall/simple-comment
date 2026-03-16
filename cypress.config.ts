@@ -11,6 +11,7 @@ export default defineConfig({
       return require("./cypress/plugins/index.js")(on, config)
     },
     baseUrl: "http://localhost:5000",
+    supportFile: "cypress/support/e2e.js",
     // baseUrl: "https://simple-comment.netlify.app",
     excludeSpecPattern: "**/examples/*.spec.js",
     experimentalRunAllSpecs: true,
