@@ -34,7 +34,7 @@ Source plan: `docs/plans/phase-06-1-cypress-embed-baseline.md`
     - "Record any explicitly deferred flows, known gaps, or setup constraints discovered during this baseline work." (In Scope)
     - "The phase records an approved minimal Cypress/embed baseline flow set for pre-upgrade validation." (Acceptance Criteria)
 
-- [ ] C03 `[cypress]` Restore Cypress 12 baseline execution by adding a supported `cypress/support/e2e` file or equivalent config in `cypress.config.ts`, and record the chosen approach in `docs/plans/phase-06-1-validation-notes.md`.
+- [x] C03 `[cypress]` Restore Cypress 12 baseline execution by adding a supported `cypress/support/e2e` file or equivalent config in `cypress.config.ts`, and record the chosen approach in `docs/plans/phase-06-1-validation-notes.md`.
   - Depends on: C01, C02.
   - Validation: T03.
   - Trace:
