@@ -90,7 +90,7 @@ Source plan: `docs/plans/phase-06-1-cypress-embed-baseline.md`
     - "The approved required baseline flows pass against the current frontend, and any excluded or optional flow is documented with a concrete reason and explicit deferment." (Acceptance Criteria)
     - "Capture baseline validation evidence that Phase 06 will use when verifying the Svelte 3 to Svelte 4 upgrade." (In Scope)
 
-- [ ] T04 `[validation]` Verify documentation and Cypress assumptions consistently describe the `#simple-comment` embed contract and that the approved baseline flow ownership is recorded for Phase 06 handoff.
+- [x] T04 `[validation]` Verify documentation and Cypress assumptions consistently describe the `#simple-comment` embed contract and that the approved baseline flow ownership is recorded for Phase 06 handoff.
   - Depends on: C01, C02.
   - Trace:
     - "Documentation/traceability evidence: repository documentation and Cypress assumptions that describe the embed host element align to the `#simple-comment` contract." (Validation Strategy)
