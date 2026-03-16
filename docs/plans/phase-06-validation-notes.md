@@ -37,6 +37,14 @@
 
 ## Implementation Validation Log
 
+- Focused Stage 2 blocker probes:
+  - `yarn test:frontend --runTestsByPath src/tests/frontend/svelte-stores.test.ts --runInBand`
+    - Result: passed
+    - Purpose: verify the Stage 2 Jest config change restores execution of the previously failing Svelte store suite without modifying tests
+    - Observed outcome:
+      - `PASS src/tests/frontend/svelte-stores.test.ts`
+      - `2` tests passed
+
 - `yarn test:frontend`:
   - Not run yet in Stage 2
 - `yarn run build:frontend`:

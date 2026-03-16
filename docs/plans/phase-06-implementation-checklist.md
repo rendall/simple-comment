@@ -29,7 +29,7 @@ Source plan: `docs/plans/phase-06-frontend-upgrade.md`
     - "Record phase-close evidence and any explicitly deferred follow-up work discovered during the upgrade." (In Scope)
     - "Contributor documentation reflects the upgraded frontend stack, workflow, and any approved follow-up constraints." (Acceptance Criteria)
 
-- [ ] C01 `[frontend]` Restore frontend Jest compatibility with Svelte 4's ESM runtime imports by updating the frontend Jest config/transform path and any directly required supporting config files so `src/tests/frontend/svelte-stores.test.ts` can execute without changing tests.
+- [x] C01 `[frontend]` Restore frontend Jest compatibility with Svelte 4's ESM runtime imports by updating the frontend Jest config/transform path and any directly required supporting config files so `src/tests/frontend/svelte-stores.test.ts` can execute without changing tests.
   - Depends on: T01, C00.
   - Validation: T02.
   - Trace:

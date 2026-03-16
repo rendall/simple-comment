@@ -13,6 +13,7 @@ export default {
   roots: ["<rootDir>/src/tests/frontend/"],
   testPathIgnorePatterns: ["\\\\node_modules\\\\", "RAW", ".js$"],
   transform: {
+    "^.+\\.js$": "babel-jest",
     "^.+\\.ts$": [
       "ts-jest",
       {
@@ -21,4 +22,5 @@ export default {
       },
     ],
   },
+  transformIgnorePatterns: ["/node_modules/(?!svelte)"],
 }
