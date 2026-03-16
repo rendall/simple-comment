@@ -88,13 +88,14 @@ Current generic spec inventory under [generic](/mnt/c/workspace/projects/simple-
   - Command: `bash ./scripts/smoke-frontend-embed.sh dist`
   - Result: passed (`Frontend embed smoke check passed`)
 - Cypress baseline/suite status:
-  - Command: `yarn run test:cypress`
-  - Result: maintainer rerun reported all specs green after the final logout-spec alignment and legacy stylesheet removal.
-  - Required baseline specs confirmed green:
-    - [basic.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/basic.cy.js)
-    - [public-comment.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/public-comment.cy.js)
-    - [reply.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/reply.cy.js)
-    - [login.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/login.cy.js)
+  - Command: `yarn run test:cypress --spec cypress/e2e/generic/basic.cy.js,cypress/e2e/generic/public-comment.cy.js,cypress/e2e/generic/reply.cy.js,cypress/e2e/generic/login.cy.js`
+  - Result: passed
+  - Approved baseline flow results:
+    - [basic.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/basic.cy.js): `2 passing`
+    - [public-comment.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/public-comment.cy.js): `1 passing`
+    - [reply.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/reply.cy.js): `1 passing`
+    - [login.cy.js](/mnt/c/workspace/projects/simple-comment/cypress/e2e/generic/login.cy.js): `1 passing`
+  - Aggregate baseline result: `5 passing`, `0 failing`
 
 ## Notes for Phase 06 Handoff
 
