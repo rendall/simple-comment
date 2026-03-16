@@ -55,7 +55,7 @@ Source plan: `docs/plans/phase-06-1-cypress-embed-baseline.md`
     - "Implement, refresh, or repair the selected Cypress flows against the current frontend behavior." (In Scope)
     - "Configured discussion bootstrap flow." (Detailed Planning Notes)
 
-- [ ] C06 `[cypress]` Implement or repair the comment submission baseline flow in `cypress/e2e/generic/public-comment.cy.js`.
+- [x] C06 `[cypress]` Implement or repair the comment submission baseline flow in `cypress/e2e/generic/public-comment.cy.js`.
   - Depends on: C01, C02, C03.
   - Validation: T03.
   - Trace:
