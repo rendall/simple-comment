@@ -41,7 +41,7 @@ Source plan: `docs/plans/phase-06-1-cypress-embed-baseline.md`
     - "Implement, refresh, or repair the selected Cypress flows against the current frontend behavior." (In Scope)
     - "Current Cypress 12 execution fails before running specs unless the repository provides a supported `cypress/support/e2e` file or explicitly disables the support file in config." (Inputs and Evidence)
 
-- [ ] C04 `[cypress]` Implement or repair the auto-init mount and discussion-load baseline flow in `cypress/e2e/generic/basic.cy.js`.
+- [x] C04 `[cypress]` Implement or repair the auto-init mount and discussion-load baseline flow in `cypress/e2e/generic/basic.cy.js`.
   - Depends on: C01, C02, C03.
   - Validation: T03.
   - Trace:
