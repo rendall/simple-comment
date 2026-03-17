@@ -2,13 +2,14 @@
 
 ## Scope Confirmation
 
-- Date: 2026-03-16
+- Date: 2026-03-17
 - Source checklist: [phase-06-implementation-checklist.md](./phase-06-implementation-checklist.md)
 - Stage: Phase 06 Stage 2 implementation
 - Execution constraints carried into implementation:
   - do not modify tests
   - stop on any dependency-blocking item that cannot be made green
   - stop for scope expansion, required public contract change, or required test change
+  - archive the completed phase artifacts after evidence review
 
 ## Approved Dependency Path
 
@@ -76,6 +77,20 @@
     - [login.cy.js](../../cypress/e2e/generic/login.cy.js): `1 passing`
     - aggregate result: `5 passing`, `0 failing`
     - completed in `55.66s`
+- Frontend artifact contract:
+  - Result: passed
+  - Command: `bash ./scripts/validate-frontend-artifacts.sh dist`
+  - Observed outcome:
+    - confirmed required built outputs for `js/simple-comment.js`, `js/simple-comment-icebreakers.js`, `css/simple-comment-style.css`, `css/index.css`, `index.html`, `icebreakers/index.html`, `img/*`, and `font/*`
+    - completed with `Frontend artifact contract check passed for dist`
+- Frontend embed smoke:
+  - Result: passed
+  - Command: `bash ./scripts/smoke-frontend-embed.sh dist`
+  - Observed outcome:
+    - served `dist` through the local static smoke harness
+    - confirmed `#simple-comment` host-page wiring plus `index.html` and `icebreakers/index.html` script references
+    - confirmed `window.loadSimpleComment` in the built `simple-comment` bundle, `window.getQuestion` in the built `simple-comment-icebreakers` bundle, and baseline API-path references in the built client bundle
+    - completed with `Frontend embed smoke check passed`
 - `yarn run ci:local`:
   - Result: passed
   - Observed outcome:

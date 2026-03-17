@@ -2,7 +2,7 @@
 
 Status: Completed
 
-Source plan: `docs/plans/phase-06-1-cypress-embed-baseline.md`
+Source plan: `docs/archive/phase-06-1-cypress-embed-baseline.md`
 
 ## Execution Locks
 
