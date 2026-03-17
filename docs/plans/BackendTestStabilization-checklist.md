@@ -53,7 +53,7 @@ Source plan: `docs/plans/BackendTestStabilization.md`
     - "Update backend test-facing comments and documentation only where they contradict the canonical Jest bootstrap path." (In Scope)
     - "Any backend test-facing comments or documentation touched by this work do not contradict the stabilized canonical bootstrap approach." (Acceptance Criteria)
 
-- [ ] C06 `[backend]` Stabilize `src/tests/backend/MongodbService.test.ts` comment-create user selection so earlier user-delete tests cannot invalidate the `commentPOST` success and duplicate-comment assertions.
+- [x] C06 `[backend]` Stabilize `src/tests/backend/MongodbService.test.ts` comment-create user selection so earlier user-delete tests cannot invalidate the `commentPOST` success and duplicate-comment assertions.
   - Depends on: C05.
   - Validation: T05.
   - Trace:
