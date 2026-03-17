@@ -1,8 +1,8 @@
 # Repo Health Improvement Backlog
 
-Status: archived
+Status: active
 
-Classification: future-looking planning document only
+Classification: active planning backlog (non-executable)
 
 This document is intentionally not an approved implementation checklist under `docs/norms/checklist.md`.
 
@@ -114,7 +114,7 @@ Success signals for a future plan:
 - repo docs reference commands that actually exist
 - local and PR validation expectations are easier to explain in one short path
 
-See: [ValidationAndDocumentationTrustDraft.md](ValidationAndDocumentationTrustDraft.md)
+See: [ValidationAndDocumentationTrustDraft.md](archive/ValidationAndDocumentationTrustDraft.md)
 
 ### Priority 2: Build and Bundle Warning Reduction
 

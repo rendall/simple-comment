@@ -1,0 +1,44 @@
+yarn run v1.22.19
+$ rimraf ./functions && rimraf ./dist/js && mkdir -p ./dist/js
+$ yarn run build:backend && yarn run build:frontend
+$ yarn run build:netlify
+$ webpack --config ./webpack.netlify.functions.js
+asset topic.js 2.94 MiB [emitted] [big] (name: topic)
+asset auth.js 2.94 MiB [emitted] [big] (name: auth)
+asset comment.js 2.94 MiB [emitted] [big] (name: comment)
+asset gauth.js 2.94 MiB [emitted] [big] (name: gauth)
+asset user.js 2.94 MiB [emitted] [big] (name: user)
+asset verify.js 2.94 MiB [emitted] [big] (name: verify)
+orphan modules 78.8 KiB [orphan] 66 modules
+runtime modules 6.21 KiB 30 modules
+modules by path ./node_modules/ 2.21 MiB
+  javascript modules 2.07 MiB 700 modules
+  json modules 144 KiB
+    modules by path ./node_modules/@aws-sdk/ 12.5 KiB 4 modules
+    + 3 modules
+modules by path ./src/ 103 KiB
+  modules by path ./src/lib/*.ts 80.9 KiB 9 modules
+  modules by path ./src/functions/*.ts 22.1 KiB
+    ./src/functions/auth.ts 4.17 KiB [built] [code generated]
+    + 5 modules
+  ./src/policy.json 289 bytes [built] [code generated]
++ 21 modules
+
+WARNING in ./node_modules/mongodb/lib/utils.js 953:38-93
+Critical dependency: the request of a dependency is an expression
+ @ ./node_modules/mongodb/lib/db.js 27:16-34
+ @ ./node_modules/mongodb/lib/index.js 26:13-28
+ @ ./src/lib/MongodbService.ts 12:0-38 31:33-52
+ @ ./src/functions/auth.ts 10:0-55 16:20-34
+
+WARNING in ./node_modules/mongodb/lib/utils.js 964:38-74
+Module not found: Error: Can't resolve 'mongodb-client-encryption' in '/workspace/simple-comment/node_modules/mongodb/lib'
+ @ ./node_modules/mongodb/lib/db.js 27:16-34
+ @ ./node_modules/mongodb/lib/index.js 26:13-28
+ @ ./src/lib/MongodbService.ts 12:0-38 31:33-52
+ @ ./src/functions/auth.ts 10:0-55 16:20-34
+
+2 warnings have detailed information that is not shown.
+Use 'stats.errorDetails: true' resp. '--stats-error-details' to show it.
+
+webpack 5.88.2 compiled with 2 warnings in 7153 ms
