@@ -135,10 +135,11 @@ const getAuthUser = (p: (u: User) => boolean = (_u: User) => true) => {
 }
 
 // This comment will be inserted
+const newCommentAuthor = getTargetUser()
 const newCommentTest: Pick<Comment, "text" | "userId" | "parentId"> = {
   text: randomString(alphaUserInput, policy.maxCommentLengthChars - 1),
   parentId: chooseRandomElement(testComments).id,
-  userId: getAuthUser().id,
+  userId: newCommentAuthor.id,
 }
 
 describe("Full API service test", () => {
