@@ -1,15 +1,15 @@
 # Phase 06 Discovery Checklist - Svelte 4 Compatibility Discovery and Scope Lock
 
-Status: Draft
+Status: Completed and archived
 
-Source plan: `docs/plans/phase-06-frontend-upgrade.md`
+Source plan: `docs/archive/phase-06-frontend-upgrade.md`
 
 ## Execution Locks
 
 - This checklist is limited to Phase 06 Stage 1 discovery work: dependency-path confirmation, baseline validation capture, trial upgrade evidence, and concrete finding collection.
 - The completed Phase 06.1 baseline recorded in `docs/archive/phase-06-1-checklist.md` and `docs/archive/phase-06-1-validation-notes.md` is the pre-upgrade comparison point for this checklist.
 - Do not modify any tests while executing this checklist.
-- Before stopping on a blocking failed item, record the exact failure and its dependency impact in `docs/plans/phase-06-discovery-notes.md`.
+- Before stopping on a blocking failed item, record the exact failure and its dependency impact in `docs/archive/phase-06-discovery-notes.md`.
 - If an item cannot be made green and it is a dependency for later approved checklist behavior, stop and discuss with user.
 - If an item cannot be made green and it is not a dependency for later approved checklist behavior, record the failure and continue.
 - Output from this checklist is discovery evidence only. It does not authorize Phase 06 implementation work beyond this checklist.
@@ -24,7 +24,7 @@ Source plan: `docs/plans/phase-06-frontend-upgrade.md`
     - "Do not modify any tests during upgrade implementation." (Constraints)
     - "If a checklist item cannot be made to run green: stop if the failing item is a dependency for later behavior" (Constraints)
 
-- [x] C01 `[docs]` Create `docs/plans/phase-06-discovery-notes.md` to record baseline references, trial dependency targets, command results, breakage findings, blocker classification, and implementation-checklist readiness.
+- [x] C01 `[docs]` Create `docs/archive/phase-06-discovery-notes.md` to record baseline references, trial dependency targets, command results, breakage findings, blocker classification, and implementation-checklist readiness.
   - Depends on: T01.
   - Validation: T07.
   - Trace:
@@ -32,7 +32,7 @@ Source plan: `docs/plans/phase-06-frontend-upgrade.md`
     - "Treat the output of this checklist as implementation-planning evidence" (Execution Staging)
     - "The phase records approved compatibility-discovery findings and uses them to author any follow-on implementation checklist." (Acceptance Criteria)
 
-- [x] C02 `[frontend]` Record the current Svelte-adjacent frontend dependency graph and the proposed Svelte 4 trial target path in `docs/plans/phase-06-discovery-notes.md`.
+- [x] C02 `[frontend]` Record the current Svelte-adjacent frontend dependency graph and the proposed Svelte 4 trial target path in `docs/archive/phase-06-discovery-notes.md`.
   - Depends on: T01, C01.
   - Validation: T07.
   - Trace:
@@ -49,7 +49,7 @@ Source plan: `docs/plans/phase-06-frontend-upgrade.md`
     - "Upgrade or adjust any remaining Svelte-adjacent tooling only as required to restore a supported and testable Svelte 4 frontend stack." (Upgrade Path Details)
     - "The following paths are explicitly not the default for this phase: ... An `xstate` 4 to `xstate` 5 migration is out of scope" (Upgrade Path Details)
 
-- [x] C04 `[frontend]` Record the resulting compile, runtime, unit, browser, and parity breakage set from the trial upgrade in `docs/plans/phase-06-discovery-notes.md`, including affected files/surfaces and dependency relationships between failures.
+- [x] C04 `[frontend]` Record the resulting compile, runtime, unit, browser, and parity breakage set from the trial upgrade in `docs/archive/phase-06-discovery-notes.md`, including affected files/surfaces and dependency relationships between failures.
   - Depends on: C03.
   - Validation: T07.
   - Trace:
@@ -57,7 +57,7 @@ Source plan: `docs/plans/phase-06-frontend-upgrade.md`
     - "This staging is required because the exact breakage set is not fully knowable before the dependency change is attempted" (Execution Staging)
     - "If implementation uncovers a hard compatibility blocker for the Svelte 3 to Svelte 4 path, the blocker must be documented with concrete package/version evidence" (Upgrade Path Details)
 
-- [x] C05 `[governance]` Classify each discovery finding in `docs/plans/phase-06-discovery-notes.md` as in-scope, out-of-scope, blocking, or non-blocking, and record whether Phase 06 can proceed to implementation checklist authoring unchanged or must return to plan refinement.
+- [x] C05 `[governance]` Classify each discovery finding in `docs/archive/phase-06-discovery-notes.md` as in-scope, out-of-scope, blocking, or non-blocking, and record whether Phase 06 can proceed to implementation checklist authoring unchanged or must return to plan refinement.
   - Depends on: C04.
   - Validation: T07.
   - Trace:
@@ -65,38 +65,38 @@ Source plan: `docs/plans/phase-06-frontend-upgrade.md`
     - "Author a second checklist only after the discovery findings are reviewed and approved." (Execution Staging)
     - "If the upgrade requires changing the public embed bootstrap contract, emitted artifact paths, or API usage semantics, implementation must stop and return to plan/checklist refinement." (Preserved Embed/Client Behavior)
 
-- [x] T02 `[validation]` Run `yarn install` after the trial dependency edits and record the exact outcome in `docs/plans/phase-06-discovery-notes.md`.
+- [x] T02 `[validation]` Run `yarn install` after the trial dependency edits and record the exact outcome in `docs/archive/phase-06-discovery-notes.md`.
   - Depends on: C03.
   - Trace:
     - "Upgrade frontend framework/runtime dependencies required for the selected path." (In Scope)
     - "prefer the lowest-risk supported target, and pin or defer incompatible packages explicitly." (Risks and Mitigations)
 
-- [x] T03 `[validation]` Run `yarn run build:frontend` on the trial Svelte 4 dependency set and record pass/fail evidence in `docs/plans/phase-06-discovery-notes.md`.
+- [x] T03 `[validation]` Run `yarn run build:frontend` on the trial Svelte 4 dependency set and record pass/fail evidence in `docs/archive/phase-06-discovery-notes.md`.
   - Depends on: C03.
   - Trace:
     - "Frontend compiles and runs on the upgraded framework/runtime dependencies for the selected path." (Acceptance Criteria)
     - "Integration/smoke evidence: the embed/client frontend can build and run" (Validation Strategy)
 
-- [x] T04 `[validation]` Run `yarn test:frontend` on the trial Svelte 4 dependency set and record pass/fail evidence in `docs/plans/phase-06-discovery-notes.md`.
+- [x] T04 `[validation]` Run `yarn test:frontend` on the trial Svelte 4 dependency set and record pass/fail evidence in `docs/archive/phase-06-discovery-notes.md`.
   - Depends on: C03.
   - Trace:
     - "`yarn test:frontend` passes on the upgraded stack." (Acceptance Criteria)
     - "Unit evidence: `yarn test:frontend` passes on the upgraded stack." (Validation Strategy)
 
-- [x] T05 `[validation]` Run the approved unchanged Phase 06.1 Cypress baseline command on the trial Svelte 4 dependency set and record pass/fail evidence in `docs/plans/phase-06-discovery-notes.md`.
+- [x] T05 `[validation]` Run the approved unchanged Phase 06.1 Cypress baseline command on the trial Svelte 4 dependency set and record pass/fail evidence in `docs/archive/phase-06-discovery-notes.md`.
   - Depends on: C03.
   - Trace:
     - "Consume the approved pre-upgrade Cypress/embed baseline recorded in Phase 06.1 Checklist and Phase 06.1 Validation Notes, and keep those flows passing on the upgraded stack." (In Scope)
     - "Integration/browser evidence: the approved Phase 06.1 Cypress baseline flows pass on the upgraded stack without modifying those tests." (Validation Strategy)
     - "The approved Phase 06.1 baseline Cypress generic/embed flows pass on the selected upgrade target" (Acceptance Criteria)
 
-- [x] T06 `[validation]` Run `yarn run ci:local` on the trial Svelte 4 dependency set, or record the exact blocker and failure evidence in `docs/plans/phase-06-discovery-notes.md`.
+- [x] T06 `[validation]` Run `yarn run ci:local` on the trial Svelte 4 dependency set, or record the exact blocker and failure evidence in `docs/archive/phase-06-discovery-notes.md`.
   - Depends on: C03.
   - Trace:
     - "Build/parity evidence: the local parity command for the repository passes (`yarn run ci:local`), or any blocker outside this phase is documented with concrete failure evidence and explicit deferment." (Validation Strategy)
     - "`yarn run ci:local` passes, or any non-phase blocker is documented with explicit failure evidence and deferment." (Acceptance Criteria)
 
-- [x] T07 `[validation]` Verify that `docs/plans/phase-06-discovery-notes.md` contains the exact trial target path, baseline references, command outcomes, blocker classification, stop-condition decisions, and explicit recommendation for either implementation-checklist authoring or plan refinement.
+- [x] T07 `[validation]` Verify that `docs/archive/phase-06-discovery-notes.md` contains the exact trial target path, baseline references, command outcomes, blocker classification, stop-condition decisions, and explicit recommendation for either implementation-checklist authoring or plan refinement.
   - Depends on: C01, C02, C04, C05, T02, T03, T04, T05, T06.
   - Trace:
     - "The phase records approved compatibility-discovery findings and uses them to author any follow-on implementation checklist." (Acceptance Criteria)
