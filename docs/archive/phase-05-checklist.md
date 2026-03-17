@@ -2,7 +2,7 @@
 
 Status: Complete
 
-Source plan: `docs/plans/phase-05-frontend-build-modernization.md`
+Source plan: `docs/archive/phase-05-frontend-build-modernization.md`
 
 ## Execution Locks
 

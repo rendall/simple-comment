@@ -4,7 +4,7 @@ Status: Complete
 
 Intent: consolidate backend/functions environment access behind a typed contract, replace env-related string throws with actionable `Error` objects, and align runtime/docs semantics without changing API behavior or broadening scope into frontend or database-logic refactors.
 
-Source plan: `docs/plans/phase-04-type-safety-and-env-handling.md`
+Source plan: `docs/archive/phase-04-type-safety-and-env-handling.md`
 
 ## Checklist
 
@@ -14,7 +14,7 @@ Source plan: `docs/plans/phase-04-type-safety-and-env-handling.md`
 - [x] C04 `[backend]` Replace env-related string throws in the scoped C03 files with structured `Error` objects that include explicit variable names and actionable messages. Depends on: C03. Execution notes: see `Execution Notes -> C04 Error Normalization`.
 - [x] C05 `[docs]` Update `example.env` and `README.md` so required/optional variables and backend runtime semantics match the implemented environment contract. Depends on: C04. Execution notes: see `Execution Notes -> C05 Documentation Alignment`.
 - [x] C06 `[backend]` Handle residual out-of-scope env/runtime clarity hotspots by adding narrow inline `TODO(phase-04.5)` markers and listing each hotspot in the Phase 4.5 gate note; if none remain, explicitly record that no `TODO(phase-04.5)` deferments were added. Depends on: C04, C05. Execution notes: see `Execution Notes -> C06 Deferment Rules`. Outcome: no `TODO(phase-04.5)` deferments were added.
-- [x] C07 `[docs]` Add the Phase 4.5 gate decision to `docs/plans/phase-04-type-safety-and-env-handling.md`, stating either Phase 04 closure or a scoped follow-up checklist with residual hotspots (including any `TODO(phase-04.5)` entries). Depends on: C06. Execution notes: see `Execution Notes -> C07 Gate Note Format`.
+- [x] C07 `[docs]` Add the Phase 4.5 gate decision to `docs/archive/phase-04-type-safety-and-env-handling.md`, stating either Phase 04 closure or a scoped follow-up checklist with residual hotspots (including any `TODO(phase-04.5)` entries). Depends on: C06. Execution notes: see `Execution Notes -> C07 Gate Note Format`.
 
 ## Behavior Slices
 
@@ -164,7 +164,7 @@ Slice D - Function Entrypoints (`src/functions/auth.ts`, `src/functions/comment.
 
 ### C07 Gate Note Format
 
-- Update `docs/plans/phase-04-type-safety-and-env-handling.md` with the Phase 4.5 gate decision.
+- Update `docs/archive/phase-04-type-safety-and-env-handling.md` with the Phase 4.5 gate decision.
 - Gate note must state either:
   - Phase 04 is complete, or
   - a scoped Phase 4.5 follow-up is required with listed hotspots/deferments.
