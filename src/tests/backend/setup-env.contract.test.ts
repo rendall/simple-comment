@@ -1,8 +1,5 @@
 import type { ExampleEnvEntry } from "./env-utils"
-import {
-  getDeterministicSecretValue,
-  isSensitiveEnvKey,
-} from "./env-utils"
+import { getDeterministicSecretValue, isSensitiveEnvKey } from "./env-utils"
 
 const bootstrapWithEntries = (
   entries: ExampleEnvEntry[],
@@ -41,7 +38,9 @@ const bootstrapWithEntries = (
 describe("backend setup env bootstrap contract", () => {
   test("injects missing non-sensitive keys from example env entries", () => {
     expect(
-      bootstrapWithEntries([{ key: "SC_PUBLIC_VALUE", value: "public-default" }])
+      bootstrapWithEntries([
+        { key: "SC_PUBLIC_VALUE", value: "public-default" },
+      ])
     ).toEqual({
       SC_PUBLIC_VALUE: "public-default",
     })
@@ -49,9 +48,7 @@ describe("backend setup env bootstrap contract", () => {
 
   test("injects deterministic non-default values for unset sensitive keys", () => {
     expect(
-      bootstrapWithEntries([
-        { key: "SC_TEST_SECRET", value: "secret-default" },
-      ])
+      bootstrapWithEntries([{ key: "SC_TEST_SECRET", value: "secret-default" }])
     ).toEqual({
       SC_TEST_SECRET: getDeterministicSecretValue("SC_TEST_SECRET"),
     })

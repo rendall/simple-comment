@@ -19,8 +19,10 @@ export const readExampleEnvText = (path = exampleEnvPath) =>
 export const parseExampleEnvText = (text: string) => {
   const seenKeys = new Set<string>()
 
-  return text.replace(/\r\n?/g, "\n").split("\n").reduce<ExampleEnvEntry[]>(
-    (entries, rawLine) => {
+  return text
+    .replace(/\r\n?/g, "\n")
+    .split("\n")
+    .reduce<ExampleEnvEntry[]>((entries, rawLine) => {
       const line = rawLine.trim()
 
       if (line.length === 0 || line.startsWith("#")) {
@@ -45,11 +47,6 @@ export const parseExampleEnvText = (text: string) => {
 
       seenKeys.add(key)
 
-      return [
-        ...entries,
-        { key, value: line.slice(separatorIndex + 1).trim() },
-      ]
-    },
-    []
-  )
+      return [...entries, { key, value: line.slice(separatorIndex + 1).trim() }]
+    }, [])
 }

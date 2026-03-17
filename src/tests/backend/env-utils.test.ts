@@ -37,8 +37,9 @@ describe("backend env utils", () => {
     })
 
     test("fails fast on duplicate keys", () => {
-      expect(() => parseExampleEnvText("PUBLIC_VALUE=first\nPUBLIC_VALUE=second"))
-        .toThrow("Duplicate example.env key: PUBLIC_VALUE")
+      expect(() =>
+        parseExampleEnvText("PUBLIC_VALUE=first\nPUBLIC_VALUE=second")
+      ).toThrow("Duplicate example.env key: PUBLIC_VALUE")
     })
   })
 
