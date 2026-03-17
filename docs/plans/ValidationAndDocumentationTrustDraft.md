@@ -190,3 +190,18 @@ Rationale:
 
 - Typecheck and full build most directly improve trust that a green PR signal reflects deployable repo health.
 - Browser smoke checks can provide useful confidence but are also a common source of gate instability and scope growth; treating them as deeper/optional validation by default keeps this phase focused.
+
+## Suggested Default Decisions For Formal Plan Section B
+
+The following defaults are recommended for CI/local parity so contributors can trust what a local pass means relative to PR CI:
+
+- Define `yarn run ci:local` as a direct mirror of the minimum PR gate validation sequence (same required checks, same order where practical).
+- Mirror CI environment values that affect determinism/runtime behavior in `ci:local` where parity is required.
+- Keep non-goals explicit: `ci:local` does not mirror runner/bootstrap setup steps and does not imply parity with separate analysis workflows unless explicitly planned.
+- Require parity coupling: any PR-gate step/env change must include corresponding `ci:local` updates in the same change.
+- Document one short canonical explanation of what `ci:local` mirrors and what it deliberately does not mirror.
+
+Rationale:
+
+- This keeps parity aligned with `docs/norms/ci-parity.md` and reduces drift between trusted local and PR signals.
+- Explicit mirrored vs non-mirrored boundaries prevent false assumptions and make required versus optional validation easier to understand.
