@@ -59,7 +59,7 @@ Source plan: `docs/plans/BackendTestStabilization.md`
     - "Add/adjust targeted backend bootstrap tests for parser/classification + setup rules." (Validation Strategy)
     - "Pass condition: tests for intended bootstrap contract rules pass." (Validation Strategy)
 
-- [ ] T02 `[test]` Run `yarn test:backend` and record that the full backend suite passes without requiring a local `.env` bootstrap path.
+- [x] T02 `[test]` Run `yarn test:backend` and record that the full backend suite passes without requiring a local `.env` bootstrap path.
   - Depends on: C03, C04.
   - Trace:
     - "Run `yarn test:backend`." (Validation Strategy)
