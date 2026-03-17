@@ -6,7 +6,7 @@ Source plan: `docs/plans/BackendTestStabilization.md`
 
 ## Checklist
 
-- [ ] C01 `[backend]` Add a shared backend test env utility module to parse `example.env`, classify sensitive keys, and expose deterministic secret replacement rules for backend test bootstrap and secret-validation code.
+- [x] C01 `[backend]` Add a shared backend test env utility module to parse `example.env`, classify sensitive keys, and expose deterministic secret replacement rules for backend test bootstrap and secret-validation code.
   - Validation: T01.
   - Implementation notes:
     - Keep the shared helper under `src/tests/backend/`.
