@@ -1,6 +1,6 @@
 # Backend Test Bootstrap Defaults Stabilization Plan
 
-Status: Draft for approval (non-phase scoped plan)
+Status: planning
 
 ## Goal
 
@@ -61,7 +61,8 @@ Contributors should be able to run backend tests and get the same bootstrap beha
    - sensitive keys use deterministic non-default values
    - pre-set non-default env values are not overwritten
    - blank lines and full-line comments are ignored
-   - lines without `=` or with a blank key are ignored
+   - non-comment, non-blank lines must contain `=` and a non-blank key; otherwise parsing fails fast
+   - duplicate keys in `example.env` cause parsing to fail fast
    - parsing uses the first `=` as the key/value separator, and additional `=` characters remain part of the value
 4. `yarn test:backend` passes with these changes.
 5. Any backend test-facing comments or documentation touched by this work do not contradict the stabilized canonical bootstrap approach.
