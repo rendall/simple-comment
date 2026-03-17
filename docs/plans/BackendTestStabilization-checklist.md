@@ -71,7 +71,7 @@ Source plan: `docs/plans/BackendTestStabilization.md`
     - "Validate that `jest.backend.config.ts` still routes setup through backend Jest `setupFiles` with the shared bootstrap utility path." (Validation Strategy)
     - "Pass condition: backend tests use one canonical setup path locally/CI." (Validation Strategy)
 
-- [ ] T04 `[docs]` Verify that any backend test-facing comments or documentation updated by this work do not reintroduce `.env` coupling or describe a conflicting bootstrap path.
+- [x] T04 `[docs]` Verify that any backend test-facing comments or documentation updated by this work do not reintroduce `.env` coupling or describe a conflicting bootstrap path.
   - Depends on: C05.
   - Trace:
     - "Validate that any backend test-facing comments or documentation updated by this work do not contradict the canonical Jest bootstrap path." (Validation Strategy)
