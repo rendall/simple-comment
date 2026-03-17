@@ -29,7 +29,7 @@ Source plan: `docs/plans/BackendTestStabilization.md`
     - "sensitive keys use deterministic non-default values" (Acceptance Criteria)
     - "pre-set non-default env values are not overwritten" (Acceptance Criteria)
 
-- [ ] C03 `[backend]` Refactor `src/tests/backend/secrets.test.ts` to remove `dotenv.config()`, consume the shared utility contract, and validate against the Jest bootstrap-injected environment instead of a local `.env` bootstrap path.
+- [x] C03 `[backend]` Refactor `src/tests/backend/secrets.test.ts` to remove `dotenv.config()`, consume the shared utility contract, and validate against the Jest bootstrap-injected environment instead of a local `.env` bootstrap path.
   - Depends on: C01, C02.
   - Validation: T01, T02.
   - Trace:

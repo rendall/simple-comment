@@ -1,8 +1,11 @@
-import * as dotenv from "dotenv"
 import * as fs from "fs"
-dotenv.config()
+import {
+  isSensitiveEnvKey,
+  parseExampleEnvText,
+  readExampleEnvText,
+} from "./env-utils"
 
-let exampleEnvEntries: string[]
+let exampleEnvEntries: { key: string; value: string }[]
 
 /**
  * example.env is tracked in git and shows the
@@ -21,15 +24,8 @@ describe("Ensures secrets are secret", () => {
     expect(exampleEnvExists).toBe(true)
   })
 
-  const exampleEnv = fs.readFileSync(`${process.cwd()}/example.env`, "utf8")
-
   // These are all the entries in `example.env`
-  exampleEnvEntries = exampleEnv
-    .replace(/\r/g, "\n")
-    .split("\n")
-    .map(l => l.trim())
-    .filter(l => !l.startsWith("#")) // eliminate comments
-    .filter(l => l.length > 0) // eliminate blank lines
+  exampleEnvEntries = parseExampleEnvText(readExampleEnvText())
 
   // Are there any entries at all in `example.env`?
   test("example.env has information", () => {
@@ -37,16 +33,15 @@ describe("Ensures secrets are secret", () => {
   })
 
   // Each entry in example.env has a corresponding defined process.env variable
-  exampleEnvEntries.forEach(line => {
-    const [varName, varValue] = line.split("=")
-    test(`${varName} is defined as an environmental variable`, () => {
-      expect(process.env[varName]).toBeDefined()
+  exampleEnvEntries.forEach(({ key, value }) => {
+    test(`${key} is defined as an environmental variable`, () => {
+      expect(process.env[key]).toBeDefined()
     })
 
     // The value of each SECRET or PASSWORD in 'example.env' is not the same as in process.env
-    if (varName.indexOf("SECRET") >= 0 || varName.indexOf("PASSWORD") >= 0)
-      test(`${varName} is not ${varValue}`, () => {
-        expect(process.env[varName]).not.toBe(varValue)
+    if (isSensitiveEnvKey(key))
+      test(`${key} is not ${value}`, () => {
+        expect(process.env[key]).not.toBe(value)
       })
   })
 })
