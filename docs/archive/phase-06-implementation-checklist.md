@@ -1,12 +1,12 @@
 # Phase 06 Implementation Checklist - Svelte 4 Frontend Upgrade
 
-Status: Approved
+Status: Completed and archived
 
-Source plan: `docs/plans/phase-06-frontend-upgrade.md`
+Source plan: `docs/archive/phase-06-frontend-upgrade.md`
 
 ## Execution Locks
 
-- This checklist is limited to Phase 06 Stage 2 implementation work supported by the approved discovery findings in `docs/plans/phase-06-discovery-notes.md`.
+- This checklist is limited to Phase 06 Stage 2 implementation work supported by the approved discovery findings in `docs/archive/phase-06-discovery-notes.md`.
 - Discovery established that the Svelte 4 trial dependency set installs and builds, the unchanged Phase 06.1 browser baseline passes, and the first in-phase implementation blockers are `D03` and `D04`; this checklist resumes from those findings and carries forward the remaining required phase validation work.
 - Do not modify any tests while executing this checklist.
 - If a checklist item cannot be made green and it is a dependency for later approved checklist behavior, stop and discuss with user.
@@ -15,14 +15,14 @@ Source plan: `docs/plans/phase-06-frontend-upgrade.md`
 
 ## Checklist
 
-- [x] T01 `[governance]` Confirm that this checklist is limited to the approved Stage 2 implementation scope, the recorded discovery findings in `docs/plans/phase-06-discovery-notes.md` with `D03` and `D04` as the first in-phase blocking work items, `D05` as the already-green browser baseline evidence, the archived Phase 06.1 baseline artifacts, and the no-test-change execution rule.
+- [x] T01 `[governance]` Confirm that this checklist is limited to the approved Stage 2 implementation scope, the recorded discovery findings in `docs/archive/phase-06-discovery-notes.md` with `D03` and `D04` as the first in-phase blocking work items, `D05` as the already-green browser baseline evidence, the archived Phase 06.1 baseline artifacts, and the no-test-change execution rule.
   - Depends on: none.
   - Trace:
     - "Implementation against approved findings." (Execution Staging)
     - "Limit implementation items to work directly supported by the approved discovery outputs and the existing phase scope." (Execution Staging)
     - "Do not modify any tests during upgrade implementation." (Constraints)
 
-- [x] C00 `[docs]` Create `docs/plans/phase-06-validation-notes.md` as the Stage 2 implementation evidence artifact for final dependency-path confirmation, validation command outcomes, known warnings, and any explicitly approved deferments.
+- [x] C00 `[docs]` Create `docs/archive/phase-06-validation-notes.md` as the Stage 2 implementation evidence artifact for final dependency-path confirmation, validation command outcomes, known warnings, and any explicitly approved deferments.
   - Depends on: T01.
   - Validation: T06.
   - Trace:
@@ -45,32 +45,39 @@ Source plan: `docs/plans/phase-06-frontend-upgrade.md`
     - "Preserve existing embed/client behavior and API usage semantics while upgrading." (In Scope)
     - "Embed/client behavior remains compatible with existing API usage patterns and current backend contracts." (Acceptance Criteria)
 
-- [x] T02 `[validation]` Run `yarn test:frontend` on the Svelte 4 implementation state and record pass/fail evidence in `docs/plans/phase-06-validation-notes.md`.
+- [x] T02 `[validation]` Run `yarn test:frontend` on the Svelte 4 implementation state and record pass/fail evidence in `docs/archive/phase-06-validation-notes.md`.
   - Depends on: C01, C02.
   - Trace:
     - "Unit evidence: `yarn test:frontend` passes on the upgraded stack." (Validation Strategy)
     - "`yarn test:frontend` passes on the upgraded stack." (Acceptance Criteria)
 
-- [x] T03 `[validation]` Run `yarn run build:frontend` on the Svelte 4 implementation state and record pass/fail evidence in `docs/plans/phase-06-validation-notes.md`.
+- [x] T03 `[validation]` Run `yarn run build:frontend` on the Svelte 4 implementation state and record pass/fail evidence in `docs/archive/phase-06-validation-notes.md`.
   - Depends on: C01, C02.
   - Trace:
     - "Frontend compiles and runs on the upgraded framework/runtime dependencies for the selected path." (Acceptance Criteria)
     - "Integration/smoke evidence: the embed/client frontend can build and run" (Validation Strategy)
 
-- [x] T04 `[validation]` Run the approved unchanged Phase 06.1 Cypress baseline command on the Svelte 4 implementation state and record pass/fail evidence in `docs/plans/phase-06-validation-notes.md`.
+- [x] T04 `[validation]` Run the approved unchanged Phase 06.1 Cypress baseline command on the Svelte 4 implementation state and record pass/fail evidence in `docs/archive/phase-06-validation-notes.md`.
   - Depends on: T02, T03.
   - Trace:
     - "Consume the approved pre-upgrade Cypress/embed baseline recorded in [Phase 06.1 Checklist](../archive/phase-06-1-checklist.md) and [Phase 06.1 Validation Notes](../archive/phase-06-1-validation-notes.md), and keep those flows passing on the upgraded stack." (In Scope)
     - "Integration/browser evidence: the approved Phase 06.1 Cypress baseline flows pass on the upgraded stack without modifying those tests." (Validation Strategy)
     - "The approved Phase 06.1 baseline Cypress generic/embed flows pass on the selected upgrade target" (Acceptance Criteria)
 
-- [x] T05 `[validation]` Run `yarn run ci:local` on the Svelte 4 implementation state, or record the exact non-phase blocker and deferment evidence in `docs/plans/phase-06-validation-notes.md` if it cannot be made green within this phase.
+- [x] T04A `[validation]` Run the existing frontend artifact contract and embed smoke checks on the Svelte 4 implementation state and record pass/fail evidence in `docs/archive/phase-06-validation-notes.md`.
+  - Depends on: T03.
+  - Trace:
+    - "Preservation for this phase is validated by contract/parity checks, embed smoke checks, and a small set of baseline Cypress generic/embed flows." (Preserved Embed/Client Behavior)
+    - "The following checks should remain outside the Cypress flow set and be handled by existing parity or smoke tooling instead: emitted artifact filenames and required frontend files; presence of required global entrypoints in built bundles; static sample-page script wiring" (Cypress Generic/Embed Validation Flows)
+    - "Embed/client behavior remains compatible with existing API usage patterns and current backend contracts." (Acceptance Criteria)
+
+- [x] T05 `[validation]` Run `yarn run ci:local` on the Svelte 4 implementation state, or record the exact non-phase blocker and deferment evidence in `docs/archive/phase-06-validation-notes.md` if it cannot be made green within this phase.
   - Depends on: T02, T03.
   - Trace:
     - "Build/parity evidence: the local parity command for the repository passes (`yarn run ci:local`), or any blocker outside this phase is documented with concrete failure evidence and explicit deferment." (Validation Strategy)
     - "`yarn run ci:local` passes, or any non-phase blocker is documented with explicit failure evidence and deferment." (Acceptance Criteria)
 
-- [x] C03 `[docs]` Update contributor-facing frontend documentation and `docs/plans/phase-06-validation-notes.md` to reflect the final approved Svelte 4 stack, execution constraints, validation outcomes, and any explicitly deferred non-phase blockers discovered during implementation.
+- [x] C03 `[docs]` Update contributor-facing frontend documentation and `docs/archive/phase-06-validation-notes.md` to reflect the final approved Svelte 4 stack, execution constraints, validation outcomes, and any explicitly deferred non-phase blockers discovered during implementation.
   - Depends on: T02, T03, T04, T05.
   - Validation: T06.
   - Trace:
@@ -78,7 +85,7 @@ Source plan: `docs/plans/phase-06-frontend-upgrade.md`
     - "Record phase-close evidence and any explicitly deferred follow-up work discovered during the upgrade." (In Scope)
     - "Contributor documentation reflects the upgraded frontend stack, workflow, and any approved follow-up constraints." (Acceptance Criteria)
 
-- [x] T06 `[validation]` Verify that [phase-06-validation-notes.md](./phase-06-validation-notes.md) records the final Svelte 4 dependency path, passing unit/build/browser evidence, `ci:local` outcome, carried-forward discovery warnings, and any explicitly approved deferments needed for phase close.
+- [x] T06 `[validation]` Verify that [phase-06-validation-notes.md](./phase-06-validation-notes.md) records the final Svelte 4 dependency path, passing unit/build/artifact/smoke/browser evidence, `ci:local` outcome, carried-forward discovery warnings, and any explicitly approved deferments needed for phase close.
   - Depends on: C03.
   - Trace:
     - "Record phase-close evidence and any explicitly deferred follow-up work discovered during the upgrade." (In Scope)
@@ -94,8 +101,8 @@ Source plan: `docs/plans/phase-06-frontend-upgrade.md`
   Items: C01, C02, T02
   Type: behavior
 
-- Goal: Reconfirm build, browser-baseline, and parity evidence on the repaired Svelte 4 implementation state.
-  Items: T03, T04, T05
+- Goal: Reconfirm build, artifact/smoke, browser-baseline, and parity evidence on the repaired Svelte 4 implementation state.
+  Items: T03, T04, T04A, T05
   Type: behavior
 
 - Goal: Record the final Svelte 4 implementation outcome and phase-close constraints for contributors.
