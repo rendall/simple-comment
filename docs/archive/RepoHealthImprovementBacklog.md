@@ -1,6 +1,6 @@
 # Repo Health Improvement Backlog
 
-Status: proposed
+Status: archived
 
 Classification: future-looking planning document only
 
