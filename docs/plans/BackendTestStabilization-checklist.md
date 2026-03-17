@@ -65,7 +65,7 @@ Source plan: `docs/plans/BackendTestStabilization.md`
     - "Run `yarn test:backend`." (Validation Strategy)
     - "Pass condition: full backend suite passes without requiring a local `.env` bootstrap path." (Validation Strategy)
 
-- [ ] T03 `[config]` Verify that `jest.backend.config.ts` still routes backend setup through one canonical `setupFiles` path and that the shared utility remains on that path.
+- [x] T03 `[config]` Verify that `jest.backend.config.ts` still routes backend setup through one canonical `setupFiles` path and that the shared utility remains on that path.
   - Depends on: C02.
   - Trace:
     - "Validate that `jest.backend.config.ts` still routes setup through backend Jest `setupFiles` with the shared bootstrap utility path." (Validation Strategy)
