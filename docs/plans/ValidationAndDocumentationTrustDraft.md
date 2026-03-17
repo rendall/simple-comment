@@ -77,8 +77,7 @@ We likely want README and nearby contributor guidance to stop referencing stale 
 
 Known examples worth checking during formal planning:
 
-- `README.md` references `yarn run test:e2e`
-- `package.json` currently exposes `test:cypress` rather than `test:e2e`
+- Historical drift to resolve: keep Cypress command references normalized to `yarn run test:cypress` across contributor docs and scripts.
 
 ### 4. Clear Separation Between Required and Optional Validation
 

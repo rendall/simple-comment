@@ -8,6 +8,11 @@ Goal: prevent drift between PR-gate validation behavior and local pre-push valid
 
 Local parity in this repository applies to dependency-resolution + validation behavior.
 
+## Contributor Entry Point
+
+- Canonical quick-start and contributor command entry point: `README.md` (Local development section).
+- Secondary references: this document for parity governance details and `docs/CYPRESS.md` for Cypress-specific guidance.
+
 ## Required Parity
 
 - Local parity commands MUST run install with the same lockfile/options as the mirrored CI workflow.
@@ -25,3 +30,9 @@ Local parity in this repository applies to dependency-resolution + validation be
 - PR-gate workflow: `.github/workflows/netlify-api-test.yml`
 - Local parity script: `scripts/ci-local.sh`
 - Local parity command: `yarn run ci:local`
+
+## Validation Matrix
+
+- **Required PR gate (parity path):** `yarn run ci:local`
+- **Deeper optional checks:** `yarn run test:cypress`
+- **Intentionally excluded from parity path:** CI runner/bootstrap setup (`actions/checkout`, `actions/setup-node`, global tool install) and separate security-analysis workflows (for example CodeQL).
