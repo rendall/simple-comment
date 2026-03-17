@@ -1,6 +1,6 @@
 # Phase 06.1 Checklist - Cypress Embed Baseline and Contract Alignment
 
-Status: Completed
+Status: Completed and archived
 
 Source plan: `docs/archive/phase-06-1-cypress-embed-baseline.md`
 

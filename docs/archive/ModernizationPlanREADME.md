@@ -1,10 +1,15 @@
-# Modernization Program Plan
+# Modernization Program README
 
-Last updated: 2026-03-02
+Status: Complete and archived
 
-This folder contains the phased modernization plans for this repository.
+Last updated: 2026-03-17
 
-The implementation model is:
+This document is the historical index for the completed modernization program.
+
+All phase artifacts from that program now live in `docs/archive` and are reference-only.
+They do not define current requirements or active scope.
+
+The modernization program used this phase workflow:
 
 1. Plan
 2. Implement
@@ -12,11 +17,9 @@ The implementation model is:
 4. Merge
 5. Re-plan next phase
 
-Each phase has its own plan file and acceptance criteria.
-
 ---
 
-## Why this order
+## Historical sequencing rationale
 
 Dependency and platform upgrades are Phase 1 per team direction.  
 This is reasonable, with one guardrail: we keep behavior changes out of Phase 1 so we can isolate upgrade risk.  
@@ -24,7 +27,7 @@ A short Phase 1.5 stabilizes CI test gating after platform changes, then runtime
 
 ---
 
-## Current baseline (observed)
+## Historical baseline snapshot (2026-03-02)
 
 - Runtime/tooling:
   - Node pinned to `22.22.0` in `.nvmrc`.
@@ -40,7 +43,7 @@ A short Phase 1.5 stabilizes CI test gating after platform changes, then runtime
 
 ---
 
-## Confirmed findings to address
+## Historical findings snapshot
 
 ### Critical / High
 
@@ -80,17 +83,34 @@ A short Phase 1.5 stabilizes CI test gating after platform changes, then runtime
 
 ## Program phases
 
-- [Phase 01 - Dependency and Platform Upgrade](../archive/phase-01-dependency-and-platform-upgrade.md)
+- [Phase 01 - Dependency and Platform Upgrade](./phase-01-dependency-and-platform-upgrade.md)
+- [Phase 01 Checklist](./phase-01-checklist.md)
 - [Phase 01.5 - CI Stabilization and Test Gating](./phase-01-5-ci-stabilization-and-test-gating.md)
-- [Phase 02 - Backend Correctness and CORS](./phase-02-backend-correctness-and-cors.md)
+- [Phase 01.5 Checklist](./phase-01-5-checklist.md)
+- [Phase 02 Checklist - Backend Correctness and CORS](./phase-02-backend-correctness-and-cors.md)
 - [Phase 03 - Test Determinism and CI Hardening](./phase-03-test-determinism-and-ci-hardening.md)
+- [Phase 03 Checklist](./phase-03-checklist.md)
 - [Phase 04 - Type Safety and Environment Handling](./phase-04-type-safety-and-env-handling.md)
+- [Phase 04.1 Checklist](./phase-4_1-checklist.md)
+- [Phase 04.2 Checklist](./phase-4_2-checklist.md)
+- [Phase 04.2.1 Checklist - CI Local Parity](./phase-4_2_1-ci-local-parity-checklist.md)
+- [Phase 04.3 Checklist](./phase-4_3-checklist.md)
+- [Phase 04.4 Checklist](./phase-4_4-checklist.md)
 - [Phase 05 - Frontend Build Modernization](./phase-05-frontend-build-modernization.md)
-- [Phase 06 - Frontend Upgrade](../archive/phase-06-frontend-upgrade.md)
+- [Phase 05 Checklist](./phase-05-checklist.md)
+- [Phase 05 Validation Notes](./phase-05-validation-notes.md)
+- [Phase 06.1 - Cypress Embed Baseline and Contract Alignment](./phase-06-1-cypress-embed-baseline.md)
+- [Phase 06.1 Checklist](./phase-06-1-checklist.md)
+- [Phase 06.1 Validation Notes](./phase-06-1-validation-notes.md)
+- [Phase 06 - Frontend Upgrade](./phase-06-frontend-upgrade.md)
+- [Phase 06 Discovery Checklist](./phase-06-discovery-checklist.md)
+- [Phase 06 Discovery Notes](./phase-06-discovery-notes.md)
+- [Phase 06 Implementation Checklist](./phase-06-implementation-checklist.md)
+- [Phase 06 Validation Notes](./phase-06-validation-notes.md)
 
 ---
 
-## Global constraints (apply to every phase)
+## Historical program constraints
 
 - One phase per PR.
 - No unrelated refactors in phase PRs.

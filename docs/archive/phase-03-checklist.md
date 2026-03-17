@@ -2,7 +2,7 @@
 
 Status: Complete
 
-Source plan: `docs/plans/phase-03-test-determinism-and-ci-hardening.md`
+Source plan: `docs/archive/phase-03-test-determinism-and-ci-hardening.md`
 
 ## Checklist
 

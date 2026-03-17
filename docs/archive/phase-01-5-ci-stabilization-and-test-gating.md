@@ -75,7 +75,7 @@ Stabilize CI gating immediately after Phase 01 so merges are reliably blocked on
   - C06 depends on C05
   - C08 depends on C03/C04/C05/C06/C07
 - Integration finding:
-  - `docs/plans/README.md` Phase 01 link still pointed to `docs/plans/phase-01-dependency-and-platform-upgrade.md` after archive move.
+  - `docs/archive/ModernizationPlanREADME.md` Phase 01 link still pointed to the pre-archive path after archive move.
   - Decision: repoint Phase 01 link to `docs/archive/phase-01-dependency-and-platform-upgrade.md`.
 
 ## Checklist sanity pass (2026-03-02)

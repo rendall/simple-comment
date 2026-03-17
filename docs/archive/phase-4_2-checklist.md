@@ -2,7 +2,7 @@
 
 Status: Complete
 
-Source plan: `docs/plans/phase-04-type-safety-and-env-handling.md`
+Source plan: `docs/archive/phase-04-type-safety-and-env-handling.md`
 
 ## Checklist
 
@@ -12,7 +12,7 @@ Source plan: `docs/plans/phase-04-type-safety-and-env-handling.md`
 - [x] C04 `[backend]` From the same post-`C02` typecheck baseline, add null-safe typing/guards only in surfaced backend/shared runtime files imported by functions (`src/lib/**/*.ts`), keeping runtime behavior unchanged where possible. Depends on: C02.
 - [x] C05 `[backend]` If `strictNullChecks`-related failures surface while running `yarn test:backend`, apply minimal typing fixes in the failing `src/tests/backend/**/*.ts` files without relaxing test intent/assertions. Depends on: C03, C04.
 - [x] C06 `[backend]` If any `strictNullChecks` issue remains out-of-scope to remediate in Phase 4.2, add narrow suppression with inline `TODO(phase-04.3)` and document each deferred hotspot in the Phase 4.3 gate note; otherwise explicitly record that no suppressions were added. Depends on: C03, C04, C05. Outcome: no `TODO(phase-04.3)` suppressions were added.
-- [x] C07 `[docs]` Record the Phase 4.3 strictness gate decision in `docs/plans/phase-04-type-safety-and-env-handling.md` with one of: proceed to broader `strict` evaluation or pause for hotspot cleanup, including deferred `TODO(phase-04.3)` hotspots (if any). Depends on: C06.
+- [x] C07 `[docs]` Record the Phase 4.3 strictness gate decision in `docs/archive/phase-04-type-safety-and-env-handling.md` with one of: proceed to broader `strict` evaluation or pause for hotspot cleanup, including deferred `TODO(phase-04.3)` hotspots (if any). Depends on: C06.
 
 ## Behavior Slices
 
