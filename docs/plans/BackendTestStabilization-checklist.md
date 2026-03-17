@@ -53,6 +53,13 @@ Source plan: `docs/plans/BackendTestStabilization.md`
     - "Update backend test-facing comments and documentation only where they contradict the canonical Jest bootstrap path." (In Scope)
     - "Any backend test-facing comments or documentation touched by this work do not contradict the stabilized canonical bootstrap approach." (Acceptance Criteria)
 
+- [ ] C06 `[backend]` Stabilize `src/tests/backend/MongodbService.test.ts` comment-create user selection so earlier user-delete tests cannot invalidate the `commentPOST` success and duplicate-comment assertions.
+  - Depends on: C05.
+  - Validation: T05.
+  - Trace:
+    - "Apply the narrowest deterministic fix required to stabilize the `MongodbService.test.ts` comment-create path if this bootstrap work exposes an existing order-dependent backend test flake in CI." (In Scope)
+    - "Backend comment-create tests do not depend on a randomly selected `MongodbService.test.ts` user remaining undeleted by earlier tests in the same file." (Acceptance Criteria)
+
 - [x] T01 `[test]` Run the targeted backend bootstrap contract tests and record that parser, classification, deterministic replacement, and setup-rule coverage passes for the intended contract.
   - Depends on: C01, C02, C03, C04.
   - Trace:
@@ -77,6 +84,13 @@ Source plan: `docs/plans/BackendTestStabilization.md`
     - "Validate that any backend test-facing comments or documentation updated by this work do not contradict the canonical Jest bootstrap path." (Validation Strategy)
     - "Fail condition: touched backend test-facing docs/comments reintroduce `.env` coupling or describe a conflicting bootstrap path." (Validation Strategy)
 
+- [ ] T05 `[test]` Run `yarn test:backend` after the `MongodbService.test.ts` user-selection stabilization and record that the full backend suite remains green.
+  - Depends on: C06.
+  - Trace:
+    - "Run `yarn test:backend`." (Validation Strategy)
+    - "Pass condition: full backend suite passes without requiring a local `.env` bootstrap path." (Validation Strategy)
+    - "Backend comment-create tests do not depend on a randomly selected `MongodbService.test.ts` user remaining undeleted by earlier tests in the same file." (Acceptance Criteria)
+
 ## Behavior Slices
 
 - Goal: Establish one shared backend test env contract and route backend bootstrap through it.
@@ -89,4 +103,8 @@ Source plan: `docs/plans/BackendTestStabilization.md`
 
 - Goal: Confirm full-suite behavior and keep touched backend test-facing guidance consistent with the canonical Jest bootstrap path.
   Items: C05, T02, T04
+  Type: behavior
+
+- Goal: Remove the CI-exposed `MongodbService.test.ts` user-selection flake and reconfirm full backend-suite behavior.
+  Items: C06, T05
   Type: behavior

@@ -20,6 +20,7 @@ Contributors should be able to run backend tests and get the same bootstrap beha
 - Preserve and formalize deterministic secret replacement behavior for keys classified as sensitive.
 - Add focused tests for backend bootstrap contract behavior (e.g., parsing, default injection, secret replacement, malformed-line handling, and non-overwrite rules).
 - Update backend test-facing comments and documentation only where they contradict the canonical Jest bootstrap path.
+- Apply the narrowest deterministic fix required to stabilize the `MongodbService.test.ts` comment-create path if this bootstrap work exposes an existing order-dependent backend test flake in CI.
 
 ## Out of Scope
 
@@ -66,6 +67,7 @@ Contributors should be able to run backend tests and get the same bootstrap beha
    - parsing uses the first `=` as the key/value separator, and additional `=` characters remain part of the value
 4. `yarn test:backend` passes with these changes.
 5. Any backend test-facing comments or documentation touched by this work do not contradict the stabilized canonical bootstrap approach.
+6. Backend comment-create tests do not depend on a randomly selected `MongodbService.test.ts` user remaining undeleted by earlier tests in the same file.
 
 ## Validation Strategy
 
