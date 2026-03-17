@@ -198,8 +198,8 @@ Assumes a unix-like environment, like Ubuntu.
    - Frontend locale/date tests run under `TZ=UTC` for deterministic output while preserving full locale matrix coverage.
 3. `yarn run test`
 4. `yarn run ci:local`
-   - Mirrors dependency-resolution + validation parity for `.github/workflows/netlify-api-test.yml`.
-   - Out of scope: CodeQL parity and CI runner/bootstrap parity (`actions/checkout`, `actions/setup-node`, global `npm install yarn@^1 -g`).
+   - Canonical parity reference for contributors: this command mirrors the required PR-gate validation path in `.github/workflows/netlify-api-test.yml`.
+   - Intentionally not mirrored by this command: CodeQL/security-analysis workflows and CI runner/bootstrap steps (`actions/checkout`, `actions/setup-node`, global `npm install yarn@^1 -g`).
 5. `yarn run test:e2e`
 
 ### Usage
