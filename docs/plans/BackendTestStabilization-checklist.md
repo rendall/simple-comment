@@ -36,7 +36,7 @@ Source plan: `docs/plans/BackendTestStabilization.md`
     - "Remove backend test bootstrap dependence on `dotenv.config()` in backend secret tests so Jest-injected env setup remains canonical." (In Scope)
     - "Backend secret tests no longer rely on `dotenv.config()` to pass and instead validate against the Jest bootstrap-injected environment." (Acceptance Criteria)
 
-- [ ] C04 `[backend]` Add targeted backend bootstrap contract tests that cover parser and setup behavior for blank lines, full-line comments, fail-fast handling for missing-`=` lines, blank-key lines, and duplicate keys, first-`=` parsing, deterministic sensitive-value replacement, and non-overwrite rules.
+- [x] C04 `[backend]` Add targeted backend bootstrap contract tests that cover parser and setup behavior for blank lines, full-line comments, fail-fast handling for missing-`=` lines, blank-key lines, and duplicate keys, first-`=` parsing, deterministic sensitive-value replacement, and non-overwrite rules.
   - Depends on: C01, C02, C03.
   - Validation: T01.
   - Trace:
