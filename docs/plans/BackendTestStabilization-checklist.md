@@ -84,7 +84,7 @@ Source plan: `docs/plans/BackendTestStabilization.md`
     - "Validate that any backend test-facing comments or documentation updated by this work do not contradict the canonical Jest bootstrap path." (Validation Strategy)
     - "Fail condition: touched backend test-facing docs/comments reintroduce `.env` coupling or describe a conflicting bootstrap path." (Validation Strategy)
 
-- [ ] T05 `[test]` Run `yarn test:backend` after the `MongodbService.test.ts` user-selection stabilization and record that the full backend suite remains green.
+- [x] T05 `[test]` Run `yarn test:backend` after the `MongodbService.test.ts` user-selection stabilization and record that the full backend suite remains green.
   - Depends on: C06.
   - Trace:
     - "Run `yarn test:backend`." (Validation Strategy)
