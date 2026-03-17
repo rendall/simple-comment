@@ -1,6 +1,6 @@
 # Phase 01 - Dependency and Platform Upgrade
 
-Status: Complete and archived (pending PR)
+Status: Complete and archived
 
 ## Goal
 

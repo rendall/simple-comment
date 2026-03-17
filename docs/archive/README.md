@@ -13,3 +13,5 @@ Agents may find artifacts of historical value, but MUST NOT:
 - assume correctness, completeness, or current relevance
 
 The archive exists for reference only. All normative behavior must come from active, non-archived documents.
+
+For the completed modernization era specifically, see [ModernizationProgramREADME](./ModernizationPlanREADME.md).

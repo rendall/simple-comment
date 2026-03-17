@@ -2,7 +2,7 @@
 
 Status: Complete
 
-Source plan: `docs/plans/phase-04-type-safety-and-env-handling.md`
+Source plan: `docs/archive/phase-04-type-safety-and-env-handling.md`
 
 ## Checklist
 
@@ -11,7 +11,7 @@ Source plan: `docs/plans/phase-04-type-safety-and-env-handling.md`
 - [x] C03 `[backend]` From the first `yarn run typecheck` baseline after `C02`, remediate surfaced strictness findings in `src/functions/**/*.ts` with explicit narrowing/typing (for example catch-variable narrowing and response-union guards) while keeping endpoint runtime behavior unchanged. Depends on: C02.
 - [x] C04 `[backend]` From the same post-`C02` baseline, remediate surfaced strictness findings in backend runtime dependencies under `src/lib/**/*.ts` imported by functions (for example class field initialization and interface/abstract-contract compatibility) with minimal behavior change. Depends on: C02.
 - [x] C05 `[backend]` Confirm strictness closure for the post-`C02` baseline: all surfaced strict diagnostics are remediated in scope; if any finding remains out-of-scope, use a narrow suppression with inline `TODO(phase-04.4)` and capture each deferred hotspot for gate-note tracking. Depends on: C03, C04. Outcome: no `TODO(phase-04.4)` suppressions were added.
-- [x] C06 `[docs]` Record the Phase 4.4 gate decision in `docs/plans/phase-04-type-safety-and-env-handling.md`: if strictness closure is achieved, create `docs/plans/phase-4_4-checklist.md` for environment/runtime error-clarity hardening; otherwise pause strictness escalation and document unresolved hotspots (including any `TODO(phase-04.4)` suppressions). Depends on: C05.
+- [x] C06 `[docs]` Record the Phase 4.4 gate decision in `docs/archive/phase-04-type-safety-and-env-handling.md`: if strictness closure is achieved, create `docs/archive/phase-4_4-checklist.md` for environment/runtime error-clarity hardening; otherwise pause strictness escalation and document unresolved hotspots (including any `TODO(phase-04.4)` suppressions). Depends on: C05.
 
 ## Behavior Slices
 

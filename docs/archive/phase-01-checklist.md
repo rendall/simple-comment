@@ -2,11 +2,11 @@
 
 Status: Complete
 
-Source plan: `docs/plans/phase-01-dependency-and-platform-upgrade.md`
+Source plan: `docs/archive/phase-01-dependency-and-platform-upgrade.md`
 
 ## Checklist
 
-- [x] C01 `[governance]` Confirm this checklist remains within approved Phase 01 scope in `docs/plans/phase-01-dependency-and-platform-upgrade.md`.
+- [x] C01 `[governance]` Confirm this checklist remains within approved Phase 01 scope in `docs/archive/phase-01-dependency-and-platform-upgrade.md`.
 - [x] C02 `[runtime]` Select the target Node major using Phase 01 fallback rules (`latest LTS -> 22 -> 20`) and record the decision rationale in the Phase 01 PR notes.
 - [x] C03 `[runtime]` Update `.nvmrc` to the selected Node major. Depends on: C02.
 - [x] C04 `[ci]` Update `.github/workflows/netlify-api-test.yml` to use the selected Node major. Depends on: C02.
@@ -18,7 +18,7 @@ Source plan: `docs/plans/phase-01-dependency-and-platform-upgrade.md`
 - [x] C10 `[deps-loop]` Upgrade only the selected dependency unit in `package.json` and `yarn.lock` as one isolated change. Depends on: C08.
 - [x] C11 `[deps-loop]` Run validation for the selected unit (`yarn lint`, targeted scope checks, and full test checks required by this phase); if checks fail, resolve before commit. Depends on: C10.
 - [x] C12 `[deps-loop]` Commit the isolated dependency unit change with an intent-revealing dependency commit message. Depends on: C11.
-- [x] C13 `[deps-loop]` Repeat C08-C12 until the Phase 01 stop conditions in `docs/plans/phase-01-dependency-and-platform-upgrade.md` are satisfied. Depends on: C07.
+- [x] C13 `[deps-loop]` Repeat C08-C12 until the Phase 01 stop conditions in `docs/archive/phase-01-dependency-and-platform-upgrade.md` are satisfied. Depends on: C07.
 - [x] C14 `[docs]` Update Node/tooling version references in `README.md` and any other modified docs to match the selected Node major. Depends on: C02, C13.
 - [x] C15 `[docs]` Record final Phase 01 compatibility notes, pinned-version rationale, audit delta summary, loop iteration summary, and fallback decision outcome in PR phase notes. Depends on: C13.
 

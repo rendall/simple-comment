@@ -108,7 +108,7 @@ This repository follows a phase workflow:
 4. Merge
 5. Re-plan next phase
 
-Reference: `docs/plans/README.md`
+Active plans are held in `docs/plans` and non-normative historical artifacts are held in `docs/archive`
 
 ## Approval and Entry Conditions
 
@@ -156,7 +156,6 @@ If a request conflicts with merged code behavior, documented contracts, or appro
 - Plan refinement and QC rules: `docs/norms/plan.md`
 - Checklist authoring rules: `docs/norms/checklist.md`
 - Implementation loop and testing expectations: `docs/norms/implementation.md`
-- Program-level phase constraints: `docs/plans/README.md`
 
 If these documents conflict, escalate and request clarification before implementation.
 
