@@ -177,3 +177,16 @@ The likely best next step is to turn this into a small formal plan that:
 - fixes only the documentation drift needed to keep that validation story coherent
 
 If browser smoke coverage is included, it should stay narrow and explicitly justified rather than being treated as an open-ended test expansion effort.
+
+## Suggested Default Decisions For Formal Plan Section A
+
+The following defaults are recommended so planning can move forward with a clear baseline and minimal scope expansion risk:
+
+- Require `yarn run typecheck` in the minimum PR gate.
+- Require full `yarn run build` in the minimum PR gate.
+- Keep browser smoke checks out of the minimum PR gate for this phase unless a very small, stable, and explicitly justified subset is agreed.
+
+Rationale:
+
+- Typecheck and full build most directly improve trust that a green PR signal reflects deployable repo health.
+- Browser smoke checks can provide useful confidence but are also a common source of gate instability and scope growth; treating them as deeper/optional validation by default keeps this phase focused.
