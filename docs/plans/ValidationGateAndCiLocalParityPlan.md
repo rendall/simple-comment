@@ -56,7 +56,11 @@ A green PR should communicate a clear minimum quality bar without requiring cont
 ## Open Questions / Deferments
 
 - Deferment: README and command-parity cleanup is intentionally moved to the next PR/plan slice.
+  - Owner: follow-on Priority 1 documentation slice author.
+  - Follow-up phase: next Priority 1 docs/command-parity plan and checklist.
 - Deferment: Browser smoke gating remains optional/deeper validation pending a future, explicitly scoped decision.
+  - Owner: follow-on Priority 1 validation-gate refinement slice author.
+  - Follow-up phase: future browser-smoke gating decision plan.
 
 ## Acceptance Criteria
 
