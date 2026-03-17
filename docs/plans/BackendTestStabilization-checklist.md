@@ -53,7 +53,7 @@ Source plan: `docs/plans/BackendTestStabilization.md`
     - "Update backend test-facing comments and documentation only where they contradict the canonical Jest bootstrap path." (In Scope)
     - "Any backend test-facing comments or documentation touched by this work do not contradict the stabilized canonical bootstrap approach." (Acceptance Criteria)
 
-- [ ] T01 `[test]` Run the targeted backend bootstrap contract tests and record that parser, classification, deterministic replacement, and setup-rule coverage passes for the intended contract.
+- [x] T01 `[test]` Run the targeted backend bootstrap contract tests and record that parser, classification, deterministic replacement, and setup-rule coverage passes for the intended contract.
   - Depends on: C01, C02, C03, C04.
   - Trace:
     - "Add/adjust targeted backend bootstrap tests for parser/classification + setup rules." (Validation Strategy)
