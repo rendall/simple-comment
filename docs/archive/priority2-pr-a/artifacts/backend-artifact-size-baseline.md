@@ -1,6 +1,6 @@
 # Priority 2 PR A Backend Artifact Size Baseline
 
-Source: `docs/plans/artifacts/priority2-pr-a/build-backend.log`
+Source: `docs/archive/priority2-pr-a/artifacts/build-backend.log`
 
 | Function Entry | Artifact File | Reported Size |
 | --- | --- | --- |

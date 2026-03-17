@@ -1,6 +1,6 @@
 # Priority 2 PR A Plan — Baseline and Inventory
 
-Status: active
+Status: archived
 
 Source backlog: `docs/RepoHealthImprovementBacklog.md` (`Priority 2: Build and Bundle Warning Reduction`)
 
@@ -112,13 +112,13 @@ Required evidence types for PR A:
 
 Artifacts produced by this phase:
 
-- Full canonical build log: `docs/plans/artifacts/priority2-pr-a/build-full.log`
-- ANSI-stripped canonical build log: `docs/plans/artifacts/priority2-pr-a/build-full.clean.log`
-- Backend-only canonical segment: `docs/plans/artifacts/priority2-pr-a/build-backend.log`
-- Frontend-only canonical segment: `docs/plans/artifacts/priority2-pr-a/build-frontend.log`
-- Structured warning register: `docs/plans/artifacts/priority2-pr-a/warning-register.md`
-- Backend artifact-size baseline: `docs/plans/artifacts/priority2-pr-a/backend-artifact-size-baseline.md`
-- Backend composition notes: `docs/plans/artifacts/priority2-pr-a/backend-artifact-composition-notes.md`
+- Full canonical build log: `docs/archive/priority2-pr-a/artifacts/build-full.log`
+- ANSI-stripped canonical build log: `docs/archive/priority2-pr-a/artifacts/build-full.clean.log`
+- Backend-only canonical segment: `docs/archive/priority2-pr-a/artifacts/build-backend.log`
+- Frontend-only canonical segment: `docs/archive/priority2-pr-a/artifacts/build-frontend.log`
+- Structured warning register: `docs/archive/priority2-pr-a/artifacts/warning-register.md`
+- Backend artifact-size baseline: `docs/archive/priority2-pr-a/artifacts/backend-artifact-size-baseline.md`
+- Backend composition notes: `docs/archive/priority2-pr-a/artifacts/backend-artifact-composition-notes.md`
 
 Interpretation boundaries for this phase:
 

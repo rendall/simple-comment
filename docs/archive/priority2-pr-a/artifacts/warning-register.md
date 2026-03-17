@@ -1,8 +1,8 @@
 # Priority 2 PR A Warning Register
 
 Source logs:
-- `docs/plans/artifacts/priority2-pr-a/build-backend.log`
-- `docs/plans/artifacts/priority2-pr-a/build-frontend.log`
+- `docs/archive/priority2-pr-a/artifacts/build-backend.log`
+- `docs/archive/priority2-pr-a/artifacts/build-frontend.log`
 
 ## Unique Warning Signatures (Structured)
 

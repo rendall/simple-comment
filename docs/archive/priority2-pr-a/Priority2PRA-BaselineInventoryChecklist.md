@@ -1,8 +1,8 @@
 # Priority 2 PR A Checklist — Baseline and Inventory Only
 
-Status: active
+Status: archived
 
-Source plan: `docs/plans/Priority2PRA-BaselineInventoryPlan.md`
+Source plan: `docs/archive/priority2-pr-a/Priority2PRA-BaselineInventoryPlan.md`
 
 ## Phase Intent (PR A Only)
 
