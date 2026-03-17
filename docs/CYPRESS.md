@@ -2,6 +2,9 @@
 
 Simple Comment uses <https://cypress.io> for frontend browser validation.
 
+- Canonical script name: `yarn run test:cypress`
+- Primary contributor quick-start lives in `README.md`; this page is a deeper Cypress-specific reference.
+
 ## Current Layout
 
 - Cypress config: [cypress.config.ts](../cypress.config.ts)

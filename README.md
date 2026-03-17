@@ -181,6 +181,13 @@ You can get your own free-tier MongoDB-in-the-cloud by [following these instruct
 
 Assumes a unix-like environment, like Ubuntu.
 
+### Contributor quick-start (canonical)
+
+- Use this `README.md` section as the canonical contributor entry point for install, run, and validation commands.
+- Use deeper docs as secondary references when needed:
+  - [`docs/norms/ci-parity.md`](./docs/norms/ci-parity.md) for CI/local parity governance details.
+  - [`docs/CYPRESS.md`](./docs/CYPRESS.md) for Cypress configuration and troubleshooting specifics.
+
 ### Installation
 
 1. Install [nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
@@ -200,7 +207,17 @@ Assumes a unix-like environment, like Ubuntu.
 4. `yarn run ci:local`
    - Canonical parity reference for contributors: this command mirrors the required PR-gate validation path in `.github/workflows/netlify-api-test.yml`.
    - Intentionally not mirrored by this command: CodeQL/security-analysis workflows and CI runner/bootstrap steps (`actions/checkout`, `actions/setup-node`, global `npm install yarn@^1 -g`).
-5. `yarn run test:e2e`
+5. `yarn run test:cypress`
+
+### Validation matrix
+
+- **Required PR gate (parity path):**
+  - `yarn run ci:local`
+- **Deeper optional checks:**
+  - `yarn run test:cypress`
+- **Intentionally excluded from parity path:**
+  - CodeQL/security-analysis workflows.
+  - CI runner/bootstrap setup steps (for example `actions/checkout`, `actions/setup-node`, and global `npm install yarn@^1 -g`).
 
 ### Usage
 
