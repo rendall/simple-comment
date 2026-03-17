@@ -131,7 +131,7 @@ Interpretation boundaries for this phase:
 - Assumption: current build outputs are stable enough to serve as a baseline for follow-on PRs.
 - Assumption: PR A should optimize for decision clarity over immediate warning-count reduction.
 - Open question: where should the warning register live long-term (plan artifact vs dedicated build-health doc)?
-- Open question: should owner attribution be team alias, role, or named maintainer for this repo?
+- Decision: warning ownership in PR A artifacts is recorded by app subsystem role (not person/team labels), e.g. `backend-data-access-system` and `frontend-build-system`.
 
 ## PR A Scope Guard (Deferred Work)
 
@@ -149,7 +149,7 @@ Any change that reduces warning count, changes bundler/runtime behavior, or alte
 
 - Intent clarity issues: none observed; intent is plain-language and phase-specific.
 - Missing required sections: none (Goal, Intent, In Scope, Out of Scope, Acceptance Criteria present).
-- Ambiguities/assumptions to resolve: owner attribution format and long-term warning-register location.
+- Ambiguities/assumptions to resolve: long-term warning-register location.
 - Validation strategy gaps: none for PR A baseline/inventory scope.
 - Traceability readiness: ready; statements are quoteable for checklist items.
 - Pass/Fail: ready for checklist authoring — **Pass**.
