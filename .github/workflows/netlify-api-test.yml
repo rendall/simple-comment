@@ -7,6 +7,11 @@ on:
 jobs:
   test-netlify-functions:
     runs-on: ubuntu-latest
+    env:
+      # @shelf/jest-mongodb's bundled mongodb-memory-server version in this repo
+      # does not support MONGOMS_DISTRO; pin a known-valid download URL instead.
+      MONGOMS_DOWNLOAD_URL: https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu2204-6.0.14.tgz
+      TZ: UTC
 
     steps:
       - uses: actions/checkout@v4
@@ -17,12 +22,12 @@ jobs:
           node-version: "22"
 
       - name: Install
-        # CI/local parity governance: any mirrored CI step/env change in this
+        # CI/local parity governance: any required PR-gate CI step/env change in this
         # workflow MUST be reflected in scripts/ci-local.sh / yarn run ci:local.
         # Source of truth: docs/norms/ci-parity.md
         run: |
           npm install yarn@^1 --no-package-lock -g
-          yarn --frozen-lockfile --production=false --ignore-optional
+          yarn --frozen-lockfile --production=false
 
       - name: Lint
         run: yarn run lint
@@ -30,15 +35,15 @@ jobs:
       - name: Format
         run: yarn run prettier --list-different .
 
-      - name: Build Netlify functions
-        run: yarn run build:netlify
+      - name: Typecheck
+        run: yarn run typecheck
+
+      - name: Build
+        run: yarn run build
 
       - name: Test Netlify functions and frontend
-        env:
-          # @shelf/jest-mongodb's bundled mongodb-memory-server version in this repo
-          # does not support MONGOMS_DISTRO; pin a known-valid download URL instead.
-          MONGOMS_DOWNLOAD_URL: https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu2204-6.0.14.tgz
-          TZ: UTC
+        # Browser smoke/e2e coverage is intentionally excluded from the
+        # required PR gate for this phase.
         run: |
           yarn test:backend
           yarn test:frontend
