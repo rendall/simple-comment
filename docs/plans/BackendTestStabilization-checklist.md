@@ -46,7 +46,7 @@ Source plan: `docs/plans/BackendTestStabilization.md`
     - "duplicate keys in `example.env` cause parsing to fail fast" (Acceptance Criteria)
     - "parsing uses the first `=` as the key/value separator, and additional `=` characters remain part of the value" (Acceptance Criteria)
 
-- [ ] C05 `[docs]` Inspect backend test-facing comments and documentation touched by this work and update only any text that contradicts the canonical Jest bootstrap path.
+- [x] C05 `[docs]` Inspect backend test-facing comments and documentation touched by this work and update only any text that contradicts the canonical Jest bootstrap path.
   - Depends on: C03.
   - Validation: T04.
   - Trace:
