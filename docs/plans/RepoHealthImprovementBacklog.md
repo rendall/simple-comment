@@ -114,6 +114,8 @@ Success signals for a future plan:
 - repo docs reference commands that actually exist
 - local and PR validation expectations are easier to explain in one short path
 
+See: [ValidationAndDocumentationTrustDraft.md](ValidationAndDocumentationTrustDraft.md)
+
 ### Priority 2: Build and Bundle Warning Reduction
 
 This area targets warning debt and backend deploy ergonomics without immediately forcing a full platform rewrite.
