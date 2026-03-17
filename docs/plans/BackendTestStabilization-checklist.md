@@ -20,7 +20,7 @@ Source plan: `docs/plans/BackendTestStabilization.md`
     - "Sensitive-key classification remains name-based for keys containing `SECRET` or `PASSWORD` only; expanding that rule is out of scope for this plan." (Locked Decisions)
     - "`example.env` remains the baseline declaration of expected env keys for backend test bootstrap in this plan." (Locked Decisions)
 
-- [ ] C02 `[backend]` Refactor `src/tests/backend/setup-env.ts` to consume the shared utility and preserve the bootstrap contract: inject missing keys from `example.env`, preserve pre-set non-default values, and replace sensitive defaults with deterministic non-default values only when unset or still equal to the `example.env` default.
+- [x] C02 `[backend]` Refactor `src/tests/backend/setup-env.ts` to consume the shared utility and preserve the bootstrap contract: inject missing keys from `example.env`, preserve pre-set non-default values, and replace sensitive defaults with deterministic non-default values only when unset or still equal to the `example.env` default.
   - Depends on: C01.
   - Validation: T01, T03.
   - Trace:
