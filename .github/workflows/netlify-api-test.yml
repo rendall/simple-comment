@@ -84,3 +84,21 @@ jobs:
         run: |
           yarn test:backend
           yarn test:frontend
+
+  test-netlify-functions:
+    runs-on: ubuntu-latest
+    needs: [quality-gate, build-gate, test-gate]
+    if: ${{ always() }}
+
+    steps:
+      - name: Fail if any required gate job failed
+        run: |
+          if [ "${{ needs.quality-gate.result }}" != "success" ] || \
+             [ "${{ needs.build-gate.result }}" != "success" ] || \
+             [ "${{ needs.test-gate.result }}" != "success" ]; then
+            echo "One or more required gate jobs failed"
+            exit 1
+          fi
+
+      - name: Preserve legacy required check context
+        run: echo "All staged gate jobs passed"
