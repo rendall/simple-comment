@@ -5,13 +5,9 @@ on:
     branches: [master]
 
 jobs:
-  test-netlify-functions:
+  quality-gate:
     runs-on: ubuntu-latest
-    env:
-      # @shelf/jest-mongodb's bundled mongodb-memory-server version in this repo
-      # does not support MONGOMS_DISTRO; pin a known-valid download URL instead.
-      MONGOMS_DOWNLOAD_URL: https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu2204-6.0.14.tgz
-      TZ: UTC
+    timeout-minutes: 20
 
     steps:
       - uses: actions/checkout@v4
@@ -38,8 +34,49 @@ jobs:
       - name: Typecheck
         run: yarn run typecheck
 
+  build-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: quality-gate
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install
+        run: |
+          npm install yarn@^1 --no-package-lock -g
+          yarn --frozen-lockfile --production=false
+
       - name: Build
         run: yarn run build
+
+  test-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: build-gate
+    env:
+      # @shelf/jest-mongodb's bundled mongodb-memory-server version in this repo
+      # does not support MONGOMS_DISTRO; pin a known-valid download URL instead.
+      MONGOMS_DOWNLOAD_URL: https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu2204-6.0.14.tgz
+      TZ: UTC
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install
+        run: |
+          npm install yarn@^1 --no-package-lock -g
+          yarn --frozen-lockfile --production=false
 
       - name: Test Netlify functions and frontend
         # Browser smoke/e2e coverage is intentionally excluded from the
