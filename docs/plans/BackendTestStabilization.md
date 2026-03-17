@@ -1,6 +1,6 @@
 # Backend Test Bootstrap Defaults Stabilization Plan
 
-Status: planning
+Status: active
 
 ## Goal
 

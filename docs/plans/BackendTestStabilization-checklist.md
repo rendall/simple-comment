@@ -1,6 +1,6 @@
 # Backend Test Bootstrap Defaults Stabilization Checklist
 
-Status: planning
+Status: active
 
 Source plan: `docs/plans/BackendTestStabilization.md`
 
