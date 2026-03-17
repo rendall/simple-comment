@@ -1,6 +1,6 @@
 # Validation and Documentation Trust Draft
 
-Status: exploratory draft
+Status: archived
 
 Classification: pre-formal planning note
 
