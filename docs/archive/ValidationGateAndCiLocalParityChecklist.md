@@ -1,6 +1,6 @@
 # Validation Gate and CI/Local Parity Checklist
 
-Status: proposed
+Status: archived
 
 Source plan: `docs/plans/ValidationGateAndCiLocalParityPlan.md`
 

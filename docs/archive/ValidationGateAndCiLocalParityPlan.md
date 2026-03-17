@@ -1,6 +1,6 @@
 # Validation Gate and CI/Local Parity Plan
 
-Status: proposed for checklist authoring
+Status: archived
 
 Classification: formal plan candidate under `docs/norms/plan.md`
 
