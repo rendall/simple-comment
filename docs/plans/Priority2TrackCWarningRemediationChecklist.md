@@ -103,7 +103,7 @@ QC mode: Conformance QC
     - "Re-run backend build validation after each remediation slice and compare warning count/signature against baseline." (In Scope)
     - "Backend warning count/signature before and after each remediation slice is captured." (Validation Strategy)
 
-- [ ] T05 `[validation]` Parity/smoke validation: verify the accepted remediation slice shows no observed runtime-behavior or API-contract drift.
+- [x] T05 `[validation]` Parity/smoke validation: verify the accepted remediation slice shows no observed runtime-behavior or API-contract drift.
   - Trace:
     - "Preserve current runtime behavior and API contracts." (Constraints)
     - "Backend build remediation must not introduce API-contract or runtime-behavior drift." (Validation Strategy)
