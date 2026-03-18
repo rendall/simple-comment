@@ -1,5 +1,7 @@
 # Priority 2 Track B Optimization Candidate Ledger
 
+Status: archived
+
 | Candidate | Hypothesis | Risk | Expected Size Impact | Parity Validation Mapping | Revert Trigger |
 | --- | --- | --- | --- | --- | --- |
 | B-CFG-01 Force production bundling defaults | Default `development` mode is inflating bundle size due non-minified output; forcing production should materially shrink each function artifact. | LOW | High (>=50% shrink expected from minification/tree-shaking) | `yarn run build:netlify` + backend/frontend smoke checks from plan validation set | Any build/runtime failure or API behavior drift post-change |

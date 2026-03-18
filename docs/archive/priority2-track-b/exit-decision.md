@@ -1,5 +1,7 @@
 # Priority 2 Track B Good-Enough Exit Decision
 
+Status: archived
+
 ## Thresholds
 
 - material improvement: >= 0.25 MiB reduction per function OR >= 10% reduction versus latest accepted baseline

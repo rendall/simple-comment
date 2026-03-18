@@ -1,5 +1,7 @@
 # Priority 2 Track B Iteration Ledger Template
 
+Status: archived
+
 | Iteration | Candidate | Change Surface | Measure (before/after) | Warning Signature Diff | Parity Checks | Decision | Follow-up |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | I01 | B-CFG-01 | `webpack.netlify.functions.js` mode/perf settings | `2.94 MiB -> TBD` per function | `W001/W002 unchanged` (expected) | `build:netlify`, smoke checks | ACCEPT/REVISE/REVERT | next candidate |

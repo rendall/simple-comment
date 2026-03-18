@@ -1,6 +1,8 @@
 # Priority 2 Track B Baseline Snapshot
 
-Source: `docs/plans/artifacts/priority2-track-b/build-backend-baseline.clean.log`
+Status: archived
+
+Source: `docs/archive/priority2-track-b/build-backend-baseline.clean.log`
 
 ## Per-function artifact sizes
 

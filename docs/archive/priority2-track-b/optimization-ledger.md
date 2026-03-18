@@ -1,5 +1,7 @@
 # Priority 2 Track B Optimization Ledger
 
+Status: archived
+
 | Iteration | Candidate | Change Surface | Before | After | Warning Diff | Parity | Decision | Rationale |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | I01 | B-CFG-01 | `webpack.netlify.functions.js` mode default + hints cleanup | ~2.94 MiB/function | ~1010 KiB/function | MongoDB warning signatures unchanged | build succeeded | ACCEPT | Material size reduction with no observed build breakage. |
