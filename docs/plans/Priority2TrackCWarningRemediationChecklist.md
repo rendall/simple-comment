@@ -73,7 +73,7 @@ QC mode: Conformance QC
     - "The warning register and Track C evidence artifacts reflect the final disposition of the backend MongoDB warnings." (Acceptance Criteria)
     - "Any upstream or external guidance used to support a Track C decision is cited in the relevant planning/evidence artifacts." (Acceptance Criteria)
 
-- [ ] C08 `[handoff]` If any backend MongoDB warning remains after the loop exits, record the residual-warning rationale, owner, and re-evaluation trigger without expanding Track C into out-of-scope modernization work.
+- [x] C08 `[handoff]` If any backend MongoDB warning remains after the loop exits, record the residual-warning rationale, owner, and re-evaluation trigger without expanding Track C into out-of-scope modernization work.
   - Depends on: C06.
   - Validation: T06, T07, T08.
   - Trace:
