@@ -66,7 +66,7 @@ QC mode: Conformance QC
     - "Loop rule: do not batch multiple speculative frontend warning fixes before completing one full implement → measure → validate → decide cycle." (How We Will Execute Track D)
     - "At least one low-risk remediation candidate is either implemented and measured or explicitly deferred with recorded rationale." (Acceptance Criteria)
 
-- [ ] C07 `[control]` Apply the Track D continuation rule after each recorded candidate outcome: if an eligible low-risk repo-local candidate still remains, return to C03 for another full C04-C06 loop; otherwise lock the final Track D disposition and proceed to documentation finalization.
+- [x] C07 `[control]` Apply the Track D continuation rule after each recorded candidate outcome: if an eligible low-risk repo-local candidate still remains, return to C03 for another full C04-C06 loop; otherwise lock the final Track D disposition and proceed to documentation finalization.
   - Depends on: C06.
   - Validation: T09.
   - Trace:
@@ -132,7 +132,7 @@ QC mode: Conformance QC
     - "Major Vite, Svelte, or related dependency upgrades performed only to silence warnings." (Out of Scope)
     - "Silent suppression of frontend warnings/notices without recorded rationale." (Out of Scope)
 
-- [ ] T09 `[validation]` Loop-control validation: confirm each attempted Track D candidate completed one full single-candidate C04-C06 cycle, that continuation occurred only when another eligible low-risk repo-local candidate remained, and that loop exit occurred only on improved output or documented residual disposition.
+- [x] T09 `[validation]` Loop-control validation: confirm each attempted Track D candidate completed one full single-candidate C04-C06 cycle, that continuation occurred only when another eligible low-risk repo-local candidate remained, and that loop exit occurred only on improved output or documented residual disposition.
   - Trace:
     - "Loop rule: do not batch multiple speculative frontend warning fixes before completing one full implement → measure → validate → decide cycle." (How We Will Execute Track D)
     - "Stop once the in-scope frontend output is either: improved through accepted low-risk fixes, or cleanly dispositioned with documented residual notices and no justified next low-risk fix remaining." (How We Will Execute Track D)

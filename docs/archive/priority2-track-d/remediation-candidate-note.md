@@ -103,3 +103,12 @@ Why:
   - `yarn run build:frontend`: passed
   - `bash ./scripts/validate-frontend-artifacts.sh dist`: passed
   - `bash ./scripts/smoke-frontend-embed.sh dist`: passed
+
+## Continuation Decision
+
+- Loop continuation:
+  - `stop after loop 1`
+- Reason:
+  - The only repo-local frontend build warning/noise signature was removed.
+  - The remaining Vite CJS deprecation notice and `carbon-icons-svelte` warning are still tolerance-first under the approved Track D plan.
+  - No additional clearly low-risk repo-local candidate remains that would justify another remediation loop without expanding Track D toward broader toolchain or dependency churn.
