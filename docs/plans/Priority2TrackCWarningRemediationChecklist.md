@@ -33,7 +33,7 @@ QC mode: Conformance QC
     - "Record the sources of any upstream or external guidance used for Track C decisions so the resulting checklist can require citation-backed remediation notes." (In Scope)
     - "Record the guidance sources consulted for Track C decisions, including enough detail for later reviewers to verify what guidance was followed." (How We Will Execute Track C)
 
-- [ ] C03 `[analysis]` Create a remediation candidate/decision note that ranks backend-first options by upstream-guidance alignment, runtime-behavior safety, reversibility, warning-reduction impact, and modernization spillover risk.
+- [x] C03 `[analysis]` Create a remediation candidate/decision note that ranks backend-first options by upstream-guidance alignment, runtime-behavior safety, reversibility, warning-reduction impact, and modernization spillover risk.
   - Depends on: C01, C02.
   - Validation: T03.
   - Trace:
