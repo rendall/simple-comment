@@ -1,0 +1,43 @@
+yarn run v1.22.22
+$ webpack --config ./webpack.netlify.functions.js
+asset [1m[33mtopic.js[39m[22m [1m[33m1010 KiB[39m[22m [1m[33m[compared for emit][39m[22m [1m[32m[minimized][39m[22m [1m[33m[big][39m[22m (name: topic) 1 related asset
+asset [1m[33muser.js[39m[22m [1m[33m1010 KiB[39m[22m [1m[33m[compared for emit][39m[22m [1m[32m[minimized][39m[22m [1m[33m[big][39m[22m (name: user) 1 related asset
+asset [1m[33mcomment.js[39m[22m [1m[33m1010 KiB[39m[22m [1m[33m[compared for emit][39m[22m [1m[32m[minimized][39m[22m [1m[33m[big][39m[22m (name: comment) 1 related asset
+asset [1m[33mauth.js[39m[22m [1m[33m1010 KiB[39m[22m [1m[33m[compared for emit][39m[22m [1m[32m[minimized][39m[22m [1m[33m[big][39m[22m (name: auth) 1 related asset
+asset [1m[33mverify.js[39m[22m [1m[33m1010 KiB[39m[22m [1m[33m[compared for emit][39m[22m [1m[32m[minimized][39m[22m [1m[33m[big][39m[22m (name: verify) 1 related asset
+asset [1m[33mgauth.js[39m[22m [1m[33m1010 KiB[39m[22m [1m[33m[compared for emit][39m[22m [1m[32m[minimized][39m[22m [1m[33m[big][39m[22m (name: gauth) 1 related asset
+orphan modules 643 KiB [1m[33m[orphan][39m[22m 525 modules
+runtime modules 6.21 KiB 30 modules
+built modules 2.74 MiB [1m[33m[built][39m[22m
+  modules by path [1m./node_modules/[39m[22m 2.19 MiB
+    javascript modules 2.06 MiB 258 modules
+    json modules 132 KiB
+      [1m./node_modules/dotenv/package.json[39m[22m 1.3 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+      + 2 modules
+  modules by path [1m./src/functions/*.ts[39m[22m 559 KiB
+    [1m./src/functions/auth.ts + 11 modules[39m[22m 93.6 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+    [1m./src/functions/comment.ts + 11 modules[39m[22m 92.9 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+    [1m./src/functions/gauth.ts + 11 modules[39m[22m 93.1 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+    [1m./src/functions/topic.ts + 11 modules[39m[22m 93.6 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+    + 2 modules
+  + 18 modules
+
+[1m[33mWARNING[39m[22m in [1m./node_modules/mongodb/lib/utils.js[39m[22m [1m[32m953:38-93[39m[22m
+[1mCritical dependency: the request of a dependency is an expression[39m[22m
+ @ ./node_modules/mongodb/lib/change_stream.js 11:16-34
+ @ ./node_modules/mongodb/lib/index.js 12:24-50
+ @ ./src/lib/MongodbService.ts 12:0-38 31:33-52
+ @ ./src/functions/auth.ts 10:0-55 16:20-34
+
+[1m[33mWARNING[39m[22m in [1m./node_modules/mongodb/lib/utils.js[39m[22m [1m[32m964:38-74[39m[22m
+[1mModule [1m[31mnot found[39m[22m[1m: [1m[31mError[39m[22m[1m: Can't resolve 'mongodb-client-encryption' in '/mnt/c/workspace/projects/simple-comment/node_modules/mongodb/lib'[39m[22m
+ @ ./node_modules/mongodb/lib/change_stream.js 11:16-34
+ @ ./node_modules/mongodb/lib/index.js 12:24-50
+ @ ./src/lib/MongodbService.ts 12:0-38 31:33-52
+ @ ./src/functions/auth.ts 10:0-55 16:20-34
+
+2 warnings have detailed information that is not shown.
+Use 'stats.errorDetails: true' resp. '--stats-error-details' to show it.
+
+webpack 5.88.2 compiled with [1m[33m2 warnings[39m[22m in 26164 ms
+Done in 54.91s.

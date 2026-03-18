@@ -18,7 +18,7 @@ QC mode: Conformance QC
 
 ## Atomic Checklist Items
 
-- [ ] C01 `[baseline]` Re-capture the canonical backend warning baseline and confirm the in-scope MongoDB warning signatures, call path, and pre-Track C warning count.
+- [x] C01 `[baseline]` Re-capture the canonical backend warning baseline and confirm the in-scope MongoDB warning signatures, call path, and pre-Track C warning count.
   - Depends on: none.
   - Validation: T01.
   - Trace:
