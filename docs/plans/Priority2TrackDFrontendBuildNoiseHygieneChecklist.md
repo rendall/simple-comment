@@ -81,7 +81,7 @@ QC mode: Conformance QC
     - "The frontend warning/noise documentation reflects the measured post-Track D message state rather than only the original Priority 2 baseline." (Acceptance Criteria)
     - "Contributors can tell from the resulting documentation which frontend build messages are expected notices versus actionable warnings." (Acceptance Criteria)
 
-- [ ] C09 `[handoff]` If any frontend message remains after the Track D loop exits, record the residual rationale, owner, re-check trigger, and any required future modernization handoff in `docs/archive/priority2-track-d/residual-notice-note.md` without expanding Track D scope.
+- [x] C09 `[handoff]` If any frontend message remains after the Track D loop exits, record the residual rationale, owner, re-check trigger, and any required future modernization handoff in `docs/archive/priority2-track-d/residual-notice-note.md` without expanding Track D scope.
   - Depends on: C08.
   - Validation: T07, T08, T09.
   - Trace:
@@ -121,12 +121,12 @@ QC mode: Conformance QC
     - "Preserve current frontend runtime behavior and public embed/client expectations." (Constraints)
     - "Pass: accepted changes show no observed behavior drift in the frontend build output and any required smoke/parity checks remain aligned with current expectations." (Validation Strategy)
 
-- [ ] T07 `[validation]` Documentation/disposition validation: confirm the Track D docs artifacts distinguish expected notices from actionable warnings and that every residual frontend message has current rationale, owner, and re-check trigger.
+- [x] T07 `[validation]` Documentation/disposition validation: confirm the Track D docs artifacts distinguish expected notices from actionable warnings and that every residual frontend message has current rationale, owner, and re-check trigger.
   - Trace:
     - "Frontend warning documentation is updated to distinguish expected notices from actionable warnings and to record residual tolerance criteria." (Validation Strategy)
     - "Contributors can tell from the resulting documentation which frontend build messages are expected notices versus actionable warnings." (Acceptance Criteria)
 
-- [ ] T08 `[validation]` Scope-conformance validation: confirm Track D does not introduce frontend feature work, visual/UI changes, major Vite or Svelte upgrades, dependency replacement for warning reduction, or silent warning suppression without rationale.
+- [x] T08 `[validation]` Scope-conformance validation: confirm Track D does not introduce frontend feature work, visual/UI changes, major Vite or Svelte upgrades, dependency replacement for warning reduction, or silent warning suppression without rationale.
   - Trace:
     - "Frontend feature work or visual/UI changes." (Out of Scope)
     - "Major Vite, Svelte, or related dependency upgrades performed only to silence warnings." (Out of Scope)
