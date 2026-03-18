@@ -48,7 +48,7 @@ QC mode: Conformance QC
     - "Implement one low-risk backend-first remediation slice." (How We Will Execute Track C)
     - "Do not convert Track C into a modernization phase in order to chase warning-count reduction." (Constraints)
 
-- [ ] C05 `[loop]` Record the Track C loop outcome for the selected remediation candidate by capturing measure, validation, and decision results as `ACCEPT`, `REVISE`, `REVERT`, or `DEFER`.
+- [x] C05 `[loop]` Record the Track C loop outcome for the selected remediation candidate by capturing measure, validation, and decision results as `ACCEPT`, `REVISE`, `REVERT`, or `DEFER`.
   - Depends on: C04.
   - Validation: T04, T05, T06.
   - Trace:
