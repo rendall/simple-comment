@@ -1,0 +1,23 @@
+yarn run v1.22.22
+$ vite build --config ./vite.config.ts
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+7:58:50 PM [vite-plugin-svelte] WARNING: The following packages have a svelte field in their package.json but no exports condition for svelte.
+
+carbon-icons-svelte@12.1.0
+
+Please see https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/faq.md#missing-exports-condition for details.
+vite v5.4.21 building for production...
+transforming...
+✓ 98 modules transformed.
+rendering chunks...
+computing gzip size...
+../../dist/icebreakers/index.html                       7.20 kB │ gzip:  2.08 kB
+../../dist/index.html                                   8.61 kB │ gzip:  2.59 kB
+../../dist/css/simple-comment-style.css                11.68 kB │ gzip:  2.13 kB
+../../dist/js/index.js                                  0.32 kB │ gzip:  0.25 kB │ map:   0.68 kB
+../../dist/js/icebreakers.js                            0.57 kB │ gzip:  0.37 kB │ map:   1.31 kB
+../../dist/assets/modulepreload-polyfill-B5Qt9EMX.js    0.77 kB │ gzip:  0.44 kB │ map:   0.12 kB
+../../dist/js/simple-comment-icebreakers.js             0.98 kB │ gzip:  0.58 kB │ map:   3.94 kB
+../../dist/js/simple-comment.js                       163.66 kB │ gzip: 51.73 kB │ map: 586.02 kB
+✓ built in 5.57s
+Done in 26.52s.

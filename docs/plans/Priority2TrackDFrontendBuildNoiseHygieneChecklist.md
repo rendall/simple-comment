@@ -58,7 +58,7 @@ QC mode: Conformance QC
     - "Preserve current frontend runtime behavior and public embed/client expectations." (Constraints)
     - "If a candidate fix would require contract changes, broad dependency modernization, or frontend architecture reshaping, stop and return to plan refinement instead of expanding Track D implicitly." (Constraints)
 
-- [ ] C06 `[loop]` Re-run `yarn run build:frontend` after the C05 slice, capture the measured result in `docs/archive/priority2-track-d/build-frontend-after.log` and `docs/archive/priority2-track-d/warning-before-after.md`, and record the loop decision as `ACCEPT`, `REVISE`, `REVERT`, or `DEFER` with exact message-signature delta.
+- [x] C06 `[loop]` Re-run `yarn run build:frontend` after the C05 slice, capture the measured result in `docs/archive/priority2-track-d/build-frontend-after.log` and `docs/archive/priority2-track-d/warning-before-after.md`, and record the loop decision as `ACCEPT`, `REVISE`, `REVERT`, or `DEFER` with exact message-signature delta.
   - Depends on: C05.
   - Validation: T04, T05, T06, T09.
   - Trace:
@@ -106,17 +106,17 @@ QC mode: Conformance QC
     - "Rank low-risk remediation candidates using these factors..." (How We Will Execute Track D)
     - "prioritize repo-local evaluation of the stylesheet-path notice before investing in third-party warning churn" (Preferred Decision Policy)
 
-- [ ] T04 `[validation]` Warning-outcome validation: compare `docs/archive/priority2-track-d/build-frontend-baseline.log` and `docs/archive/priority2-track-d/build-frontend-after.log` and record the exact frontend message count/signature delta attributable to the selected Track D candidate.
+- [x] T04 `[validation]` Warning-outcome validation: compare `docs/archive/priority2-track-d/build-frontend-baseline.log` and `docs/archive/priority2-track-d/build-frontend-after.log` and record the exact frontend message count/signature delta attributable to the selected Track D candidate.
   - Trace:
     - "Frontend build message count/signature before and after each accepted Track D slice is captured." (Validation Strategy)
     - "Pass: message changes are measurable, attributable to a specific candidate change, and compared against the refreshed baseline." (Validation Strategy)
 
-- [ ] T05 `[validation]` Artifact-contract validation: run `bash ./scripts/validate-frontend-artifacts.sh dist` after each accepted frontend build-hygiene slice and confirm the required built artifact contract still holds.
+- [x] T05 `[validation]` Artifact-contract validation: run `bash ./scripts/validate-frontend-artifacts.sh dist` after each accepted frontend build-hygiene slice and confirm the required built artifact contract still holds.
   - Trace:
     - "Track D changes must not alter public embed/client behavior or intended runtime asset behavior." (Validation Strategy)
     - "Pass: accepted changes show no observed behavior drift in the frontend build output and any required smoke/parity checks remain aligned with current expectations." (Validation Strategy)
 
-- [ ] T06 `[validation]` Frontend embed-smoke validation: run `bash ./scripts/smoke-frontend-embed.sh dist` after each accepted frontend build-hygiene slice and confirm the built frontend still preserves baseline embed/runtime wiring expectations.
+- [x] T06 `[validation]` Frontend embed-smoke validation: run `bash ./scripts/smoke-frontend-embed.sh dist` after each accepted frontend build-hygiene slice and confirm the built frontend still preserves baseline embed/runtime wiring expectations.
   - Trace:
     - "Preserve current frontend runtime behavior and public embed/client expectations." (Constraints)
     - "Pass: accepted changes show no observed behavior drift in the frontend build output and any required smoke/parity checks remain aligned with current expectations." (Validation Strategy)
