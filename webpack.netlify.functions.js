@@ -60,8 +60,9 @@ const config = {
           ["mongodb-client-encryption", "mongodb/lib"],
           ["snappy", "mongodb/lib"],
         ]
+        const normalizedContext = (context ?? "").replace(/\\/g, "/")
 
-        return ignores.some(([i, c]) => resource === i && context.endsWith(c))
+        return ignores.some(([i, c]) => resource === i && normalizedContext.endsWith(c))
       },
     }),
   ],
