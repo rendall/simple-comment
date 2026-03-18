@@ -26,7 +26,7 @@ QC mode: Conformance QC
     - "Re-confirm the current frontend build-output messages emitted by the canonical frontend production build path." (In Scope)
     - "A fresh local `yarn run build:frontend` re-check on March 18, 2026 confirmed that the current frontend build still emits the same three unique noisy message signatures already captured in the baseline and did not surface any additional frontend warning/noise signatures." (Current Baseline)
 
-- [ ] C02 `[analysis]` Create or update `docs/archive/priority2-track-d/warning-register-current.md` so each in-scope frontend message is classified as `actionable warning`, `informational notice`, or `tolerated residual notice`, with rationale, owner, and re-evaluation trigger.
+- [x] C02 `[analysis]` Create or update `docs/archive/priority2-track-d/warning-register-current.md` so each in-scope frontend message is classified as `actionable warning`, `informational notice`, or `tolerated residual notice`, with rationale, owner, and re-evaluation trigger.
   - Depends on: C01.
   - Validation: T02, T07.
   - Trace:
@@ -96,7 +96,7 @@ QC mode: Conformance QC
     - "Re-confirm the current frontend build-output messages emitted by the canonical frontend production build path." (In Scope)
     - "The current frontend build-output messages are re-confirmed from the canonical frontend production build path." (Acceptance Criteria)
 
-- [ ] T02 `[validation]` Classification validation: confirm `docs/archive/priority2-track-d/warning-register-current.md` covers every current frontend message and assigns one explicit Track D disposition plus rationale, owner, and re-evaluation trigger.
+- [x] T02 `[validation]` Classification validation: confirm `docs/archive/priority2-track-d/warning-register-current.md` covers every current frontend message and assigns one explicit Track D disposition plus rationale, owner, and re-evaluation trigger.
   - Trace:
     - "Re-classify each in-scope frontend message using the Track D categories..." (In Scope)
     - "Every in-scope frontend build message has an explicit Track D disposition: actionable warning, informational notice, or tolerated residual notice." (Acceptance Criteria)
