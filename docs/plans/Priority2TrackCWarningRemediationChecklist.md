@@ -40,7 +40,7 @@ QC mode: Conformance QC
     - "Rank remediation candidates by: alignment with upstream guidance, runtime-behavior safety, reversibility, warning-reduction impact, and modernization spillover risk." (How We Will Execute Track C)
     - "When multiple options are available, prefer them in this order..." (Preferred Decision Policy)
 
-- [ ] C04 `[backend]` Implement one low-risk backend-first remediation slice that matches current-stack upstream guidance without introducing MongoDB major-version modernization or unrelated toolchain migration.
+- [x] C04 `[backend]` Implement one low-risk backend-first remediation slice that matches current-stack upstream guidance without introducing MongoDB major-version modernization or unrelated toolchain migration.
   - Depends on: C03.
   - Validation: T04, T05, T07.
   - Trace:
