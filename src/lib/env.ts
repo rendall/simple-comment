@@ -1,5 +1,7 @@
+import { config as dotenvConfig } from "dotenv"
+
 if (process.env.NODE_ENV !== "production") {
-  require("dotenv").config()
+  dotenvConfig()
 }
 
 type RequiredBackendEnvKey =
