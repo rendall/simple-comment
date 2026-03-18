@@ -5974,10 +5974,10 @@ caniuse-lite@^1.0.30001759:
   resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001775.tgz#9572266e3f7f77efee5deac1efeb4795879d1b7f"
   integrity sha512-s3Qv7Lht9zbVKE9XoTyRG6wVDCKdtOFIjBGg3+Yhn6JaytuNKPIjBMTMIY1AnOH3seL5mvF+x33oGAyK3hVt3A==
 
-carbon-icons-svelte@^12.0.0:
-  version "12.1.0"
-  resolved "https://registry.yarnpkg.com/carbon-icons-svelte/-/carbon-icons-svelte-12.1.0.tgz#9bad975d8621acec8b2f6244bd6308603c326d8d"
-  integrity sha512-RPU+W/AhkdPRqHMaShOdFluQZXMT6PNYrqEwPxDBvmrX2ioOYhZo1J508e0WeVX69iOqyUv6KjxrdbsoDdogeg==
+carbon-icons-svelte@^13.9.1:
+  version "13.9.1"
+  resolved "https://registry.yarnpkg.com/carbon-icons-svelte/-/carbon-icons-svelte-13.9.1.tgz#a06125f8e7fc42aaec89bc68acdacb3e897bb79b"
+  integrity sha512-rhpfzAohh62QG0k0IwH2u6GJ0OYnf4tOLkBI9h7EGAM3xQC8q5WFv4p2vMBTxMs0MIqED8ttknhjlJBllFMBEw==
 
 caseless@~0.12.0:
   version "0.12.0"
