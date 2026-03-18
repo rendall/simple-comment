@@ -1,6 +1,6 @@
-# Priority 2 Track D Plan Draft — Frontend Build Noise Hygiene
+# Priority 2 Track D Plan — Frontend Build Noise Hygiene
 
-Status: draft
+Status: active
 
 Source backlog: `docs/RepoHealthImprovementBacklog.md` (`Priority 2: Build and Bundle Warning Reduction`)
 
@@ -11,7 +11,7 @@ Related artifacts:
 - `docs/archive/priority2-pr-a/artifacts/build-frontend.log`
 - `docs/plans/Priority2TrackCWarningRemediationPlan.md`
 
-Classification: discussion draft under `docs/norms/plan.md` for Track D refinement; not yet a checklist source of truth.
+Classification: formal plan artifact under `docs/norms/plan.md`
 
 ## Goal
 
@@ -71,6 +71,8 @@ This phase should improve build-output clarity, not expand into dependency moder
 
 Track D starts from the frontend warning inventory already captured in the Priority 2 baseline artifacts.
 
+A fresh local `yarn run build:frontend` re-check on March 18, 2026 confirmed that the current frontend build still emits the same three unique noisy message signatures already captured in the baseline and did not surface any additional frontend warning/noise signatures.
+
 The currently known frontend build messages in scope are:
 
 1. `The CJS build of Vite's Node API is deprecated.`
@@ -85,6 +87,15 @@ Their current register dispositions are:
 
 Track D should verify that this baseline still matches the current frontend build before any checklist is authored.
 
+## Known Repo-Local Surfaces
+
+The current warning/noise signatures map to these repo-local surfaces and should anchor Track D implementation/checklist authoring:
+
+- `vite.config.ts` for Vite config shape, Svelte plugin setup, and the current dev HTML transform that rewrites stylesheet links only for dev-server use.
+- `src/entry/index.html` and `src/entry/icebreakers/index.html` for the current runtime stylesheet link to `/css/simple-comment-style.css`.
+- `src/components/CommentDisplay.svelte` and `src/components/low-level/PasswordInput.svelte` for current `carbon-icons-svelte` imports that trigger the third-party package metadata warning during the Svelte/Vite build.
+- `docs/archive/priority2-pr-a/artifacts/warning-register.md` and Track D artifacts/docs for warning/noise disposition updates.
+
 ## How We Will Execute Track D
 
 1. Re-run the canonical frontend production build and confirm the exact current message signatures and frequency.
@@ -93,20 +104,24 @@ Track D should verify that this baseline still matches the current frontend buil
    - an actionable warning to fix now,
    - an informational notice that should remain visible but be documented,
    - or a tolerated residual notice with explicit rationale and re-check trigger.
-4. Rank low-risk remediation candidates using these factors:
+4. Use these current default dispositions during checklist authoring unless new evidence from implementation invalidates them:
+   - treat the runtime CSS path notice as the primary repo-local mitigation candidate,
+   - treat the `carbon-icons-svelte` export-condition warning as an upstream/dependency-metadata notice unless the dependency is already changing for another approved reason,
+   - treat the Vite CJS Node API deprecation message as a residual ecosystem/tooling notice unless a clearly low-risk repo-local alignment fix is identified without triggering broader modernization scope.
+5. Rank low-risk remediation candidates using these factors:
    - runtime-behavior safety,
    - clarity gain for contributors,
    - reversibility,
    - alignment with current tool guidance,
    - and risk of scope expansion into modernization work.
-5. Implement at most one low-risk frontend build-hygiene change at a time.
-6. Re-run the frontend build after each accepted change and record:
+6. Implement at most one low-risk frontend build-hygiene change at a time.
+7. Re-run the frontend build after each accepted change and record:
    - build success/failure,
    - message count/signature delta,
    - whether the output is more legible,
    - and whether any runtime-facing artifact expectations changed.
-7. Update the frontend warning documentation and any residual-notice rationale after each measured decision.
-8. Stop once the in-scope frontend output is either:
+8. Update the frontend warning documentation and any residual-notice rationale after each measured decision.
+9. Stop once the in-scope frontend output is either:
    - improved through accepted low-risk fixes, or
    - cleanly dispositioned with documented residual notices and no justified next low-risk fix remaining.
 
@@ -125,6 +140,12 @@ Do not prefer:
 - broad frontend dependency modernization as a warning-cleanup shortcut,
 - UI or architecture refactors that do not directly improve build-output trust,
 - or hiding messages without a documented explanation of why they are acceptable.
+
+For the current known message set, this policy implies:
+
+- prioritize repo-local evaluation of the stylesheet-path notice before investing in third-party warning churn,
+- keep the `carbon-icons-svelte` warning in tolerance scope unless another approved change already touches that dependency path,
+- and allow the Vite CJS notice to remain documented if the only plausible remediation paths materially increase modernization scope.
 
 ## Risks and Mitigations
 
@@ -186,10 +207,9 @@ Artifact paths should be finalized during refinement before checklist authoring.
 
 - Assumption: the current frontend warning set can be improved or cleanly dispositioned without changing user-facing behavior.
 - Assumption: at least one current frontend message is either fixable through low-risk config alignment or documentable as intentional residual noise.
-- Open question: should Track D retain the parent plan's distinction between warnings and notices verbatim, or define a stricter repo-local message taxonomy for future validation checks?
-- Open question: does the Vite CJS deprecation message require repo-local config migration now, or should it stay tolerated until a later toolchain-modernization phase?
-- Open question: is the runtime CSS path notice best addressed through asset-path clarity, or is it an intentional runtime-resolution pattern that should simply be documented more clearly?
-- Open question: should the `carbon-icons-svelte` package warning remain tolerated unless the dependency is already changing for another approved reason?
+- Assumption: Track D will retain the parent plan's warning-vs-notice distinction rather than inventing a more granular local taxonomy for this phase.
+- Open question: does the runtime CSS path notice reduce cleanly through repo-local asset-path alignment, or should Track D conclude that the current runtime-resolution pattern is intentional and document it as a residual notice instead?
+- Open question: does the current stack expose a genuinely low-risk repo-local path to reduce the Vite CJS deprecation notice, or should Track D record it as a tolerated ecosystem notice and hand it forward to a later modernization phase?
 
 ## Track D Scope Guard
 
@@ -203,19 +223,18 @@ The following work is explicitly deferred and must not be folded into Track D wi
 
 If a proposed fix requires one of the above to succeed, Track D should stop, document the blocker, and return to plan refinement rather than silently expanding scope.
 
-## Conformance QC (Discussion Draft)
+## Conformance QC (Plan)
 
 - Intent clarity issues:
-  - none observed in the current draft; the user-facing outcome is stated in plain language.
+  - none observed; the user-facing outcome is stated in plain language.
 - Missing required sections:
   - none (`Goal`, `Intent`, `In Scope`, `Out of Scope`, and `Acceptance Criteria` are present).
 - Ambiguities/assumptions to resolve:
-  - whether the Vite CJS deprecation notice is in-scope for repo-local remediation now or should be treated as an accepted residual notice,
-  - whether the runtime CSS path message reflects a correct intentional asset pattern or a fixable clarity problem,
-  - and whether Track D needs a stricter message taxonomy before checklist authoring.
+  - execution-time ambiguity remains around whether the runtime CSS path notice is eliminable or should end as an intentionally documented residual notice,
+  - and whether a genuinely low-risk repo-local treatment exists for the Vite CJS notice on the current stack.
 - Validation strategy gaps:
-  - no structural gap, but the exact smoke/parity evidence for behavior-adjacent asset-path changes should be confirmed during refinement.
+  - none that block checklist authoring; artifact-contract and embed-smoke validation already exist as suitable validation anchors for behavior-adjacent frontend build changes.
 - Traceability readiness:
-  - mostly ready; the draft contains quoteable statements for checklist conversion once the open questions above are settled.
+  - ready; the plan contains quoteable statements for checklist conversion and identifies the current default disposition policy plus likely repo-local surfaces.
 - Pass/Fail: ready for checklist authoring:
-  - **Fail for now** pending collaborator confirmation of intended outcomes, scope boundaries, acceptance criteria interpretation, and the unresolved Track D ambiguities listed above.
+  - **Pass**.

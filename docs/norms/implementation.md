@@ -13,8 +13,8 @@ If there is no approved checklist created under `docs/norms/checklist.md` conven
 ## Start State
 
 - Run relevant tests to understand baseline behavior.
-- Check out a new branch named as `<verb>-<optionalAdj>-<noun>` to describe intent.
-  - This pattern is mandatory for new work branches.
+- If the current branch is `master`, then check out a new branch 
+  - named as `<verb>-<optionalAdj>-<noun>` to describe intent
   - Use lowercase kebab-case tokens.
   - Examples: `fix-auth-cookie`, `upgrade-core-dependencies`, `refactor-comment-pipeline`.
 - Check `git status`.
