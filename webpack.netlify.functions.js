@@ -62,7 +62,9 @@ const config = {
         ]
         const normalizedContext = (context ?? "").replace(/\\/g, "/")
 
-        return ignores.some(([i, c]) => resource === i && normalizedContext.endsWith(c))
+        return ignores.some(
+          ([i, c]) => resource === i && normalizedContext.endsWith(c)
+        )
       },
     }),
   ],
