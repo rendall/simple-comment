@@ -1,0 +1,16 @@
+yarn run v1.22.22
+$ cross-env TZ=UTC jest --config jest.frontend.config.ts
+PASS src/tests/frontend/blockies.test.ts (14.25 s)
+PASS src/tests/frontend/discussion.xstate.test.ts (15.303 s)
+PASS src/tests/frontend/shared-utilities.test.ts (19.735 s)
+PASS src/tests/frontend/login.xstate.test.ts (22.47 s)
+PASS src/tests/frontend/hello-world.test.ts (23.146 s)
+PASS src/tests/frontend/svelte-stores.test.ts (65.998 s)
+PASS src/tests/frontend/frontend-utilities.test.ts (44.704 s)
+
+Test Suites: 7 passed, 7 total
+Tests:       159 passed, 159 total
+Snapshots:   0 total
+Time:        120.534 s
+Ran all test suites.
+Done in 142.51s.
