@@ -119,7 +119,7 @@ QC mode: Conformance QC
     - "Silent warning suppression without recorded rationale and validation evidence." (Out of Scope)
     - "If a proposed fix requires one of the above to succeed, Track C should stop, document the blocker, and hand it forward rather than silently expanding scope." (Track C Scope Guard)
 
-- [ ] T08 `[validation]` Loop-control validation: confirm each attempted remediation candidate completed one full implement → measure → validate → decide cycle, that iteration continued when eligible current-stack candidates remained, and that loop exit occurred only on clean remediation or documented residual disposition.
+- [x] T08 `[validation]` Loop-control validation: confirm each attempted remediation candidate completed one full implement → measure → validate → decide cycle, that iteration continued when eligible current-stack candidates remained, and that loop exit occurred only on clean remediation or documented residual disposition.
   - Trace:
     - "Stop once the backend warning path is either: cleanly remediated with acceptable risk, or explicitly dispositioned as a documented residual warning with owner and re-check trigger." (How We Will Execute Track C)
     - "Loop rule: do not batch multiple remediation approaches before completing one full implement → measure → validate → decide cycle." (How We Will Execute Track C)

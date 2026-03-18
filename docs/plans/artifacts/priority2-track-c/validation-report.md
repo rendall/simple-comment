@@ -29,3 +29,9 @@ Status: active
 - Pass: `yarn run test:frontend` completed successfully (`7` suites passed, `159` tests passed).
 - Pass: `yarn run test:backend` completed successfully (`11` suites passed, `197` tests passed).
 - Pass: the accepted remediation slice shows no observed runtime-behavior or API-contract drift in the available parity evidence.
+
+## T08
+
+- Pass: the attempted candidate completed one full implement → measure → validate → decide cycle.
+- Pass: the accepted first slice was followed by an explicit continuation-rule check rather than silent loop termination.
+- Pass: loop exit occurred because no other eligible low-risk current-stack candidate remained, not because the remaining warning was ignored without disposition.
