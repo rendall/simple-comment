@@ -25,7 +25,7 @@ QC mode: Conformance QC
     - "Re-confirm the current backend warning signatures and call path from the canonical backend build." (In Scope)
     - "Re-capture the canonical backend warning evidence and confirm the exact warning signatures still match the current register." (How We Will Execute Track C)
 
-- [ ] C02 `[research]` Create a Track C guidance-sources note that records the upstream or external guidance consulted for current-stack MongoDB optional dependency handling and webpack optional dependency treatment.
+- [x] C02 `[research]` Create a Track C guidance-sources note that records the upstream or external guidance consulted for current-stack MongoDB optional dependency handling and webpack optional dependency treatment.
   - Depends on: C01.
   - Validation: T02.
   - Trace:
