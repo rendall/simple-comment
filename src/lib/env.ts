@@ -1,6 +1,8 @@
 import { config as dotenvConfig } from "dotenv"
 
-dotenvConfig()
+if (process.env.NODE_ENV !== "production") {
+  dotenvConfig()
+}
 
 type RequiredBackendEnvKey =
   | "DB_CONNECTION_STRING"
