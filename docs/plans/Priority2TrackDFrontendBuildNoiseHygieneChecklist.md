@@ -19,7 +19,7 @@ QC mode: Conformance QC
 
 ## Atomic Checklist Items
 
-- [ ] C01 `[baseline]` Re-run `yarn run build:frontend`, capture the raw Track D baseline in `docs/archive/priority2-track-d/build-frontend-baseline.log`, and confirm that the current frontend build still emits exactly the three in-scope noisy message signatures with no additional unique frontend warning/noise signatures.
+- [x] C01 `[baseline]` Re-run `yarn run build:frontend`, capture the raw Track D baseline in `docs/archive/priority2-track-d/build-frontend-baseline.log`, and confirm that the current frontend build still emits exactly the three in-scope noisy message signatures with no additional unique frontend warning/noise signatures.
   - Depends on: none.
   - Validation: T01.
   - Trace:
@@ -91,7 +91,7 @@ QC mode: Conformance QC
 
 ## Validation Items
 
-- [ ] T01 `[validation]` Baseline validation: confirm `docs/archive/priority2-track-d/build-frontend-baseline.log` comes from `yarn run build:frontend` and captures exactly the three in-scope noisy message signatures with no extra unique frontend warning/noise signatures.
+- [x] T01 `[validation]` Baseline validation: confirm `docs/archive/priority2-track-d/build-frontend-baseline.log` comes from `yarn run build:frontend` and captures exactly the three in-scope noisy message signatures with no extra unique frontend warning/noise signatures.
   - Trace:
     - "Re-confirm the current frontend build-output messages emitted by the canonical frontend production build path." (In Scope)
     - "The current frontend build-output messages are re-confirmed from the canonical frontend production build path." (Acceptance Criteria)
