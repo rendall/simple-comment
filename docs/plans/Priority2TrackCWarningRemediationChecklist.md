@@ -93,7 +93,7 @@ QC mode: Conformance QC
     - "Record the guidance sources consulted for Track C decisions, including enough detail for later reviewers to verify what guidance was followed." (How We Will Execute Track C)
     - "Any upstream or external guidance used to support a Track C decision is cited in the relevant planning/evidence artifacts." (Acceptance Criteria)
 
-- [ ] T03 `[validation]` Candidate-ranking validation: confirm the remediation candidate note ranks options using the plan's required decision factors and preserves the preferred current-stack ordering policy.
+- [x] T03 `[validation]` Candidate-ranking validation: confirm the remediation candidate note ranks options using the plan's required decision factors and preserves the preferred current-stack ordering policy.
   - Trace:
     - "Rank remediation candidates by..." (How We Will Execute Track C)
     - "When multiple options are available, prefer them in this order..." (Preferred Decision Policy)
