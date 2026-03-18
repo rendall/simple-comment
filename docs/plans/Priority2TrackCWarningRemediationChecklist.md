@@ -88,7 +88,7 @@ QC mode: Conformance QC
     - "Re-capture the canonical backend warning evidence and confirm the exact warning signatures still match the current register." (How We Will Execute Track C)
     - "Backend warning count/signature outcome after Track C is captured and compared against the pre-Track C baseline." (Acceptance Criteria)
 
-- [ ] T02 `[validation]` Guidance-citation validation: confirm the guidance-sources artifact identifies the upstream or external sources actually used and that those citations appear in the relevant decision/evidence artifacts.
+- [x] T02 `[validation]` Guidance-citation validation: confirm the guidance-sources artifact identifies the upstream or external sources actually used and that those citations appear in the relevant decision/evidence artifacts.
   - Trace:
     - "Record the guidance sources consulted for Track C decisions, including enough detail for later reviewers to verify what guidance was followed." (How We Will Execute Track C)
     - "Any upstream or external guidance used to support a Track C decision is cited in the relevant planning/evidence artifacts." (Acceptance Criteria)
