@@ -98,7 +98,7 @@ QC mode: Conformance QC
     - "Rank remediation candidates by..." (How We Will Execute Track C)
     - "When multiple options are available, prefer them in this order..." (Preferred Decision Policy)
 
-- [ ] T04 `[validation]` Warning-outcome validation: compare pre- and post-slice backend build output and record the exact warning count/signature delta attributable to the selected remediation candidate.
+- [x] T04 `[validation]` Warning-outcome validation: compare pre- and post-slice backend build output and record the exact warning count/signature delta attributable to the selected remediation candidate.
   - Trace:
     - "Re-run backend build validation after each remediation slice and compare warning count/signature against baseline." (In Scope)
     - "Backend warning count/signature before and after each remediation slice is captured." (Validation Strategy)

@@ -17,3 +17,9 @@ Status: active
 
 - Pass: `remediation-candidate-note.md` ranks candidates using the plan's required decision factors.
 - Pass: the note preserves the preferred current-stack ordering policy by selecting targeted webpack-side handling ahead of dependency installation, externalization, or modernization.
+
+## T04
+
+- Pass: the post-change backend build output is attributable to the selected `C-CFG-01` remediation slice.
+- Pass: warning count dropped from `2` to `1`.
+- Pass: the `mongodb-client-encryption` module-resolution warning was removed while the existing dynamic-require warning remained.
