@@ -2,7 +2,7 @@ const path = require("path")
 const fs = require("fs")
 const webpack = require("webpack")
 
-const mode = process.env.NODE_ENV ?? "development"
+const mode = process.env.NODE_ENV ?? "production"
 const isProduction = mode === "production"
 
 const entry = fs
@@ -20,7 +20,7 @@ const config = {
   mode,
   entry,
   performance: {
-    hints: isProduction ? "warning" : false,
+    hints: false,
   },
   resolve: {
     extensions: [".ts", ".js"],
@@ -60,8 +60,6 @@ const config = {
           ["snappy", "mongodb/lib"],
         ]
 
-        if (resource.includes("mongodb/lib/utils"))
-          console.log({ resource, context })
 
         return ignores.some(([i, c]) => resource === i && context.endsWith(c))
       },

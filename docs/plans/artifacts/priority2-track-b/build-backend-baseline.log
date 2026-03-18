@@ -1,0 +1,39 @@
+asset [1m[33mtopic.js[39m[22m [1m[33m2.94 MiB[39m[22m [1m[32m[emitted][39m[22m [1m[33m[big][39m[22m (name: topic)
+asset [1m[33mauth.js[39m[22m [1m[33m2.94 MiB[39m[22m [1m[32m[emitted][39m[22m [1m[33m[big][39m[22m (name: auth)
+asset [1m[33mcomment.js[39m[22m [1m[33m2.94 MiB[39m[22m [1m[32m[emitted][39m[22m [1m[33m[big][39m[22m (name: comment)
+asset [1m[33mgauth.js[39m[22m [1m[33m2.94 MiB[39m[22m [1m[32m[emitted][39m[22m [1m[33m[big][39m[22m (name: gauth)
+asset [1m[33muser.js[39m[22m [1m[33m2.94 MiB[39m[22m [1m[32m[emitted][39m[22m [1m[33m[big][39m[22m (name: user)
+asset [1m[33mverify.js[39m[22m [1m[33m2.94 MiB[39m[22m [1m[32m[emitted][39m[22m [1m[33m[big][39m[22m (name: verify)
+orphan modules 78.8 KiB [1m[33m[orphan][39m[22m 66 modules
+runtime modules 6.21 KiB 30 modules
+modules by path [1m./node_modules/[39m[22m 2.21 MiB
+  javascript modules 2.07 MiB 700 modules
+  json modules 144 KiB
+    modules by path [1m./node_modules/@aws-sdk/[39m[22m 12.5 KiB 4 modules
+    + 3 modules
+modules by path [1m./src/[39m[22m 103 KiB
+  modules by path [1m./src/lib/*.ts[39m[22m 80.9 KiB 9 modules
+  modules by path [1m./src/functions/*.ts[39m[22m 22.1 KiB
+    [1m./src/functions/auth.ts[39m[22m 4.17 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+    + 5 modules
+  [1m./src/policy.json[39m[22m 289 bytes [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
++ 21 modules
+
+[1m[33mWARNING[39m[22m in [1m./node_modules/mongodb/lib/utils.js[39m[22m [1m[32m953:38-93[39m[22m
+[1mCritical dependency: the request of a dependency is an expression[39m[22m
+ @ ./node_modules/mongodb/lib/change_stream.js 11:16-34
+ @ ./node_modules/mongodb/lib/index.js 12:24-50
+ @ ./src/lib/MongodbService.ts 12:0-38 31:33-52
+ @ ./src/functions/auth.ts 10:0-55 16:20-34
+
+[1m[33mWARNING[39m[22m in [1m./node_modules/mongodb/lib/utils.js[39m[22m [1m[32m964:38-74[39m[22m
+[1mModule [1m[31mnot found[39m[22m[1m: [1m[31mError[39m[22m[1m: Can't resolve 'mongodb-client-encryption' in '/workspace/simple-comment/node_modules/mongodb/lib'[39m[22m
+ @ ./node_modules/mongodb/lib/change_stream.js 11:16-34
+ @ ./node_modules/mongodb/lib/index.js 12:24-50
+ @ ./src/lib/MongodbService.ts 12:0-38 31:33-52
+ @ ./src/functions/auth.ts 10:0-55 16:20-34
+
+2 warnings have detailed information that is not shown.
+Use 'stats.errorDetails: true' resp. '--stats-error-details' to show it.
+
+webpack 5.88.2 compiled with [1m[33m2 warnings[39m[22m in 4908 ms

@@ -1,0 +1,40 @@
+asset topic.js 1010 KiB [emitted] [minimized] [big] (name: topic) 1 related asset
+asset user.js 1010 KiB [emitted] [minimized] [big] (name: user) 1 related asset
+asset comment.js 1010 KiB [emitted] [minimized] [big] (name: comment) 1 related asset
+asset auth.js 1010 KiB [emitted] [minimized] [big] (name: auth) 1 related asset
+asset verify.js 1010 KiB [emitted] [minimized] [big] (name: verify) 1 related asset
+asset gauth.js 1010 KiB [emitted] [minimized] [big] (name: gauth) 1 related asset
+orphan modules 643 KiB [orphan] 525 modules
+runtime modules 6.21 KiB 30 modules
+built modules 2.73 MiB [built]
+  modules by path ./node_modules/ 2.18 MiB
+    cacheable modules 1.73 MiB 257 modules
+    optional modules 464 KiB [optional]
+      ./node_modules/@aws-sdk/credential-providers/dist-es/index.js + 335 modules 463 KiB [not cacheable] [optional] [built] [code generated]
+      ./node_modules/mongodb/lib/ sync 160 bytes [optional] [built] [code generated]
+  modules by path ./src/functions/*.ts 559 KiB
+    ./src/functions/auth.ts + 11 modules 93.6 KiB [built] [code generated]
+    ./src/functions/comment.ts + 11 modules 92.9 KiB [built] [code generated]
+    ./src/functions/gauth.ts + 11 modules 93.1 KiB [built] [code generated]
+    ./src/functions/topic.ts + 11 modules 93.6 KiB [built] [code generated]
+    + 2 modules
+  + 18 modules
+
+WARNING in ./node_modules/mongodb/lib/utils.js 953:38-93
+Critical dependency: the request of a dependency is an expression
+ @ ./node_modules/mongodb/lib/db.js 27:16-34
+ @ ./node_modules/mongodb/lib/index.js 26:13-28
+ @ ./src/lib/MongodbService.ts 12:0-38 31:33-52
+ @ ./src/functions/auth.ts 10:0-55 16:20-34
+
+WARNING in ./node_modules/mongodb/lib/utils.js 964:38-74
+Module not found: Error: Can't resolve 'mongodb-client-encryption' in '/workspace/simple-comment/node_modules/mongodb/lib'
+ @ ./node_modules/mongodb/lib/db.js 27:16-34
+ @ ./node_modules/mongodb/lib/index.js 26:13-28
+ @ ./src/lib/MongodbService.ts 12:0-38 31:33-52
+ @ ./src/functions/auth.ts 10:0-55 16:20-34
+
+2 warnings have detailed information that is not shown.
+Use 'stats.errorDetails: true' resp. '--stats-error-details' to show it.
+
+webpack 5.88.2 compiled with 2 warnings in 32095 ms
