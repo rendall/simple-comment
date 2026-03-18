@@ -83,7 +83,7 @@ QC mode: Conformance QC
 
 ## Validation Items
 
-- [ ] T01 `[validation]` Baseline validation: confirm the refreshed Track C backend warning baseline comes from the canonical backend build path and still matches the warning register's in-scope signatures.
+- [x] T01 `[validation]` Baseline validation: confirm the refreshed Track C backend warning baseline comes from the canonical backend build path and still matches the warning register's in-scope signatures.
   - Trace:
     - "Re-capture the canonical backend warning evidence and confirm the exact warning signatures still match the current register." (How We Will Execute Track C)
     - "Backend warning count/signature outcome after Track C is captured and compared against the pre-Track C baseline." (Acceptance Criteria)
