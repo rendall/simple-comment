@@ -1,6 +1,6 @@
 # Priority 2 Track C Checklist — Warning Remediation (Backend First)
 
-Status: planning
+Status: active
 
 Source plan: `docs/plans/Priority2TrackCWarningRemediationPlan.md`
 
