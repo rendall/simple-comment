@@ -108,7 +108,7 @@ QC mode: Conformance QC
     - "Preserve current runtime behavior and API contracts." (Constraints)
     - "Backend build remediation must not introduce API-contract or runtime-behavior drift." (Validation Strategy)
 
-- [ ] T06 `[validation]` Documentation/disposition validation: confirm the warning register, Track C evidence notes, and any residual-warning documentation are current, internally consistent, and aligned with the recorded Track C decision.
+- [x] T06 `[validation]` Documentation/disposition validation: confirm the warning register, Track C evidence notes, and any residual-warning documentation are current, internally consistent, and aligned with the recorded Track C decision.
   - Trace:
     - "Warning disposition artifacts are updated to match the actual measured Track C result." (Validation Strategy)
     - "Pass: warning register entries, residual-warning rationale, re-check triggers, and guidance-source citations are current and internally consistent." (Validation Strategy)

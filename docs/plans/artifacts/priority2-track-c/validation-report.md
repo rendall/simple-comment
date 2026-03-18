@@ -35,3 +35,9 @@ Status: active
 - Pass: the attempted candidate completed one full implement → measure → validate → decide cycle.
 - Pass: the accepted first slice was followed by an explicit continuation-rule check rather than silent loop termination.
 - Pass: loop exit occurred because no other eligible low-risk current-stack candidate remained, not because the remaining warning was ignored without disposition.
+
+## T06
+
+- Pass: `warning-register-current.md`, `warning-before-after.md`, and `residual-warning-note.md` agree on the final Track C warning state.
+- Pass: `W002` is documented as eliminated and `W001` is documented as the only remaining backend warning.
+- Pass: guidance-source citations remain available through the Track C evidence chain (`guidance-sources.md`, `mongodb-warning-guide.md`, and candidate/decision artifacts).
