@@ -14,17 +14,15 @@ export default defineConfig(async ({ mode }) => {
     __dirname,
     "src/scss/simple-comment-style.scss"
   )
+  const buildCssHref = "/css/simple-comment-style.css"
+  const styleHrefPlaceholder = "__SIMPLE_COMMENT_STYLE_HREF__"
   const frontendApiUrl =
     env.VITE_SIMPLE_COMMENT_API_URL ?? env.SIMPLE_COMMENT_API_URL
   const frontendApiUrlDefine =
     frontendApiUrl === undefined ? "undefined" : JSON.stringify(frontendApiUrl)
   const toFsPath = (targetPath: string) =>
     `/@fs/${targetPath.replace(/\\/g, "/")}`
-  const sourceStyleLink = `<link rel="stylesheet" type="text/css" href="${toFsPath(
-    sourceCssPath
-  )}" />`
-  const buildStyleLinkPattern =
-    /<link[^>]+href="\/css\/simple-comment-style\.css"[^>]*>/m
+  const sourceCssHref = toFsPath(sourceCssPath)
 
   return {
     root: viteRoot,
@@ -41,22 +39,8 @@ export default defineConfig(async ({ mode }) => {
       {
         name: "simple-comment-dev-html-entries",
         transformIndexHtml(html, ctx) {
-          if (!ctx?.server) return html
-
-          const pathname = ctx.path.split("?")[0]
-
-          if (pathname === "/" || pathname === "/index.html") {
-            return html.replace(buildStyleLinkPattern, sourceStyleLink)
-          }
-
-          if (
-            pathname === "/icebreakers/" ||
-            pathname === "/icebreakers/index.html"
-          ) {
-            return html.replace(buildStyleLinkPattern, sourceStyleLink)
-          }
-
-          return html
+          const styleHref = ctx?.server ? sourceCssHref : buildCssHref
+          return html.replaceAll(styleHrefPlaceholder, styleHref)
         },
       },
     ],

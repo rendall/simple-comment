@@ -50,7 +50,7 @@ QC mode: Conformance QC
     - "treat the Vite CJS Node API deprecation message as a residual ecosystem/tooling notice unless a clearly low-risk repo-local alignment fix is identified without triggering broader modernization scope." (How We Will Execute Track D)
     - "prioritize repo-local evaluation of the stylesheet-path notice before investing in third-party warning churn" (Preferred Decision Policy)
 
-- [ ] C05 `[frontend]` Execute the single candidate selected in C04 in one isolated slice: either implement the locked repo-local mitigation in the named files, or record an explicit `DEFER` outcome in `docs/archive/priority2-track-d/remediation-candidate-note.md` if C04 concluded that no eligible low-risk repo-local change remains.
+- [x] C05 `[frontend]` Execute the single candidate selected in C04 in one isolated slice: either implement the locked repo-local mitigation in the named files, or record an explicit `DEFER` outcome in `docs/archive/priority2-track-d/remediation-candidate-note.md` if C04 concluded that no eligible low-risk repo-local change remains.
   - Depends on: C04.
   - Validation: T04, T05, T06, T08, T09.
   - Trace:
