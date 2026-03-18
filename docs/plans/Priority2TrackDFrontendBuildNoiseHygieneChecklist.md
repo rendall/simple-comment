@@ -73,7 +73,7 @@ QC mode: Conformance QC
     - "Stop once the in-scope frontend output is either: improved through accepted low-risk fixes, or cleanly dispositioned with documented residual notices and no justified next low-risk fix remaining." (How We Will Execute Track D)
     - "Loop rule: do not batch multiple speculative frontend warning fixes before completing one full implement → measure → validate → decide cycle." (How We Will Execute Track D)
 
-- [ ] C08 `[docs]` Update `docs/archive/priority2-track-d/warning-register-current.md` and `docs/archive/priority2-track-d/validation-report.md` so they reflect the measured Track D outcome and clearly separate expected notices from actionable warnings.
+- [x] C08 `[docs]` Update `docs/archive/priority2-track-d/warning-register-current.md` and `docs/archive/priority2-track-d/validation-report.md` so they reflect the measured Track D outcome and clearly separate expected notices from actionable warnings.
   - Depends on: C07.
   - Validation: T07.
   - Trace:
