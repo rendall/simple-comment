@@ -65,7 +65,7 @@ QC mode: Conformance QC
     - "Loop rule: do not batch multiple remediation approaches before completing one full implement → measure → validate → decide cycle." (How We Will Execute Track C)
     - "If the lowest-risk current-stack approach cannot eliminate a warning cleanly, document and tolerate it explicitly rather than forcing higher-risk dependency churn." (Constraints)
 
-- [ ] C07 `[docs]` Update the warning register and Track C evidence artifacts so they reflect the measured warning outcome, the cited guidance basis, and the final disposition of the backend MongoDB warning path.
+- [x] C07 `[docs]` Update the warning register and Track C evidence artifacts so they reflect the measured warning outcome, the cited guidance basis, and the final disposition of the backend MongoDB warning path.
   - Depends on: C06.
   - Validation: T02, T06.
   - Trace:
