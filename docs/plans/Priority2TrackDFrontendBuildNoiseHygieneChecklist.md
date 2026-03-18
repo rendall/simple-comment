@@ -34,7 +34,7 @@ QC mode: Conformance QC
     - "Every in-scope frontend build message has an explicit Track D disposition: actionable warning, informational notice, or tolerated residual notice." (Acceptance Criteria)
     - "Any frontend message that remains is intentionally documented with rationale, owner, and re-evaluation trigger." (Acceptance Criteria)
 
-- [ ] C03 `[analysis]` Create `docs/archive/priority2-track-d/remediation-candidate-note.md` that ranks repo-local candidates across `vite.config.ts`, `src/entry/index.html`, `src/entry/icebreakers/index.html`, `src/components/CommentDisplay.svelte`, and `src/components/low-level/PasswordInput.svelte` using the plan's decision factors and default disposition policy.
+- [x] C03 `[analysis]` Create `docs/archive/priority2-track-d/remediation-candidate-note.md` that ranks repo-local candidates across `vite.config.ts`, `src/entry/index.html`, `src/entry/icebreakers/index.html`, `src/components/CommentDisplay.svelte`, and `src/components/low-level/PasswordInput.svelte` using the plan's decision factors and default disposition policy.
   - Depends on: C01, C02.
   - Validation: T03, T08.
   - Trace:
@@ -101,7 +101,7 @@ QC mode: Conformance QC
     - "Re-classify each in-scope frontend message using the Track D categories..." (In Scope)
     - "Every in-scope frontend build message has an explicit Track D disposition: actionable warning, informational notice, or tolerated residual notice." (Acceptance Criteria)
 
-- [ ] T03 `[validation]` Candidate-selection validation: confirm `docs/archive/priority2-track-d/remediation-candidate-note.md` ranks options using runtime-behavior safety, clarity gain, reversibility, tool-guidance alignment, and modernization-spillover risk, and that it follows the stylesheet-path-first default policy.
+- [x] T03 `[validation]` Candidate-selection validation: confirm `docs/archive/priority2-track-d/remediation-candidate-note.md` ranks options using runtime-behavior safety, clarity gain, reversibility, tool-guidance alignment, and modernization-spillover risk, and that it follows the stylesheet-path-first default policy.
   - Trace:
     - "Rank low-risk remediation candidates using these factors..." (How We Will Execute Track D)
     - "prioritize repo-local evaluation of the stylesheet-path notice before investing in third-party warning churn" (Preferred Decision Policy)
