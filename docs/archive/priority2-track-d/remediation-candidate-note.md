@@ -79,3 +79,16 @@ Why:
 - It is the only current frontend noise signature that is clearly repo-local and directly tied to build-output clarity.
 - It offers the best chance of improving contributor trust without entering dependency/toolchain modernization work.
 - If a safe mitigation does not emerge quickly, the fallback path is still in-plan: document the warning as an intentional residual notice and keep the output contract unchanged.
+
+## Locked Loop Candidate
+
+- Selected candidate:
+  - `stylesheet-path mitigation`
+- Working hypothesis:
+  - Replace the hard-coded built stylesheet href in `src/entry/index.html` and `src/entry/icebreakers/index.html` with the source stylesheet entry so Vite can manage the build/dev asset rewrite directly, then simplify `vite.config.ts` only if the custom dev-only stylesheet HTML transform becomes unnecessary.
+- Expected validation path:
+  - `yarn run build:frontend`
+  - `bash ./scripts/validate-frontend-artifacts.sh dist`
+  - `bash ./scripts/smoke-frontend-embed.sh dist`
+- Revert trigger:
+  - Revert immediately if the change alters the emitted `dist/css/simple-comment-style.css` contract, breaks built HTML asset references, or leaves the warning unchanged while increasing config complexity.

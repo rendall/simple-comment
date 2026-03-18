@@ -42,7 +42,7 @@ QC mode: Conformance QC
     - "Rank low-risk remediation candidates using these factors..." (How We Will Execute Track D)
     - "Use these current default dispositions during checklist authoring unless new evidence from implementation invalidates them..." (How We Will Execute Track D)
 
-- [ ] C04 `[control]` Record the next loop candidate in `docs/archive/priority2-track-d/remediation-candidate-note.md` as exactly one of: `stylesheet-path mitigation`, `low-risk Vite-config alignment`, or `explicit defer because only tolerance paths remain`.
+- [x] C04 `[control]` Record the next loop candidate in `docs/archive/priority2-track-d/remediation-candidate-note.md` as exactly one of: `stylesheet-path mitigation`, `low-risk Vite-config alignment`, or `explicit defer because only tolerance paths remain`.
   - Depends on: C03.
   - Validation: T03, T09.
   - Trace:
