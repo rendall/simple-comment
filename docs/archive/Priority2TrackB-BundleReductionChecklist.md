@@ -1,6 +1,6 @@
 # Priority 2 Track B Checklist — Backend Bundle Size Reduction
 
-Status: executed (Track B implementation complete for this cycle)
+Status: archived
 
 Source plan: `docs/plans/Priority2BuildAndBundleWarningReductionPlan.md`
 

@@ -1,7 +1,9 @@
 # Priority 2 Track B Validation Report
 
+Status: archived
+
 ## T01
-- Pass: baseline logs and derived baseline table are present under `docs/plans/artifacts/priority2-track-b/`.
+- Pass: baseline logs and derived baseline table are present under `docs/archive/priority2-track-b/`.
 
 ## T02
 - Pass: `optimization-candidate-ledger.md` includes hypothesis, risk class, expected impact, parity mapping, and revert trigger for each candidate.

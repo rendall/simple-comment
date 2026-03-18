@@ -1,5 +1,7 @@
 # Priority 2 Track B Watchlist
 
+Status: archived
+
 | Item | Owner | Trigger | Action |
 | --- | --- | --- | --- |
 | MongoDB optional dependency warning path | backend-data-access-system | New MongoDB major/minor upgrade or warning signature change | Re-evaluate optional dependency handling and warning disposition |

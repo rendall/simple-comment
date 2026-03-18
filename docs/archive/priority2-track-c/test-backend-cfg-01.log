@@ -1,0 +1,20 @@
+yarn run v1.22.22
+$ jest --config jest.backend.config.ts
+PASS src/tests/backend/setup-env.contract.test.ts (14.948 s)
+PASS src/tests/backend/env-utils.test.ts (14.993 s)
+PASS src/tests/backend/utilities.test.ts (18.691 s)
+PASS src/tests/backend/api.test.ts (13.31 s)
+PASS src/tests/backend/policyEnforcement.test.ts (12.764 s)
+PASS src/tests/backend/normalizeUrl.test.ts (15.554 s)
+PASS src/tests/backend/mongoDb.test.ts (15.245 s)
+PASS src/tests/backend/MongodbService.test.ts (27.579 s)
+PASS src/tests/backend/SendGridNotificationService.test.ts (17.886 s)
+PASS src/tests/backend/secrets.test.ts (16.795 s)
+PASS src/tests/backend/crypt.test.ts (19.082 s)
+
+Test Suites: 11 passed, 11 total
+Tests:       197 passed, 197 total
+Snapshots:   0 total
+Time:        122.158 s
+Ran all test suites.
+Done in 214.65s.

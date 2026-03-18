@@ -57,10 +57,14 @@ const config = {
           ["aws-crt", "@aws-sdk/util-user-agent-node/dist-es"],
           ["gcp-metadata", "mongodb-client-encryption/lib/providers"],
           ["kerberos", "mongodb/lib"],
+          ["mongodb-client-encryption", "mongodb/lib"],
           ["snappy", "mongodb/lib"],
         ]
+        const normalizedContext = (context ?? "").replace(/\\/g, "/")
 
-        return ignores.some(([i, c]) => resource === i && context.endsWith(c))
+        return ignores.some(
+          ([i, c]) => resource === i && normalizedContext.endsWith(c)
+        )
       },
     }),
   ],
