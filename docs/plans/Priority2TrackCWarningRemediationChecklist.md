@@ -57,7 +57,7 @@ QC mode: Conformance QC
     - "Decide `ACCEPT`, `REVISE`, `REVERT`, or `DEFER` for the candidate." (How We Will Execute Track C)
     - "Loop rule: do not batch multiple remediation approaches before completing one full implement → measure → validate → decide cycle." (How We Will Execute Track C)
 
-- [ ] C06 `[control]` Apply the Track C continuation rule after each recorded candidate decision: if the warning path is not yet cleanly remediated and another eligible low-risk current-stack candidate remains, return to C03 and execute another full C04-C05 cycle; otherwise proceed to final disposition documentation.
+- [x] C06 `[control]` Apply the Track C continuation rule after each recorded candidate decision: if the warning path is not yet cleanly remediated and another eligible low-risk current-stack candidate remains, return to C03 and execute another full C04-C05 cycle; otherwise proceed to final disposition documentation.
   - Depends on: C05.
   - Validation: T08.
   - Trace:
