@@ -1,12 +1,12 @@
 # Priority 2 Track C Warning Register (Current State)
 
-Status: active
+Status: archived
 
 Source inputs:
 - `docs/archive/priority2-pr-a/artifacts/warning-register.md`
-- `docs/plans/artifacts/priority2-track-c/backend-warning-baseline.md`
-- `docs/plans/artifacts/priority2-track-c/loop-attempt-c-cfg-01.md`
-- `docs/plans/artifacts/priority2-track-c/loop-control-decision.md`
+- `docs/archive/priority2-track-c/backend-warning-baseline.md`
+- `docs/archive/priority2-track-c/loop-attempt-c-cfg-01.md`
+- `docs/archive/priority2-track-c/loop-control-decision.md`
 
 ## Backend Warning Outcomes
 

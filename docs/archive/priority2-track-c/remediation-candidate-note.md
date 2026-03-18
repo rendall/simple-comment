@@ -1,11 +1,11 @@
 # Priority 2 Track C Remediation Candidate Note
 
-Status: active
+Status: archived
 
 Sources:
-- `docs/plans/artifacts/priority2-track-c/backend-warning-baseline.md`
-- `docs/plans/artifacts/priority2-track-c/guidance-sources.md`
-- `docs/plans/artifacts/priority2-track-c/mongodb-warning-guide.md`
+- `docs/archive/priority2-track-c/backend-warning-baseline.md`
+- `docs/archive/priority2-track-c/guidance-sources.md`
+- `docs/archive/priority2-track-c/mongodb-warning-guide.md`
 - `webpack.netlify.functions.js`
 
 ## Current Situation

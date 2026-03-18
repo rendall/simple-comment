@@ -1,6 +1,6 @@
 # Priority 2 Track C Guidance Sources
 
-Status: active
+Status: archived
 
 Access date: `2026-03-18`
 

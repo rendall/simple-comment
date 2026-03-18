@@ -1,6 +1,6 @@
 # Priority 2 Track C Residual Warning Note
 
-Status: active
+Status: archived
 
 Residual warning ID: `W001`
 

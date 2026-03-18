@@ -1,6 +1,6 @@
 # Priority 2 Track C Loop Attempt — C-CFG-01
 
-Status: active
+Status: archived
 
 Candidate: `C-CFG-01`
 
@@ -26,8 +26,8 @@ Decision: `ACCEPT`
 
 ## Build Evidence
 
-- Baseline source: `docs/plans/artifacts/priority2-track-c/build-backend-baseline.clean.log`
-- Post-change source: `docs/plans/artifacts/priority2-track-c/build-backend-after-cfg-01.clean.log`
+- Baseline source: `docs/archive/priority2-track-c/build-backend-baseline.clean.log`
+- Post-change source: `docs/archive/priority2-track-c/build-backend-after-cfg-01.clean.log`
 - Post-change build result: success with `1` warning
 
 ## Parity / Smoke Evidence

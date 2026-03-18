@@ -1,6 +1,6 @@
 # Priority 2 Track C Loop Control Decision
 
-Status: active
+Status: archived
 
 Decision: exit active low-risk iteration and proceed to final disposition documentation
 

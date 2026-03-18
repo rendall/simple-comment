@@ -1,10 +1,10 @@
 # Priority 2 Track C Backend Warning Baseline
 
-Status: active
+Status: archived
 
 Sources:
-- `docs/plans/artifacts/priority2-track-c/build-backend-baseline.log`
-- `docs/plans/artifacts/priority2-track-c/build-backend-baseline.clean.log`
+- `docs/archive/priority2-track-c/build-backend-baseline.log`
+- `docs/archive/priority2-track-c/build-backend-baseline.clean.log`
 - `docs/archive/priority2-pr-a/artifacts/warning-register.md`
 
 ## Baseline Summary

@@ -1,10 +1,10 @@
 # Priority 2 Track C Warning Before/After
 
-Status: active
+Status: archived
 
 Sources:
-- `docs/plans/artifacts/priority2-track-c/build-backend-baseline.clean.log`
-- `docs/plans/artifacts/priority2-track-c/build-backend-after-cfg-01.clean.log`
+- `docs/archive/priority2-track-c/build-backend-baseline.clean.log`
+- `docs/archive/priority2-track-c/build-backend-after-cfg-01.clean.log`
 
 ## Warning Count Comparison
 
