@@ -60,7 +60,6 @@ const config = {
           ["snappy", "mongodb/lib"],
         ]
 
-
         return ignores.some(([i, c]) => resource === i && context.endsWith(c))
       },
     }),
