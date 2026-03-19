@@ -18,7 +18,7 @@
     "build": "yarn run build:backend && yarn run build:frontend",
     "build:backend": "yarn run build:netlify",
     "build:frontend": "vite build --config ./vite.config.ts",
-    "build:netlify": "webpack --config ./webpack.netlify.functions.js",
+    "build:netlify": "webpack --config ./webpack.netlify.functions.cjs",
     "ci:local": "bash ./scripts/ci-local.sh",
     "fix": "eslint . --fix && prettier . --write",
     "lint": "eslint .",
@@ -35,7 +35,7 @@
     "test:cypress": "cypress run",
     "test:frontend": "cross-env TZ=UTC jest --config jest.frontend.config.ts",
     "typecheck": "tsc --noEmit -p tsconfig.frontend.json && tsc --noEmit -p tsconfig.netlify.functions.json",
-    "watch:backend": "webpack --config ./webpack.netlify.functions.js --watch",
+    "watch:backend": "webpack --config ./webpack.netlify.functions.cjs --watch",
     "watch:frontend": "vite build --config ./vite.config.ts --watch",
     "watch:lint": "esw -w ./src/**/*.ts --color --clear --changed",
     "watch:test": "jest --watch --noStackTrace"
