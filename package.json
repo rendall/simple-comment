@@ -1,4 +1,5 @@
 {
+  "type": "module",
   "devDependencies": {
     "@shelf/jest-mongodb": "^4.1.7",
     "@sveltejs/vite-plugin-svelte": "^3.1.2",
@@ -17,7 +18,7 @@
     "build": "yarn run build:backend && yarn run build:frontend",
     "build:backend": "yarn run build:netlify",
     "build:frontend": "vite build --config ./vite.config.ts",
-    "build:netlify": "webpack --config ./webpack.netlify.functions.js",
+    "build:netlify": "webpack --config ./webpack.netlify.functions.cjs",
     "ci:local": "bash ./scripts/ci-local.sh",
     "fix": "eslint . --fix && prettier . --write",
     "lint": "eslint .",
@@ -34,7 +35,7 @@
     "test:cypress": "cypress run",
     "test:frontend": "cross-env TZ=UTC jest --config jest.frontend.config.ts",
     "typecheck": "tsc --noEmit -p tsconfig.frontend.json && tsc --noEmit -p tsconfig.netlify.functions.json",
-    "watch:backend": "webpack --config ./webpack.netlify.functions.js --watch",
+    "watch:backend": "webpack --config ./webpack.netlify.functions.cjs --watch",
     "watch:frontend": "vite build --config ./vite.config.ts --watch",
     "watch:lint": "esw -w ./src/**/*.ts --color --clear --changed",
     "watch:test": "jest --watch --noStackTrace"
@@ -55,7 +56,7 @@
     "@xstate/test": "^1.0.0-alpha.1",
     "babel-jest": "^29.6.1",
     "bcryptjs": "^2.4.3",
-    "carbon-icons-svelte": "^12.0.0",
+    "carbon-icons-svelte": "^13.9.1",
     "concurrently": "^7.1.0",
     "dotenv": "^16.0.0",
     "eslint": "^8.45.0",
