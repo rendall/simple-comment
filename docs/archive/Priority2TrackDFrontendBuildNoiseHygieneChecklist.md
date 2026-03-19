@@ -1,6 +1,6 @@
 # Priority 2 Track D Checklist — Frontend Build Noise Hygiene
 
-Status: active
+Status: archived
 
 Source plan: `docs/plans/Priority2TrackDFrontendBuildNoiseHygienePlan.md`
 
