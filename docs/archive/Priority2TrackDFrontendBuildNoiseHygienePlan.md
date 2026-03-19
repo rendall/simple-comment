@@ -1,6 +1,6 @@
 # Priority 2 Track D Plan — Frontend Build Noise Hygiene
 
-Status: active
+Status: archived
 
 Source backlog: `docs/RepoHealthImprovementBacklog.md` (`Priority 2: Build and Bundle Warning Reduction`)
 

@@ -1,6 +1,6 @@
 # Priority 2 Track C Plan — Warning Remediation (Backend First)
 
-Status: active
+Status: archived
 
 Source backlog: `docs/RepoHealthImprovementBacklog.md` (`Priority 2: Build and Bundle Warning Reduction`)
 
