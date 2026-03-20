@@ -21,7 +21,7 @@ QC mode: Conformance QC
 
 ## Atomic Checklist Items
 
-- [ ] C00 `[docs]` Create `docs/checklists/Priority3TestSuiteSignalQualityChecklist01Validation.md` with sections for removed rows, replaced rows, deterministic-performance substitutions, regression command results, and blockers so every later checklist item has a live traceability destination.
+- [x] C00 `[docs]` Create `docs/checklists/Priority3TestSuiteSignalQualityChecklist01Validation.md` with sections for removed rows, replaced rows, deterministic-performance substitutions, regression command results, and blockers so every later checklist item has a live traceability destination.
   - Depends on: none.
   - Validation: T10, T11.
   - Trace:
