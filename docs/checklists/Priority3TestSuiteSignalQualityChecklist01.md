@@ -35,7 +35,7 @@ QC mode: Conformance QC
     - "Remove tests already identified by the survey as clear placeholders or redundant duplicates." (In Scope)
     - "Tests marked `Remove` in the approved checklist are removed only when they are placeholder or redundant and no meaningful protection is lost." (Acceptance Criteria)
 
-- [ ] C02 `[backend]` Remove the duplicate `validateUserId` rows and the indirect `normalizeUrl` rows from `src/tests/backend/utilities.test.ts` while preserving the file's remaining unique helper coverage.
+- [x] C02 `[backend]` Remove the duplicate `validateUserId` rows and the indirect `normalizeUrl` rows from `src/tests/backend/utilities.test.ts` while preserving the file's remaining unique helper coverage.
   - Depends on: none.
   - Validation: T01, T02, T11.
   - Trace:
