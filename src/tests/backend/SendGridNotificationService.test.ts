@@ -153,7 +153,7 @@ describe("SendGridNotificationService", () => {
     }
     const mockResponse: [ClientResponse, object] = [clientResponse, {}]
 
-    mailServiceMock.send.mockResolvedValueOnce(mockResponse)
+    mailServiceMock.send.mockResolvedValue(mockResponse)
 
     const result = await sendGridNotificationService.notifyModerators(body)
 
@@ -161,6 +161,18 @@ describe("SendGridNotificationService", () => {
     expect(mailServiceMock.send).toHaveBeenCalledTimes(
       moderatorContactEmails.length
     )
+    expect(mailServiceMock.send).toHaveBeenNthCalledWith(1, {
+      to: moderatorContactEmails[0],
+      from: "email@example.com",
+      subject: "Simple Comment Notification",
+      text: body,
+    })
+    expect(mailServiceMock.send).toHaveBeenNthCalledWith(2, {
+      to: moderatorContactEmails[1],
+      from: "email@example.com",
+      subject: "Simple Comment Notification",
+      text: body,
+    })
     expect(result.statusCode).toEqual(202)
   })
 

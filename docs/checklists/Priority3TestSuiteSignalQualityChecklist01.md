@@ -84,7 +84,7 @@ QC mode: Conformance QC
     - "Replace tests already identified by the survey as stale, brittle, misleading, overly structure-coupled, order-coupled, or noisy." (In Scope)
     - "Pass: reviewers can map each rewritten test back to a concrete behavior or contract the repo still cares about." (Validation Strategy)
 
-- [ ] C09 `[backend]` Rewrite the multi-recipient happy-path row in `src/tests/backend/SendGridNotificationService.test.ts` so it asserts the outbound payload contract for each moderator recipient.
+- [x] C09 `[backend]` Rewrite the multi-recipient happy-path row in `src/tests/backend/SendGridNotificationService.test.ts` so it asserts the outbound payload contract for each moderator recipient.
   - Depends on: none.
   - Validation: T03, T04, T05, T11.
   - Trace:

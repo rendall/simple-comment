@@ -31,6 +31,8 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
   - Change: replaced the duplicated empty-array case with a real missing-env / undefined-input assertion.
 - `C08` / `src/tests/backend/SendGridNotificationService.test.ts` / `should handle email sending failure`
   - Change: replaced the under-specified single-response mock with a deterministic failure contract assertion that checks both the outbound payload and the returned error body.
+- `C09` / `src/tests/backend/SendGridNotificationService.test.ts` / `should send notification to moderators`
+  - Change: replaced the count-only happy-path assertion with exact outbound payload checks for each moderator recipient.
 
 ## Deterministic Performance Substitutions
 
@@ -62,6 +64,9 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
 - `C08` / `yarn test:backend --runTestsByPath src/tests/backend/SendGridNotificationService.test.ts`
   - Result: pass
   - Notes: `SendGridNotificationService.test.ts` stayed green after tightening the send-failure row to assert the returned error body and first outbound payload explicitly.
+- `C09` / `yarn test:backend --runTestsByPath src/tests/backend/SendGridNotificationService.test.ts`
+  - Result: pass
+  - Notes: `SendGridNotificationService.test.ts` stayed green after replacing the count-only happy-path check with exact payload assertions for both configured moderator recipients.
 
 ## Blockers
 
