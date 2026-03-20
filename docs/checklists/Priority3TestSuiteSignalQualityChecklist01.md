@@ -28,7 +28,7 @@ QC mode: Conformance QC
     - "Update survey/checklist traceability as implementation decisions are made so future reviewers can understand why a test was kept, replaced, or removed." (In Scope)
     - "Survey-driven decisions remain traceable through the implementation checklist and validation notes." (Validation Strategy)
 
-- [ ] C01 `[frontend]` Remove the placeholder arithmetic test file `src/tests/frontend/hello-world.test.ts` without introducing replacement coverage.
+- [x] C01 `[frontend]` Remove the placeholder arithmetic test file `src/tests/frontend/hello-world.test.ts` without introducing replacement coverage.
   - Depends on: none.
   - Validation: T01, T02, T11.
   - Trace:

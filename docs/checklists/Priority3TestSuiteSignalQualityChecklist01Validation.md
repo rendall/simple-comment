@@ -6,7 +6,9 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
 
 ## Removed Rows
 
-- None yet.
+- `C01` / `src/tests/frontend/hello-world.test.ts` / `adds 1 + 2 to equal 3`
+  - Rationale: pure placeholder coverage; the test defines `sum` inline and does not assert any repo behavior.
+  - Surviving coverage: no replacement required because this row did not protect product, helper, or infrastructure behavior.
 
 ## Replaced Rows
 
@@ -18,7 +20,9 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
 
 ## Regression Command Results
 
-- None yet.
+- `C01` / `yarn test:frontend`
+  - Result: pass
+  - Notes: 6 frontend suites passed, 158 tests passed after removing `src/tests/frontend/hello-world.test.ts`.
 
 ## Blockers
 
