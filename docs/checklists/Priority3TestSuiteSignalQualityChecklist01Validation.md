@@ -25,6 +25,8 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
   - Change: replaced the wall-clock tolerance check with a fixed-clock assertion that verifies the 10-second rounding behavior exactly.
 - `C05` / `src/tests/backend/crypt.test.ts` / `Test auth token`
   - Change: replaced the calendar-year assertion with a fixed-`exp` token assertion that verifies the decoded JWT claim contract directly.
+- `C06` / `src/tests/backend/api.test.ts` / generated `...should be defined in AbstractDbService` rows
+  - Change: replaced the lossy route-normalization logic with an explicit OpenAPI route-and-method mapping table plus a parity assertion that the mapping still matches the current spec paths.
 
 ## Deterministic Performance Substitutions
 
@@ -47,6 +49,9 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
 - `C05` / `yarn test:backend --runTestsByPath src/tests/backend/crypt.test.ts`
   - Result: pass
   - Notes: `crypt.test.ts` passed with 2 tests after replacing the wall-clock and calendar-coupled assertions with fixed-input contract checks.
+- `C06` / `yarn test:backend --runTestsByPath src/tests/backend/api.test.ts`
+  - Result: pass
+  - Notes: `api.test.ts` passed with 20 tests after replacing the lossy route normalization with an explicit route-to-service mapping table.
 
 ## Blockers
 

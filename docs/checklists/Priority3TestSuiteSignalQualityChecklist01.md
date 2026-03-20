@@ -63,7 +63,7 @@ QC mode: Conformance QC
     - "Replace tests already identified by the survey as stale, brittle, misleading, overly structure-coupled, order-coupled, or noisy." (In Scope)
     - "Prefer deterministic assertions over wall-clock, timing-threshold, or environment-speed-sensitive assertions." (In Scope)
 
-- [ ] C06 `[backend]` Replace the lossy property-existence checks in `src/tests/backend/api.test.ts` with explicit OpenAPI route-and-method to `AbstractDbService` mapping assertions.
+- [x] C06 `[backend]` Replace the lossy property-existence checks in `src/tests/backend/api.test.ts` with explicit OpenAPI route-and-method to `AbstractDbService` mapping assertions.
   - Depends on: C03.
   - Validation: T03, T04, T05, T11.
   - Trace:

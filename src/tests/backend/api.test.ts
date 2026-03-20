@@ -47,24 +47,6 @@ describe("Ensures API specs match controller service", () => {
     }
   } = JSON.parse(apiSpecText)
 
-  // Get the `dir` part of `/dir/{id}`
-  const normalizeRoute = (route: string) => route.split("/")[1]
-
-  type RouteTuple = [string, { [key in Method]: Record<string, unknown> }]
-  // serviceMethods is an array of strings like `userGET` or `topicPOST`
-  // all of these methods should exist on testService
-  const serviceMethods = Object.keys(apiSpecJSON.paths)
-    .map<RouteTuple>(route => [route, apiSpecJSON.paths[route]])
-    .reduce(
-      (methods: string[], [route, mObj]: RouteTuple) => [
-        ...methods,
-        ...Object.keys(mObj).map(
-          method => `${normalizeRoute(route)}${method.toUpperCase()}`
-        ),
-      ],
-      []
-    )
-
   class TestService extends AbstractDbService {
     authDELETE = async (): Promise<Success | Error> => {
       throw "Error: not implemented"
@@ -203,13 +185,47 @@ describe("Ensures API specs match controller service", () => {
   // This test relies on compile time flagging an error that TestService does not implment AbstractDbService
   const testService = new TestService()
 
-  // Make sure that each entry in serviceMethods has a corresponding
-  // value in the AbstractDbService instance, `testService`
-  serviceMethods.forEach(method => {
-    test(`${method} should be defined in AbstractDbService`, () => {
-      const serviceRecord = testService as unknown as Record<string, unknown>
-      expect(serviceRecord[method]).toBeDefined()
-    })
+  const expectedRouteToServiceMethodMap = [
+    ["/topic", "get", "topicListGET"],
+    ["/topic", "post", "topicPOST"],
+    ["/topic/{topicId}", "get", "topicGET"],
+    ["/topic/{topicId}", "put", "topicPUT"],
+    ["/topic/{topicId}", "delete", "topicDELETE"],
+    ["/comment/{commentId}", "post", "commentPOST"],
+    ["/comment/{commentId}", "get", "commentGET"],
+    ["/comment/{commentId}", "put", "commentPUT"],
+    ["/comment/{commentId}", "delete", "commentDELETE"],
+    ["/user", "get", "userListGET"],
+    ["/user", "post", "userPOST"],
+    ["/user/{userId}", "get", "userGET"],
+    ["/user/{userId}", "put", "userPUT"],
+    ["/user/{userId}", "delete", "userDELETE"],
+    ["/auth", "post", "authPOST"],
+    ["/auth", "delete", "authDELETE"],
+    ["/gauth", "get", "gauthGET"],
+    ["/verify", "get", "verifyGET"],
+  ] as const
+
+  const specRouteMethods = Object.entries(apiSpecJSON.paths)
+    .flatMap(([route, methodMap]) =>
+      Object.keys(methodMap).map(method => `${route} ${method}`)
+    )
+    .sort()
+
+  const mappedRouteMethods = expectedRouteToServiceMethodMap
+    .map(([route, method]) => `${route} ${method}`)
+    .sort()
+
+  test("OpenAPI route-to-service mapping table should match current spec paths", () => {
+    expect(mappedRouteMethods).toEqual(specRouteMethods)
   })
 
+  // Make sure that each explicit route/method mapping points to a corresponding
+  // value in the AbstractDbService instance, `testService`
+  expectedRouteToServiceMethodMap.forEach(([route, method, serviceMethod]) => {
+    test(`${route} ${method} should map to ${serviceMethod} in AbstractDbService`, () => {
+      const serviceRecord = testService as unknown as Record<string, unknown>
+      expect(serviceRecord[serviceMethod]).toBeDefined()
+    })
+  })
 })
