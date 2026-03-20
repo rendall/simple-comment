@@ -29,6 +29,8 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
   - Change: replaced the lossy route-normalization logic with an explicit OpenAPI route-and-method mapping table plus a parity assertion that the mapping still matches the current spec paths.
 - `C07` / `src/tests/backend/SendGridNotificationService.test.ts` / `should throw given undefined moderator contact emails`
   - Change: replaced the duplicated empty-array case with a real missing-env / undefined-input assertion.
+- `C08` / `src/tests/backend/SendGridNotificationService.test.ts` / `should handle email sending failure`
+  - Change: replaced the under-specified single-response mock with a deterministic failure contract assertion that checks both the outbound payload and the returned error body.
 
 ## Deterministic Performance Substitutions
 
@@ -57,6 +59,9 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
 - `C07` / `yarn test:backend --runTestsByPath src/tests/backend/SendGridNotificationService.test.ts`
   - Result: pass
   - Notes: `SendGridNotificationService.test.ts` passed with 9 tests after converting the duplicated undefined-contact row into a real missing-env assertion.
+- `C08` / `yarn test:backend --runTestsByPath src/tests/backend/SendGridNotificationService.test.ts`
+  - Result: pass
+  - Notes: `SendGridNotificationService.test.ts` stayed green after tightening the send-failure row to assert the returned error body and first outbound payload explicitly.
 
 ## Blockers
 

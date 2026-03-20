@@ -48,11 +48,11 @@ describe("SendGridNotificationService", () => {
     const body = "Test message"
     const mockErrorResponse: ClientResponse = {
       statusCode: 500,
-      body: {},
+      body: { error: "send failed" },
       headers: undefined,
     }
 
-    mailServiceMock.send.mockResolvedValueOnce([mockErrorResponse, {}])
+    mailServiceMock.send.mockResolvedValue([mockErrorResponse, {}])
 
     const result = await sendGridNotificationService.notifyModerators(body)
 
@@ -60,7 +60,16 @@ describe("SendGridNotificationService", () => {
     expect(mailServiceMock.send).toHaveBeenCalledTimes(
       moderatorContactEmails.length
     )
-    expect(result.statusCode).toEqual(mockErrorResponse.statusCode)
+    expect(mailServiceMock.send).toHaveBeenNthCalledWith(1, {
+      to: moderatorContactEmails[0],
+      from: "email@example.com",
+      subject: "Simple Comment Notification",
+      text: body,
+    })
+    expect(result).toEqual({
+      statusCode: mockErrorResponse.statusCode,
+      body: JSON.stringify(mockErrorResponse.body),
+    })
   })
 
   it("should throw given empty moderator contact emails", async () => {

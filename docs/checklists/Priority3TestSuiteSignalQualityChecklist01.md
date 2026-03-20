@@ -77,7 +77,7 @@ QC mode: Conformance QC
     - "Replace tests already identified by the survey as stale, brittle, misleading, overly structure-coupled, order-coupled, or noisy." (In Scope)
     - "Pass: reviewers can map each rewritten test back to a concrete behavior or contract the repo still cares about." (Validation Strategy)
 
-- [ ] C08 `[backend]` Rewrite the send-failure row in `src/tests/backend/SendGridNotificationService.test.ts` so it deterministically asserts the failure contract instead of under-specifying the mocked send outcome.
+- [x] C08 `[backend]` Rewrite the send-failure row in `src/tests/backend/SendGridNotificationService.test.ts` so it deterministically asserts the failure contract instead of under-specifying the mocked send outcome.
   - Depends on: none.
   - Validation: T03, T04, T05, T11.
   - Trace:
