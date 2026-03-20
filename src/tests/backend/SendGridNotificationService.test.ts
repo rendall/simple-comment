@@ -73,12 +73,26 @@ describe("SendGridNotificationService", () => {
   })
 
   it("should throw given undefined moderator contact emails", async () => {
+    const previousModeratorEmails =
+      process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL
+    delete process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL
+
     expect(
       () =>
-        new SendGridNotificationService(mailServiceMock, sendGridTestApiKey, [])
+        new SendGridNotificationService(
+          mailServiceMock,
+          sendGridTestApiKey,
+          undefined
+        )
     ).toThrowError(
       "SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL is not set in environmental variables"
     )
+
+    if (previousModeratorEmails === undefined)
+      delete process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL
+    else
+      process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL =
+        previousModeratorEmails
   })
 
   it("should allow moderator contact email override when env value is missing", () => {

@@ -27,6 +27,8 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
   - Change: replaced the calendar-year assertion with a fixed-`exp` token assertion that verifies the decoded JWT claim contract directly.
 - `C06` / `src/tests/backend/api.test.ts` / generated `...should be defined in AbstractDbService` rows
   - Change: replaced the lossy route-normalization logic with an explicit OpenAPI route-and-method mapping table plus a parity assertion that the mapping still matches the current spec paths.
+- `C07` / `src/tests/backend/SendGridNotificationService.test.ts` / `should throw given undefined moderator contact emails`
+  - Change: replaced the duplicated empty-array case with a real missing-env / undefined-input assertion.
 
 ## Deterministic Performance Substitutions
 
@@ -52,6 +54,9 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
 - `C06` / `yarn test:backend --runTestsByPath src/tests/backend/api.test.ts`
   - Result: pass
   - Notes: `api.test.ts` passed with 20 tests after replacing the lossy route normalization with an explicit route-to-service mapping table.
+- `C07` / `yarn test:backend --runTestsByPath src/tests/backend/SendGridNotificationService.test.ts`
+  - Result: pass
+  - Notes: `SendGridNotificationService.test.ts` passed with 9 tests after converting the duplicated undefined-contact row into a real missing-env assertion.
 
 ## Blockers
 

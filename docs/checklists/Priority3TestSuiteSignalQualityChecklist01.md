@@ -70,7 +70,7 @@ QC mode: Conformance QC
     - "Replace tests already identified by the survey as stale, brittle, misleading, overly structure-coupled, order-coupled, or noisy." (In Scope)
     - "For affected seams such as auth token creation, env bootstrap, OpenAPI/service parity... replacement tests still protect the same intended contract in clearer terms." (Validation Strategy)
 
-- [ ] C07 `[backend]` Rewrite the undefined-contact row in `src/tests/backend/SendGridNotificationService.test.ts` so it actually exercises missing moderator-contact input instead of duplicating the empty-array case.
+- [x] C07 `[backend]` Rewrite the undefined-contact row in `src/tests/backend/SendGridNotificationService.test.ts` so it actually exercises missing moderator-contact input instead of duplicating the empty-array case.
   - Depends on: none.
   - Validation: T03, T04, T05, T11.
   - Trace:
