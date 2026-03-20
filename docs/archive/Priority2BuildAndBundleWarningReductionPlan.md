@@ -1,6 +1,6 @@
 # Priority 2 Plan: Build and Bundle Warning Reduction
 
-Status: active
+Status: archived
 
 Source: `docs/RepoHealthImprovementBacklog.md` → `Priority 2: Build and Bundle Warning Reduction`
 
