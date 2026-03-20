@@ -91,7 +91,7 @@ QC mode: Conformance QC
     - "Replace tests already identified by the survey as stale, brittle, misleading, overly structure-coupled, order-coupled, or noisy." (In Scope)
     - "Pass: reviewers can map each rewritten test back to a concrete behavior or contract the repo still cares about." (Validation Strategy)
 
-- [ ] C10 `[backend]` Rewrite `src/tests/backend/policyEnforcement.test.ts` so the guest-comment policy rows use behavior-specific names that clearly describe the `Action.postComment` contract they assert.
+- [x] C10 `[backend]` Rewrite `src/tests/backend/policyEnforcement.test.ts` so the guest-comment policy rows use behavior-specific names that clearly describe the `Action.postComment` contract they assert.
   - Depends on: none.
   - Validation: T03, T04, T05, T11.
   - Trace:

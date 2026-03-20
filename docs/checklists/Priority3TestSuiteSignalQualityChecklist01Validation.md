@@ -33,6 +33,8 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
   - Change: replaced the under-specified single-response mock with a deterministic failure contract assertion that checks both the outbound payload and the returned error body.
 - `C09` / `src/tests/backend/SendGridNotificationService.test.ts` / `should send notification to moderators`
   - Change: replaced the count-only happy-path assertion with exact outbound payload checks for each moderator recipient.
+- `C10` / `src/tests/backend/policyEnforcement.test.ts` / guest comment policy rows
+  - Change: replaced the vague titles with policy-specific names and made the disabled-guest case assert the returned policy error string directly.
 
 ## Deterministic Performance Substitutions
 
@@ -67,6 +69,9 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
 - `C09` / `yarn test:backend --runTestsByPath src/tests/backend/SendGridNotificationService.test.ts`
   - Result: pass
   - Notes: `SendGridNotificationService.test.ts` stayed green after replacing the count-only happy-path check with exact payload assertions for both configured moderator recipients.
+- `C10` / `yarn test:backend --runTestsByPath src/tests/backend/policyEnforcement.test.ts`
+  - Result: pass
+  - Notes: `policyEnforcement.test.ts` passed with 2 tests after renaming the guest-comment rows and making the disabled-guest case assert the policy error string directly.
 
 ## Blockers
 
