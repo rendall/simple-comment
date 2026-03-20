@@ -42,7 +42,7 @@ QC mode: Conformance QC
     - "Remove tests already identified by the survey as clear placeholders or redundant duplicates." (In Scope)
     - "Do not silently weaken protection when removing tests; any removed test must either be genuinely redundant/placeholder or be paired with replacement coverage when the survey calls for `Replace`." (Constraints)
 
-- [ ] C03 `[backend]` Remove the low-signal negative-property row from `src/tests/backend/api.test.ts` that only proves a random missing `AbstractDbService` property is undefined.
+- [x] C03 `[backend]` Remove the low-signal negative-property row from `src/tests/backend/api.test.ts` that only proves a random missing `AbstractDbService` property is undefined.
   - Depends on: none.
   - Validation: T01, T02, T11.
   - Trace:

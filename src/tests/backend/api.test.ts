@@ -212,8 +212,4 @@ describe("Ensures API specs match controller service", () => {
     })
   })
 
-  test(`non existent method on AbstractDbService should fail`, () => {
-    const serviceRecord = testService as unknown as Record<string, unknown>
-    expect(serviceRecord["nonexistent"]).toBeUndefined()
-  })
 })
