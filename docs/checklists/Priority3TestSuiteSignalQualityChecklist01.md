@@ -98,7 +98,7 @@ QC mode: Conformance QC
     - "Improve test naming where current copy does not match the asserted behavior." (In Scope)
     - "Tests marked `Replace` in the approved checklist are rewritten so the resulting assertion is more behavior-oriented, more deterministic, or more accurately named than the baseline." (Acceptance Criteria)
 
-- [ ] C11 `[backend]` Replace the final row in `src/tests/backend/setup-env.contract.test.ts` with a bootstrap-level assertion that actually proves `setup-env.ts` uses the shared sensitive-key classifier during env initialization.
+- [x] C11 `[backend]` Replace the final row in `src/tests/backend/setup-env.contract.test.ts` with a bootstrap-level assertion that actually proves `setup-env.ts` uses the shared sensitive-key classifier during env initialization.
   - Depends on: none.
   - Validation: T03, T04, T05, T11.
   - Trace:

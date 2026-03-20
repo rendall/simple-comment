@@ -84,7 +84,14 @@ describe("backend setup env bootstrap contract", () => {
   })
 
   test("uses the shared sensitive-key classifier during bootstrap", () => {
-    expect(isSensitiveEnvKey("SC_TEST_SECRET")).toBe(true)
-    expect(isSensitiveEnvKey("SC_PUBLIC_VALUE")).toBe(false)
+    expect(
+      bootstrapWithEntries([
+        { key: "SC_BOOTSTRAP_SECRET", value: "secret-default" },
+        { key: "SC_BOOTSTRAP_PUBLIC_VALUE", value: "public-default" },
+      ])
+    ).toEqual({
+      SC_BOOTSTRAP_SECRET: getDeterministicSecretValue("SC_BOOTSTRAP_SECRET"),
+      SC_BOOTSTRAP_PUBLIC_VALUE: "public-default",
+    })
   })
 })

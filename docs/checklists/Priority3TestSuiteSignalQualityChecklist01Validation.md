@@ -35,6 +35,8 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
   - Change: replaced the count-only happy-path assertion with exact outbound payload checks for each moderator recipient.
 - `C10` / `src/tests/backend/policyEnforcement.test.ts` / guest comment policy rows
   - Change: replaced the vague titles with policy-specific names and made the disabled-guest case assert the returned policy error string directly.
+- `C11` / `src/tests/backend/setup-env.contract.test.ts` / `uses the shared sensitive-key classifier during bootstrap`
+  - Change: replaced the helper-only assertion with a bootstrap-level check that proves secret and non-secret keys are classified differently during env initialization.
 
 ## Deterministic Performance Substitutions
 
@@ -72,6 +74,9 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
 - `C10` / `yarn test:backend --runTestsByPath src/tests/backend/policyEnforcement.test.ts`
   - Result: pass
   - Notes: `policyEnforcement.test.ts` passed with 2 tests after renaming the guest-comment rows and making the disabled-guest case assert the policy error string directly.
+- `C11` / `yarn test:backend --runTestsByPath src/tests/backend/setup-env.contract.test.ts`
+  - Result: pass
+  - Notes: `setup-env.contract.test.ts` passed with 5 tests after replacing the helper-only assertion with a bootstrap-level classification check.
 
 ## Blockers
 
