@@ -56,7 +56,7 @@ QC mode: Conformance QC
     - "Remove tests already identified by the survey as clear placeholders or redundant duplicates." (In Scope)
     - "Tests marked `Remove` in the approved checklist are removed only when they are placeholder or redundant and no meaningful protection is lost." (Acceptance Criteria)
 
-- [ ] C05 `[backend]` Rewrite `src/tests/backend/crypt.test.ts` so the `getExpirationTime` and auth-token rows use deterministic contract assertions instead of wall-clock or calendar-coupled checks.
+- [x] C05 `[backend]` Rewrite `src/tests/backend/crypt.test.ts` so the `getExpirationTime` and auth-token rows use deterministic contract assertions instead of wall-clock or calendar-coupled checks.
   - Depends on: none.
   - Validation: T03, T04, T05, T11.
   - Trace:

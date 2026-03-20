@@ -21,7 +21,10 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
 
 ## Replaced Rows
 
-- None yet.
+- `C05` / `src/tests/backend/crypt.test.ts` / `Get Expiration time`
+  - Change: replaced the wall-clock tolerance check with a fixed-clock assertion that verifies the 10-second rounding behavior exactly.
+- `C05` / `src/tests/backend/crypt.test.ts` / `Test auth token`
+  - Change: replaced the calendar-year assertion with a fixed-`exp` token assertion that verifies the decoded JWT claim contract directly.
 
 ## Deterministic Performance Substitutions
 
@@ -41,6 +44,9 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
 - `C04` / `yarn test:backend --runTestsByPath src/tests/backend/MongodbService.test.ts`
   - Result: pass
   - Notes: `MongodbService.test.ts` passed with 66 tests after removing the duplicate admin success-path `GET /user/{userId}` row.
+- `C05` / `yarn test:backend --runTestsByPath src/tests/backend/crypt.test.ts`
+  - Result: pass
+  - Notes: `crypt.test.ts` passed with 2 tests after replacing the wall-clock and calendar-coupled assertions with fixed-input contract checks.
 
 ## Blockers
 
