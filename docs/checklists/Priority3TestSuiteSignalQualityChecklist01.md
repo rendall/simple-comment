@@ -49,7 +49,7 @@ QC mode: Conformance QC
     - "Remove tests already identified by the survey as clear placeholders or redundant duplicates." (In Scope)
     - "The dominant current quality issues are: ... generated/per-entry test patterns that create maintenance noise without proportional confidence." (Current Baseline)
 
-- [ ] C04 `[backend]` Remove the duplicate admin success-path `GET /user/{userId}` row from `src/tests/backend/MongodbService.test.ts`.
+- [x] C04 `[backend]` Remove the duplicate admin success-path `GET /user/{userId}` row from `src/tests/backend/MongodbService.test.ts`.
   - Depends on: none.
   - Validation: T01, T02, T11.
   - Trace:

@@ -15,6 +15,9 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
 - `C03` / `src/tests/backend/api.test.ts` / `non existent method on AbstractDbService should fail`
   - Rationale: low-signal negative check; proving a random missing property is undefined does not protect the OpenAPI-to-service contract.
   - Surviving coverage: the remaining parity rows still cover the intended positive contract surface until the later route-mapping replacement work lands.
+- `C04` / `src/tests/backend/MongodbService.test.ts` / `GET get to /user/{userId} should return user`
+  - Rationale: duplicate success-path coverage; the earlier admin `GET /user/{userId}` row already covers the same core contract.
+  - Surviving coverage: `GET to /user/{userId} should return User and 200` remains the primary admin success-path check, and `GET to /user/{userId} with public user` still covers the public-user variant.
 
 ## Replaced Rows
 
@@ -35,6 +38,9 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
 - `C03` / `yarn test:backend --runTestsByPath src/tests/backend/api.test.ts`
   - Result: pass
   - Notes: `api.test.ts` passed with 19 tests after removing the low-signal negative-property row.
+- `C04` / `yarn test:backend --runTestsByPath src/tests/backend/MongodbService.test.ts`
+  - Result: pass
+  - Notes: `MongodbService.test.ts` passed with 66 tests after removing the duplicate admin success-path `GET /user/{userId}` row.
 
 ## Blockers
 

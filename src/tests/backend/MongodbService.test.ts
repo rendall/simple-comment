@@ -432,19 +432,6 @@ describe("Full API service test", () => {
         expect(checkProp("hash")).toBe(false)
       })
   }) // get to /user/{userId} should return user
-  test("GET get to /user/{userId} should return user", () => {
-    const user = getAuthUser()
-    const adminUserTest = getAuthUser(u => u.isAdmin!)
-    return service
-      .userGET(user.id, adminUserTest.id)
-      .then((res: Success<PublicSafeUser | AdminSafeUser> | Error) => {
-        expect(res).toHaveProperty("statusCode", 200)
-        expect(res.body).toHaveProperty("id", user.id)
-        expect(res.body).toHaveProperty("name", user.name)
-        expect(res.body).not.toHaveProperty("hash")
-        expect(res.body).toHaveProperty("email")
-      })
-  })
 
   test("GET to /user/{userId} with public user", () => {
     const user = getAuthUser()
