@@ -126,7 +126,7 @@ QC mode: Conformance QC
     - "Replace tests already identified by the survey as stale, brittle, misleading, overly structure-coupled, order-coupled, or noisy." (In Scope)
     - "The dominant current quality issues are: ... hidden order dependence across larger integration suites." (Current Baseline)
 
-- [ ] C15 `[backend]` In `src/tests/backend/MongodbService.test.ts`, replace the stale or overclaimed topic/comment rows so the test names and assertions match the actual contract being checked.
+- [x] C15 `[backend]` In `src/tests/backend/MongodbService.test.ts`, replace the stale or overclaimed topic/comment rows so the test names and assertions match the actual contract being checked.
   - Depends on: C13, C14.
   - Validation: T03, T04, T05, T11.
   - Trace:

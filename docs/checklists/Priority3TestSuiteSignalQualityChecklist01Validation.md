@@ -43,6 +43,8 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
   - Change: replaced JWT prefix comparisons with fixed-clock decoded-claim assertions for `user` and `exp`.
 - `C14` / `src/tests/backend/MongodbService.test.ts` / duplicate-user, duplicate-comment, and descendant-delete rows
   - Change: replaced order-dependent rows with self-contained setup so each test now creates the duplicate or descendant data it needs before asserting the contract.
+- `C15` / `src/tests/backend/MongodbService.test.ts` / stale or overclaimed topic/comment rows
+  - Change: aligned the affected test titles with the narrower contracts they actually assert.
 
 ## Deterministic Performance Substitutions
 
@@ -92,6 +94,9 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
 - `C14` / `yarn test:backend --runTestsByPath src/tests/backend/MongodbService.test.ts`
   - Result: pass
   - Notes: `MongodbService.test.ts` passed with 66 tests after making the duplicate-user, duplicate-comment, and descendant-delete rows self-contained.
+- `C15` / `yarn test:backend --runTestsByPath src/tests/backend/MongodbService.test.ts`
+  - Result: pass
+  - Notes: `MongodbService.test.ts` passed with 66 tests after aligning the stale or overclaimed topic/comment titles with the contracts actually asserted.
 
 ## Blockers
 

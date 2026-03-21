@@ -850,7 +850,7 @@ describe("Full API service test", () => {
     )
     expect(e).toHaveProperty("statusCode", 404)
   })
-  test("PUT comment to /comment/{commentId} should return the edited comment with 202 Comment updated", () => {
+  test("PUT comment to /comment/{commentId} should return the edited comment with 204 Comment updated", () => {
     const targetComment = chooseRandomElement(
       testComments.filter(isComment).filter(c => c.userId !== null)
     ) as Comment & { userId: string }
@@ -973,7 +973,7 @@ describe("Full API service test", () => {
     })
   })
 
-  test("GET to /topic/{topicId} should return a topic and descendent comments", async () => {
+  test("GET to /topic/{topicId} should return the topic and expose a replies array for seeded topics with replies", async () => {
     const commentsCollection = db.collection("comments")
     const seededTopicIds = testTopics.map(topic => topic.id)
     const topicIdsWithReplies = (
@@ -992,7 +992,7 @@ describe("Full API service test", () => {
   })
 
   // Discussion Update
-  test("PUT topic  to /topic/{topicId} editing anything except title or isLocked should be ignored", () => {
+  test("PUT topic to /topic/{topicId} should preserve dateCreated when non-editable fields are submitted", () => {
     const topic = chooseRandomElement(testTopics)
     const putTopic = {
       ...topic,
