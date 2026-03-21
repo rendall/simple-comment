@@ -49,6 +49,8 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
   - Change: replaced the numbered rows with sequence-based deterministic assertions for same-seed and different-seed generators.
 - `C17` / `src/tests/frontend/discussion.xstate.test.ts` / structure-coupled definition rows
   - Change: removed definition-shape assertions and corrected the stale initial-state title so the file focuses on workflow transitions.
+- `C18` / `src/tests/frontend/login.xstate.test.ts` / structure-coupled definition rows
+  - Change: removed definition-shape assertions so the file focuses on state transitions that matter to the login workflow.
 
 ## Deterministic Performance Substitutions
 
@@ -107,6 +109,9 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
 - `C17` / `yarn test:frontend --runTestsByPath src/tests/frontend/discussion.xstate.test.ts`
   - Result: pass
   - Notes: `discussion.xstate.test.ts` passed with 9 tests after removing the structure-coupled definition checks and keeping the workflow transitions.
+- `C18` / `yarn test:frontend --runTestsByPath src/tests/frontend/login.xstate.test.ts`
+  - Result: pass
+  - Notes: `login.xstate.test.ts` passed with 8 tests after removing the structure-coupled definition checks and keeping the workflow transitions.
 
 ## Blockers
 

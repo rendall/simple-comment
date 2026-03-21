@@ -147,7 +147,7 @@ QC mode: Conformance QC
     - "Replace tests already identified by the survey as stale, brittle, misleading, overly structure-coupled, order-coupled, or noisy." (In Scope)
     - "Prefer behavior-level assertions over test assertions tied to internal implementation shape when both are feasible." (Constraints)
 
-- [ ] C18 `[frontend]` Replace the `definition.states...on` structure checks in `src/tests/frontend/login.xstate.test.ts` with workflow-behavior assertions that stay tied to the login state machine contract.
+- [x] C18 `[frontend]` Replace the `definition.states...on` structure checks in `src/tests/frontend/login.xstate.test.ts` with workflow-behavior assertions that stay tied to the login state machine contract.
   - Depends on: none.
   - Validation: T06, T07, T08, T11.
   - Trace:
