@@ -19,41 +19,22 @@ describe("getGenerator", () => {
     const seed = "testSeed"
     const generator1 = getGenerator(seed)
     const generator2 = getGenerator(seed)
-    const rand1 = () => generator1.next()
-    const rand2 = () => generator2.next()
-    test("1 should return identical results", () => {
-      expect(rand1()).toEqual(rand2())
-    })
-    test("2 should return identical results", () => {
-      expect(rand1()).toEqual(rand2())
-    })
-    test("3 should return identical results", () => {
-      expect(rand1()).toEqual(rand2())
-    })
-    test("4 should return identical results", () => {
-      expect(rand1()).toEqual(rand2())
-    })
-    test("5 should return identical results", () => {
-      expect(rand1()).toEqual(rand2())
-    })
-    test("6 should return identical results", () => {
-      expect(rand1()).toEqual(rand2())
+    test("should return identical results for a fixed sequence length", () => {
+      const results1 = Array.from({ length: 6 }, () => generator1.next())
+      const results2 = Array.from({ length: 6 }, () => generator2.next())
+      expect(results1).toEqual(results2)
     })
   })
 
   describe("2 generators, different seeds", () => {
     const generator1 = getGenerator("seed1")
     const generator2 = getGenerator("seed2")
-    const rand1 = () => generator1.next()
-    const rand2 = () => generator2.next()
-    test("1 should return different results", () => {
-      expect(rand1()).not.toEqual(rand2())
-    })
-    test("2 should return different results", () => {
-      expect(rand1()).not.toEqual(rand2())
-    })
-    test("3 should return different results", () => {
-      expect(rand1()).not.toEqual(rand2())
+    test("should return different results across a fixed sequence length", () => {
+      const results1 = Array.from({ length: 3 }, () => generator1.next())
+      const results2 = Array.from({ length: 3 }, () => generator2.next())
+      results1.forEach((result, index) => {
+        expect(result).not.toEqual(results2[index])
+      })
     })
   })
 })

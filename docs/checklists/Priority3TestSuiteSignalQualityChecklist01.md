@@ -133,7 +133,7 @@ QC mode: Conformance QC
     - "Improve test naming where current copy does not match the asserted behavior." (In Scope)
     - "Tests marked `Replace` in the approved checklist are rewritten so the resulting assertion is more behavior-oriented, more deterministic, or more accurately named than the baseline." (Acceptance Criteria)
 
-- [ ] C16 `[frontend]` Replace the numbered repetition rows in `src/tests/frontend/blockies.test.ts` with concise fixed-sequence assertions that keep the same deterministic seeded-output contract.
+- [x] C16 `[frontend]` Replace the numbered repetition rows in `src/tests/frontend/blockies.test.ts` with concise fixed-sequence assertions that keep the same deterministic seeded-output contract.
   - Depends on: none.
   - Validation: T06, T07, T08, T11.
   - Trace:

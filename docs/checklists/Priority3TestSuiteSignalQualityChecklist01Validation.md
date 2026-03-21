@@ -45,6 +45,8 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
   - Change: replaced order-dependent rows with self-contained setup so each test now creates the duplicate or descendant data it needs before asserting the contract.
 - `C15` / `src/tests/backend/MongodbService.test.ts` / stale or overclaimed topic/comment rows
   - Change: aligned the affected test titles with the narrower contracts they actually assert.
+- `C16` / `src/tests/frontend/blockies.test.ts` / numbered generator repetition rows
+  - Change: replaced the numbered rows with sequence-based deterministic assertions for same-seed and different-seed generators.
 
 ## Deterministic Performance Substitutions
 
@@ -97,6 +99,9 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
 - `C15` / `yarn test:backend --runTestsByPath src/tests/backend/MongodbService.test.ts`
   - Result: pass
   - Notes: `MongodbService.test.ts` passed with 66 tests after aligning the stale or overclaimed topic/comment titles with the contracts actually asserted.
+- `C16` / `yarn test:frontend --runTestsByPath src/tests/frontend/blockies.test.ts`
+  - Result: pass
+  - Notes: `blockies.test.ts` passed with 9 tests after replacing the numbered generator repetition rows with sequence-based assertions.
 
 ## Blockers
 
