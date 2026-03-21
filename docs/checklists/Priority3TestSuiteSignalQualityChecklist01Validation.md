@@ -37,6 +37,8 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
   - Change: replaced the vague titles with policy-specific names and made the disabled-guest case assert the returned policy error string directly.
 - `C11` / `src/tests/backend/setup-env.contract.test.ts` / `uses the shared sensitive-key classifier during bootstrap`
   - Change: replaced the helper-only assertion with a bootstrap-level check that proves secret and non-secret keys are classified differently during env initialization.
+- `C12` / `src/tests/backend/utilities.test.ts` / `bad email should fail` and `good email should pass`
+  - Change: replaced random email generation with fixed representative addresses so the validation intent stays stable and readable.
 
 ## Deterministic Performance Substitutions
 
@@ -77,6 +79,9 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
 - `C11` / `yarn test:backend --runTestsByPath src/tests/backend/setup-env.contract.test.ts`
   - Result: pass
   - Notes: `setup-env.contract.test.ts` passed with 5 tests after replacing the helper-only assertion with a bootstrap-level classification check.
+- `C12` / `yarn test:backend --runTestsByPath src/tests/backend/utilities.test.ts`
+  - Result: pass
+  - Notes: `utilities.test.ts` passed with 48 tests after replacing the random email cases with fixed representative addresses.
 
 ## Blockers
 

@@ -99,28 +99,8 @@ describe("generateCommentId", () => {
 })
 
 describe("Test validations", () => {
-  const emailAscii = "abcdefghijklmnopqrstuvwxyz01234567890"
-  const randomNumber = (min: number, max: number): number =>
-    Math.floor(Math.random() * (max - min)) + min
-  const randomString = (
-    alpha: string = emailAscii,
-    len: number = randomNumber(10, 50),
-    str: string = ""
-  ): string =>
-    len === 0
-      ? str
-      : randomString(
-          alpha,
-          len - 1,
-          `${str}${alpha.charAt(Math.floor(Math.random() * alpha.length))}`
-        )
-  const createRandomEmail = (): Email =>
-    `${randomString(emailAscii)}@${randomString(emailAscii)}.${randomString(
-      "abcdefghijklmnopqrstuvwxyz",
-      3
-    )}`
-  const badEmail = randomString()
-  const goodEmail = createRandomEmail()
+  const badEmail: Email = "not-an-email"
+  const goodEmail: Email = "commenter@example.com"
 
   const badEmailValidation = validateEmail(badEmail)
   const goodEmailValidation = validateEmail(goodEmail)

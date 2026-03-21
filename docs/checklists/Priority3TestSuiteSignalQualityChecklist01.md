@@ -105,7 +105,7 @@ QC mode: Conformance QC
     - "Preserve and, where necessary, strengthen unique contract, infrastructure, and workflow coverage that the survey marked as valuable." (In Scope)
     - "Pass: reviewers can map each rewritten test back to a concrete behavior or contract the repo still cares about." (Validation Strategy)
 
-- [ ] C12 `[backend]` Replace the random-input email rows in `src/tests/backend/utilities.test.ts` with fixed representative email assertions that preserve helper coverage without test-data noise.
+- [x] C12 `[backend]` Replace the random-input email rows in `src/tests/backend/utilities.test.ts` with fixed representative email assertions that preserve helper coverage without test-data noise.
   - Depends on: C02.
   - Validation: T03, T04, T05, T11.
   - Trace:
