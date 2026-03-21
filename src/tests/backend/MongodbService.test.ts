@@ -371,11 +371,18 @@ describe("Full API service test", () => {
   })
   test("POST to /user with existing username should return 409 user exists", async () => {
     const authUser = getAuthUser(u => u.isAdmin!)
+    const duplicateUser: CreateUserPayload = {
+      ...mockUser("duplicate-"),
+      isAdmin: false,
+      password: mockPassword(),
+      email: mockEmail(),
+    }
     expect.assertions(1)
-    const e = await service.userPOST(testNewUser, authUser.id)
+    await service.userPOST(duplicateUser, authUser.id)
+    const e = await service.userPOST(duplicateUser, authUser.id)
     expect(e).toEqual({
       ...error409UserExists,
-      body: `UserId '${testNewUser.id}' exists`,
+      body: `UserId '${duplicateUser.id}' exists`,
     })
   })
   test("GET to /auth with newly created user should return authtoken", () => {
@@ -732,11 +739,21 @@ describe("Full API service test", () => {
   })
 
   test("POST comment to /comment/{commentId} with identical information within a short length of time should return 425 Possible duplicate comment", async () => {
+    const originalComment = {
+      parentId: chooseRandomElement(testComments).id,
+      text: randomString(alphaUserInput, 400),
+      userId: getAuthUser().id,
+    }
     expect.assertions(1)
+    await service.commentPOST(
+      originalComment.parentId,
+      originalComment.text,
+      originalComment.userId
+    )
     const e = await service.commentPOST(
-      newCommentTest.parentId,
-      newCommentTest.text!,
-      newCommentTest.userId!
+      originalComment.parentId,
+      originalComment.text,
+      originalComment.userId
     )
     expect(e).toBe(error409DuplicateComment)
   })
@@ -1062,16 +1079,36 @@ describe("Full API service test", () => {
       .then((res: Success) => expect(res).toBe(success202TopicDeleted))
   })
   test("DELETE topic to /topic/{topicId} should delete descended comments", async () => {
-    // none of these replies should be in the database
-    const replies = testDeleteTopicComments
+    const adminUserTest = getAuthUser(u => u.isAdmin!)
+    const commentAuthor = getAuthUser()
+    const topicToDelete = mockTopic("delete-descendants-")
+    await service.topicPOST(topicToDelete, adminUserTest.id)
+    const createdTopicId = topicToDelete.id
+    const firstComment = await service.commentPOST(
+      createdTopicId,
+      randomString(alphaUserInput, 200),
+      commentAuthor.id
+    )
+    const firstCommentId = (firstComment.body as Comment).id
+    const secondComment = await service.commentPOST(
+      firstCommentId,
+      randomString(alphaUserInput, 200),
+      commentAuthor.id
+    )
+    const secondCommentId = (secondComment.body as Comment).id
+
+    const deleteResponse = await service.topicDELETE(
+      createdTopicId,
+      adminUserTest.id
+    )
+    expect(deleteResponse).toBe(success202TopicDeleted)
+
     const comments = await db
       .collection<Comment | Discussion>("comments")
-      .find({})
+      .find({ id: { $in: [firstCommentId, secondCommentId] } })
       .toArray()
 
-    replies.forEach(c => {
-      expect(comments).not.toContain(c)
-    })
+    expect(comments).toEqual([])
   })
 })
 

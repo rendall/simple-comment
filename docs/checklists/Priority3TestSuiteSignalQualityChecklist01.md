@@ -119,7 +119,7 @@ QC mode: Conformance QC
     - "Replace tests already identified by the survey as stale, brittle, misleading, overly structure-coupled, order-coupled, or noisy." (In Scope)
     - "The dominant current quality issues are: ... hidden order dependence across larger integration suites." (Current Baseline)
 
-- [ ] C14 `[backend]` In `src/tests/backend/MongodbService.test.ts`, replace the order-dependent duplicate-user, duplicate-comment, and descendant-delete rows with self-contained behavior checks.
+- [x] C14 `[backend]` In `src/tests/backend/MongodbService.test.ts`, replace the order-dependent duplicate-user, duplicate-comment, and descendant-delete rows with self-contained behavior checks.
   - Depends on: C04.
   - Validation: T03, T04, T05, T11.
   - Trace:

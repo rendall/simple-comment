@@ -41,6 +41,8 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
   - Change: replaced random email generation with fixed representative addresses so the validation intent stays stable and readable.
 - `C13` / `src/tests/backend/MongodbService.test.ts` / auth-token rows
   - Change: replaced JWT prefix comparisons with fixed-clock decoded-claim assertions for `user` and `exp`.
+- `C14` / `src/tests/backend/MongodbService.test.ts` / duplicate-user, duplicate-comment, and descendant-delete rows
+  - Change: replaced order-dependent rows with self-contained setup so each test now creates the duplicate or descendant data it needs before asserting the contract.
 
 ## Deterministic Performance Substitutions
 
@@ -87,6 +89,9 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
 - `C13` / `yarn test:backend --runTestsByPath src/tests/backend/MongodbService.test.ts`
   - Result: pass
   - Notes: `MongodbService.test.ts` passed with 66 tests after replacing the auth-token prefix comparisons with decoded-claim assertions bounded by the exact `exp` rounding window.
+- `C14` / `yarn test:backend --runTestsByPath src/tests/backend/MongodbService.test.ts`
+  - Result: pass
+  - Notes: `MongodbService.test.ts` passed with 66 tests after making the duplicate-user, duplicate-comment, and descendant-delete rows self-contained.
 
 ## Blockers
 
