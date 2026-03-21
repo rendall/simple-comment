@@ -144,6 +144,9 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
 - `T07` / frontend contract review
   - Result: pass
   - Notes: the frontend rewrites still cover seeded blockies determinism, observable XState workflow transitions, and retained `threadComments`/`debounceFunc` non-functional intent without depending on wall-clock thresholds.
+- `T08` / `yarn test:frontend`
+  - Result: pass
+  - Notes: the full frontend Jest suite from `T01` passed with 140 tests across 6 suites. The slice stayed within test-signal cleanup scope and did not introduce frontend runtime behavior changes, dependency churn, or CI-policy changes.
 
 ## Blockers
 

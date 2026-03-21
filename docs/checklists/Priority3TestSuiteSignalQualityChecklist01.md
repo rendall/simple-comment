@@ -212,7 +212,7 @@ QC mode: Conformance QC
     - "Timing or performance-oriented tests remain real tests when they still protect meaningful behavior, but they should be made deterministic or anchored to stable proxies instead of unexplained wall-clock thresholds where feasible." (Validation Strategy)
     - "Pass: retained performance-oriented coverage no longer depends on brittle wall-clock assertions when a deterministic alternative exists." (Validation Strategy)
 
-- [ ] T08 `[validation]` Frontend smoke-and-scope validation: run `yarn test:frontend`, confirm the full frontend Jest suite remains green, and verify the slice did not introduce frontend runtime behavior changes, dependency churn, or CI-policy changes.
+- [x] T08 `[validation]` Frontend smoke-and-scope validation: run `yarn test:frontend`, confirm the full frontend Jest suite remains green, and verify the slice did not introduce frontend runtime behavior changes, dependency churn, or CI-policy changes.
   - Trace:
     - "The full Jest suites remain green after each accepted slice." (Validation Strategy)
     - "This phase should improve test trust, not expand into dependency modernization, runtime feature changes, CI gate redesign, or broad frontend/backend architecture work." (Intent)
