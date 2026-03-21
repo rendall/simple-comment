@@ -32,16 +32,22 @@ describe("Ensures secrets are secret", () => {
     expect(exampleEnvEntries.length).toBeGreaterThan(0)
   })
 
-  // Each entry in example.env has a corresponding defined process.env variable
-  exampleEnvEntries.forEach(({ key, value }) => {
-    test(`${key} is defined as an environmental variable`, () => {
-      expect(process.env[key]).toBeDefined()
-    })
+  test("every example.env key is defined in process.env after test bootstrap", () => {
+    expect(
+      exampleEnvEntries.map(({ key }) => [key, process.env[key]])
+    ).toEqual(
+      exampleEnvEntries.map(({ key }) => [key, expect.any(String)])
+    )
+  })
 
-    // The value of each SECRET or PASSWORD in 'example.env' is not the same as in process.env
-    if (isSensitiveEnvKey(key))
-      test(`${key} is not ${value}`, () => {
-        expect(process.env[key]).not.toBe(value)
-      })
+  test("sensitive example.env defaults are replaced during test bootstrap", () => {
+    const sensitiveEntries = exampleEnvEntries.filter(({ key }) =>
+      isSensitiveEnvKey(key)
+    )
+
+    expect(sensitiveEntries.length).toBeGreaterThan(0)
+    sensitiveEntries.forEach(({ key, value }) => {
+      expect(process.env[key]).not.toBe(value)
+    })
   })
 })

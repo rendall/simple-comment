@@ -51,6 +51,8 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
   - Change: removed definition-shape assertions and corrected the stale initial-state title so the file focuses on workflow transitions.
 - `C18` / `src/tests/frontend/login.xstate.test.ts` / structure-coupled definition rows
   - Change: removed definition-shape assertions so the file focuses on state transitions that matter to the login workflow.
+- `C20` / `src/tests/backend/secrets.test.ts` / row-per-key and row-per-sensitive-key coverage
+  - Change: consolidated the generated per-key assertions into aggregated bootstrap parity checks for all env keys and all sensitive defaults.
 
 ## Deterministic Performance Substitutions
 
@@ -112,6 +114,9 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
 - `C18` / `yarn test:frontend --runTestsByPath src/tests/frontend/login.xstate.test.ts`
   - Result: pass
   - Notes: `login.xstate.test.ts` passed with 8 tests after removing the structure-coupled definition checks and keeping the workflow transitions.
+- `C20` / `yarn test:backend --runTestsByPath src/tests/backend/secrets.test.ts src/tests/backend/setup-env.contract.test.ts`
+  - Result: pass
+  - Notes: the secrets/bootstrap pair passed with 9 total tests after consolidating the generated per-key assertions into aggregated bootstrap parity checks.
 
 ## Blockers
 

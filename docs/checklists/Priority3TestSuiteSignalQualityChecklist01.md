@@ -161,7 +161,7 @@ QC mode: Conformance QC
     - "Preserve performance-oriented test intent where the survey identified valuable non-functional coverage, but replace wall-clock-sensitive assertions with more deterministic checks when feasible." (In Scope)
     - "Pass: retained performance-oriented coverage no longer depends on brittle wall-clock assertions when a deterministic alternative exists." (Validation Strategy)
 
-- [ ] C20 `[backend]` Consolidate the row-per-key and row-per-sensitive-key coverage in `src/tests/backend/secrets.test.ts` into clearer aggregated bootstrap parity assertions.
+- [x] C20 `[backend]` Consolidate the row-per-key and row-per-sensitive-key coverage in `src/tests/backend/secrets.test.ts` into clearer aggregated bootstrap parity assertions.
   - Depends on: C11.
   - Validation: T09, T10, T11.
   - Trace:
