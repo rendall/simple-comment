@@ -153,6 +153,9 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
 - `T10` / documentation and traceability review
   - Result: pass
   - Notes: `docs/Priority3TestSurvey.md`, `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md`, and this validation file agree on the completed first-slice remove/replace outcomes, and the three `Investigate` survey rows remain untouched for the follow-on slice.
+- `T11` / final regression command set
+  - Result: pass
+  - Notes: `yarn test:backend` passed with 178 tests across 11 suites, `yarn test:frontend` passed with 140 tests across 6 suites, and `yarn test` passed end to end with the same green backend/frontend totals and no blockers.
 
 ## Blockers
 

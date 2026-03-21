@@ -227,7 +227,7 @@ QC mode: Conformance QC
     - "The current survey `Investigate` items are not mixed into the first implementation checklist; they are tracked as a follow-on slice with written rationale." (Acceptance Criteria)
     - "Survey-driven decisions remain traceable through the implementation checklist and validation notes." (Validation Strategy)
 
-- [ ] T11 `[validation]` Final regression validation: run `yarn test:backend`, `yarn test:frontend`, and `yarn test`, and record pass/fail status plus any blockers in `docs/checklists/Priority3TestSuiteSignalQualityChecklist01Validation.md`.
+- [x] T11 `[validation]` Final regression validation: run `yarn test:backend`, `yarn test:frontend`, and `yarn test`, and record pass/fail status plus any blockers in `docs/checklists/Priority3TestSuiteSignalQualityChecklist01Validation.md`.
   - Trace:
     - "Pass: `yarn test:backend` and `yarn test:frontend` pass after the slice, and `yarn test` remains consistent." (Validation Strategy)
     - "Broad regression validation passes after implementation, or any blocker is documented explicitly in validation notes." (Acceptance Criteria)
