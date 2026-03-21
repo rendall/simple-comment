@@ -147,6 +147,9 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
 - `T08` / `yarn test:frontend`
   - Result: pass
   - Notes: the full frontend Jest suite from `T01` passed with 140 tests across 6 suites. The slice stayed within test-signal cleanup scope and did not introduce frontend runtime behavior changes, dependency churn, or CI-policy changes.
+- `T09` / secrets/bootstrap focused command
+  - Result: pass
+  - Notes: the exact `C20` command (`yarn test:backend --runTestsByPath src/tests/backend/secrets.test.ts src/tests/backend/setup-env.contract.test.ts`) already passed with the aggregated `example.env` parity and deterministic sensitive-value replacement assertions in place.
 
 ## Blockers
 

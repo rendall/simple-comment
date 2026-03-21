@@ -217,7 +217,7 @@ QC mode: Conformance QC
     - "The full Jest suites remain green after each accepted slice." (Validation Strategy)
     - "This phase should improve test trust, not expand into dependency modernization, runtime feature changes, CI gate redesign, or broad frontend/backend architecture work." (Intent)
 
-- [ ] T09 `[validation]` Secrets/bootstrap validation: run `yarn test:backend --runTestsByPath src/tests/backend/secrets.test.ts src/tests/backend/setup-env.contract.test.ts` and confirm the aggregated assertions still protect `example.env` parity and deterministic sensitive-value replacement.
+- [x] T09 `[validation]` Secrets/bootstrap validation: run `yarn test:backend --runTestsByPath src/tests/backend/secrets.test.ts src/tests/backend/setup-env.contract.test.ts` and confirm the aggregated assertions still protect `example.env` parity and deterministic sensitive-value replacement.
   - Trace:
     - "backend env bootstrap and parser contract coverage" (Current Baseline)
     - "Preserve and, where necessary, strengthen unique contract, infrastructure, and workflow coverage that the survey marked as valuable." (In Scope)
