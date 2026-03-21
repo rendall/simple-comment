@@ -168,7 +168,7 @@ QC mode: Conformance QC
     - "Replace tests already identified by the survey as stale, brittle, misleading, overly structure-coupled, order-coupled, or noisy." (In Scope)
     - "The dominant current quality issues are: ... generated/per-entry test patterns that create maintenance noise without proportional confidence." (Current Baseline)
 
-- [ ] C21 `[docs]` Update `docs/Priority3TestSurvey.md` so every row touched by this checklist reflects the completed first-slice outcome while leaving the deferred `Investigate` rows untouched.
+- [x] C21 `[docs]` Update `docs/Priority3TestSurvey.md` so every row touched by this checklist reflects the completed first-slice outcome while leaving the deferred `Investigate` rows untouched.
   - Depends on: C00, C01, C02, C03, C04, C05, C06, C07, C08, C09, C10, C11, C12, C13, C14, C15, C16, C17, C18, C19, C20.
   - Validation: T10, T11.
   - Trace:
