@@ -154,7 +154,7 @@ QC mode: Conformance QC
     - "Replace tests already identified by the survey as stale, brittle, misleading, overly structure-coupled, order-coupled, or noisy." (In Scope)
     - "Prefer behavior-level assertions over test assertions tied to internal implementation shape when both are feasible." (Constraints)
 
-- [ ] C19 `[frontend]` Replace the wall-clock and real-timer rows in `src/tests/frontend/frontend-utilities.test.ts` with deterministic timing/performance assertions that keep the performance intent without depending on machine-speed thresholds.
+- [x] C19 `[frontend]` Replace the wall-clock and real-timer rows in `src/tests/frontend/frontend-utilities.test.ts` with deterministic timing/performance assertions that keep the performance intent without depending on machine-speed thresholds.
   - Depends on: none.
   - Validation: T06, T07, T08, T11.
   - Trace:

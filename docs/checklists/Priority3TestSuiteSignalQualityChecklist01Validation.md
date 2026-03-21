@@ -51,12 +51,17 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
   - Change: removed definition-shape assertions and corrected the stale initial-state title so the file focuses on workflow transitions.
 - `C18` / `src/tests/frontend/login.xstate.test.ts` / structure-coupled definition rows
   - Change: removed definition-shape assertions so the file focuses on state transitions that matter to the login workflow.
+- `C19` / `src/tests/frontend/frontend-utilities.test.ts` / wall-clock and real-timer rows
+  - Change: replaced the elapsed-time thresholds with deterministic reply-group/sibling-sort proxies for `threadComments` and fake-timer scheduling assertions for `debounceFunc`.
 - `C20` / `src/tests/backend/secrets.test.ts` / row-per-key and row-per-sensitive-key coverage
   - Change: consolidated the generated per-key assertions into aggregated bootstrap parity checks for all env keys and all sensitive defaults.
 
 ## Deterministic Performance Substitutions
 
-- None yet.
+- `C19` / `src/tests/frontend/frontend-utilities.test.ts` / `threadComments`
+  - Replacement: the mock discussion and large flat-array rows now assert stable sort-work proxies instead of elapsed milliseconds by checking that sibling sorting happens once per reachable reply group, and only once for 2000 flat replies.
+- `C19` / `src/tests/frontend/frontend-utilities.test.ts` / `debounce`
+  - Replacement: the real-time debounce rows now use Jest fake timers to assert scheduling boundaries without depending on wall-clock elapsed time.
 
 ## Regression Command Results
 
@@ -114,6 +119,9 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
 - `C18` / `yarn test:frontend --runTestsByPath src/tests/frontend/login.xstate.test.ts`
   - Result: pass
   - Notes: `login.xstate.test.ts` passed with 8 tests after removing the structure-coupled definition checks and keeping the workflow transitions.
+- `C19` / `yarn test:frontend --runTestsByPath src/tests/frontend/blockies.test.ts src/tests/frontend/discussion.xstate.test.ts src/tests/frontend/login.xstate.test.ts src/tests/frontend/frontend-utilities.test.ts`
+  - Result: pass
+  - Notes: the focused frontend slice passed with 126 tests after replacing the `frontend-utilities` wall-clock thresholds with sort-work proxies and fake-timer debounce assertions.
 - `C20` / `yarn test:backend --runTestsByPath src/tests/backend/secrets.test.ts src/tests/backend/setup-env.contract.test.ts`
   - Result: pass
   - Notes: the secrets/bootstrap pair passed with 9 total tests after consolidating the generated per-key assertions into aggregated bootstrap parity checks.

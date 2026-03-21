@@ -1,14 +1,50 @@
 /**
  * @jest-environment jsdom
  */
-import { longFormatDate, threadComments } from "../../frontend-utilities"
+import {
+  debounceFunc,
+  longFormatDate,
+  threadComments,
+} from "../../frontend-utilities"
 import { Comment, Discussion } from "../../lib/simple-comment-types"
-import { mockCommentTree, mockTopic } from "../mockData"
-import { performance } from "perf_hooks"
-import { debounceFunc } from "../../frontend-utilities"
 import mockDiscussion from "../mockDiscussion.json"
 
 describe("threadComments", () => {
+  const countThreadedReplies = (comment: { replies?: any[] }) =>
+    (comment.replies ?? []).reduce(
+      (total, reply) => total + 1 + countThreadedReplies(reply),
+      0
+    )
+
+  const countReachableReplyGroups = (
+    rootId: string,
+    replies: { id: string; parentId?: string | null }[]
+  ) => {
+    const childrenByParent = replies.reduce(
+      (groups, reply) =>
+        reply.parentId
+          ? {
+              ...groups,
+              [reply.parentId]: [...(groups[reply.parentId] ?? []), reply],
+            }
+          : groups,
+      {} as Record<string, { id: string; parentId?: string | null }[]>
+    )
+
+    const countChildGroups = (commentId: string): number => {
+      const children = childrenByParent[commentId] ?? []
+      return children.length === 0
+        ? 0
+        : 1 +
+            children.reduce(
+              (total, child) => total + countChildGroups(child.id),
+              0
+            )
+    }
+
+    return countChildGroups(rootId)
+  }
+
   it("should thread comments correctly", () => {
     const comments = [
       { id: "1", parentId: null },
@@ -43,109 +79,125 @@ describe("threadComments", () => {
     expect(result).toEqual(expected)
   })
 
-  it("should thread mockDiscussion.json in under 0.1s", () => {
+  it("should thread mockDiscussion.json with one sibling sort per reply group", () => {
     const topic = mockDiscussion as unknown as Discussion
-
     const topicReplies = topic.replies as Comment[]
+    const expectedSortCalls = countReachableReplyGroups(topic.id, topicReplies)
+    const sortSpy = jest.spyOn(Array.prototype, "sort")
 
-    const t0 = performance.now()
+    const threadedTopic = threadComments(topic, topicReplies)
 
-    threadComments(topic, topicReplies)
+    expect(sortSpy).toHaveBeenCalledTimes(expectedSortCalls)
+    expect(countThreadedReplies(threadedTopic)).toBe(topicReplies.length)
 
-    const t1 = performance.now()
-
-    expect(t1 - t0).toBeLessThan(100)
+    sortSpy.mockRestore()
   })
 
-  it("should thread flat array of 2000 comments in under 1s", () => {
-    const topic = mockTopic()
-    const largeCommentsArray = mockCommentTree(2000, undefined, [
-      topic,
-    ]) as Comment[]
+  it("should thread 2000 flat replies with a single sibling sort", () => {
+    const largeCommentsArray = Array.from({ length: 2000 }, (_, index) => ({
+      id: `reply-${String(index).padStart(4, "0")}`,
+      parentId: "large-topic",
+    }))
+    const topic: {
+      id: string
+      parentId: null
+      replies?: typeof largeCommentsArray
+    } = { id: "large-topic", parentId: null }
+    const sortSpy = jest.spyOn(Array.prototype, "sort")
 
-    const t0 = performance.now()
+    const threadedTopic = threadComments(topic, largeCommentsArray)
 
-    threadComments(topic, largeCommentsArray)
+    expect(sortSpy).toHaveBeenCalledTimes(1)
+    expect(threadedTopic.replies).toHaveLength(2000)
+    expect(countThreadedReplies(threadedTopic)).toBe(largeCommentsArray.length)
+    expect(threadedTopic.replies?.every((reply: any) => !reply.replies)).toBe(
+      true
+    )
 
-    const t1 = performance.now()
-
-    expect(t1 - t0).toBeLessThan(1000)
+    sortSpy.mockRestore()
   })
 })
 
 describe("debounce", () => {
-  it("calls as expected", function (done) {
+  beforeEach(() => {
+    jest.useFakeTimers()
+  })
+
+  afterEach(() => {
+    jest.runOnlyPendingTimers()
+    jest.clearAllTimers()
+    jest.useRealTimers()
+  })
+
+  it("calls as expected", () => {
     const callingArgument = "debounce it!"
-    const debounceCallback = (value: string) => {
-      expect(value).toBe(callingArgument)
-      done()
-    }
+    const debounceCallback = jest.fn()
     const debounce = debounceFunc(debounceCallback)
+
     debounce(callingArgument)
+
+    jest.advanceTimersByTime(250)
+
+    expect(debounceCallback).toHaveBeenCalledWith(callingArgument)
   })
 
-  it("does not call immediately", function (done) {
-    const startTime = new Date()
-    const debounceCallback = () => {
-      const duration = new Date().valueOf() - startTime.valueOf()
-      expect(duration).toBeGreaterThan(200)
-      done()
-    }
-
+  it("does not call immediately", () => {
+    const debounceCallback = jest.fn()
     const debounce = debounceFunc(debounceCallback)
 
     debounce()
+
+    expect(debounceCallback).not.toHaveBeenCalled()
+
+    jest.advanceTimersByTime(249)
+    expect(debounceCallback).not.toHaveBeenCalled()
+
+    jest.advanceTimersByTime(1)
+    expect(debounceCallback).toHaveBeenCalledTimes(1)
   })
 
-  it("never calls callback if continuously called", function (done) {
-    let numCalls = 0
-
-    const debounceCallback = () => {
-      numCalls++
-    }
+  it("never calls callback while it is continuously retriggered", () => {
+    const debounceCallback = jest.fn()
     const debounce = debounceFunc(debounceCallback)
-    const testInterval = window.setInterval(() => debounce(), 50)
-    const endTest = (toclear: number) => () => {
-      clearInterval(toclear)
-      expect(numCalls).toBe(0)
-      done()
+
+    for (let index = 0; index < 10; index++) {
+      debounce()
+      jest.advanceTimersByTime(50)
     }
-    setTimeout(endTest(testInterval), 500)
+
+    expect(debounceCallback).not.toHaveBeenCalled()
   })
 
-  it("calls after its wait time", function (done) {
+  it("calls after its wait time", () => {
     const waitTime = 1000
-    const startTime = new Date().valueOf()
-
-    expect.assertions(1)
-
-    const debounceCallback = () => {
-      const callTime = new Date().valueOf()
-      expect(callTime - startTime).toBeGreaterThanOrEqual(waitTime)
-      done()
-    }
+    const debounceCallback = jest.fn()
     const debounce = debounceFunc(debounceCallback, waitTime)
+
     debounce()
+
+    jest.advanceTimersByTime(waitTime - 1)
+    expect(debounceCallback).not.toHaveBeenCalled()
+
+    jest.advanceTimersByTime(1)
+    expect(debounceCallback).toHaveBeenCalledTimes(1)
   })
 
-  it("calls once only after debounce ends", function (done) {
-    let numCalls = 0
-
-    const debounceCallback = () => {
-      numCalls++
-    }
+  it("calls once only after debounce ends", () => {
+    const debounceCallback = jest.fn()
     const debounce = debounceFunc(debounceCallback)
-    const testInterval = window.setInterval(() => debounce(), 50)
-    const endInterval = (toclear: number) => () => {
-      clearInterval(toclear)
+
+    for (let index = 0; index < 4; index++) {
+      debounce()
+      jest.advanceTimersByTime(50)
     }
 
-    const endTest = () => {
-      expect(numCalls).toBe(1)
-      done()
-    }
-    setTimeout(endInterval(testInterval), 200)
-    setTimeout(endTest, 500)
+    expect(debounceCallback).not.toHaveBeenCalled()
+
+    jest.advanceTimersByTime(199)
+    expect(debounceCallback).not.toHaveBeenCalled()
+
+    jest.advanceTimersByTime(1)
+    expect(debounceCallback).toHaveBeenCalledTimes(1)
   })
 })
 
