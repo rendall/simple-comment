@@ -187,7 +187,7 @@ QC mode: Conformance QC
     - "Tests marked `Remove` in the approved checklist are removed only when they are placeholder or redundant and no meaningful protection is lost." (Acceptance Criteria)
     - "Survey-driven decisions remain traceable through the implementation checklist and validation notes." (Validation Strategy)
 
-- [ ] T03 `[validation]` Backend focused-suite validation: run `yarn test:backend --runTestsByPath src/tests/backend/crypt.test.ts src/tests/backend/api.test.ts src/tests/backend/SendGridNotificationService.test.ts src/tests/backend/policyEnforcement.test.ts src/tests/backend/setup-env.contract.test.ts src/tests/backend/utilities.test.ts src/tests/backend/MongodbService.test.ts` and confirm the rewritten rows pass with self-contained setup and deterministic assertions.
+- [x] T03 `[validation]` Backend focused-suite validation: run `yarn test:backend --runTestsByPath src/tests/backend/crypt.test.ts src/tests/backend/api.test.ts src/tests/backend/SendGridNotificationService.test.ts src/tests/backend/policyEnforcement.test.ts src/tests/backend/setup-env.contract.test.ts src/tests/backend/utilities.test.ts src/tests/backend/MongodbService.test.ts` and confirm the rewritten rows pass with self-contained setup and deterministic assertions.
   - Trace:
     - "Replacement and retained tests for the touched helpers/workflows pass in their local suites." (Validation Strategy)
     - "Pass: changed test files assert the intended behavior clearly and pass without relying on accidental order or timing." (Validation Strategy)

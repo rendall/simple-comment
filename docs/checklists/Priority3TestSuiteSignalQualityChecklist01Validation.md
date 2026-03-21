@@ -129,6 +129,9 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
 - `C20` / `yarn test:backend --runTestsByPath src/tests/backend/secrets.test.ts src/tests/backend/setup-env.contract.test.ts`
   - Result: pass
   - Notes: the secrets/bootstrap pair passed with 9 total tests after consolidating the generated per-key assertions into aggregated bootstrap parity checks.
+- `T03` / backend focused-suite validation command
+  - Result: pass
+  - Notes: `yarn test:backend --runTestsByPath src/tests/backend/crypt.test.ts src/tests/backend/api.test.ts src/tests/backend/SendGridNotificationService.test.ts src/tests/backend/policyEnforcement.test.ts src/tests/backend/setup-env.contract.test.ts src/tests/backend/utilities.test.ts src/tests/backend/MongodbService.test.ts` passed with 152 tests; the rewritten backend rows stayed green with deterministic and self-contained assertions.
 
 ## Blockers
 
