@@ -197,7 +197,7 @@ QC mode: Conformance QC
     - "For affected seams such as auth token creation, env bootstrap, OpenAPI/service parity... replacement tests still protect the same intended contract in clearer terms." (Validation Strategy)
     - "Pass: reviewers can map each rewritten test back to a concrete behavior or contract the repo still cares about." (Validation Strategy)
 
-- [ ] T05 `[validation]` Backend smoke-and-scope validation: run `yarn test:backend`, confirm the full backend Jest suite remains green, and verify the slice did not require runtime/API behavior changes, dependency changes, or CI-policy changes.
+- [x] T05 `[validation]` Backend smoke-and-scope validation: run `yarn test:backend`, confirm the full backend Jest suite remains green, and verify the slice did not require runtime/API behavior changes, dependency changes, or CI-policy changes.
   - Trace:
     - "The full Jest suites remain green after each accepted slice." (Validation Strategy)
     - "No approved change in this phase requires changing runtime/API behavior, dependency scope, or CI policy beyond the plan’s stated scope." (Acceptance Criteria)

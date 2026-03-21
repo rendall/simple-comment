@@ -135,6 +135,9 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
 - `T04` / backend contract review
   - Result: pass
   - Notes: the rewritten backend rows still map cleanly to auth token creation, OpenAPI-to-service parity, SendGrid payload/error handling, guest-comment policy enforcement, env bootstrap wiring, deterministic validation inputs, and API-level order-independent contracts.
+- `T05` / `yarn test:backend`
+  - Result: pass
+  - Notes: the full backend Jest suite passed with 178 tests across 11 suites. The slice stayed within test-signal cleanup scope and did not require runtime/API behavior changes, dependency changes, or CI-policy changes.
 
 ## Blockers
 
