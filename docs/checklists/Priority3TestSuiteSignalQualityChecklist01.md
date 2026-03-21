@@ -182,7 +182,7 @@ QC mode: Conformance QC
     - "Replacement and retained tests for the touched helpers/workflows pass in their local suites." (Validation Strategy)
     - "Pass: changed test files assert the intended behavior clearly and pass without relying on accidental order or timing." (Validation Strategy)
 
-- [ ] T02 `[validation]` Removal-contract validation: in `docs/checklists/Priority3TestSuiteSignalQualityChecklist01Validation.md`, document why each removed row was placeholder or redundant and identify the surviving coverage that still protects the contract.
+- [x] T02 `[validation]` Removal-contract validation: in `docs/checklists/Priority3TestSuiteSignalQualityChecklist01Validation.md`, document why each removed row was placeholder or redundant and identify the surviving coverage that still protects the contract.
   - Trace:
     - "Tests marked `Remove` in the approved checklist are removed only when they are placeholder or redundant and no meaningful protection is lost." (Acceptance Criteria)
     - "Survey-driven decisions remain traceable through the implementation checklist and validation notes." (Validation Strategy)
