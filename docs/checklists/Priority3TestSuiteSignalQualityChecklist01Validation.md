@@ -65,6 +65,10 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
 
 ## Regression Command Results
 
+- `T01` / removal-slice validation command set
+  - Result: pass
+  - Notes: `yarn test:frontend`, `yarn test:backend --runTestsByPath src/tests/backend/utilities.test.ts`, `yarn test:backend --runTestsByPath src/tests/backend/api.test.ts`, and `yarn test:backend --runTestsByPath src/tests/backend/MongodbService.test.ts` all passed; the removal items left no missing expectation behind in the touched suites.
+
 - `C01` / `yarn test:frontend`
   - Result: pass
   - Notes: 6 frontend suites passed, 158 tests passed after removing `src/tests/frontend/hello-world.test.ts`.

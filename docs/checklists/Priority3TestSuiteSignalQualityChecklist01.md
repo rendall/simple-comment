@@ -177,7 +177,7 @@ QC mode: Conformance QC
 
 ## Validation Items
 
-- [ ] T01 `[validation]` Removal-slice validation: run `yarn test:frontend`, `yarn test:backend --runTestsByPath src/tests/backend/utilities.test.ts`, `yarn test:backend --runTestsByPath src/tests/backend/api.test.ts`, and `yarn test:backend --runTestsByPath src/tests/backend/MongodbService.test.ts`, and confirm each removal leaves no failing or missing replacement expectation behind.
+- [x] T01 `[validation]` Removal-slice validation: run `yarn test:frontend`, `yarn test:backend --runTestsByPath src/tests/backend/utilities.test.ts`, `yarn test:backend --runTestsByPath src/tests/backend/api.test.ts`, and `yarn test:backend --runTestsByPath src/tests/backend/MongodbService.test.ts`, and confirm each removal leaves no failing or missing replacement expectation behind.
   - Trace:
     - "Replacement and retained tests for the touched helpers/workflows pass in their local suites." (Validation Strategy)
     - "Pass: changed test files assert the intended behavior clearly and pass without relying on accidental order or timing." (Validation Strategy)
