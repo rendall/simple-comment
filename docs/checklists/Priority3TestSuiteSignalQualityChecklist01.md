@@ -202,7 +202,7 @@ QC mode: Conformance QC
     - "The full Jest suites remain green after each accepted slice." (Validation Strategy)
     - "No approved change in this phase requires changing runtime/API behavior, dependency scope, or CI policy beyond the plan’s stated scope." (Acceptance Criteria)
 
-- [ ] T06 `[validation]` Frontend focused-suite validation: run `yarn test:frontend --runTestsByPath src/tests/frontend/blockies.test.ts src/tests/frontend/discussion.xstate.test.ts src/tests/frontend/login.xstate.test.ts src/tests/frontend/frontend-utilities.test.ts` and confirm the rewritten rows pass with deterministic assertions.
+- [x] T06 `[validation]` Frontend focused-suite validation: run `yarn test:frontend --runTestsByPath src/tests/frontend/blockies.test.ts src/tests/frontend/discussion.xstate.test.ts src/tests/frontend/login.xstate.test.ts src/tests/frontend/frontend-utilities.test.ts` and confirm the rewritten rows pass with deterministic assertions.
   - Trace:
     - "Replacement and retained tests for the touched helpers/workflows pass in their local suites." (Validation Strategy)
     - "Pass: changed test files assert the intended behavior clearly and pass without relying on accidental order or timing." (Validation Strategy)

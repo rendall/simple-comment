@@ -138,6 +138,9 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
 - `T05` / `yarn test:backend`
   - Result: pass
   - Notes: the full backend Jest suite passed with 178 tests across 11 suites. The slice stayed within test-signal cleanup scope and did not require runtime/API behavior changes, dependency changes, or CI-policy changes.
+- `T06` / frontend focused-suite validation command
+  - Result: pass
+  - Notes: the exact focused frontend command from `C19` already passed with 126 tests across `blockies.test.ts`, `discussion.xstate.test.ts`, `login.xstate.test.ts`, and `frontend-utilities.test.ts`, so the deterministic frontend rewrites remained green in their local slice.
 
 ## Blockers
 
