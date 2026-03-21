@@ -140,7 +140,7 @@ QC mode: Conformance QC
     - "Replace tests already identified by the survey as stale, brittle, misleading, overly structure-coupled, order-coupled, or noisy." (In Scope)
     - "Preserve and, where necessary, strengthen unique contract, infrastructure, and workflow coverage that the survey marked as valuable." (In Scope)
 
-- [ ] C17 `[frontend]` Replace the `definition.states...on` structure checks in `src/tests/frontend/discussion.xstate.test.ts` with workflow-behavior assertions that stay tied to the discussion state machine contract.
+- [x] C17 `[frontend]` Replace the `definition.states...on` structure checks in `src/tests/frontend/discussion.xstate.test.ts` with workflow-behavior assertions that stay tied to the discussion state machine contract.
   - Depends on: none.
   - Validation: T06, T07, T08, T11.
   - Trace:
