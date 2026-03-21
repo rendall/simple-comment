@@ -112,7 +112,7 @@ QC mode: Conformance QC
     - "Replace tests already identified by the survey as stale, brittle, misleading, overly structure-coupled, order-coupled, or noisy." (In Scope)
     - "The dominant current quality issues are: ... generated/per-entry test patterns that create maintenance noise without proportional confidence." (Current Baseline)
 
-- [ ] C13 `[backend]` In `src/tests/backend/MongodbService.test.ts`, replace the brittle auth-token rows with self-contained decoded-claim assertions instead of time-sensitive token-prefix comparisons.
+- [x] C13 `[backend]` In `src/tests/backend/MongodbService.test.ts`, replace the brittle auth-token rows with self-contained decoded-claim assertions instead of time-sensitive token-prefix comparisons.
   - Depends on: C04.
   - Validation: T03, T04, T05, T11.
   - Trace:

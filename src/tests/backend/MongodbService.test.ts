@@ -10,6 +10,7 @@ import type {
   Error,
   PublicSafeUser,
   Success,
+  TokenClaim,
   Topic,
   UpdateUser,
   User,
@@ -30,7 +31,8 @@ import {
   success202TopicDeleted,
   success202UserDeleted,
 } from "../../../src/lib/messages"
-import { getAuthToken, hashPassword } from "../../../src/lib/crypt"
+import { getExpirationTime, hashPassword } from "../../../src/lib/crypt"
+import * as jwt from "jsonwebtoken"
 import policy from "../../policy.json"
 import {
   generateGuestId,
@@ -71,6 +73,14 @@ const publicUnsafeUserProperties: (keyof User | "password")[] = [
   "email",
   "isVerified",
 ]
+const yearSeconds = 60 * 60 * 24 * 365
+
+const decodeAuthToken = (token: AuthToken): TokenClaim => {
+  const jwtSecret = process.env.JWT_SECRET
+  if (jwtSecret === undefined)
+    throw new Error("JWT_SECRET is not set in the environment variables")
+  return jwt.verify(token, jwtSecret) as TokenClaim
+}
 
 // Verification functions
 const isPublicSafeUser = (u: Partial<User>): u is PublicSafeUser =>
@@ -193,23 +203,26 @@ describe("Full API service test", () => {
       .catch(e => expect(e).toEqual(error401BadCredentials))
   })
   test("POST to auth with user id and correct password should return auth token", () => {
-    const authToken = getAuthToken(authUserTest.id)
-    // The difference in timing between the line above and the authToken returned from the service
-    // can change the two. We will compare only the first 70 characters, just to be sure that it
-    // is correct. It does not have to be exact for this purpose
+    const lowerBoundExp = getExpirationTime(yearSeconds)
     return service
       .authPOST(authUserTest.id, authUserTest.password)
-      .then((value: Success<AuthToken>) =>
-        expect(value.body.slice(0, 70)).toEqual(authToken.slice(0, 70))
-      )
+      .then((value: Success<AuthToken>) => {
+        const claim = decodeAuthToken(value.body)
+        const upperBoundExp = getExpirationTime(yearSeconds)
+        expect(claim.user).toBe(authUserTest.id)
+        expect([lowerBoundExp, upperBoundExp]).toContain(claim.exp)
+      })
   })
   test("POST to auth with email and correct password should return auth token", () => {
-    const authToken = getAuthToken(authUserTest.id)
+    const lowerBoundExp = getExpirationTime(yearSeconds)
     return service
       .authPOST(authUserTest.email, authUserTest.password)
-      .then((value: Success<AuthToken>) =>
-        expect(value.body.slice(0, 70)).toEqual(authToken.slice(0, 70))
-      )
+      .then((value: Success<AuthToken>) => {
+        const claim = decodeAuthToken(value.body)
+        const upperBoundExp = getExpirationTime(yearSeconds)
+        expect(claim.user).toBe(authUserTest.id)
+        expect([lowerBoundExp, upperBoundExp]).toContain(claim.exp)
+      })
   })
   // hardcoded moderator should always be able to log in
   test("POST to auth with hardcoded credentials should return auth token", () => {
@@ -366,12 +379,15 @@ describe("Full API service test", () => {
     })
   })
   test("GET to /auth with newly created user should return authtoken", () => {
-    const authToken = getAuthToken(testNewUser.id!)
+    const lowerBoundExp = getExpirationTime(yearSeconds)
     return service
       .authPOST(testNewUser.id!, testNewUser.password)
-      .then((value: Success<AuthToken>) =>
-        expect(value.body.slice(0, 70)).toEqual(authToken.slice(0, 70))
-      )
+      .then((value: Success<AuthToken>) => {
+        const claim = decodeAuthToken(value.body)
+        const upperBoundExp = getExpirationTime(yearSeconds)
+        expect(claim.user).toBe(testNewUser.id)
+        expect([lowerBoundExp, upperBoundExp]).toContain(claim.exp)
+      })
   })
 
   // User Read

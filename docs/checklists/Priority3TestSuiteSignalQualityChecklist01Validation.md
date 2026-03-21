@@ -39,6 +39,8 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
   - Change: replaced the helper-only assertion with a bootstrap-level check that proves secret and non-secret keys are classified differently during env initialization.
 - `C12` / `src/tests/backend/utilities.test.ts` / `bad email should fail` and `good email should pass`
   - Change: replaced random email generation with fixed representative addresses so the validation intent stays stable and readable.
+- `C13` / `src/tests/backend/MongodbService.test.ts` / auth-token rows
+  - Change: replaced JWT prefix comparisons with fixed-clock decoded-claim assertions for `user` and `exp`.
 
 ## Deterministic Performance Substitutions
 
@@ -82,6 +84,9 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
 - `C12` / `yarn test:backend --runTestsByPath src/tests/backend/utilities.test.ts`
   - Result: pass
   - Notes: `utilities.test.ts` passed with 48 tests after replacing the random email cases with fixed representative addresses.
+- `C13` / `yarn test:backend --runTestsByPath src/tests/backend/MongodbService.test.ts`
+  - Result: pass
+  - Notes: `MongodbService.test.ts` passed with 66 tests after replacing the auth-token prefix comparisons with decoded-claim assertions bounded by the exact `exp` rounding window.
 
 ## Blockers
 
