@@ -192,7 +192,7 @@ QC mode: Conformance QC
     - "Replacement and retained tests for the touched helpers/workflows pass in their local suites." (Validation Strategy)
     - "Pass: changed test files assert the intended behavior clearly and pass without relying on accidental order or timing." (Validation Strategy)
 
-- [ ] T04 `[validation]` Backend contract/parity validation: confirm the rewrites in `crypt.test.ts`, `api.test.ts`, `SendGridNotificationService.test.ts`, `policyEnforcement.test.ts`, `setup-env.contract.test.ts`, `utilities.test.ts`, and `MongodbService.test.ts` still map directly to concrete auth, OpenAPI/service, env-bootstrap, email, policy, and API-contract behavior.
+- [x] T04 `[validation]` Backend contract/parity validation: confirm the rewrites in `crypt.test.ts`, `api.test.ts`, `SendGridNotificationService.test.ts`, `policyEnforcement.test.ts`, `setup-env.contract.test.ts`, `utilities.test.ts`, and `MongodbService.test.ts` still map directly to concrete auth, OpenAPI/service, env-bootstrap, email, policy, and API-contract behavior.
   - Trace:
     - "For affected seams such as auth token creation, env bootstrap, OpenAPI/service parity... replacement tests still protect the same intended contract in clearer terms." (Validation Strategy)
     - "Pass: reviewers can map each rewritten test back to a concrete behavior or contract the repo still cares about." (Validation Strategy)

@@ -132,6 +132,9 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
 - `T03` / backend focused-suite validation command
   - Result: pass
   - Notes: `yarn test:backend --runTestsByPath src/tests/backend/crypt.test.ts src/tests/backend/api.test.ts src/tests/backend/SendGridNotificationService.test.ts src/tests/backend/policyEnforcement.test.ts src/tests/backend/setup-env.contract.test.ts src/tests/backend/utilities.test.ts src/tests/backend/MongodbService.test.ts` passed with 152 tests; the rewritten backend rows stayed green with deterministic and self-contained assertions.
+- `T04` / backend contract review
+  - Result: pass
+  - Notes: the rewritten backend rows still map cleanly to auth token creation, OpenAPI-to-service parity, SendGrid payload/error handling, guest-comment policy enforcement, env bootstrap wiring, deterministic validation inputs, and API-level order-independent contracts.
 
 ## Blockers
 
