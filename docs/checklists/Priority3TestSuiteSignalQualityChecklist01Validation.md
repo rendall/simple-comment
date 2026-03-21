@@ -141,6 +141,9 @@ Source checklist: `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md
 - `T06` / frontend focused-suite validation command
   - Result: pass
   - Notes: the exact focused frontend command from `C19` already passed with 126 tests across `blockies.test.ts`, `discussion.xstate.test.ts`, `login.xstate.test.ts`, and `frontend-utilities.test.ts`, so the deterministic frontend rewrites remained green in their local slice.
+- `T07` / frontend contract review
+  - Result: pass
+  - Notes: the frontend rewrites still cover seeded blockies determinism, observable XState workflow transitions, and retained `threadComments`/`debounceFunc` non-functional intent without depending on wall-clock thresholds.
 
 ## Blockers
 

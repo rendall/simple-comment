@@ -207,7 +207,7 @@ QC mode: Conformance QC
     - "Replacement and retained tests for the touched helpers/workflows pass in their local suites." (Validation Strategy)
     - "Pass: changed test files assert the intended behavior clearly and pass without relying on accidental order or timing." (Validation Strategy)
 
-- [ ] T07 `[validation]` Frontend contract-and-non-functional validation: confirm the blockies, XState, and frontend-utilities rewrites still protect deterministic seeded output, workflow behavior, and retained performance intent without relying on brittle wall-clock thresholds.
+- [x] T07 `[validation]` Frontend contract-and-non-functional validation: confirm the blockies, XState, and frontend-utilities rewrites still protect deterministic seeded output, workflow behavior, and retained performance intent without relying on brittle wall-clock thresholds.
   - Trace:
     - "Timing or performance-oriented tests remain real tests when they still protect meaningful behavior, but they should be made deterministic or anchored to stable proxies instead of unexplained wall-clock thresholds where feasible." (Validation Strategy)
     - "Pass: retained performance-oriented coverage no longer depends on brittle wall-clock assertions when a deterministic alternative exists." (Validation Strategy)
