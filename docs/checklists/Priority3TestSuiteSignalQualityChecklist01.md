@@ -222,7 +222,7 @@ QC mode: Conformance QC
     - "backend env bootstrap and parser contract coverage" (Current Baseline)
     - "Preserve and, where necessary, strengthen unique contract, infrastructure, and workflow coverage that the survey marked as valuable." (In Scope)
 
-- [ ] T10 `[validation]` Documentation-and-traceability validation: confirm `docs/Priority3TestSurvey.md`, this checklist, and `docs/checklists/Priority3TestSuiteSignalQualityChecklist01Validation.md` all agree on the completed first-slice remove/replace outcomes and still leave the `Investigate` rows for the follow-on checklist.
+- [x] T10 `[validation]` Documentation-and-traceability validation: confirm `docs/Priority3TestSurvey.md`, this checklist, and `docs/checklists/Priority3TestSuiteSignalQualityChecklist01Validation.md` all agree on the completed first-slice remove/replace outcomes and still leave the `Investigate` rows for the follow-on checklist.
   - Trace:
     - "The current survey `Investigate` items are not mixed into the first implementation checklist; they are tracked as a follow-on slice with written rationale." (Acceptance Criteria)
     - "Survey-driven decisions remain traceable through the implementation checklist and validation notes." (Validation Strategy)
