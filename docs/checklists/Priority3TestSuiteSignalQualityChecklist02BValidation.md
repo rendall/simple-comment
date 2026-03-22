@@ -37,3 +37,14 @@ Status: active
     - missing target user returns `error404UserUnknown`
     - missing authenticating user returns `{ ...error404UserUnknown, body: "Authenticating user is unknown" }`
   - Confirmed the survey no longer describes these rows as unresolved `Investigate` mismatches.
+
+- T03:
+  - Completed sequential broad regression validation:
+    - `yarn test:backend`
+    - `yarn test:frontend`
+    - `yarn test`
+  - Results:
+    - backend: 11 suites passed, 179 tests passed
+    - frontend: 6 suites passed, 140 tests passed
+    - full `yarn test`: passed end to end
+  - Checklist 02B no longer depends on the Checklist 02A execution exception because the runtime alignment is now green in both targeted and broad validation.

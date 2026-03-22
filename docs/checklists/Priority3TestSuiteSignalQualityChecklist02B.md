@@ -60,7 +60,7 @@ QC mode: Conformance QC
     - "Pass: reviewers can map each rewritten test back to a concrete behavior or contract the repo still cares about." (Validation Strategy)
     - "Survey-driven decisions remain traceable through the implementation checklist and validation notes." (Validation Strategy)
 
-- [ ] T03 `[validation]` Broad regression validation: run `yarn test:backend`, `yarn test:frontend`, and `yarn test`, and confirm the slice no longer requires the Checklist 02A execution exception.
+- [x] T03 `[validation]` Broad regression validation: run `yarn test:backend`, `yarn test:frontend`, and `yarn test`, and confirm the slice no longer requires the Checklist 02A execution exception.
   - Trace:
     - "The full Jest suites remain green after each accepted slice." (Validation Strategy)
     - "Broad regression validation passes after implementation, or any blocker is documented explicitly in validation notes." (Acceptance Criteria)
