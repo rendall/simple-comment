@@ -50,7 +50,7 @@ QC mode: Conformance QC
 
 ## Validation Items
 
-- [ ] T01 `[validation]` Targeted contract validation: run `yarn test:backend --runTestsByPath src/tests/backend/MongodbService.test.ts` and confirm the two `userGET` rows added in Checklist 02A now pass without test modification.
+- [x] T01 `[validation]` Targeted contract validation: run `yarn test:backend --runTestsByPath src/tests/backend/MongodbService.test.ts` and confirm the two `userGET` rows added in Checklist 02A now pass without test modification.
   - Trace:
     - "Replacement and retained tests for the touched helpers/workflows pass in their local suites." (Validation Strategy)
     - "Pass: changed test files assert the intended behavior clearly and pass without relying on accidental order or timing." (Validation Strategy)

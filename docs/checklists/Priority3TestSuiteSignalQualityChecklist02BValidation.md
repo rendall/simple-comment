@@ -23,3 +23,10 @@ Status: active
 - C03:
   - Updated `docs/Priority3TestSurvey.md` so the two split `userGET` rows are no longer unresolved `Investigate` items.
   - The survey now records both rows as accepted `Keep` coverage with Checklist 02A/02B traceability.
+
+## Validation Items
+
+- T01:
+  - Completed with `yarn test:backend --runTestsByPath src/tests/backend/MongodbService.test.ts`.
+  - Result: 67 tests passed, 0 failed.
+  - Both Checklist 02A `userGET` rows now pass without any test modification.
