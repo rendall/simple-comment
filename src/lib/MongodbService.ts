@@ -349,7 +349,19 @@ export class MongodbService extends AbstractDbService {
     }
 
     const authUser = await users.findOne({ id: authUserId })
-    const isAdmin = authUser ? authUser.isAdmin : false
+    const isHardcodedModerator = authUserId === simpleCommentModeratorId
+    const isValidGuest =
+      isGuestId(authUserId) &&
+      (policy.canGuestReadUser || policy.canPublicReadUser)
+
+    if (authUserId && !authUser && !isValidGuest && !isHardcodedModerator) {
+      return {
+        ...error404UserUnknown,
+        body: "Authenticating user is unknown",
+      }
+    }
+
+    const isAdmin = authUser ? authUser.isAdmin : isHardcodedModerator
     const isSelf = authUser && targetUserId === authUser.id
     const body = toSafeUser(user, isSelf || isAdmin)
     return { ...success200OK, body }

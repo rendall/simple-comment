@@ -34,7 +34,7 @@ QC mode: Conformance QC
     - "Preserve and, where necessary, strengthen unique contract, infrastructure, and workflow coverage that the survey marked as valuable." (In Scope)
     - "Replacement and retained tests for the touched helpers/workflows pass in their local suites." (Validation Strategy)
 
-- [ ] C02 `[backend]` Update `userGET` in `src/lib/MongodbService.ts` so a nonexistent `authUserId` does not fall through to a normal `200` safe-user response and instead returns the `404` contract expected by the new missing-authenticating-user test.
+- [x] C02 `[backend]` Update `userGET` in `src/lib/MongodbService.ts` so a nonexistent `authUserId` does not fall through to a normal `200` safe-user response and instead returns the `404` contract expected by the new missing-authenticating-user test.
   - Depends on: C01.
   - Validation: T01, T02.
   - Trace:
