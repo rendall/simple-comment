@@ -47,7 +47,7 @@ QC mode: Conformance QC
     - "Improve test naming where current copy does not match the asserted behavior." (In Scope)
     - "The resulting suite is easier to explain in plain language: contributors can point to what the changed tests protect rather than relying on “green means probably fine.”" (Acceptance Criteria)
 
-- [ ] C04 `[docs]` Update the affected `Investigate` row in `docs/Priority3TestSurvey.md` so it no longer describes one mixed `userGET` ambiguity and instead records the split test intent plus any unresolved runtime mismatch discovered by this fail-first pass.
+- [x] C04 `[docs]` Update the affected `Investigate` row in `docs/Priority3TestSurvey.md` so it no longer describes one mixed `userGET` ambiguity and instead records the split test intent plus any unresolved runtime mismatch discovered by this fail-first pass.
   - Depends on: C03.
   - Validation: T02, T03.
   - Trace:

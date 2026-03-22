@@ -33,8 +33,9 @@ Each table is organized by test file.
 | POST to /user with a guestUserId as targetId should fail | Keep | |
 | POST to /user with existing username should return 409 user exists | Replace | This currently depends on the earlier successful create-user test having already inserted `testNewUser`. Completed in Checklist 01 with a self-contained duplicate-user setup. |
 | GET to /auth with newly created user should return authtoken | Replace | Depends on earlier user creation and uses the same brittle token-prefix comparison as the other auth token tests. Completed in Checklist 01 with a decoded-claim assertion on the returned JWT. |
-| GET to /user/{userId} where userId does not exist should return 404 | Investigate | The test title says the target user is unknown, but the expected body is `Authenticating user is unknown`, which suggests a stale assumption or mismatched setup. |
-| GET to /user/{userId} should return User and 200 | Keep | |
+| GET to /user/{userId} with an unknown target user should return 404 unknown user | Investigate | Split out in Checklist 02A as a fail-first target-user contract test. It currently fails because `userGET` returns `{ statusCode: 404, body: "Authenticating user is unknown" }` instead of the generic `error404UserUnknown` contract. |
+| GET to /user/{userId} with an unknown authenticating user should return 404 authenticating user is unknown | Investigate | Split out in Checklist 02A as a fail-first auth-user contract test. It currently fails because `userGET` returns a normal `200` safe-user response when `authUserId` does not exist. |
+| GET to /user/{userId} with admin credentials should return user and 200 | Keep | |
 | GET to /user should return list of users | Keep | |
 | GET to /user with admin credentials can return list of users with email | Keep | |
 | GET get to /user/{userId} should return user | Remove | Duplicates the earlier admin `userGET` success path without adding a materially different contract check. Removed in Checklist 01. |
