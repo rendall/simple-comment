@@ -26,7 +26,7 @@ QC mode: Conformance QC
 
 ## Atomic Checklist Items
 
-- [ ] C01 `[backend]` Replace the ambiguous `GET to /user/{userId} where userId does not exist should return 404` row in `src/tests/backend/MongodbService.test.ts` with a clearly named missing-target-user row whose setup uses a known-valid existing admin `authUserId`, a nonexistent `targetUserId`, and assertions limited to the missing-target-user contract only.
+- [x] C01 `[backend]` Replace the ambiguous `GET to /user/{userId} where userId does not exist should return 404` row in `src/tests/backend/MongodbService.test.ts` with a clearly named missing-target-user row whose setup uses a known-valid existing admin `authUserId`, a nonexistent `targetUserId`, and assertions limited to the missing-target-user contract only.
   - Depends on: none.
   - Validation: T01, T02.
   - Trace:

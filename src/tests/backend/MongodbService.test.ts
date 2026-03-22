@@ -398,14 +398,12 @@ describe("Full API service test", () => {
   })
 
   // User Read
-  test("GET to /user/{userId} where userId does not exist should return 404", () => {
+  test("GET to /user/{userId} with an unknown target user should return 404 unknown user", () => {
     const adminUserTest = getAuthUser(u => u.isAdmin!)
+    const unknownTargetUser = mockUser()
     expect.assertions(1)
-    return service.userGET(randomString(), adminUserTest.id).then(e =>
-      expect(e).toEqual({
-        ...error404UserUnknown,
-        body: "Authenticating user is unknown",
-      })
+    return service.userGET(unknownTargetUser.id, adminUserTest.id).then(e =>
+      expect(e).toBe(error404UserUnknown)
     )
   })
   test("GET to /user/{userId} should return User and 200", () => {
