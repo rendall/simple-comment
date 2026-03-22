@@ -41,7 +41,7 @@ QC mode: Conformance QC
     - "Preserve and, where necessary, strengthen unique contract, infrastructure, and workflow coverage that the survey marked as valuable." (In Scope)
     - "If a proposed replacement would require changing runtime behavior, public contract interpretation, or broader repo policy, stop and return to plan/checklist refinement." (Constraints)
 
-- [ ] C03 `[docs]` Update `docs/Priority3TestSurvey.md` and this checklist’s validation notes so the two split `userGET` investigate rows record the accepted runtime-aligned outcome rather than an unresolved mismatch.
+- [x] C03 `[docs]` Update `docs/Priority3TestSurvey.md` and this checklist’s validation notes so the two split `userGET` investigate rows record the accepted runtime-aligned outcome rather than an unresolved mismatch.
   - Depends on: C02.
   - Validation: T02, T03.
   - Trace:
