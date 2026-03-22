@@ -27,7 +27,7 @@ QC mode: Conformance QC
 
 ## Atomic Checklist Items
 
-- [ ] C01 `[backend]` Update `userGET` in `src/lib/MongodbService.ts` so a nonexistent `targetUserId` with a valid non-moderator `authUserId` returns the generic `error404UserUnknown` contract rather than a `404` body for an unknown authenticating user.
+- [x] C01 `[backend]` Update `userGET` in `src/lib/MongodbService.ts` so a nonexistent `targetUserId` with a valid non-moderator `authUserId` returns the generic `error404UserUnknown` contract rather than a `404` body for an unknown authenticating user.
   - Depends on: none.
   - Validation: T01, T02.
   - Trace:

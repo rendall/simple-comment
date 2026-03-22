@@ -327,10 +327,7 @@ export class MongodbService extends AbstractDbService {
         authUserId === targetUserId && authUserId === simpleCommentModeratorId
 
       if (!isModerator) {
-        return {
-          ...error404UserUnknown,
-          body: "Authenticating user is unknown",
-        }
+        return error404UserUnknown
       }
 
       // The Big Moderator is authenticated but has no user object in the database
