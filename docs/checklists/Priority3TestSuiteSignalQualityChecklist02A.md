@@ -40,7 +40,7 @@ QC mode: Conformance QC
     - "The current survey `Investigate` items are not mixed into the first implementation checklist; they are tracked as a follow-on slice with written rationale." (Acceptance Criteria)
     - "Preserve and, where necessary, strengthen unique contract, infrastructure, and workflow coverage that the survey marked as valuable." (In Scope)
 
-- [ ] C03 `[backend]` Normalize the surrounding `userGET` test copy in `src/tests/backend/MongodbService.test.ts` only as needed so the file no longer contains one row that ambiguously stands in for both missing-target-user and missing-authenticating-user behavior.
+- [x] C03 `[backend]` Normalize the surrounding `userGET` test copy in `src/tests/backend/MongodbService.test.ts` only as needed so the file no longer contains one row that ambiguously stands in for both missing-target-user and missing-authenticating-user behavior.
   - Depends on: C02.
   - Validation: T01, T02.
   - Trace:

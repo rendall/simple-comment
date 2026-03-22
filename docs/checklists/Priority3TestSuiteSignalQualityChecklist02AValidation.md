@@ -22,3 +22,7 @@ Status: active
   - Added a separate explicit missing-authenticating-user `userGET` test using an existing target user and a nonexistent `authUserId`.
   - `yarn test:backend --runTestsByPath src/tests/backend/MongodbService.test.ts` now fails on exactly two rows, both in the split `userGET` contract area.
   - Observed runtime mismatch for the new auth-user case: `userGET` returned a normal `200` safe-user response instead of `{ statusCode: 404, body: "Authenticating user is unknown" }`.
+
+- C03:
+  - Renamed the nearby successful admin read row to `GET to /user/{userId} with admin credentials should return user and 200` so the surrounding `userGET` read-path copy is no longer generic or ambiguous.
+  - Re-ran `yarn test:backend --runTestsByPath src/tests/backend/MongodbService.test.ts`; the suite still fails only on the two intentional contract rows from C01 and C02.

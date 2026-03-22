@@ -417,7 +417,7 @@ describe("Full API service test", () => {
       })
     )
   })
-  test("GET to /user/{userId} should return User and 200", () => {
+  test("GET to /user/{userId} with admin credentials should return user and 200", () => {
     const targetUser = getTargetUser()
     const authAdminUser = getAuthUser(u => u.isAdmin!)
     return service
