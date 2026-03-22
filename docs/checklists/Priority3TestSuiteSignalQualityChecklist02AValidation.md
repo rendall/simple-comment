@@ -26,3 +26,10 @@ Status: active
 - C03:
   - Renamed the nearby successful admin read row to `GET to /user/{userId} with admin credentials should return user and 200` so the surrounding `userGET` read-path copy is no longer generic or ambiguous.
   - Re-ran `yarn test:backend --runTestsByPath src/tests/backend/MongodbService.test.ts`; the suite still fails only on the two intentional contract rows from C01 and C02.
+
+## Validation Items
+
+- T01:
+  - Completed with `yarn test:backend --runTestsByPath src/tests/backend/MongodbService.test.ts`.
+  - Result: 65 tests passed and 2 tests failed.
+  - The only failing rows are the two explicit split `userGET` investigate tests, so the suite behavior is now informative rather than ambiguous.

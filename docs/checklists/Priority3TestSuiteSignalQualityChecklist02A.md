@@ -56,7 +56,7 @@ QC mode: Conformance QC
 
 ## Validation Items
 
-- [ ] T01 `[validation]` Fail-first targeted validation: run `yarn test:backend --runTestsByPath src/tests/backend/MongodbService.test.ts` and record which of the new `userGET` clarification rows fail or pass.
+- [x] T01 `[validation]` Fail-first targeted validation: run `yarn test:backend --runTestsByPath src/tests/backend/MongodbService.test.ts` and record which of the new `userGET` clarification rows fail or pass.
   - Required outcome:
     - the suite behavior is now informative rather than ambiguous
     - if a row fails, the failure must point to a concrete runtime mismatch
