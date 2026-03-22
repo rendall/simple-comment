@@ -65,7 +65,7 @@ QC mode: Conformance QC
     - "Pass: changed test files assert the intended behavior clearly and pass without relying on accidental order or timing." (Validation Strategy)
     - "Fail: a rewrite removes contract protection or leaves only a weaker structural/proxy assertion." (Validation Strategy)
 
-- [ ] T02 `[validation]` Contract-clarity review: compare the new `userGET` tests in `src/tests/backend/MongodbService.test.ts`, the current runtime behavior in `src/lib/MongodbService.ts`, and the updated `docs/Priority3TestSurvey.md`, and confirm the result clearly distinguishes missing target user from missing authenticating user without leaving a stale mixed contract behind.
+- [x] T02 `[validation]` Contract-clarity review: compare the new `userGET` tests in `src/tests/backend/MongodbService.test.ts`, the current runtime behavior in `src/lib/MongodbService.ts`, and the updated `docs/Priority3TestSurvey.md`, and confirm the result clearly distinguishes missing target user from missing authenticating user without leaving a stale mixed contract behind.
   - Trace:
     - "Pass: reviewers can map each rewritten test back to a concrete behavior or contract the repo still cares about." (Validation Strategy)
     - "Survey-driven decisions remain traceable through the implementation checklist and validation notes." (Validation Strategy)

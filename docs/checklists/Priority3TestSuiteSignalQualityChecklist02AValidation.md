@@ -33,3 +33,10 @@ Status: active
   - Completed with `yarn test:backend --runTestsByPath src/tests/backend/MongodbService.test.ts`.
   - Result: 65 tests passed and 2 tests failed.
   - The only failing rows are the two explicit split `userGET` investigate tests, so the suite behavior is now informative rather than ambiguous.
+
+- T02:
+  - Reviewed the new `userGET` tests in `src/tests/backend/MongodbService.test.ts` against the current runtime path in `src/lib/MongodbService.ts` and the updated survey rows in `docs/Priority3TestSurvey.md`.
+  - The ambiguity is now split cleanly:
+    - missing target user: test expects `error404UserUnknown`, runtime currently returns a 404 with body `"Authenticating user is unknown"`
+    - missing authenticating user: test expects a 404 with body `"Authenticating user is unknown"`, runtime currently returns `200` with a safe-user body
+  - No stale mixed contract row remains in the survey or the test file.
