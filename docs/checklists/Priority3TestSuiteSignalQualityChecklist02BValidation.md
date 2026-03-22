@@ -30,3 +30,10 @@ Status: active
   - Completed with `yarn test:backend --runTestsByPath src/tests/backend/MongodbService.test.ts`.
   - Result: 67 tests passed, 0 failed.
   - Both Checklist 02A `userGET` rows now pass without any test modification.
+
+- T02:
+  - Reviewed `userGET` in `src/lib/MongodbService.ts`, the split tests in `src/tests/backend/MongodbService.test.ts`, and the aligned survey rows in `docs/Priority3TestSurvey.md`.
+  - Confirmed the implemented contract split is now consistent across all three surfaces:
+    - missing target user returns `error404UserUnknown`
+    - missing authenticating user returns `{ ...error404UserUnknown, body: "Authenticating user is unknown" }`
+  - Confirmed the survey no longer describes these rows as unresolved `Investigate` mismatches.

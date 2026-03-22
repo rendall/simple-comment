@@ -55,7 +55,7 @@ QC mode: Conformance QC
     - "Replacement and retained tests for the touched helpers/workflows pass in their local suites." (Validation Strategy)
     - "Pass: changed test files assert the intended behavior clearly and pass without relying on accidental order or timing." (Validation Strategy)
 
-- [ ] T02 `[validation]` Contract-parity review: compare `src/lib/MongodbService.ts`, `src/tests/backend/MongodbService.test.ts`, and `docs/Priority3TestSurvey.md` and confirm that missing target user and missing authenticating user are now distinct, implemented, and described consistently.
+- [x] T02 `[validation]` Contract-parity review: compare `src/lib/MongodbService.ts`, `src/tests/backend/MongodbService.test.ts`, and `docs/Priority3TestSurvey.md` and confirm that missing target user and missing authenticating user are now distinct, implemented, and described consistently.
   - Trace:
     - "Pass: reviewers can map each rewritten test back to a concrete behavior or contract the repo still cares about." (Validation Strategy)
     - "Survey-driven decisions remain traceable through the implementation checklist and validation notes." (Validation Strategy)
