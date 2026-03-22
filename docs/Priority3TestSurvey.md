@@ -72,7 +72,7 @@ Each table is organized by test file.
 | DELETE comment to /comment/{commentId} where Id does not exist should return 404 | Keep | |
 | DELETE comment to /comment/{commentId} by an admin should delete the comment and return 202 Comment deleted | Keep | |
 | DELETE comment to /comment/{commentId} by the user should delete the comment and return 202 Comment deleted | Keep | |
-| POST to /topic with no credentials and policy.canPublicCreateTopic===false | Investigate | The test is gated by `!policy.canFirstVisitCreateTopic`, but the title refers to `policy.canPublicCreateTopic===false`. The name and the controlling condition do not clearly match. |
+| POST to /topic with no credentials and policy.canFirstVisitCreateTopic===false should return 401 | Keep | Resolved from `Investigate`: the old title referred to a nonexistent `canPublicCreateTopic` flag, while the test setup and runtime both key off `canFirstVisitCreateTopic`. |
 | POST to /topic with improper credentials should return 403 | Keep | |
 | POST to /topic should return Discussion object and 201 Discussion created | Keep | |
 | GET to /topic should return a list of topics and 200 OK | Keep | |

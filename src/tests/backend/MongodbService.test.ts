@@ -935,7 +935,7 @@ describe("Full API service test", () => {
 
   // Topic Create
   if (!policy.canFirstVisitCreateTopic)
-    test("POST to /topic with no credentials and policy.canPublicCreateTopic===false", () => {
+    test("POST to /topic with no credentials and policy.canFirstVisitCreateTopic===false should return 401", () => {
       expect.assertions(2)
       const newTopic = mockTopic()
       return service.topicPOST(newTopic).catch(async value => {
