@@ -40,3 +40,10 @@ Status: active
     - missing target user: test expects `error404UserUnknown`, runtime currently returns a 404 with body `"Authenticating user is unknown"`
     - missing authenticating user: test expects a 404 with body `"Authenticating user is unknown"`, runtime currently returns `200` with a safe-user body
   - No stale mixed contract row remains in the survey or the test file.
+
+- T03:
+  - Prepared the follow-on implementation handoff without rewriting the new tests.
+  - Required implementation outcomes:
+    - update `userGET` so an unknown target user returns the generic `error404UserUnknown` contract
+    - update `userGET` so a nonexistent `authUserId` does not fall through to a normal `200` safe-user response
+  - Constraint for the next pass: keep the Checklist 02A tests unchanged and align runtime behavior to them, or return to discussion if that contract choice is rejected.

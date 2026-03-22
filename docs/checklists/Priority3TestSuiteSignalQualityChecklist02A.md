@@ -70,7 +70,7 @@ QC mode: Conformance QC
     - "Pass: reviewers can map each rewritten test back to a concrete behavior or contract the repo still cares about." (Validation Strategy)
     - "Survey-driven decisions remain traceable through the implementation checklist and validation notes." (Validation Strategy)
 
-- [ ] T03 `[validation]` Blocker handoff validation: if either new test fails, record the exact failing expectation as the handoff input for the follow-on implementation checklist, with enough detail that implementation can proceed without rewriting the tests.
+- [x] T03 `[validation]` Blocker handoff validation: if either new test fails, record the exact failing expectation as the handoff input for the follow-on implementation checklist, with enough detail that implementation can proceed without rewriting the tests.
   - Trace:
     - "If a proposed replacement would require changing runtime behavior, public contract interpretation, or broader repo policy, stop and return to plan/checklist refinement." (Constraints)
     - "Broad regression validation passes after implementation, or any blocker is documented explicitly in validation notes." (Acceptance Criteria)
