@@ -406,6 +406,17 @@ describe("Full API service test", () => {
       expect(e).toBe(error404UserUnknown)
     )
   })
+  test("GET to /user/{userId} with an unknown authenticating user should return 404 authenticating user is unknown", () => {
+    const targetUser = getAuthUser()
+    const unknownAuthUser = mockUser()
+    expect.assertions(1)
+    return service.userGET(targetUser.id, unknownAuthUser.id).then(e =>
+      expect(e).toEqual({
+        ...error404UserUnknown,
+        body: "Authenticating user is unknown",
+      })
+    )
+  })
   test("GET to /user/{userId} should return User and 200", () => {
     const targetUser = getTargetUser()
     const authAdminUser = getAuthUser(u => u.isAdmin!)

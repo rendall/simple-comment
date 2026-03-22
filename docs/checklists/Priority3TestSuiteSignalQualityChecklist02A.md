@@ -33,7 +33,7 @@ QC mode: Conformance QC
     - "Improve test naming where current copy does not match the asserted behavior." (In Scope)
     - "Preserve and, where necessary, strengthen unique contract, infrastructure, and workflow coverage that the survey marked as valuable." (In Scope)
 
-- [ ] C02 `[backend]` Add a separate clearly named missing-authenticating-user row to `src/tests/backend/MongodbService.test.ts` whose setup uses a known-existing `targetUserId`, a nonexistent `authUserId`, and assertions limited to the missing-authenticating-user contract only.
+- [x] C02 `[backend]` Add a separate clearly named missing-authenticating-user row to `src/tests/backend/MongodbService.test.ts` whose setup uses a known-existing `targetUserId`, a nonexistent `authUserId`, and assertions limited to the missing-authenticating-user contract only.
   - Depends on: C01.
   - Validation: T01, T02.
   - Trace:
