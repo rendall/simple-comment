@@ -57,7 +57,7 @@ QC mode: Conformance QC
     - "Before/after analysis evidence" (Validation Strategy)
     - "a follow-up `yarn knip` run shows fewer obviously false-positive findings in the known problem areas." (Validation Strategy)
 
-- [ ] C06 `[control]` Only if residual noise remains after C02-C05, apply narrowly scoped suppressions in `knip.json` using `ignoreFiles`, `ignoreIssues`, or `ignoreBinaries` with written rationale in the validation notes; do not use `ignoreDependencies` unless a dependency is clearly unmodelable in the repo's current structure and that rationale is recorded explicitly.
+- [x] C06 `[control]` Only if residual noise remains after C02-C05, apply narrowly scoped suppressions in `knip.json` using `ignoreFiles`, `ignoreIssues`, or `ignoreBinaries` with written rationale in the validation notes; do not use `ignoreDependencies` unless a dependency is clearly unmodelable in the repo's current structure and that rationale is recorded explicitly.
   - Depends on: C05.
   - Validation: T03.
   - Trace:

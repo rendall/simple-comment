@@ -13,6 +13,13 @@
   "eslint": {
     "config": ["src/.eslintrc.json"]
   },
+  "ignoreBinaries": ["cypress", "netlify"],
+  "ignoreDependencies": [
+    "http-server",
+    "jest-environment-jsdom",
+    "prettier-plugin-svelte"
+  ],
+  "ignoreFiles": ["jest-mongodb-config.js", "src/tests/mockComment.ts"],
   "jest": {
     "config": ["jest.backend.config.ts", "jest.frontend.config.ts"]
   },
