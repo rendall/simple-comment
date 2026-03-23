@@ -10,10 +10,7 @@ import {
   toErrorBody,
 } from "../../../src/lib/backend-utilities"
 import type { Email } from "../../../src/lib/simple-comment-types"
-import {
-  isGuestId,
-  validateEmail,
-} from "../../lib/shared-utilities"
+import { isGuestId, validateEmail } from "../../lib/shared-utilities"
 
 describe("test the `getAllowOriginHeaders` function", () => {
   it("should return {headers} if there is a header match", () => {
@@ -132,7 +129,6 @@ describe("isAllowedReferer", () => {
   ])("%s should not be allowed", (url: string) => {
     expect(isAllowedReferer(url, normalAllowedOrigins)).toBe(false)
   })
-
 })
 
 describe("isAllowedReferer with advanced patterns", () => {

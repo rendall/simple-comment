@@ -33,9 +33,7 @@ describe("Ensures secrets are secret", () => {
   })
 
   test("every example.env key is defined in process.env after test bootstrap", () => {
-    expect(
-      exampleEnvEntries.map(({ key }) => [key, process.env[key]])
-    ).toEqual(
+    expect(exampleEnvEntries.map(({ key }) => [key, process.env[key]])).toEqual(
       exampleEnvEntries.map(({ key }) => [key, expect.any(String)])
     )
   })

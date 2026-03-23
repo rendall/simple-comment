@@ -402,9 +402,9 @@ describe("Full API service test", () => {
     const adminUserTest = getAuthUser(u => u.isAdmin!)
     const unknownTargetUser = mockUser()
     expect.assertions(1)
-    return service.userGET(unknownTargetUser.id, adminUserTest.id).then(e =>
-      expect(e).toBe(error404UserUnknown)
-    )
+    return service
+      .userGET(unknownTargetUser.id, adminUserTest.id)
+      .then(e => expect(e).toBe(error404UserUnknown))
   })
   test("GET to /user/{userId} with an unknown authenticating user should return 404 authenticating user is unknown", () => {
     const targetUser = getAuthUser()
