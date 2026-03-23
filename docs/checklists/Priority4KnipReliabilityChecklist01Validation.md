@@ -36,7 +36,48 @@ Known noisy areas before calibration:
 
 ## Before/After Knip Comparison
 
-To be filled after the post-change `yarn knip` run.
+Post-change local validation on 2026-03-23:
+
+- `yarn knip` was rerun successfully three times after the C02-C04 configuration changes.
+- all three runs produced the same findings, which indicates the calibrated output is stable in the current local environment.
+
+Material improvements compared with the baseline captured in the source mini-plan:
+
+- `cypress.config.ts` no longer appears as an unused file
+- `src/simple-comment-icebreakers.ts` no longer appears as an unused file
+- `src/scss/simple-comment-style.scss` no longer appears as an unused file
+- ESLint-config-driven dependency noise no longer includes `@typescript-eslint/eslint-plugin`, `@typescript-eslint/parser`, `eslint-plugin-svelte`, or `eslint-config-prettier`
+
+Remaining post-change findings are narrower and more believable:
+
+- likely blind spots that still need interpretation:
+  - `jest-mongodb-config.js`
+  - `src/tests/mockComment.ts`
+  - `http-server`
+  - `jest-environment-jsdom`
+  - `prettier-plugin-svelte`
+  - unlisted `netlify` / `cypress` binaries
+- likely real cleanup or follow-up candidates:
+  - `@babel/preset-typescript`
+  - `@netlify/functions`
+  - `@xstate/cli`
+  - `@xstate/test`
+  - `mongodb-memory-server`
+  - `ts-node`
+  - `webpack-bundle-analyzer`
+  - `webpack-license-plugin`
+  - `yarn`
+  - `scripts/createTestEnv.mjs`
+  - `scripts/mockComment.mjs`
+  - `src/components/low-level/IconToggle.svelte`
+  - `src/lib/NoOpNotificationService.ts`
+- likely actionable declaration gap rather than a Knip blind spot:
+  - unresolved import `svelte-eslint-parser` from `src/.eslintrc.json`
+
+Known residual config hint from the calibrated run:
+
+- `src/entry/index.ts` is now considered a redundant explicit entry pattern by Knip
+- keep this as a follow-up cleanup hint rather than treating it as evidence that C04 failed, because the broader entry calibration still removed the intended false positives
 
 ## Residual Noise
 

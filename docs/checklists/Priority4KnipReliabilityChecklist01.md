@@ -50,7 +50,7 @@ QC mode: Conformance QC
     - "Add targeted repo entry/project patterns only where needed." (Proposed Configuration Direction)
     - "use configuration to model these files before suppressing them" (Proposed Configuration Direction)
 
-- [ ] C05 `[validation]` Run `yarn knip` after C02-C04 and record a before/after comparison in `docs/checklists/Priority4KnipReliabilityChecklist01Validation.md`, with explicit focus on the known problem areas from the source plan.
+- [x] C05 `[validation]` Run `yarn knip` after C02-C04 and record a before/after comparison in `docs/checklists/Priority4KnipReliabilityChecklist01Validation.md`, with explicit focus on the known problem areas from the source plan.
   - Depends on: C01, C02, C03, C04.
   - Validation: T02.
   - Trace:
