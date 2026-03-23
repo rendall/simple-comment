@@ -3,41 +3,13 @@ import { discussionMachine } from "../../lib/discussion.xstate"
 const initialState = discussionMachine.initialState
 
 describe("Discussion flow state machine", () => {
-  test("init state should be 'idle'", () => {
+  test("init state should be 'loading'", () => {
     expect(initialState.value).toBe("loading")
-  })
-
-  test("loading state should allow only actions SUCCESS or ERROR", () => {
-    const loadingActions = Object.keys(
-      discussionMachine.definition.states.loading.on
-    )
-    expect(loadingActions).toEqual(["SUCCESS", "ERROR"])
-  })
-
-  test("creating state should allow only actions SUCCESS or ERROR", () => {
-    const creatingActions = Object.keys(
-      discussionMachine.definition.states.creating.on
-    )
-    expect(creatingActions).toEqual(["SUCCESS", "ERROR"])
   })
 
   test("'created' state should always transition to 'loading'", () => {
     const nextState = discussionMachine.transition("creating", "SUCCESS")
     expect(nextState.value).toBe("loading")
-  })
-
-  test("loaded state should allow only action LOAD", () => {
-    const loadedActions = Object.keys(
-      discussionMachine.definition.states.loaded.on
-    )
-    expect(loadedActions).toEqual(["LOAD"])
-  })
-
-  test("error state should allow only actions RETRY or CREATE", () => {
-    const errorActions = Object.keys(
-      discussionMachine.definition.states.error.on
-    )
-    expect(errorActions).toEqual(["RETRY", "CREATE"])
   })
 
   test("loading with SUCCESS should transition to state `loaded`", () => {

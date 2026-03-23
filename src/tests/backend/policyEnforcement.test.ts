@@ -23,18 +23,20 @@ const mockGuestUser: User = {
 
 describe("isUserAllowedTo", () => {
   describe("isGuestAccountAllowed:false", () => {
-    it("should not post comment", () => {
+    it("returns a policy error when a guest tries to post a comment and guest accounts are disabled", () => {
       const policyCheck = isUserAllowedTo(
         mockGuestUser.id,
         Action.postComment,
         { ...mockPolicy, isGuestAccountAllowed: false }
       )
-      expect(policyCheck).not.toBe(true)
+      expect(policyCheck).toBe(
+        "Guest accounts are forbidden to comment by policy isGuestAllowed: false"
+      )
     })
   })
 
   describe("isGuestAccountAllowed:true", () => {
-    it("should post comment", () => {
+    it("allows a guest to post a comment when guest accounts are enabled", () => {
       const policyCheck = isUserAllowedTo(
         mockGuestUser.id,
         Action.postComment,

@@ -48,11 +48,11 @@ describe("SendGridNotificationService", () => {
     const body = "Test message"
     const mockErrorResponse: ClientResponse = {
       statusCode: 500,
-      body: {},
+      body: { error: "send failed" },
       headers: undefined,
     }
 
-    mailServiceMock.send.mockResolvedValueOnce([mockErrorResponse, {}])
+    mailServiceMock.send.mockResolvedValue([mockErrorResponse, {}])
 
     const result = await sendGridNotificationService.notifyModerators(body)
 
@@ -60,7 +60,16 @@ describe("SendGridNotificationService", () => {
     expect(mailServiceMock.send).toHaveBeenCalledTimes(
       moderatorContactEmails.length
     )
-    expect(result.statusCode).toEqual(mockErrorResponse.statusCode)
+    expect(mailServiceMock.send).toHaveBeenNthCalledWith(1, {
+      to: moderatorContactEmails[0],
+      from: "email@example.com",
+      subject: "Simple Comment Notification",
+      text: body,
+    })
+    expect(result).toEqual({
+      statusCode: mockErrorResponse.statusCode,
+      body: JSON.stringify(mockErrorResponse.body),
+    })
   })
 
   it("should throw given empty moderator contact emails", async () => {
@@ -73,12 +82,26 @@ describe("SendGridNotificationService", () => {
   })
 
   it("should throw given undefined moderator contact emails", async () => {
+    const previousModeratorEmails =
+      process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL
+    delete process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL
+
     expect(
       () =>
-        new SendGridNotificationService(mailServiceMock, sendGridTestApiKey, [])
+        new SendGridNotificationService(
+          mailServiceMock,
+          sendGridTestApiKey,
+          undefined
+        )
     ).toThrowError(
       "SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL is not set in environmental variables"
     )
+
+    if (previousModeratorEmails === undefined)
+      delete process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL
+    else
+      process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL =
+        previousModeratorEmails
   })
 
   it("should allow moderator contact email override when env value is missing", () => {
@@ -130,7 +153,7 @@ describe("SendGridNotificationService", () => {
     }
     const mockResponse: [ClientResponse, object] = [clientResponse, {}]
 
-    mailServiceMock.send.mockResolvedValueOnce(mockResponse)
+    mailServiceMock.send.mockResolvedValue(mockResponse)
 
     const result = await sendGridNotificationService.notifyModerators(body)
 
@@ -138,6 +161,18 @@ describe("SendGridNotificationService", () => {
     expect(mailServiceMock.send).toHaveBeenCalledTimes(
       moderatorContactEmails.length
     )
+    expect(mailServiceMock.send).toHaveBeenNthCalledWith(1, {
+      to: moderatorContactEmails[0],
+      from: "email@example.com",
+      subject: "Simple Comment Notification",
+      text: body,
+    })
+    expect(mailServiceMock.send).toHaveBeenNthCalledWith(2, {
+      to: moderatorContactEmails[1],
+      from: "email@example.com",
+      subject: "Simple Comment Notification",
+      text: body,
+    })
     expect(result.statusCode).toEqual(202)
   })
 

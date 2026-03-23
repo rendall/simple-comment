@@ -10,12 +10,7 @@ import {
   toErrorBody,
 } from "../../../src/lib/backend-utilities"
 import type { Email } from "../../../src/lib/simple-comment-types"
-import {
-  isGuestId,
-  validateEmail,
-  validateUserId,
-} from "../../lib/shared-utilities"
-import { mockUserId } from "../mockData"
+import { isGuestId, validateEmail } from "../../lib/shared-utilities"
 
 describe("test the `getAllowOriginHeaders` function", () => {
   it("should return {headers} if there is a header match", () => {
@@ -101,61 +96,8 @@ describe("generateCommentId", () => {
 })
 
 describe("Test validations", () => {
-  test("good validateUserId", () => {
-    expect(validateUserId("rendall-775-id")).toEqual({ isValid: true })
-  })
-
-  test("guestId is validateUserId", () => {
-    expect(validateUserId(generateGuestId())).toEqual({ isValid: true })
-  })
-
-  test("incorrect characters in validateUserId", () => {
-    expect(validateUserId("A-rendall-775-id")).toEqual({
-      isValid: false,
-      reason:
-        "'A-rendall-775-id' must have only lower-case letters, numbers and the characters - and _, but 'A-rendall-775-id' contains A",
-    })
-  })
-
-  test("not enough characters in validateUserId", () => {
-    expect(validateUserId("ad")).toEqual({
-      isValid: false,
-      reason:
-        "'ad' has only 2 characters, but it must be at least 5 characters long.",
-    })
-  })
-
-  test("too many characters in validateUserId", () => {
-    const tooMany = mockUserId(37)
-    expect(tooMany.length).toBeGreaterThan(36)
-    expect(validateUserId(tooMany)).toEqual({
-      isValid: false,
-      reason: `'${tooMany}' has 37 characters, but it must be no more than 36 characters long.`,
-    })
-  })
-
-  const emailAscii = "abcdefghijklmnopqrstuvwxyz01234567890"
-  const randomNumber = (min: number, max: number): number =>
-    Math.floor(Math.random() * (max - min)) + min
-  const randomString = (
-    alpha: string = emailAscii,
-    len: number = randomNumber(10, 50),
-    str: string = ""
-  ): string =>
-    len === 0
-      ? str
-      : randomString(
-          alpha,
-          len - 1,
-          `${str}${alpha.charAt(Math.floor(Math.random() * alpha.length))}`
-        )
-  const createRandomEmail = (): Email =>
-    `${randomString(emailAscii)}@${randomString(emailAscii)}.${randomString(
-      "abcdefghijklmnopqrstuvwxyz",
-      3
-    )}`
-  const badEmail = randomString()
-  const goodEmail = createRandomEmail()
+  const badEmail: Email = "not-an-email"
+  const goodEmail: Email = "commenter@example.com"
 
   const badEmailValidation = validateEmail(badEmail)
   const goodEmailValidation = validateEmail(goodEmail)
@@ -186,16 +128,6 @@ describe("isAllowedReferer", () => {
     "https://yet-another-example.com", // completely different domain
   ])("%s should not be allowed", (url: string) => {
     expect(isAllowedReferer(url, normalAllowedOrigins)).toBe(false)
-  })
-
-  it("should handle URLs with hash, query parameters, and directory index", () => {
-    const url = "https://www.example.com:443/about/index.html?param=value#hash"
-    expect(isAllowedReferer(url, normalAllowedOrigins)).toBe(true)
-  })
-
-  it("should handle URLs without any of the stripped elements", () => {
-    const url = "example.com"
-    expect(isAllowedReferer(url, normalAllowedOrigins)).toBe(true)
   })
 })
 

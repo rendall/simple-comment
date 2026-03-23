@@ -10,6 +10,7 @@ import type {
   Error,
   PublicSafeUser,
   Success,
+  TokenClaim,
   Topic,
   UpdateUser,
   User,
@@ -30,7 +31,8 @@ import {
   success202TopicDeleted,
   success202UserDeleted,
 } from "../../../src/lib/messages"
-import { getAuthToken, hashPassword } from "../../../src/lib/crypt"
+import { getExpirationTime, hashPassword } from "../../../src/lib/crypt"
+import * as jwt from "jsonwebtoken"
 import policy from "../../policy.json"
 import {
   generateGuestId,
@@ -71,6 +73,14 @@ const publicUnsafeUserProperties: (keyof User | "password")[] = [
   "email",
   "isVerified",
 ]
+const yearSeconds = 60 * 60 * 24 * 365
+
+const decodeAuthToken = (token: AuthToken): TokenClaim => {
+  const jwtSecret = process.env.JWT_SECRET
+  if (jwtSecret === undefined)
+    throw new Error("JWT_SECRET is not set in the environment variables")
+  return jwt.verify(token, jwtSecret) as TokenClaim
+}
 
 // Verification functions
 const isPublicSafeUser = (u: Partial<User>): u is PublicSafeUser =>
@@ -193,23 +203,26 @@ describe("Full API service test", () => {
       .catch(e => expect(e).toEqual(error401BadCredentials))
   })
   test("POST to auth with user id and correct password should return auth token", () => {
-    const authToken = getAuthToken(authUserTest.id)
-    // The difference in timing between the line above and the authToken returned from the service
-    // can change the two. We will compare only the first 70 characters, just to be sure that it
-    // is correct. It does not have to be exact for this purpose
+    const lowerBoundExp = getExpirationTime(yearSeconds)
     return service
       .authPOST(authUserTest.id, authUserTest.password)
-      .then((value: Success<AuthToken>) =>
-        expect(value.body.slice(0, 70)).toEqual(authToken.slice(0, 70))
-      )
+      .then((value: Success<AuthToken>) => {
+        const claim = decodeAuthToken(value.body)
+        const upperBoundExp = getExpirationTime(yearSeconds)
+        expect(claim.user).toBe(authUserTest.id)
+        expect([lowerBoundExp, upperBoundExp]).toContain(claim.exp)
+      })
   })
   test("POST to auth with email and correct password should return auth token", () => {
-    const authToken = getAuthToken(authUserTest.id)
+    const lowerBoundExp = getExpirationTime(yearSeconds)
     return service
       .authPOST(authUserTest.email, authUserTest.password)
-      .then((value: Success<AuthToken>) =>
-        expect(value.body.slice(0, 70)).toEqual(authToken.slice(0, 70))
-      )
+      .then((value: Success<AuthToken>) => {
+        const claim = decodeAuthToken(value.body)
+        const upperBoundExp = getExpirationTime(yearSeconds)
+        expect(claim.user).toBe(authUserTest.id)
+        expect([lowerBoundExp, upperBoundExp]).toContain(claim.exp)
+      })
   })
   // hardcoded moderator should always be able to log in
   test("POST to auth with hardcoded credentials should return auth token", () => {
@@ -358,34 +371,78 @@ describe("Full API service test", () => {
   })
   test("POST to /user with existing username should return 409 user exists", async () => {
     const authUser = getAuthUser(u => u.isAdmin!)
+    const duplicateUser: CreateUserPayload = {
+      ...mockUser("duplicate-"),
+      isAdmin: false,
+      password: mockPassword(),
+      email: mockEmail(),
+    }
     expect.assertions(1)
-    const e = await service.userPOST(testNewUser, authUser.id)
+    await service.userPOST(duplicateUser, authUser.id)
+    const e = await service.userPOST(duplicateUser, authUser.id)
     expect(e).toEqual({
       ...error409UserExists,
-      body: `UserId '${testNewUser.id}' exists`,
+      body: `UserId '${duplicateUser.id}' exists`,
     })
   })
   test("GET to /auth with newly created user should return authtoken", () => {
-    const authToken = getAuthToken(testNewUser.id!)
+    const lowerBoundExp = getExpirationTime(yearSeconds)
     return service
       .authPOST(testNewUser.id!, testNewUser.password)
-      .then((value: Success<AuthToken>) =>
-        expect(value.body.slice(0, 70)).toEqual(authToken.slice(0, 70))
-      )
+      .then((value: Success<AuthToken>) => {
+        const claim = decodeAuthToken(value.body)
+        const upperBoundExp = getExpirationTime(yearSeconds)
+        expect(claim.user).toBe(testNewUser.id)
+        expect([lowerBoundExp, upperBoundExp]).toContain(claim.exp)
+      })
   })
 
   // User Read
-  test("GET to /user/{userId} where userId does not exist should return 404", () => {
+  test("GET to /user/{userId} with an unknown target user should return 404 unknown user", () => {
     const adminUserTest = getAuthUser(u => u.isAdmin!)
+    const unknownTargetUser = mockUser()
     expect.assertions(1)
-    return service.userGET(randomString(), adminUserTest.id).then(e =>
+    return service
+      .userGET(unknownTargetUser.id, adminUserTest.id)
+      .then(e => expect(e).toBe(error404UserUnknown))
+  })
+  test("GET to /user/{userId} with an unknown authenticating user and public user reads disabled should return 404 authenticating user is unknown", async () => {
+    const targetUser = getAuthUser()
+    const unknownAuthUser = mockUser()
+    const originalCanPublicReadUser = policy.canPublicReadUser
+
+    policy.canPublicReadUser = false
+
+    try {
+      expect.assertions(1)
+      const e = await service.userGET(targetUser.id, unknownAuthUser.id)
       expect(e).toEqual({
         ...error404UserUnknown,
         body: "Authenticating user is unknown",
       })
-    )
+    } finally {
+      policy.canPublicReadUser = originalCanPublicReadUser
+    }
   })
-  test("GET to /user/{userId} should return User and 200", () => {
+  test("GET to /user/{userId} with an unknown authenticating user and public user reads enabled should return public user and 200", async () => {
+    const targetUser = getAuthUser(u => !u.isAdmin)
+    const unknownAuthUser = mockUser()
+    const originalCanPublicReadUser = policy.canPublicReadUser
+
+    policy.canPublicReadUser = true
+
+    try {
+      const res = await service.userGET(targetUser.id, unknownAuthUser.id)
+      expect(res).toHaveProperty("statusCode", 200)
+      expect(res.body).toHaveProperty("id", targetUser.id)
+      expect(res.body).toHaveProperty("name", targetUser.name)
+      expect(res.body).not.toHaveProperty("hash")
+      expect(res.body).not.toHaveProperty("email")
+    } finally {
+      policy.canPublicReadUser = originalCanPublicReadUser
+    }
+  })
+  test("GET to /user/{userId} with admin credentials should return user and 200", () => {
     const targetUser = getTargetUser()
     const authAdminUser = getAuthUser(u => u.isAdmin!)
     return service
@@ -432,19 +489,6 @@ describe("Full API service test", () => {
         expect(checkProp("hash")).toBe(false)
       })
   }) // get to /user/{userId} should return user
-  test("GET get to /user/{userId} should return user", () => {
-    const user = getAuthUser()
-    const adminUserTest = getAuthUser(u => u.isAdmin!)
-    return service
-      .userGET(user.id, adminUserTest.id)
-      .then((res: Success<PublicSafeUser | AdminSafeUser> | Error) => {
-        expect(res).toHaveProperty("statusCode", 200)
-        expect(res.body).toHaveProperty("id", user.id)
-        expect(res.body).toHaveProperty("name", user.name)
-        expect(res.body).not.toHaveProperty("hash")
-        expect(res.body).toHaveProperty("email")
-      })
-  })
 
   test("GET to /user/{userId} with public user", () => {
     const user = getAuthUser()
@@ -729,11 +773,21 @@ describe("Full API service test", () => {
   })
 
   test("POST comment to /comment/{commentId} with identical information within a short length of time should return 425 Possible duplicate comment", async () => {
+    const originalComment = {
+      parentId: chooseRandomElement(testComments).id,
+      text: randomString(alphaUserInput, 400),
+      userId: getAuthUser().id,
+    }
     expect.assertions(1)
+    await service.commentPOST(
+      originalComment.parentId,
+      originalComment.text,
+      originalComment.userId
+    )
     const e = await service.commentPOST(
-      newCommentTest.parentId,
-      newCommentTest.text!,
-      newCommentTest.userId!
+      originalComment.parentId,
+      originalComment.text,
+      originalComment.userId
     )
     expect(e).toBe(error409DuplicateComment)
   })
@@ -830,7 +884,7 @@ describe("Full API service test", () => {
     )
     expect(e).toHaveProperty("statusCode", 404)
   })
-  test("PUT comment to /comment/{commentId} should return the edited comment with 202 Comment updated", () => {
+  test("PUT comment to /comment/{commentId} should return the edited comment with 204 Comment updated", () => {
     const targetComment = chooseRandomElement(
       testComments.filter(isComment).filter(c => c.userId !== null)
     ) as Comment & { userId: string }
@@ -906,7 +960,7 @@ describe("Full API service test", () => {
 
   // Topic Create
   if (!policy.canFirstVisitCreateTopic)
-    test("POST to /topic with no credentials and policy.canPublicCreateTopic===false", () => {
+    test("POST to /topic with no credentials and policy.canFirstVisitCreateTopic===false should return 401", () => {
       expect.assertions(2)
       const newTopic = mockTopic()
       return service.topicPOST(newTopic).catch(async value => {
@@ -953,7 +1007,7 @@ describe("Full API service test", () => {
     })
   })
 
-  test("GET to /topic/{topicId} should return a topic and descendent comments", async () => {
+  test("GET to /topic/{topicId} should return the topic and expose a replies array for seeded topics with replies", async () => {
     const commentsCollection = db.collection("comments")
     const seededTopicIds = testTopics.map(topic => topic.id)
     const topicIdsWithReplies = (
@@ -972,7 +1026,7 @@ describe("Full API service test", () => {
   })
 
   // Discussion Update
-  test("PUT topic  to /topic/{topicId} editing anything except title or isLocked should be ignored", () => {
+  test("PUT topic to /topic/{topicId} should preserve dateCreated when non-editable fields are submitted", () => {
     const topic = chooseRandomElement(testTopics)
     const putTopic = {
       ...topic,
@@ -1059,16 +1113,36 @@ describe("Full API service test", () => {
       .then((res: Success) => expect(res).toBe(success202TopicDeleted))
   })
   test("DELETE topic to /topic/{topicId} should delete descended comments", async () => {
-    // none of these replies should be in the database
-    const replies = testDeleteTopicComments
+    const adminUserTest = getAuthUser(u => u.isAdmin!)
+    const commentAuthor = getAuthUser()
+    const topicToDelete = mockTopic("delete-descendants-")
+    await service.topicPOST(topicToDelete, adminUserTest.id)
+    const createdTopicId = topicToDelete.id
+    const firstComment = await service.commentPOST(
+      createdTopicId,
+      randomString(alphaUserInput, 200),
+      commentAuthor.id
+    )
+    const firstCommentId = (firstComment.body as Comment).id
+    const secondComment = await service.commentPOST(
+      firstCommentId,
+      randomString(alphaUserInput, 200),
+      commentAuthor.id
+    )
+    const secondCommentId = (secondComment.body as Comment).id
+
+    const deleteResponse = await service.topicDELETE(
+      createdTopicId,
+      adminUserTest.id
+    )
+    expect(deleteResponse).toBe(success202TopicDeleted)
+
     const comments = await db
       .collection<Comment | Discussion>("comments")
-      .find({})
+      .find({ id: { $in: [firstCommentId, secondCommentId] } })
       .toArray()
 
-    replies.forEach(c => {
-      expect(comments).not.toContain(c)
-    })
+    expect(comments).toEqual([])
   })
 })
 
