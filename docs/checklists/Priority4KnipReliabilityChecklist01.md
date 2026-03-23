@@ -74,7 +74,7 @@ QC mode: Conformance QC
 
 ## Validation Items
 
-- [ ] T01 `[validation]` Configuration evidence validation: verify the resulting `knip.json` matches the installed Knip major version and explicitly models the repo's non-default config surfaces that are in scope for this checklist.
+- [x] T01 `[validation]` Configuration evidence validation: verify the resulting `knip.json` matches the installed Knip major version and explicitly models the repo's non-default config surfaces that are in scope for this checklist.
   - Trace:
     - "Pass: the configured Knip options match the installed major version and explicitly model the repo's non-default config surfaces." (Validation Strategy)
     - "Fail: the config remains version-misaligned or continues to omit known custom repo surfaces." (Validation Strategy)
