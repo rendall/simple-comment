@@ -79,7 +79,7 @@ QC mode: Conformance QC
     - "Pass: the configured Knip options match the installed major version and explicitly model the repo's non-default config surfaces." (Validation Strategy)
     - "Fail: the config remains version-misaligned or continues to omit known custom repo surfaces." (Validation Strategy)
 
-- [ ] T02 `[validation]` Before/after analysis validation: compare the baseline `yarn knip` findings recorded from the source plan against the post-change `yarn knip` run and confirm whether the known false-positive areas materially improved.
+- [x] T02 `[validation]` Before/after analysis validation: compare the baseline `yarn knip` findings recorded from the source plan against the post-change `yarn knip` run and confirm whether the known false-positive areas materially improved.
   - Trace:
     - "Pass: a follow-up `yarn knip` run shows fewer obviously false-positive findings in the known problem areas." (Validation Strategy)
     - "Fail: the same known false positives remain unchanged, or broad suppressions hide too much signal." (Validation Strategy)
