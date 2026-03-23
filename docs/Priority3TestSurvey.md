@@ -345,5 +345,5 @@ Each table is organized by test file.
 
 | Test Copy | Decision | Notes |
 | --- | --- | --- |
-| should initialize with the correct default state | Investigate | The store is used by live components, but the exact sentinel value `{ name: "init" }` appears to be an implementation detail rather than a user-facing contract. Decide whether we care about an inert initial event generically or this exact payload specifically. |
+| should initialize with the correct default state | Remove | Completed as a removal after investigation: nothing in the repo depends on the literal `{ name: "init" }` sentinel, so this was testing an implementation detail rather than a user-facing contract. |
 | should dispatch and update the state correctly | Keep | `dispatchableStore.dispatch()` is real app wiring used by components like `Login.svelte` and `CommentInput.svelte`, so keeping a direct contract check on the dispatched event payload is worthwhile. |
