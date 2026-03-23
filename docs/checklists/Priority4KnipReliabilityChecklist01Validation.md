@@ -1,6 +1,6 @@
 # Priority 4 Checklist 01 Validation — Knip Reliability Calibration
 
-Status: in progress
+Status: complete
 
 Checklist: `docs/checklists/Priority4KnipReliabilityChecklist01.md`
 
@@ -123,4 +123,20 @@ Residual findings that should remain visible after the narrow C06 suppressions:
 
 ## Rationale and Interpretation Guidance
 
-To be finalized after checklist execution so future Priority 4 work can interpret calibrated `knip` output consistently.
+Use the current `knip` output as calibrated triage input, not as automatic deletion authority.
+
+Interpretation guidance for future Priority 4 work:
+
+- treat the remaining unused dependency and unused file findings as a review queue for manual verification
+- treat unresolved `svelte-eslint-parser` as a likely package-declaration/config gap, not as cleanup noise
+- treat unlisted `jsdom` as a follow-up dependency declaration question tied to the frontend Jest environment
+- do not remove `mongodb-memory-server` only because Knip reports it; verify first whether the direct dependency is still intentionally needed alongside `@shelf/jest-mongodb`
+- keep using plugin/config and `entry` modeling first whenever new Knip false positives appear
+- use `ignoreDependencies` only for clearly repo-used but structurally hard-to-model dependencies, as done here for shell-script CLI usage and implicit tool plugin loading
+- prefer leaving plausible cleanup candidates visible rather than over-suppressing them to get a perfectly quiet report
+
+Result of this calibration pass:
+
+- Knip now models the repo's non-default ESLint, Jest, webpack, and Cypress config surfaces
+- Knip now understands the repo's custom frontend/build entry surface well enough to remove the most obvious false positives from the baseline run
+- the remaining report is small enough to support planned Priority 4 dependency/file triage without pretending every finding is automatically correct

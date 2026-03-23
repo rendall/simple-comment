@@ -65,7 +65,7 @@ QC mode: Conformance QC
     - "Prefer targeted suppressions over broad ignore rules." (Proposed Configuration Direction)
     - "avoid `ignoreDependencies` as a first move unless a dependency is truly unmodelable in the repo's current structure" (Proposed Configuration Direction)
 
-- [ ] C07 `[docs]` Finalize `docs/checklists/Priority4KnipReliabilityChecklist01Validation.md` so it explains which current findings appear resolved, which remain verification-required, and how future Priority 4 work should interpret Knip output after this calibration pass.
+- [x] C07 `[docs]` Finalize `docs/checklists/Priority4KnipReliabilityChecklist01Validation.md` so it explains which current findings appear resolved, which remain verification-required, and how future Priority 4 work should interpret Knip output after this calibration pass.
   - Depends on: C05, C06.
   - Validation: T03.
   - Trace:
