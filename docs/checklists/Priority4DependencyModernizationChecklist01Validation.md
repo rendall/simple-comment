@@ -21,11 +21,18 @@ Baseline captured on 2026-03-23 before checklist implementation:
 
 ## Per-Step Dependency Changes
 
-To be filled during checklist execution.
+- C02:
+  - added `svelte-eslint-parser` to `package.json` so the parser named directly in `src/.eslintrc.json` is explicitly declared
+  - `yarn.lock` already contained a matching `svelte-eslint-parser@^0.32.2` entry from the existing dependency graph, so this step required no lockfile content change
 
 ## Command Evidence
 
-To be filled during checklist execution.
+- C02:
+  - `yarn knip`
+    - pass condition met for this step: unresolved `svelte-eslint-parser` is no longer reported
+    - intentionally deferred residual findings remain visible
+  - `yarn lint`
+    - passed with the same two pre-existing warnings in `src/tests/frontend/frontend-utilities.test.ts`
 
 ## Before/After Knip Comparison
 

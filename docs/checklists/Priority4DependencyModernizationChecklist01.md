@@ -39,7 +39,7 @@ QC mode: Conformance QC
     - "Use `package.json`, `yarn outdated`, and `yarn knip` as the current planning baseline for dependency modernization." (In Scope)
     - "The plan defines a current dependency inventory method based on `package.json`, `yarn outdated`, and `yarn knip`." (Acceptance Criteria)
 
-- [ ] C02 `[deps]` Add `svelte-eslint-parser` to `package.json` and `yarn.lock` so the parser named directly in `src/.eslintrc.json` is an explicit repo dependency instead of an unresolved Knip/import gap.
+- [x] C02 `[deps]` Add `svelte-eslint-parser` to `package.json` and `yarn.lock` so the parser named directly in `src/.eslintrc.json` is an explicit repo dependency instead of an unresolved Knip/import gap.
   - Depends on: C01.
   - Validation: T01, T02 (`yarn knip`, `yarn lint`).
   - Trace:
