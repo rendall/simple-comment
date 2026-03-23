@@ -1,0 +1,32 @@
+# Priority 4 Checklist 01 Validation — Knip Reliability Calibration
+
+Status: in progress
+
+Checklist: `docs/checklists/Priority4KnipReliabilityChecklist01.md`
+
+## Baseline Findings
+
+Initial `knip` evidence for this checklist comes from the 2026-03-23 planning pass recorded in `docs/plans/Priority4KnipReliabilityMiniPlan.md`.
+
+Known noisy areas before calibration:
+
+- config-driven unused dependency findings for ESLint-related packages referenced by `src/.eslintrc.json`
+- config-driven unused dependency findings for Jest and Mongo test-stack packages
+- unused-file findings for repo-owned entry points such as `src/simple-comment-icebreakers.ts` and `src/scss/simple-comment-style.scss`
+- binary/config noise around Cypress and Netlify usage
+
+## Configuration Changes
+
+To be filled during checklist execution.
+
+## Before/After Knip Comparison
+
+To be filled after the post-change `yarn knip` run.
+
+## Residual Noise
+
+To be filled if any findings remain after config and entry-point tuning.
+
+## Rationale and Interpretation Guidance
+
+To be finalized after checklist execution so future Priority 4 work can interpret calibrated `knip` output consistently.

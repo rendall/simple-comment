@@ -19,7 +19,7 @@ QC mode: Conformance QC
 
 ## Atomic Checklist Items
 
-- [ ] C01 `[docs]` Create `docs/checklists/Priority4KnipReliabilityChecklist01Validation.md` with sections for baseline findings, configuration changes, before/after Knip comparison, residual noise, and rationale so the rest of the checklist has one traceability destination.
+- [x] C01 `[docs]` Create `docs/checklists/Priority4KnipReliabilityChecklist01Validation.md` with sections for baseline findings, configuration changes, before/after Knip comparison, residual noise, and rationale so the rest of the checklist has one traceability destination.
   - Depends on: none.
   - Validation: T01, T02.
   - Trace:
