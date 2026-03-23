@@ -17,7 +17,9 @@ Known noisy areas before calibration:
 
 ## Configuration Changes
 
-To be filled during checklist execution.
+- C02:
+  - updated `knip.json` schema from Knip 5 to Knip 6 to match the installed local `knip` version `6.0.3`
+  - retained `"tags": ["-lintignore"]` after validating that the local Knip 6 schema still documents `-lintignore` as a supported example for tag-based exclusion
 
 ## Before/After Knip Comparison
 

@@ -26,7 +26,7 @@ QC mode: Conformance QC
     - "Document the recommended Knip configuration strategy so future Priority 4 work can use Knip output consistently." (In Scope)
     - "future contributors can understand why Knip is configured the way it is and how to interpret its output." (Validation Strategy)
 
-- [ ] C02 `[config]` Update `knip.json` so its schema/version assumptions match the installed Knip 6 major version and validate or remove the current suspicious `tags` entry instead of carrying it forward blindly.
+- [x] C02 `[config]` Update `knip.json` so its schema/version assumptions match the installed Knip 6 major version and validate or remove the current suspicious `tags` entry instead of carrying it forward blindly.
   - Depends on: none.
   - Validation: T01, T03.
   - Trace:
