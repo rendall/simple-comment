@@ -84,7 +84,7 @@ QC mode: Conformance QC
     - "Pass: a follow-up `yarn knip` run shows fewer obviously false-positive findings in the known problem areas." (Validation Strategy)
     - "Fail: the same known false positives remain unchanged, or broad suppressions hide too much signal." (Validation Strategy)
 
-- [ ] T03 `[validation]` Process validation: confirm the checklist used plugin/config and `entry`/`project` tuning before any suppressions, that any suppressions are targeted and justified, and that no dependency-removal decision was made from Knip output alone.
+- [x] T03 `[validation]` Process validation: confirm the checklist used plugin/config and `entry`/`project` tuning before any suppressions, that any suppressions are targeted and justified, and that no dependency-removal decision was made from Knip output alone.
   - Trace:
     - "The proposed changes prioritize plugin/config overrides and `entry`/`project` tuning before broad ignore-based suppression." (Acceptance Criteria)
     - "Do not use this mini-plan to justify dependency removals without separate manual verification." (Constraints)
