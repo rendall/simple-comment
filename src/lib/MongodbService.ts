@@ -354,7 +354,13 @@ export class MongodbService extends AbstractDbService {
       isGuestId(authUserId) &&
       (policy.canGuestReadUser || policy.canPublicReadUser)
 
-    if (authUserId && !authUser && !isValidGuest && !isHardcodedModerator) {
+    if (
+      authUserId &&
+      !authUser &&
+      !isValidGuest &&
+      !isHardcodedModerator &&
+      !policy.canPublicReadUser
+    ) {
       return {
         ...error404UserUnknown,
         body: "Authenticating user is unknown",
