@@ -46,7 +46,7 @@ QC mode: Conformance QC
     - "Use repo-aware triage rules so config-loaded, preset-loaded, and optional-tool packages are not removed solely because a tool flagged them." (In Scope)
     - "`knip` findings are treated as triage inputs and require manual verification before any removal or replacement decision." (Acceptance Criteria)
 
-- [ ] C03 `[deps]` Add `jsdom` to `package.json` and `yarn.lock` so the frontend Jest environment usage reported from `src/tests/frontend/frontend-utilities.test.ts` is explicitly declared rather than left as an unlisted dependency signal.
+- [x] C03 `[deps]` Add `jsdom` to `package.json` and `yarn.lock` so the frontend Jest environment usage reported from `src/tests/frontend/frontend-utilities.test.ts` is explicitly declared rather than left as an unlisted dependency signal.
   - Depends on: C01.
   - Validation: T01, T02 (`yarn knip`, `yarn test:frontend`).
   - Trace:

@@ -24,6 +24,9 @@ Baseline captured on 2026-03-23 before checklist implementation:
 - C02:
   - added `svelte-eslint-parser` to `package.json` so the parser named directly in `src/.eslintrc.json` is explicitly declared
   - `yarn.lock` already contained a matching `svelte-eslint-parser@^0.32.2` entry from the existing dependency graph, so this step required no lockfile content change
+- C03:
+  - added `jsdom` to `package.json` so the frontend Jest environment usage reported from `src/tests/frontend/frontend-utilities.test.ts` is explicitly declared
+  - `yarn.lock` already contained a matching `jsdom@^20.0.0` entry from the existing Jest environment dependency graph, so this step required no lockfile content change
 
 ## Command Evidence
 
@@ -33,6 +36,12 @@ Baseline captured on 2026-03-23 before checklist implementation:
     - intentionally deferred residual findings remain visible
   - `yarn lint`
     - passed with the same two pre-existing warnings in `src/tests/frontend/frontend-utilities.test.ts`
+- C03:
+  - `yarn knip`
+    - pass condition met for this step: unlisted `jsdom` is no longer reported
+    - intentionally deferred residual findings remain visible
+  - `yarn test:frontend`
+    - passed: 6 suites, 139 tests
 
 ## Before/After Knip Comparison
 
