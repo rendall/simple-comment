@@ -1,6 +1,18 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
+  "cypress": {
+    "config": ["cypress.config.ts"]
+  },
+  "eslint": {
+    "config": ["src/.eslintrc.json"]
+  },
+  "jest": {
+    "config": ["jest.backend.config.ts", "jest.frontend.config.ts"]
+  },
   "tags": [
     "-lintignore"
-  ]
+  ],
+  "webpack": {
+    "config": ["webpack.netlify.functions.cjs"]
+  }
 }

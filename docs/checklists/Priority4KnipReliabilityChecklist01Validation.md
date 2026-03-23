@@ -20,6 +20,11 @@ Known noisy areas before calibration:
 - C02:
   - updated `knip.json` schema from Knip 5 to Knip 6 to match the installed local `knip` version `6.0.3`
   - retained `"tags": ["-lintignore"]` after validating that the local Knip 6 schema still documents `-lintignore` as a supported example for tag-based exclusion
+- C03:
+  - added an ESLint plugin config override for `src/.eslintrc.json`
+  - added Jest plugin config overrides for `jest.backend.config.ts` and `jest.frontend.config.ts`
+  - added a webpack plugin config override for `webpack.netlify.functions.cjs`
+  - added a Cypress plugin config override for `cypress.config.ts` so the repo's explicit Cypress config path is modeled directly
 
 ## Before/After Knip Comparison
 

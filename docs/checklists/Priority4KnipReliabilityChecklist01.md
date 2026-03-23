@@ -34,7 +34,7 @@ QC mode: Conformance QC
     - "Align the schema to the installed major version." (Proposed Configuration Direction)
     - "Correct or remove the current tag configuration." (Proposed Configuration Direction)
 
-- [ ] C03 `[config]` Teach Knip about this repo's non-default config surfaces in `knip.json`, including the repo-owned ESLint, Jest, webpack, and Cypress config locations when official plugin configuration supports those overrides.
+- [x] C03 `[config]` Teach Knip about this repo's non-default config surfaces in `knip.json`, including the repo-owned ESLint, Jest, webpack, and Cypress config locations when official plugin configuration supports those overrides.
   - Depends on: C02.
   - Validation: T01, T02.
   - Trace:
