@@ -60,7 +60,7 @@ QC mode: Conformance QC
     - "Define the first implementation slice as actual low-risk dependency modernization work, not a generic research-only pass." (In Scope)
     - "`knip` findings are treated as triage inputs and require manual verification before any removal or replacement decision." (Acceptance Criteria)
 
-- [ ] C05 `[docs]` Finalize `docs/checklists/Priority4DependencyModernizationChecklist01Validation.md` with before/after Knip evidence, relevant command outcomes, and a clearly deferred residual queue for later Priority 4 checklists.
+- [x] C05 `[docs]` Finalize `docs/checklists/Priority4DependencyModernizationChecklist01Validation.md` with before/after Knip evidence, relevant command outcomes, and a clearly deferred residual queue for later Priority 4 checklists.
   - Depends on: C02, C03, C04.
   - Validation: T01, T03.
   - Trace:

@@ -1,6 +1,6 @@
 # Priority 4 Checklist 01 Validation — Residual Dependency Declaration Fixes
 
-Status: in progress
+Status: complete
 
 Checklist: `docs/checklists/Priority4DependencyModernizationChecklist01.md`
 
@@ -59,8 +59,56 @@ Baseline captured on 2026-03-23 before checklist implementation:
 
 ## Before/After Knip Comparison
 
-To be filled after C02-C04 and T01.
+Before this checklist:
+
+- `yarn knip` reported:
+  - unresolved import `svelte-eslint-parser`
+  - unlisted dependency `jsdom`
+  - unused dependency `@babel/preset-typescript`
+  - additional intentionally deferred residual findings outside this checklist's scope
+
+After C02-C04:
+
+- `yarn knip` no longer reports:
+  - unresolved `svelte-eslint-parser`
+  - unlisted `jsdom`
+  - unused `@babel/preset-typescript`
+- the current calibrated residual report remains focused on intentionally deferred follow-up work rather than declaration gaps for the active frontend lint/test stack
+- the residual unused dependency list is now:
+  - `@netlify/functions`
+  - `@xstate/cli`
+  - `@xstate/test`
+  - `mongodb-memory-server`
+  - `ts-node`
+  - `webpack-bundle-analyzer`
+  - `webpack-license-plugin`
+  - `yarn`
+- the residual unused file list is now:
+  - `scripts/createTestEnv.mjs`
+  - `scripts/mockComment.mjs`
+  - `src/components/low-level/IconToggle.svelte`
+  - `src/lib/NoOpNotificationService.ts`
 
 ## Deferred Residual Queue
 
-To be filled during checklist execution so later Priority 4 checklists can pick up intentionally deferred work.
+Deferred from this checklist for later Priority 4 work:
+
+- ambiguous dependency removals:
+  - `@netlify/functions`
+  - `@xstate/cli`
+  - `@xstate/test`
+  - `mongodb-memory-server`
+  - `ts-node`
+  - `webpack-bundle-analyzer`
+  - `webpack-license-plugin`
+  - `yarn`
+- file cleanup candidates:
+  - `scripts/createTestEnv.mjs`
+  - `scripts/mockComment.mjs`
+  - `src/components/low-level/IconToggle.svelte`
+  - `src/lib/NoOpNotificationService.ts`
+- residual Knip follow-up:
+  - redundant `src/entry/index.ts` entry hint from `knip.json`
+  - remaining unused exports and unused exported types report
+
+This checklist intentionally leaves those items visible for later manual verification rather than suppressing or removing them opportunistically.
