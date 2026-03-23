@@ -25,6 +25,14 @@ Known noisy areas before calibration:
   - added Jest plugin config overrides for `jest.backend.config.ts` and `jest.frontend.config.ts`
   - added a webpack plugin config override for `webpack.netlify.functions.cjs`
   - added a Cypress plugin config override for `cypress.config.ts` so the repo's explicit Cypress config path is modeled directly
+- C04:
+  - added explicit top-level Knip entry points for the repo's Vite-managed frontend and build artifacts:
+    - `src/entry/index.ts`
+    - `src/entry/icebreakers/index.ts`
+    - `src/simple-comment.ts`
+    - `src/simple-comment-icebreakers.ts`
+    - `src/scss/simple-comment-style.scss`
+  - chose explicit entry modeling instead of ignore-based suppression because Knip's built-in Vite discovery only auto-reads a root `index.html`, while this repo uses a custom `src/entry` root plus additional Rollup inputs
 
 ## Before/After Knip Comparison
 

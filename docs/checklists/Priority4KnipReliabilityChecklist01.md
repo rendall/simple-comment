@@ -42,7 +42,7 @@ QC mode: Conformance QC
     - "Add plugin/config overrides for non-default file locations." (Proposed Configuration Direction)
     - "prefer `entry`/`project` and plugin configuration over broad `ignore` usage." (Constraints)
 
-- [ ] C04 `[config]` Add targeted `entry` and/or `project` tuning in `knip.json` for repo-specific frontend/build entry points only where that modeling is needed to reduce known false unused-file or unused-export reports.
+- [x] C04 `[config]` Add targeted `entry` and/or `project` tuning in `knip.json` for repo-specific frontend/build entry points only where that modeling is needed to reduce known false unused-file or unused-export reports.
   - Depends on: C02.
   - Validation: T02, T03.
   - Trace:
