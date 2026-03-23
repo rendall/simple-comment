@@ -406,16 +406,41 @@ describe("Full API service test", () => {
       .userGET(unknownTargetUser.id, adminUserTest.id)
       .then(e => expect(e).toBe(error404UserUnknown))
   })
-  test("GET to /user/{userId} with an unknown authenticating user should return 404 authenticating user is unknown", () => {
+  test("GET to /user/{userId} with an unknown authenticating user and public user reads disabled should return 404 authenticating user is unknown", async () => {
     const targetUser = getAuthUser()
     const unknownAuthUser = mockUser()
-    expect.assertions(1)
-    return service.userGET(targetUser.id, unknownAuthUser.id).then(e =>
+    const originalCanPublicReadUser = policy.canPublicReadUser
+
+    policy.canPublicReadUser = false
+
+    try {
+      expect.assertions(1)
+      const e = await service.userGET(targetUser.id, unknownAuthUser.id)
       expect(e).toEqual({
         ...error404UserUnknown,
         body: "Authenticating user is unknown",
       })
-    )
+    } finally {
+      policy.canPublicReadUser = originalCanPublicReadUser
+    }
+  })
+  test("GET to /user/{userId} with an unknown authenticating user and public user reads enabled should return public user and 200", async () => {
+    const targetUser = getAuthUser(u => !u.isAdmin)
+    const unknownAuthUser = mockUser()
+    const originalCanPublicReadUser = policy.canPublicReadUser
+
+    policy.canPublicReadUser = true
+
+    try {
+      const res = await service.userGET(targetUser.id, unknownAuthUser.id)
+      expect(res).toHaveProperty("statusCode", 200)
+      expect(res.body).toHaveProperty("id", targetUser.id)
+      expect(res.body).toHaveProperty("name", targetUser.name)
+      expect(res.body).not.toHaveProperty("hash")
+      expect(res.body).not.toHaveProperty("email")
+    } finally {
+      policy.canPublicReadUser = originalCanPublicReadUser
+    }
   })
   test("GET to /user/{userId} with admin credentials should return user and 200", () => {
     const targetUser = getTargetUser()
