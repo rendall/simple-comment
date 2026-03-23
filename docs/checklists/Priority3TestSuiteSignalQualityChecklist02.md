@@ -1,6 +1,6 @@
 # Priority 3 Checklist 02 — `userGET` Investigate Resolution
 
-Status: draft
+Status: superseded by `docs/checklists/Priority3TestSuiteSignalQualityChecklist02A.md` and `docs/checklists/Priority3TestSuiteSignalQualityChecklist02B.md`
 
 Source plan: `docs/plans/Priority3TestSuiteSignalQualityPlan.md`
 
@@ -21,6 +21,7 @@ QC mode: Conformance QC
 - It exists to keep the full resolution path separate from the test-only fail-first pass in `docs/checklists/Priority3TestSuiteSignalQualityChecklist02A.md`.
 - It may later be refined into executable implementation items after the test-authoring pass is reviewed.
 - No code or test changes should be executed from this draft until its items are explicitly approved.
+- This draft was not executed directly. The work was split into the executed fail-first authoring pass in `Checklist02A` and the runtime-alignment pass in `Checklist02B`.
 
 ## Atomic Checklist Items
 

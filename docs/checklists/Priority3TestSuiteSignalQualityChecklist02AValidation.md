@@ -1,11 +1,12 @@
 # Priority 3 Checklist 02A Validation Notes
 
-Status: active
+Status: completed
 
 ## Execution Exception
 
 - Approved deviation from `docs/norms/implementation.md`: this checklist is a tests-only fail-first pass for Priority 3 investigate work, so targeted backend validation may remain red after an item if the failure exposes the intended runtime mismatch.
 - Runtime code must remain untouched during Checklist 02A execution.
+- This exception was retired by Checklist 02B after runtime alignment and broad green validation.
 
 ## Baseline
 

@@ -1,12 +1,17 @@
 # Priority 3 Plan — Test Suite Signal Quality
 
-Status: active
+Status: completed
 
 Source backlog: `docs/RepoHealthImprovementBacklog.md` (`Priority 3: Test Suite Signal Quality`)
 
 Source survey: `docs/Priority3TestSurvey.md`
 
 Classification: formal plan artifact under `docs/norms/plan.md`
+
+## Close-out
+
+- Implemented via `docs/checklists/Priority3TestSuiteSignalQualityChecklist01.md`, `docs/checklists/Priority3TestSuiteSignalQualityChecklist02A.md`, and `docs/checklists/Priority3TestSuiteSignalQualityChecklist02B.md`, plus the final two resolved investigate follow-ons recorded in `docs/Priority3TestSurvey.md`.
+- Final broad validation passed on 2026-03-23 with `yarn test`.
 
 ## Goal
 

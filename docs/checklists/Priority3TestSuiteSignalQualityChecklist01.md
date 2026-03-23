@@ -1,6 +1,6 @@
 # Priority 3 Checklist 01 — Test Suite Signal Quality
 
-Status: active
+Status: completed
 
 Source plan: `docs/plans/Priority3TestSuiteSignalQualityPlan.md`
 

@@ -1,6 +1,6 @@
 # Priority 3 Checklist 02B — `userGET` Runtime Alignment
 
-Status: draft
+Status: completed
 
 Source plan: `docs/plans/Priority3TestSuiteSignalQualityPlan.md`
 
@@ -87,4 +87,4 @@ QC mode: Conformance QC
   - None.
 
 - Pass/Fail: checklist achieves plan goals
-  - Pass for follow-on runtime implementation approval.
+  - Pass for completed follow-on runtime implementation.
