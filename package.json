@@ -31,7 +31,7 @@
     "dev:frontend": "vite dev --config ./vite.config.ts --host 0.0.0.0 --port 5173",
     "dev": "concurrently \"yarn run watch:backend\" \"NODE_ENV=development NODE_OPTIONS=\\\"--max-old-space-size=4096\\\" netlify dev\" --kill-others",
     "test": "yarn test:backend && yarn test:frontend",
-    "test:backend": "jest --config jest.backend.config.ts",
+    "test:backend": "cross-env MONGOMS_DOWNLOAD_URL=https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu2204-6.0.14.tgz jest --config jest.backend.config.ts",
     "test:cypress": "cypress run",
     "test:frontend": "cross-env TZ=UTC jest --config jest.frontend.config.ts",
     "typecheck": "tsc --noEmit -p tsconfig.frontend.json && tsc --noEmit -p tsconfig.netlify.functions.json",
