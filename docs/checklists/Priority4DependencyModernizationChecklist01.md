@@ -69,7 +69,7 @@ QC mode: Conformance QC
 
 ## Validation Items
 
-- [ ] T01 `[validation]` Residual-signal validation: run `yarn knip` after C02-C04 and confirm the calibrated report no longer includes unresolved `svelte-eslint-parser`, unlisted `jsdom`, or unused `@babel/preset-typescript`, while preserving the intentionally deferred residual queue.
+- [x] T01 `[validation]` Residual-signal validation: run `yarn knip` after C02-C04 and confirm the calibrated report no longer includes unresolved `svelte-eslint-parser`, unlisted `jsdom`, or unused `@babel/preset-typescript`, while preserving the intentionally deferred residual queue.
   - Trace:
     - "Triage evidence: Pass: every candidate in the first checklist has recorded ecosystem grouping, risk class, and rationale for `refresh`, `replace`, `remove`, `defer`, or `plan separately`." (Validation Strategy)
     - "Treat tool output as evidence, not authority." (Constraints)
