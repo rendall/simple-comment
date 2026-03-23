@@ -53,7 +53,7 @@ QC mode: Conformance QC
     - "Define the first implementation slice as actual low-risk dependency modernization work, not a generic research-only pass." (In Scope)
     - "Treat tool output as evidence, not authority." (Constraints)
 
-- [ ] C04 `[deps]` Remove `@babel/preset-typescript` from `package.json` and `yarn.lock` after verifying `babel.config.cjs` does not reference it and the change stays within this checklist's low-risk dependency scope.
+- [x] C04 `[deps]` Remove `@babel/preset-typescript` from `package.json` and `yarn.lock` after verifying `babel.config.cjs` does not reference it and the change stays within this checklist's low-risk dependency scope.
   - Depends on: C01.
   - Validation: T01, T02 (`yarn knip`, `yarn test:frontend`, `yarn build`).
   - Trace:

@@ -27,6 +27,10 @@ Baseline captured on 2026-03-23 before checklist implementation:
 - C03:
   - added `jsdom` to `package.json` so the frontend Jest environment usage reported from `src/tests/frontend/frontend-utilities.test.ts` is explicitly declared
   - `yarn.lock` already contained a matching `jsdom@^20.0.0` entry from the existing Jest environment dependency graph, so this step required no lockfile content change
+- C04:
+  - removed `@babel/preset-typescript` from `package.json`
+  - removed the direct `@babel/preset-typescript@^7.28.5` stanza from `yarn.lock`
+  - verified beforehand that `babel.config.cjs` references only `@babel/preset-env`
 
 ## Command Evidence
 
@@ -42,6 +46,16 @@ Baseline captured on 2026-03-23 before checklist implementation:
     - intentionally deferred residual findings remain visible
   - `yarn test:frontend`
     - passed: 6 suites, 139 tests
+- C04:
+  - `yarn knip`
+    - pass condition met for this step: unused `@babel/preset-typescript` is no longer reported
+    - intentionally deferred residual findings remain visible
+  - `yarn test:frontend`
+    - passed: 6 suites, 139 tests
+  - `yarn build`
+    - passed
+    - backend retained the known MongoDB webpack warning
+    - frontend build completed successfully
 
 ## Before/After Knip Comparison
 
