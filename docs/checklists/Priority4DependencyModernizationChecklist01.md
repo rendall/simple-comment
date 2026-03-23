@@ -74,7 +74,7 @@ QC mode: Conformance QC
     - "Triage evidence: Pass: every candidate in the first checklist has recorded ecosystem grouping, risk class, and rationale for `refresh`, `replace`, `remove`, `defer`, or `plan separately`." (Validation Strategy)
     - "Treat tool output as evidence, not authority." (Constraints)
 
-- [ ] T02 `[validation]` Step-level smoke validation: after each dependency change item, run the exact local validation commands for that step and record the outcomes in the validation notes:
+- [x] T02 `[validation]` Step-level smoke validation: after each dependency change item, run the exact local validation commands for that step and record the outcomes in the validation notes:
   - C02: `yarn knip`, `yarn lint`
   - C03: `yarn knip`, `yarn test:frontend`
   - C04: `yarn knip`, `yarn test:frontend`, `yarn build`
