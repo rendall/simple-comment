@@ -23,9 +23,7 @@
   "jest": {
     "config": ["jest.backend.config.ts", "jest.frontend.config.ts"]
   },
-  "tags": [
-    "-lintignore"
-  ],
+  "tags": ["-lintignore"],
   "webpack": {
     "config": ["webpack.netlify.functions.cjs"]
   }
