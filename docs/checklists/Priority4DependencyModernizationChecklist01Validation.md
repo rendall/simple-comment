@@ -112,3 +112,25 @@ Deferred from this checklist for later Priority 4 work:
   - remaining unused exports and unused exported types report
 
 This checklist intentionally leaves those items visible for later manual verification rather than suppressing or removing them opportunistically.
+
+## PR-Readiness / Local CI Parity
+
+`yarn run ci:local` was executed on 2026-03-24.
+
+Result:
+
+- parity run failed with exit code `1`
+
+Observed path through the script:
+
+- install/link phase completed
+- an optional dependency (`unix-dgram`) failed to build under Node `22.22.0` during install, but Yarn explicitly reported it as safe to ignore and the parity script continued
+- lint step reproduced the same two pre-existing warnings in `src/tests/frontend/frontend-utilities.test.ts`
+- prettier parity step then failed on:
+  - `knip.json`
+
+Current recorded blocker:
+
+- `yarn run ci:local` is blocked by formatting drift in `knip.json` at the `prettier --list-different .` step
+
+This note records the blocker only. It does not apply a formatting fix, because the request for this step was to record the local parity outcome rather than to change code or formatting proactively.
