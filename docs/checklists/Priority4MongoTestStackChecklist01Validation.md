@@ -77,6 +77,16 @@ Replica-set follow-up:
   - config decision:
     - accepted the existing `8.2.1` pin as the modern supported configuration for this checklist
     - left `storageEngine` unset because the current modernized path does not require an explicit override to exit the old `6.0.14` workaround model
+- C05:
+  - `sed -n '1,220p' scripts/ci-local.sh`
+    - confirmed local parity now exports only `TZ=UTC`
+    - confirmed the old `MONGOMS_DOWNLOAD_URL` override is gone
+  - `sed -n '1,220p' .github/workflows/netlify-api-test.yml`
+    - confirmed test-gate parity now exports only `TZ: UTC`
+    - confirmed the old `MONGOMS_DOWNLOAD_URL` override is gone
+  - parity decision:
+    - accepted the already-landed parity alignment as satisfying this checklist item
+    - no further workflow/script change was needed beyond documenting the modernized state
 
 ## Before / After Backend Test Results
 

@@ -58,7 +58,7 @@ QC mode: Conformance QC
     - "Modernize the current MongoDB-backed backend test stack so it no longer depends on the repo's pinned `6.0.14` workaround path" (Goal)
     - "The lower-risk Priority 4 move is to modernize the current Mongo test stack in place first." (External Guidance Snapshot)
 
-- [ ] C05 `[parity]` Update `.github/workflows/netlify-api-test.yml` and `scripts/ci-local.sh` so the backend test path no longer carries the stale `MONGOMS_DOWNLOAD_URL` compatibility workaround and the local/CI parity story remains aligned with the modernized Mongo-backed test stack.
+- [x] C05 `[parity]` Update `.github/workflows/netlify-api-test.yml` and `scripts/ci-local.sh` so the backend test path no longer carries the stale `MONGOMS_DOWNLOAD_URL` compatibility workaround and the local/CI parity story remains aligned with the modernized Mongo-backed test stack.
   - Depends on: C04.
   - Validation: T02, T03.
   - Trace:
