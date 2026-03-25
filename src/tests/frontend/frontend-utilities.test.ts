@@ -10,9 +10,11 @@ import { Comment, Discussion } from "../../lib/simple-comment-types"
 import mockDiscussion from "../mockDiscussion.json"
 
 describe("threadComments", () => {
-  const countThreadedReplies = (comment: { replies?: any[] }) =>
-    (comment.replies ?? []).reduce(
-      (total, reply) => total + 1 + countThreadedReplies(reply),
+  const countThreadedReplies = <T extends { replies?: unknown[] }>(
+    comment: T
+  ): number =>
+    (comment.replies ?? []).reduce<number>(
+      (total, reply) => total + 1 + countThreadedReplies(reply as T),
       0
     )
 
@@ -110,9 +112,15 @@ describe("threadComments", () => {
     expect(sortSpy).toHaveBeenCalledTimes(1)
     expect(threadedTopic.replies).toHaveLength(2000)
     expect(countThreadedReplies(threadedTopic)).toBe(largeCommentsArray.length)
-    expect(threadedTopic.replies?.every((reply: any) => !reply.replies)).toBe(
-      true
-    )
+    expect(
+      threadedTopic.replies?.every(
+        (reply: {
+          id: string
+          parentId?: string | null
+          replies?: unknown[]
+        }) => !reply.replies
+      )
+    ).toBe(true)
 
     sortSpy.mockRestore()
   })

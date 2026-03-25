@@ -5,7 +5,7 @@
   "description": "A simple comment system built with Svelte, Netlify Functions, and MongoDB.",
   "main": "dist/js/index.js",
   "devDependencies": {
-    "@shelf/jest-mongodb": "^4.1.7",
+    "@shelf/jest-mongodb": "^6.0.2",
     "@sveltejs/vite-plugin-svelte": "^3.1.2",
     "@types/bcryptjs": "^2.4.2",
     "@types/jest": "^29.5.3",
@@ -74,7 +74,7 @@
     "jsonwebtoken": "^9.0.3",
     "merge": "^2.1.1",
     "mongodb": "^5.8.0",
-    "mongodb-memory-server": "^8.5.1",
+    "mongodb-memory-server": "^11.0.1",
     "normalize-url": "^8.0.0",
     "picomatch": "^2.3.1",
     "prando": "^6.0.1",
