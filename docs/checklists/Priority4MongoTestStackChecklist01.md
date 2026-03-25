@@ -51,7 +51,7 @@ QC mode: Conformance QC
     - "Re-evaluate the current `@shelf/jest-mongodb` / `mongodb-memory-server` version pairing and compatibility assumptions." (In Scope)
     - "The repo's current problem is not that `mongodb-memory-server` is inherently obsolete; it is that this repo is pinned to an old `@shelf/jest-mongodb` / MongoDB `6.0.14` setup with download-workaround baggage." (External Guidance Snapshot)
 
-- [ ] C04 `[config]` Update `jest-mongodb-config.js` to remove the old MongoDB `6.0.14` workaround assumptions and use a modern supported `mongodb-memory-server` configuration for the updated preset without pre-committing this phase to an external replica-set migration.
+- [x] C04 `[config]` Update `jest-mongodb-config.js` to remove the old MongoDB `6.0.14` workaround assumptions and use a modern supported `mongodb-memory-server` configuration for the updated preset without pre-committing this phase to an external replica-set migration.
   - Depends on: C03.
   - Validation: T01.
   - Trace:

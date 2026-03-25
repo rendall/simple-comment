@@ -69,6 +69,14 @@ Replica-set follow-up:
   - local install-tail note:
     - repeated `yarn install` attempts in this Codex session stalled after dependency linking, so the orphaned `11.0.1` lockfile entries were pruned manually to match the already-updated dependency graph
     - this does not change the intended runtime pairing: the preset-bundled `mongodb-memory-server@10.3.0` remains present and is the version actually resolved from inside `@shelf/jest-mongodb`
+- C04:
+  - `sed -n '1,40p' jest-mongodb-config.js`
+    - confirmed the active config now uses `mongodbMemoryServerOptions.binary.version: "8.2.1"`
+    - confirmed the file no longer pins `6.0.14`
+    - confirmed the file no longer encodes `MONGOMS_DOWNLOAD_URL`-style workaround assumptions
+  - config decision:
+    - accepted the existing `8.2.1` pin as the modern supported configuration for this checklist
+    - left `storageEngine` unset because the current modernized path does not require an explicit override to exit the old `6.0.14` workaround model
 
 ## Before / After Backend Test Results
 
