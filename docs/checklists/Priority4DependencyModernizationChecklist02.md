@@ -4,7 +4,7 @@ Status: proposed
 
 Source plan: `docs/plans/Priority4DependencyModernizationPlan.md`
 
-Evidence input: `docs/checklists/Priority4DependencyModernizationChecklist01Validation.md`
+Evidence input: `docs/archive/Priority4DependencyModernizationChecklist01Validation.md`
 
 QC mode: Conformance QC
 
@@ -22,7 +22,7 @@ QC mode: Conformance QC
 
 ## Additional Scope Control
 
-- This checklist handles only the highest-confidence residual file-cleanup candidates deferred from `docs/checklists/Priority4DependencyModernizationChecklist01Validation.md`.
+- This checklist handles only the highest-confidence residual file-cleanup candidates deferred from `docs/archive/Priority4KnipReliabilityChecklist01Validation.md`.
 - This checklist intentionally limits itself to:
   - removing `scripts/createTestEnv.mjs`
   - removing `scripts/mockComment.mjs` and updating stale comments in `src/tests/mockComment.ts`
