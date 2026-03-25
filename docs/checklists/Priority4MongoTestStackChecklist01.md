@@ -65,7 +65,7 @@ QC mode: Conformance QC
     - "Define the CI/runtime parity approach for the modernized Mongo-backed backend tests." (In Scope)
     - "Pass: local parity surfaces and CI surfaces describe and use the same Mongo test model." (Validation Strategy)
 
-- [ ] C06 `[docs]` Update contributor-facing MongoDB testing guidance in `README.md` so it describes the modernized backend Mongo test path, stops teaching the old `MONGOMS_*` / MongoDB `6.0.14` workaround as current practice, and notes that the actual-replica-set question remains open via issue `#167`.
+- [x] C06 `[docs]` Update contributor-facing MongoDB testing guidance in `README.md` so it describes the modernized backend Mongo test path, stops teaching the old `MONGOMS_*` / MongoDB `6.0.14` workaround as current practice, and notes that the actual-replica-set question remains open via issue `#167`.
   - Depends on: C02, C05.
   - Validation: T03.
   - Trace:

@@ -87,6 +87,11 @@ Replica-set follow-up:
   - parity decision:
     - accepted the already-landed parity alignment as satisfying this checklist item
     - no further workflow/script change was needed beyond documenting the modernized state
+- C06:
+  - `README.md`
+    - clarified that installing/running local MongoDB Community Edition is for local application runtime workflows, not for backend Jest bootstrap
+    - added backend-test guidance that the repo-managed `@shelf/jest-mongodb` + `jest-mongodb-config.js` path is the current supported test model
+    - added the open follow-up reference to issue `#167` for the later replica-set architecture decision
 
 ## Before / After Backend Test Results
 
