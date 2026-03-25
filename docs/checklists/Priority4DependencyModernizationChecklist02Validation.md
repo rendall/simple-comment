@@ -28,7 +28,8 @@ Baseline captured on 2026-03-25 before checklist implementation:
   - removed `scripts/mockComment.mjs`
   - removed stale generated-script workflow comments from `src/tests/mockComment.ts` so the source helper no longer points at the deleted `.mjs` artifact
 - C04:
-  - pending
+  - removed `src/components/low-level/IconToggle.svelte`
+  - verified beforehand that repo references were limited to checklist/archive documentation and validation notes, not live component imports
 - C05:
   - pending
 
@@ -49,7 +50,15 @@ Baseline captured on 2026-03-25 before checklist implementation:
     - pass condition met for this step: `scripts/mockComment.mjs` is no longer reported in the unused file list
     - intentionally deferred dependency and export/type follow-up findings remain visible
 - C04:
-  - pending
+  - `rg -n "IconToggle" .`
+    - confirmed only checklist/archive documentation and validation notes reference the component name
+    - no live source import path was found
+  - `yarn knip`
+    - pass condition met for this step: `src/components/low-level/IconToggle.svelte` is no longer reported in the unused file list
+    - intentionally deferred dependency and export/type follow-up findings remain visible
+  - `yarn build:frontend`
+    - passed
+    - frontend production build completed successfully after the component removal
 - C05:
   - pending
 

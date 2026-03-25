@@ -57,7 +57,7 @@ QC mode: Conformance QC
     - "Treat tool output as evidence, not authority." (Constraints)
     - "`knip` findings are treated as triage inputs and require manual verification before any removal or replacement decision." (Acceptance Criteria)
 
-- [ ] C04 `[cleanup]` Remove `src/components/low-level/IconToggle.svelte` after verifying it has no live import path and the frontend build still succeeds without it.
+- [x] C04 `[cleanup]` Remove `src/components/low-level/IconToggle.svelte` after verifying it has no live import path and the frontend build still succeeds without it.
   - Depends on: C01.
   - Validation: T01, T02 (`rg -n "IconToggle" .`, `yarn knip`, `yarn build:frontend`).
   - Trace:
