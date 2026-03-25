@@ -133,7 +133,7 @@ After checklist execution:
   - retained warning signals:
     - `mongodb/lib/deps.js`: cannot resolve `@aws-sdk/credential-providers`
     - `mongodb/lib/utils.js`: critical dependency expression warning
-  - interpretation: build remains runnable, but backend Jest still does not complete reliably in this Codex environment
+  - interpretation: build remains runnable, and the backend Jest path completed successfully on retry in this Codex environment
 - maintainer-provided environment evidence still on record:
   - `yarn run ci:local` passes in the maintainer environment after the Mongo test-stack modernization and parity updates
 
