@@ -43,7 +43,7 @@ QC mode: Conformance QC
     - "Use `package.json`, `yarn outdated`, and `yarn knip` as the current planning baseline for dependency modernization." (In Scope)
     - "Triage evidence: Pass: every candidate in the first checklist has recorded ecosystem grouping, risk class, and rationale for `refresh`, `replace`, `remove`, `defer`, or `plan separately`." (Validation Strategy)
 
-- [ ] C02 `[cleanup]` Remove `scripts/createTestEnv.mjs` after verifying no live repo workflows or current execution paths still depend on it.
+- [x] C02 `[cleanup]` Remove `scripts/createTestEnv.mjs` after verifying no live repo workflows or current execution paths still depend on it.
   - Depends on: C01.
   - Validation: T01, T02 (`rg -n "createTestEnv" .`, `yarn knip`).
   - Trace:

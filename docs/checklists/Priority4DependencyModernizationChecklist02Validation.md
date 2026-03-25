@@ -22,7 +22,8 @@ Baseline captured on 2026-03-25 before checklist implementation:
 ## Per-Step File Changes
 
 - C02:
-  - pending
+  - removed `scripts/createTestEnv.mjs`
+  - verified beforehand that repo references were limited to checklist/archive documentation and historical notes, not current runtime or workflow entry points
 - C03:
   - pending
 - C04:
@@ -33,7 +34,12 @@ Baseline captured on 2026-03-25 before checklist implementation:
 ## Command Evidence
 
 - C02:
-  - pending
+  - `rg -n "createTestEnv" .`
+    - confirmed only checklist/archive references and the historical phase note remain
+    - no current runtime or workflow file references were found
+  - `yarn knip`
+    - pass condition met for this step: `scripts/createTestEnv.mjs` is no longer reported in the unused file list
+    - intentionally deferred dependency and export/type follow-up findings remain visible
 - C03:
   - pending
 - C04:
