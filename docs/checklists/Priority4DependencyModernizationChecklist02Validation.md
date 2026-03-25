@@ -31,7 +31,8 @@ Baseline captured on 2026-03-25 before checklist implementation:
   - removed `src/components/low-level/IconToggle.svelte`
   - verified beforehand that repo references were limited to checklist/archive documentation and validation notes, not live component imports
 - C05:
-  - pending
+  - removed `src/lib/NoOpNotificationService.ts`
+  - verified beforehand that repo references were limited to checklist/archive documentation and validation notes, not live imports
 
 ## Command Evidence
 
@@ -60,7 +61,15 @@ Baseline captured on 2026-03-25 before checklist implementation:
     - passed
     - frontend production build completed successfully after the component removal
 - C05:
-  - pending
+  - `rg -n "NoOpNotificationService" .`
+    - confirmed only checklist/archive documentation and validation notes reference the class name
+    - no live source import path was found
+  - `yarn knip`
+    - pass condition met for this step: `src/lib/NoOpNotificationService.ts` is no longer reported in the unused file list
+    - the calibrated Knip report now has no unused-file entries remaining
+  - `yarn typecheck`
+    - passed
+    - frontend and Netlify functions TypeScript projects both completed successfully after the class removal
 
 ## Before/After Knip Comparison
 

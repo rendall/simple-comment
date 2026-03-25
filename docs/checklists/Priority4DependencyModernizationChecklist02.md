@@ -64,7 +64,7 @@ QC mode: Conformance QC
     - "patch/minor updates and similarly low-blast-radius changes that provide immediate maintenance value." (Planned Slices)
     - "Run agreed validation after each upgrade step, not only after the entire sequence." (Constraints)
 
-- [ ] C05 `[cleanup]` Remove `src/lib/NoOpNotificationService.ts` after verifying it has no live import path and the TypeScript project still passes typecheck without it.
+- [x] C05 `[cleanup]` Remove `src/lib/NoOpNotificationService.ts` after verifying it has no live import path and the TypeScript project still passes typecheck without it.
   - Depends on: C01.
   - Validation: T01, T02 (`rg -n "NoOpNotificationService" .`, `yarn knip`, `yarn typecheck`).
   - Trace:
