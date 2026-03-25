@@ -94,7 +94,7 @@ QC mode: Conformance QC
     - "Run agreed validation after each upgrade step, not only after the entire sequence." (Constraints)
     - "Step-level smoke/process evidence: Pass: every accepted upgrade step records the validation commands run immediately after that step, and the loop stops when a failure exceeds the step's approved local scope." (Validation Strategy)
 
-- [ ] T03 `[validation]` Scope/process validation: confirm this checklist stayed within low-risk file cleanup, did not expand into ambiguous dependency removals or major migration work, and stopped if any candidate proved to have live coupling beyond the approved local step.
+- [x] T03 `[validation]` Scope/process validation: confirm this checklist stayed within low-risk file cleanup, did not expand into ambiguous dependency removals or major migration work, and stopped if any candidate proved to have live coupling beyond the approved local step.
   - Trace:
     - "The first implementation checklist is explicitly limited to low-risk refresh work and does not include unrelated major-version migrations." (Acceptance Criteria)
     - "stop when the fallout exceeds the approved local step scope." (Planned Slices)
