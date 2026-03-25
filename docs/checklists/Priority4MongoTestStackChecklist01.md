@@ -81,7 +81,7 @@ QC mode: Conformance QC
 
 ## Validation Items
 
-- [ ] T01 `[validation]` Backend targeted validation: run `yarn test:backend --runTestsByPath src/tests/backend/mongoDb.test.ts src/tests/backend/MongodbService.test.ts` after the dependency/config changes and confirm the modernized Mongo-backed test path is runnable without the old pinned workaround assumptions.
+- [x] T01 `[validation]` Backend targeted validation: run `yarn test:backend --runTestsByPath src/tests/backend/mongoDb.test.ts src/tests/backend/MongodbService.test.ts` after the dependency/config changes and confirm the modernized Mongo-backed test path is runnable without the old pinned workaround assumptions.
   - Trace:
     - "Pass: the backend test suite runs successfully against the updated Mongo-backed test path." (Validation Strategy)
     - "Fail: the modernization leaves backend tests broken or still dependent on the old pinned workaround assumptions." (Validation Strategy)

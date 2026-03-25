@@ -113,8 +113,13 @@ After checklist execution:
   - local/CI parity surfaces no longer export `MONGOMS_DOWNLOAD_URL`
 - T01 targeted backend validation:
   - command: `timeout 180s yarn test:backend --runTestsByPath src/tests/backend/mongoDb.test.ts src/tests/backend/MongodbService.test.ts`
-  - local outcome in this Codex session: Jest started, then stalled again in `D` state without producing test results
-  - status: blocked locally
+  - initial local outcome in this Codex session: Jest started, then stalled in `D` state without producing test results
+  - retry command: `timeout 300s yarn test:backend --runTestsByPath src/tests/backend/mongoDb.test.ts src/tests/backend/MongodbService.test.ts`
+  - retry outcome: passed
+    - 2 suites passed
+    - 69 tests passed
+    - completed in `170.82s` wall time / `68.427s` Jest time
+  - status: pass on retry
 - T02 backend smoke/parity validation:
   - command: `timeout 180s yarn test:backend`
   - local outcome in this Codex session: same backend Jest stall pattern as T01
