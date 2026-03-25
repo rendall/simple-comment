@@ -56,7 +56,7 @@ QC mode: Conformance QC
     - "Sequence candidates by coupling and blast radius rather than by package age alone." (In Scope)
     - "If a candidate upgrade would require changing runtime behavior... stop and move that candidate into a separate follow-on plan/checklist." (Constraints)
 
-- [ ] C04 `[backend]` Investigate the `mongodb/lib/deps.js` `@aws-sdk/credential-providers` build warning and either implement the lowest-risk backend bundler-side remediation that preserves current behavior or record an explicit in-scope tolerance/defer decision with rationale in the validation notes.
+- [x] C04 `[backend]` Investigate the `mongodb/lib/deps.js` `@aws-sdk/credential-providers` build warning and either implement the lowest-risk backend bundler-side remediation that preserves current behavior or record an explicit in-scope tolerance/defer decision with rationale in the validation notes.
   - Depends on: C02.
   - Validation: T02.
   - Trace:

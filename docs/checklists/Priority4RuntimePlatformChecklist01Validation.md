@@ -81,6 +81,16 @@ Baseline inventory after C02:
   - `yarn build:backend`
     - passed
     - backend build retained the same two MongoDB-related warnings and did not surface new Netlify/runtime regressions
+- C04:
+  - implementation:
+    - added targeted `IgnorePlugin` handling for `@aws-sdk/credential-providers` under the `mongodb/lib` path in `webpack.netlify.functions.cjs`
+  - `yarn build:backend`
+    - passed
+    - removed the `mongodb/lib/deps.js` `@aws-sdk/credential-providers` module-resolution warning
+    - retained only the `mongodb/lib/utils.js` critical dependency warning
+  - disposition:
+    - accepted as a low-risk backend bundler-side remediation
+    - no runtime-behavior change observed; the warning removal matches the existing optional-dependency ignore pattern already used for other MongoDB driver peers
 
 ## Validation Outcomes
 

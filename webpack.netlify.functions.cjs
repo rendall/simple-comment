@@ -54,6 +54,7 @@ const config = {
       checkResource(resource, context) {
         const ignores = [
           ["@mongodb-js/zstd", "mongodb/lib"],
+          ["@aws-sdk/credential-providers", "mongodb/lib"],
           ["aws-crt", "@aws-sdk/util-user-agent-node/dist-es"],
           ["gcp-metadata", "mongodb-client-encryption/lib/providers"],
           ["kerberos", "mongodb/lib"],
