@@ -127,7 +127,7 @@ QC mode: Conformance QC
 
 ## Validation Items
 
-- [ ] T01 `[validation]` Residual-queue validation: run `yarn knip` at the end of the loop and confirm that every issue category present at the start of this phase is now either removed/fixed from the report or explicitly documented as deferred with rationale and destination.
+- [x] T01 `[validation]` Residual-queue validation: run `yarn knip` at the end of the loop and confirm that every issue category present at the start of this phase is now either removed/fixed from the report or explicitly documented as deferred with rationale and destination.
   - Trace:
     - "Triage evidence: Pass: every candidate in the first checklist has recorded ecosystem grouping, risk class, and rationale for `refresh`, `replace`, `remove`, `defer`, or `plan separately`." (Validation Strategy)
     - "Treat tool output as evidence, not authority." (Constraints)
