@@ -106,7 +106,27 @@ Before checklist execution:
 
 After checklist execution:
 
-- To be completed in T01/T02.
+- final package/config state after C03-C06:
+  - `package.json` keeps `@shelf/jest-mongodb@^6.0.2`
+  - direct `mongodb-memory-server` dependency removed
+  - `jest-mongodb-config.js` keeps the modern `8.2.1` binary pin without the old `6.0.14` workaround assumptions
+  - local/CI parity surfaces no longer export `MONGOMS_DOWNLOAD_URL`
+- T01 targeted backend validation:
+  - command: `timeout 180s yarn test:backend --runTestsByPath src/tests/backend/mongoDb.test.ts src/tests/backend/MongodbService.test.ts`
+  - local outcome in this Codex session: Jest started, then stalled again in `D` state without producing test results
+  - status: blocked locally
+- T02 backend smoke/parity validation:
+  - command: `timeout 180s yarn test:backend`
+  - local outcome in this Codex session: same backend Jest stall pattern as T01
+  - status: blocked locally
+  - command: `yarn build`
+  - outcome: passed
+  - retained warning signals:
+    - `mongodb/lib/deps.js`: cannot resolve `@aws-sdk/credential-providers`
+    - `mongodb/lib/utils.js`: critical dependency expression warning
+  - interpretation: build remains runnable, but backend Jest still does not complete reliably in this Codex environment
+- maintainer-provided environment evidence still on record:
+  - `yarn run ci:local` passes in the maintainer environment after the Mongo test-stack modernization and parity updates
 
 ## Documentation / Parity Validation
 
@@ -127,3 +147,9 @@ After checklist execution:
 
 - Open follow-up issue: `#167`
 - Topic: document and later evaluate whether the repo should stay on the modernized `mongodb-memory-server` path or move to an actual local replica-set-backed backend test model
+
+## Current Checklist Outcome
+
+- C01-C06 and T03 are complete.
+- T01 and T02 remain open because backend Jest still hangs in this Codex environment after config loading succeeds.
+- The repo state is materially modernized compared with the old `6.0.14` / `MONGOMS_DOWNLOAD_URL` path, but this checklist should not be marked complete until backend validation is captured from a working environment.

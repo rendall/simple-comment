@@ -1,6 +1,6 @@
 # Priority 4 — Mongo Test Stack Checklist 01
 
-Status: proposed
+Status: in progress
 
 Source plan: `docs/plans/Priority4MongoReplicaSetTestingMiniPlan.md`
 
@@ -72,7 +72,7 @@ QC mode: Conformance QC
     - "Update active documentation when the testing model changes so contributors are not left with mixed instructions." (Constraints)
     - "Pass: active docs that mention MongoDB testing no longer describe the old pinned `MONGOMS_*` / MongoDB `6.0.14` workaround path as the current recommended workflow, and they record the open replica-set investigation clearly." (Validation Strategy)
 
-- [ ] C07 `[docs]` Finalize `docs/checklists/Priority4MongoTestStackChecklist01Validation.md` with the completed doc inventory, package/config before/after summary, command evidence, validation outcomes, and the remaining follow-up question for issue `#167`.
+- [x] C07 `[docs]` Finalize `docs/checklists/Priority4MongoTestStackChecklist01Validation.md` with the completed doc inventory, package/config before/after summary, command evidence, validation outcomes, and the remaining follow-up question for issue `#167`.
   - Depends on: C02, C03, C04, C05, C06.
   - Validation: T03.
   - Trace:
