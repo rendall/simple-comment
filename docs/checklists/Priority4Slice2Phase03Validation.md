@@ -29,7 +29,8 @@ Baseline captured on 2026-03-25 before Phase 03 implementation:
   - rationale: repo search found no direct source imports, but this package sits on the runtime/platform boundary already named in the Priority 4 plan; removing it in Slice 2 would force a runtime/tooling judgment better handled in the dedicated runtime/platform follow-on
   - destination: Priority 4 runtime/platform modernization slice
 - C03 `@xstate/cli`:
-  - pending
+  - decision: remove
+  - rationale: repo search found no live usage outside package metadata, lockfile, and prior planning documents
 - C04 `@xstate/test`:
   - pending
 - C05 `mongodb-memory-server`:
@@ -56,7 +57,13 @@ Baseline captured on 2026-03-25 before Phase 03 implementation:
     - package remains reported as unused
     - defer decision recorded instead of forcing a runtime/platform removal in Slice 2
 - C03:
-  - pending
+  - `rg -n "@xstate/cli|xstate-cli" .`
+    - confirmed matches were limited to `package.json`, lockfile, and documentation
+  - `yarn knip`
+    - pass condition met for this step: `@xstate/cli` is no longer reported in the unused dependency list
+  - `yarn build:frontend`
+    - passed
+    - frontend build completed successfully after the dependency removal
 - C04:
   - pending
 - C05:

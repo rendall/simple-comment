@@ -56,7 +56,6 @@
     "@types/node": "^25.5.0",
     "@typescript-eslint/eslint-plugin": "^5.22.0",
     "@typescript-eslint/parser": "^5.22.0",
-    "@xstate/cli": "^0.5.1",
     "@xstate/svelte": "^2.1.0",
     "@xstate/test": "^1.0.0-alpha.1",
     "babel-jest": "^29.6.1",

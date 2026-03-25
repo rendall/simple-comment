@@ -55,7 +55,7 @@ QC mode: Conformance QC
     - "Use repo-aware triage rules so config-loaded, preset-loaded, and optional-tool packages are not removed solely because a tool flagged them." (In Scope)
     - "If a candidate upgrade would require changing runtime behavior, public contracts, test semantics, or repository process rules, stop and move that candidate into a separate follow-on plan/checklist." (Constraints)
 
-- [ ] C03 `[triage]` Assess `@xstate/cli` and either remove it if no live repo usage remains, or document a defer-to-frontend/build rationale in the validation notes.
+- [x] C03 `[triage]` Assess `@xstate/cli` and either remove it if no live repo usage remains, or document a defer-to-frontend/build rationale in the validation notes.
   - Depends on: C01.
   - Validation: T01, T02 (`rg -n "@xstate/cli|xstate-cli" .`, `yarn knip`, and if removed `yarn build:frontend`).
   - Trace:
