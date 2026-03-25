@@ -90,7 +90,7 @@ QC mode: Conformance QC
     - "Treat each upgrade step as the smallest logical reviewable unit; some steps may be paired package updates when versions are obviously coupled." (Constraints)
     - "patch/minor updates and similarly low-blast-radius changes that provide immediate maintenance value." (Planned Slices)
 
-- [ ] C08 `[triage]` Assess `webpack-license-plugin` and either remove it if no live repo usage remains, or document a low-risk-loop defer rationale in the validation notes.
+- [x] C08 `[triage]` Assess `webpack-license-plugin` and either remove it if no live repo usage remains, or document a low-risk-loop defer rationale in the validation notes.
   - Depends on: C01.
   - Validation: T01, T02 (`rg -n "webpack-license-plugin|LicenseWebpackPlugin|license-plugin" .`, `yarn knip`, and if removed `yarn build:backend`).
   - Trace:

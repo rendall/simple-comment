@@ -46,7 +46,8 @@ Baseline captured on 2026-03-25 before Phase 03 implementation:
   - decision: remove
   - rationale: repo search found no live webpack config usage or other source-level references outside package metadata, lockfile, and planning docs
 - C08 `webpack-license-plugin`:
-  - pending
+  - decision: remove
+  - rationale: repo search found no live webpack config usage or other source-level references outside package metadata, lockfile, and planning docs
 - C09 `yarn`:
   - pending
 - C10 `knip.json` configuration hint:
@@ -100,7 +101,13 @@ Baseline captured on 2026-03-25 before Phase 03 implementation:
     - passed
     - backend build retained the same known MongoDB warning and did not surface new webpack/plugin regressions
 - C08:
-  - pending
+  - `rg -n "webpack-license-plugin|LicenseWebpackPlugin|license-plugin" .`
+    - confirmed matches were limited to `package.json`, lockfile, and documentation
+  - `yarn knip`
+    - pass condition met for this step: `webpack-license-plugin` is no longer reported in the unused dependency list
+  - `yarn build:backend`
+    - passed
+    - backend build retained the same known MongoDB warning and did not surface new webpack/plugin regressions
 - C09:
   - pending
 - C10:
