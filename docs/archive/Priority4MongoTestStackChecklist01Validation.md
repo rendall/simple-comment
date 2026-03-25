@@ -1,8 +1,8 @@
 # Priority 4 Mongo Test Stack Checklist 01 Validation
 
-Status: complete
+Status: archived
 
-Checklist: `docs/checklists/Priority4MongoTestStackChecklist01.md`
+Checklist: `docs/archive/Priority4MongoTestStackChecklist01.md`
 
 ## Baseline Package / Config State
 
@@ -37,14 +37,14 @@ Inventory captured on 2026-03-25 across the checklist-scoped active surfaces:
 | `docs/MONGODB_ATLAS.md` | `reviewed no change` | Atlas setup guide is about application runtime/cloud setup rather than backend test bootstrap. |
 | `docs/norms/ci-parity.md` | `update now` | Generic parity norm stayed correct, but the example env list no longer needed to name the retired Mongo download override. |
 | `docs/plans/Priority4DependencyModernizationPlan.md` | `reviewed no change` | Still correctly describes the dedicated Mongo/test-stack follow-on lane within Priority 4. |
-| `docs/plans/Priority4MongoReplicaSetTestingMiniPlan.md` | `update now` | Active mini-plan needed current-state wording so it no longer described the retired `6.0.14` / `MONGOMS_DOWNLOAD_URL` path as if it were still present. |
+| `docs/archive/Priority4MongoReplicaSetTestingMiniPlan.md` | `update now` | The slice-specific mini-plan needed current-state wording so it no longer described the retired `6.0.14` / `MONGOMS_DOWNLOAD_URL` path as if it were still present before archival. |
 | `jest.backend.config.ts` | `reviewed no change` | Preset composition remains the active backend Jest contract; no checklist change needed in this file. |
 | `jest-mongodb-config.js` | `update now` | Active Mongo test bootstrap config must reflect the post-`6.0.14` modernized path. |
 | `.github/workflows/netlify-api-test.yml` | `update now` | CI parity surface must no longer carry the old download URL workaround. |
 | `scripts/ci-local.sh` | `update now` | Local parity surface must stay aligned with the workflow and current Mongo-backed test path. |
 | `package.json` | `update now` | Active dependency surface still needs the direct `mongodb-memory-server` keep/remove decision documented by this checklist. |
-| `docs/checklists/Priority4MongoTestStackChecklist01.md` | `update now` | The checklist's execution note needed to reflect that the `ts-node` prerequisite has already been satisfied. |
-| `docs/checklists/Priority4MongoTestStackChecklist01Validation.md` | `update now` | This validation ledger is the active evidence surface for the Mongo test-stack slice. |
+| `docs/archive/Priority4MongoTestStackChecklist01.md` | `update now` | The checklist's execution note needed to reflect that the `ts-node` prerequisite had already been satisfied before archival. |
+| `docs/archive/Priority4MongoTestStackChecklist01Validation.md` | `update now` | This validation ledger records the Mongo test-stack slice evidence and is now archived with the completed checklist. |
 | `docs/checklists/Priority4Slice2Phase03Validation.md` | `reviewed no change` | Remains the correct historical rationale for why `ts-node` had to be restored before backend Jest work resumed. |
 
 Replica-set follow-up:
@@ -140,10 +140,10 @@ After checklist execution:
 ## Documentation / Parity Validation
 
 - T03:
-  - `rg -n "MONGOMS_DOWNLOAD_URL|6\\.0\\.14" README.md docs/MONGODB_ATLAS.md docs/norms/ci-parity.md docs/plans/Priority4DependencyModernizationPlan.md docs/plans/Priority4MongoReplicaSetTestingMiniPlan.md jest.backend.config.ts jest-mongodb-config.js .github/workflows/netlify-api-test.yml scripts/ci-local.sh docs/checklists/Priority4MongoTestStackChecklist01.md docs/checklists/Priority4MongoTestStackChecklist01Validation.md docs/checklists/Priority4Slice2Phase03Validation.md`
+  - `rg -n "MONGOMS_DOWNLOAD_URL|6\\.0\\.14" README.md docs/MONGODB_ATLAS.md docs/norms/ci-parity.md docs/plans/Priority4DependencyModernizationPlan.md docs/archive/Priority4MongoReplicaSetTestingMiniPlan.md jest.backend.config.ts jest-mongodb-config.js .github/workflows/netlify-api-test.yml scripts/ci-local.sh docs/archive/Priority4MongoTestStackChecklist01.md docs/archive/Priority4MongoTestStackChecklist01Validation.md docs/checklists/Priority4Slice2Phase03Validation.md`
     - confirmed there are no remaining active config/runtime surfaces that still set or require `MONGOMS_DOWNLOAD_URL`
     - confirmed `README.md` no longer teaches the old `6.0.14` / `MONGOMS_*` workaround as the current contributor workflow
-    - confirmed `docs/plans/Priority4MongoReplicaSetTestingMiniPlan.md` now describes the old workaround path as retired historical baseline, not current practice
+    - confirmed `docs/archive/Priority4MongoReplicaSetTestingMiniPlan.md` describes the old workaround path as retired historical baseline, not current practice
     - confirmed remaining matches are limited to:
       - checklist language and validation notes that explicitly describe the retired workaround while auditing its removal
       - historical reasoning in active plan/checklist artifacts

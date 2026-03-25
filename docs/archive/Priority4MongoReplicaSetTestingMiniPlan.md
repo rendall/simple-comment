@@ -1,6 +1,6 @@
 # Priority 4 Mini-Plan — Mongo Test Stack Modernization
 
-Status: proposed
+Status: archived
 
 Source plan: `docs/plans/Priority4DependencyModernizationPlan.md`
 

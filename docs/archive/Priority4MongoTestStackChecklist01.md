@@ -1,8 +1,8 @@
 # Priority 4 — Mongo Test Stack Checklist 01
 
-Status: complete
+Status: archived
 
-Source plan: `docs/plans/Priority4MongoReplicaSetTestingMiniPlan.md`
+Source plan: `docs/archive/Priority4MongoReplicaSetTestingMiniPlan.md`
 
 QC mode: Conformance QC
 
@@ -30,7 +30,7 @@ QC mode: Conformance QC
 
 ## Atomic Checklist Items
 
-- [x] C01 `[docs]` Create `docs/checklists/Priority4MongoTestStackChecklist01Validation.md` with sections for baseline package/config state, active-doc inventory, per-item command evidence, before/after backend test results, and the open replica-set follow-up reference.
+- [x] C01 `[docs]` Create `docs/archive/Priority4MongoTestStackChecklist01Validation.md` with sections for baseline package/config state, active-doc inventory, per-item command evidence, before/after backend test results, and the open replica-set follow-up reference.
   - Depends on: none.
   - Validation: T03.
   - Trace:
@@ -72,7 +72,7 @@ QC mode: Conformance QC
     - "Update active documentation when the testing model changes so contributors are not left with mixed instructions." (Constraints)
     - "Pass: active docs that mention MongoDB testing no longer describe the old pinned `MONGOMS_*` / MongoDB `6.0.14` workaround path as the current recommended workflow, and they record the open replica-set investigation clearly." (Validation Strategy)
 
-- [x] C07 `[docs]` Finalize `docs/checklists/Priority4MongoTestStackChecklist01Validation.md` with the completed doc inventory, package/config before/after summary, command evidence, validation outcomes, and the remaining follow-up question for issue `#167`.
+- [x] C07 `[docs]` Finalize `docs/archive/Priority4MongoTestStackChecklist01Validation.md` with the completed doc inventory, package/config before/after summary, command evidence, validation outcomes, and the remaining follow-up question for issue `#167`.
   - Depends on: C02, C03, C04, C05, C06.
   - Validation: T03.
   - Trace:
