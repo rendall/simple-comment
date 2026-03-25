@@ -18,15 +18,45 @@ Baseline captured on 2026-03-25 before Checklist 01 implementation:
 
 ## @netlify/functions Triage
 
-To be completed in C02-C03.
+Baseline inventory after C02:
+
+- repo search:
+  - no live source import or runtime usage of `@netlify/functions` was found in `src`, scripts, workflow files, or contributor docs
+  - current matches are limited to:
+    - direct declaration in `package.json`
+    - transitive lockfile entries through Netlify tooling
+    - prior Priority 4 planning/checklist references
+    - the Netlify CLI command string `netlify functions:serve`, which does not itself import the direct package from repo source
+- `yarn knip`:
+  - still reports `@netlify/functions` as an unused dependency
+- provisional classification:
+  - `@netlify/functions`: `remove now`
 
 ## Backend Warning Investigation
 
-To be completed in C02, C04, and C05.
+Baseline inventory after C02:
+
+- fresh `yarn build` warning signatures:
+  - `mongodb/lib/deps.js`: `Module not found: Error: Can't resolve '@aws-sdk/credential-providers'`
+  - `mongodb/lib/utils.js`: `Critical dependency: the request of a dependency is an expression`
+- current webpack config signal:
+  - `webpack.netlify.functions.cjs` already uses `IgnorePlugin` to suppress several MongoDB optional dependency paths without changing runtime behavior
+- provisional classifications:
+  - `@aws-sdk/credential-providers` warning: `fix now`
+  - dynamic `mongodb/lib/utils.js` warning: `tolerate` unless a comparably low-risk webpack-side remediation is found during C05
 
 ## Per-Item Command Evidence
 
-To be completed item by item.
+- C02:
+  - `rg -n "from ['\\\"]@netlify/functions|require\\(['\\\"]@netlify/functions|@netlify/functions|functions:" . --glob '!docs/archive/**'`
+    - confirmed no repo-managed source import of `@netlify/functions`
+    - confirmed remaining direct matches are package metadata, lockfile transitives, Netlify CLI command strings, and active Priority 4 docs
+  - `yarn knip`
+    - still reports `@netlify/functions` as an unused dependency
+    - also still reports `ts-node` as unused, but that remains out of scope for this slice because the earlier Mongo checklist re-established it as required for backend Jest config loading
+  - `yarn build`
+    - passed
+    - reproduced the current backend warning pair for the runtime/platform slice baseline
 
 ## Validation Outcomes
 

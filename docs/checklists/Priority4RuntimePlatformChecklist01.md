@@ -42,7 +42,7 @@ QC mode: Conformance QC
     - "Triage evidence" requires recorded ecosystem grouping, risk class, and rationale. (Validation Strategy)
     - "The implementation model requires validation after each upgrade step..." (Acceptance Criteria)
 
-- [ ] C02 `[inventory]` Capture the current runtime/platform baseline in the validation notes by inventorying direct `@netlify/functions` usage evidence plus the current backend warning signatures from `yarn build`, and classify each concern as `remove now`, `tolerate`, `fix now`, or `defer`.
+- [x] C02 `[inventory]` Capture the current runtime/platform baseline in the validation notes by inventorying direct `@netlify/functions` usage evidence plus the current backend warning signatures from `yarn build`, and classify each concern as `remove now`, `tolerate`, `fix now`, or `defer`.
   - Depends on: C01.
   - Validation: T01, T02, T03.
   - Trace:
