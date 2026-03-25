@@ -26,6 +26,7 @@ QC mode: Conformance QC
 - This checklist includes the active-doc inventory/update pass for MongoDB testing guidance.
 - This checklist does not implement a shift to an externally managed local replica set.
 - This checklist does not change application runtime MongoDB behavior, Atlas configuration, or backend data/service contracts.
+- Current execution note: backend Jest config loading still depends on `ts-node`; the rationale for keeping/restoring `ts-node` is documented in `docs/checklists/Priority4Slice2Phase03Validation.md`, and this checklist should not proceed until that prerequisite is satisfied.
 
 ## Atomic Checklist Items
 

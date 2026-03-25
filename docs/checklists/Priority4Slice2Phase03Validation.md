@@ -42,6 +42,7 @@ Baseline captured on 2026-03-25 before Phase 03 implementation:
 - C06 `ts-node`:
   - decision: remove
   - rationale: repo search found no live `ts-node` usage in scripts, configs, or source imports; typecheck continues to run through `tsc`
+  - post-phase addendum: a later Priority 4 Mongo test-stack baseline run showed that backend Jest still needs `ts-node` to parse `jest.backend.config.ts`; this means the Slice 2 removal rationale is no longer valid as a keep/remove recommendation for the current repo state, and `ts-node` should be treated as a required dependency until Jest config loading is changed or the package is restored and re-triaged
 - C07 `webpack-bundle-analyzer`:
   - decision: remove
   - rationale: repo search found no live webpack config usage or other source-level references outside package metadata, lockfile, and planning docs
@@ -165,6 +166,8 @@ After C02-C11:
   - `@netlify/functions`
 - deferred to test-stack slice:
   - `mongodb-memory-server`
+- restore-or-retriage prerequisite before further backend Jest work:
+  - `ts-node`, because backend Jest still requires it to load `jest.backend.config.ts`
 - deferred to later code-surface cleanup:
   - unused exports report
   - unused exported types report
