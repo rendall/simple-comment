@@ -35,7 +35,7 @@ QC mode: Conformance QC
 
 ## Atomic Checklist Items
 
-- [ ] C01 `[docs]` Create `docs/checklists/Priority4RuntimePlatformChecklist01Validation.md` with sections for baseline runtime/platform evidence, `@netlify/functions` triage, backend warning investigation, per-item command evidence, validation outcomes, and final dispositions.
+- [x] C01 `[docs]` Create `docs/checklists/Priority4RuntimePlatformChecklist01Validation.md` with sections for baseline runtime/platform evidence, `@netlify/functions` triage, backend warning investigation, per-item command evidence, validation outcomes, and final dispositions.
   - Depends on: none.
   - Validation: T03.
   - Trace:
