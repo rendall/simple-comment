@@ -132,7 +132,7 @@ QC mode: Conformance QC
     - "Triage evidence: Pass: every candidate in the first checklist has recorded ecosystem grouping, risk class, and rationale for `refresh`, `replace`, `remove`, `defer`, or `plan separately`." (Validation Strategy)
     - "Treat tool output as evidence, not authority." (Constraints)
 
-- [ ] T02 `[validation]` Step-level smoke validation: after each triage item, run the exact local validation commands for that item and record the outcomes in the validation notes.
+- [x] T02 `[validation]` Step-level smoke validation: after each triage item, run the exact local validation commands for that item and record the outcomes in the validation notes.
   - C02: `rg -n "@netlify/functions|functions:" .`, `yarn knip`, and if removed `yarn build:backend`
   - C03: `rg -n "@xstate/cli|xstate-cli" .`, `yarn knip`, and if removed `yarn build:frontend`
   - C04: `rg -n "@xstate/test|xstate/test" .`, `yarn knip`, and if removed `yarn test:frontend`
