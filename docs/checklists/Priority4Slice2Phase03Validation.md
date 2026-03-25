@@ -53,7 +53,9 @@ Baseline captured on 2026-03-25 before Phase 03 implementation:
   - rationale: removing the direct `yarn` package entry caused the required `yarn build` validation to fail in the frontend preprocess path with `Cannot find module 'mkdirp'` from the `svelte-preprocess`/`sander` chain, which indicates hidden build coupling outside the intended low-risk scope
   - destination: remain deferred until a later build/tooling-focused slice can investigate the hidden coupling directly
 - C10 `knip.json` configuration hint:
-  - pending
+  - decision: fix in place
+  - rationale: Knip consistently reports `src/entry/index.ts` as a redundant explicit entry because the current frontend entry surface is already covered by the remaining explicit Vite inputs
+  - result: removing the redundant entry eliminated the final Knip configuration hint
 - C11 unused exports/types disposition:
   - pending
 
@@ -120,7 +122,8 @@ Baseline captured on 2026-03-25 before Phase 03 implementation:
     - failure signature: `Cannot find module 'mkdirp'` during Svelte preprocess inside the frontend build
     - action taken: restored the direct `yarn` dependency declaration and deferred removal rather than broadening Slice 2 into hidden build-coupling repair
 - C10:
-  - pending
+  - `yarn knip`
+    - pass condition met for this step: the redundant `src/entry/index.ts` configuration hint is no longer reported
 
 ## Before/After Knip Comparison
 

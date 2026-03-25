@@ -104,7 +104,7 @@ QC mode: Conformance QC
     - "`knip` findings are treated as triage inputs and require manual verification before any removal or replacement decision." (Acceptance Criteria)
     - "Run agreed validation after each upgrade step, not only after the entire sequence." (Constraints)
 
-- [ ] C10 `[knip]` Resolve the current Knip configuration hint by either removing the redundant `src/entry/index.ts` entry pattern from `knip.json` or documenting why it must remain.
+- [x] C10 `[knip]` Resolve the current Knip configuration hint by either removing the redundant `src/entry/index.ts` entry pattern from `knip.json` or documenting why it must remain.
   - Depends on: C01.
   - Validation: T01, T02 (`yarn knip`).
   - Trace:

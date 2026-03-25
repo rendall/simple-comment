@@ -4,7 +4,6 @@
     "config": ["cypress.config.ts"]
   },
   "entry": [
-    "src/entry/index.ts",
     "src/entry/icebreakers/index.ts",
     "src/simple-comment.ts",
     "src/simple-comment-icebreakers.ts",
