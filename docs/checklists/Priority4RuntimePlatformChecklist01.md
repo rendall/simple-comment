@@ -1,6 +1,6 @@
 # Priority 4 — Runtime / Platform Checklist 01
 
-Status: proposed
+Status: complete
 
 Source plan: `docs/plans/Priority4DependencyModernizationPlan.md`
 
@@ -70,7 +70,7 @@ QC mode: Conformance QC
     - "Contract/parity evidence" requires that build/test/tooling changes do not silently change current contracts or parity expectations. (Validation Strategy)
     - "Non-functional evidence" requires meaningful warning deltas to be recorded clearly. (Validation Strategy)
 
-- [ ] C06 `[docs]` Finalize `docs/checklists/Priority4RuntimePlatformChecklist01Validation.md` with the measured before/after warning state, `@netlify/functions` disposition, command evidence, and any explicit residual-warning acceptance or defer rationale.
+- [x] C06 `[docs]` Finalize `docs/checklists/Priority4RuntimePlatformChecklist01Validation.md` with the measured before/after warning state, `@netlify/functions` disposition, command evidence, and any explicit residual-warning acceptance or defer rationale.
   - Depends on: C02, C03, C04, C05.
   - Validation: T03.
   - Trace:
@@ -79,16 +79,16 @@ QC mode: Conformance QC
 
 ## Validation Items
 
-- [ ] T01 `[validation]` Dependency/runtime validation: run `yarn knip` plus repo search after the `@netlify/functions` decision and confirm the package is either gone with no new runtime/tooling breakage or explicitly documented as deferred with rationale.
+- [x] T01 `[validation]` Dependency/runtime validation: run `yarn knip` plus repo search after the `@netlify/functions` decision and confirm the package is either gone with no new runtime/tooling breakage or explicitly documented as deferred with rationale.
   - Trace:
     - "Triage evidence" requires written rationale for `refresh`, `replace`, `remove`, `defer`, or `plan separately`. (Validation Strategy)
 
-- [ ] T02 `[validation]` Backend smoke/warning validation: run `yarn build` after each accepted runtime/platform change and record warning count/signature outcome, then run `yarn test:backend` after any accepted behavior-affecting runtime/platform change.
+- [x] T02 `[validation]` Backend smoke/warning validation: run `yarn build` after each accepted runtime/platform change and record warning count/signature outcome, then run `yarn test:backend` after any accepted behavior-affecting runtime/platform change.
   - Trace:
     - "Step-level smoke/process evidence" requires validation after each accepted upgrade step. (Validation Strategy)
     - "Non-functional evidence" requires warning deltas to be recorded clearly. (Validation Strategy)
 
-- [ ] T03 `[validation]` Documentation/process validation: confirm the validation notes, checklist state, and any warning/defer decisions are internally consistent and sufficient to hand the remaining runtime/platform work forward without ambiguity.
+- [x] T03 `[validation]` Documentation/process validation: confirm the validation notes, checklist state, and any warning/defer decisions are internally consistent and sufficient to hand the remaining runtime/platform work forward without ambiguity.
   - Trace:
     - "Documentation/process evidence" requires current and internally consistent disposition artifacts. (Validation Strategy)
 

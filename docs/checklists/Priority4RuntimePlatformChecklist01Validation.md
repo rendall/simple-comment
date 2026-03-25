@@ -1,6 +1,6 @@
 # Priority 4 Runtime / Platform Checklist 01 Validation
 
-Status: in progress
+Status: complete
 
 Checklist: `docs/checklists/Priority4RuntimePlatformChecklist01.md`
 
@@ -107,8 +107,46 @@ Baseline inventory after C02:
 
 ## Validation Outcomes
 
-To be completed in T01-T03.
+- T01:
+  - post-removal repo search confirms there is no repo-managed source import of `@netlify/functions`
+  - `yarn knip` no longer reports `@netlify/functions`; the only remaining unused dependency signal is `ts-node`, which remains intentionally out of scope for this slice
+  - result: pass
+- T02:
+  - `yarn build` baseline before runtime/platform changes:
+    - 2 backend warnings
+      - `mongodb/lib/deps.js`: `Can't resolve '@aws-sdk/credential-providers'`
+      - `mongodb/lib/utils.js`: `Critical dependency: the request of a dependency is an expression`
+  - `yarn build:backend` after C03:
+    - passed
+    - same 2 warnings remained
+  - `yarn build:backend` after C04:
+    - passed
+    - warning count reduced from 2 to 1
+    - remaining warning: `mongodb/lib/utils.js` dynamic require
+  - `timeout 300s yarn test:backend`
+    - passed
+    - 11 suites passed
+    - 180 tests passed
+    - completed in `223.99s` wall time / `106.845s` Jest time
+  - result: pass
+- T03:
+  - checklist state and validation notes agree on all outcomes:
+    - `@netlify/functions`: removed
+    - `@aws-sdk/credential-providers` warning: fixed in-scope
+    - dynamic `mongodb/lib/utils.js` warning: explicitly tolerated with rationale
+  - the slice leaves a clear remaining runtime/platform handoff:
+    - one residual backend build warning
+    - broader runtime/platform major-version modernization still deferred to later Priority 4 work
+  - result: pass
 
 ## Final Dispositions
 
-To be completed in C06.
+- `@netlify/functions`
+  - disposition: removed
+  - rationale: no live repo-managed source/runtime usage found; validation stayed green after removal
+- `mongodb/lib/deps.js` `@aws-sdk/credential-providers` warning
+  - disposition: fixed in-scope
+  - rationale: targeted `IgnorePlugin` handling matched the existing optional MongoDB dependency strategy and removed the warning without observed runtime regression
+- `mongodb/lib/utils.js` critical dependency warning
+  - disposition: tolerate
+  - rationale: current evidence still points to a MongoDB-driver dynamic `require()` pattern rather than a repo-local import mistake; eliminating it would likely require broader bundler/driver intervention than this slice approves
