@@ -43,7 +43,8 @@ Baseline captured on 2026-03-25 before Phase 03 implementation:
   - decision: remove
   - rationale: repo search found no live `ts-node` usage in scripts, configs, or source imports; typecheck continues to run through `tsc`
 - C07 `webpack-bundle-analyzer`:
-  - pending
+  - decision: remove
+  - rationale: repo search found no live webpack config usage or other source-level references outside package metadata, lockfile, and planning docs
 - C08 `webpack-license-plugin`:
   - pending
 - C09 `yarn`:
@@ -91,7 +92,13 @@ Baseline captured on 2026-03-25 before Phase 03 implementation:
     - passed
     - frontend and Netlify functions TypeScript projects both completed successfully after the dependency removal
 - C07:
-  - pending
+  - `rg -n "webpack-bundle-analyzer|BundleAnalyzerPlugin|bundle-analyzer" .`
+    - confirmed matches were limited to `package.json`, lockfile, and documentation
+  - `yarn knip`
+    - pass condition met for this step: `webpack-bundle-analyzer` is no longer reported in the unused dependency list
+  - `yarn build:backend`
+    - passed
+    - backend build retained the same known MongoDB warning and did not surface new webpack/plugin regressions
 - C08:
   - pending
 - C09:

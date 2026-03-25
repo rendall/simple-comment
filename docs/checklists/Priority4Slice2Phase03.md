@@ -83,7 +83,7 @@ QC mode: Conformance QC
     - "Treat tool output as evidence, not authority." (Constraints)
     - "patch/minor updates and similarly low-blast-radius changes that provide immediate maintenance value." (Planned Slices)
 
-- [ ] C07 `[triage]` Assess `webpack-bundle-analyzer` and either remove it if no live repo usage remains, or document a low-risk-loop defer rationale in the validation notes.
+- [x] C07 `[triage]` Assess `webpack-bundle-analyzer` and either remove it if no live repo usage remains, or document a low-risk-loop defer rationale in the validation notes.
   - Depends on: C01.
   - Validation: T01, T02 (`rg -n "webpack-bundle-analyzer|BundleAnalyzerPlugin|bundle-analyzer" .`, `yarn knip`, and if removed `yarn build:backend`).
   - Trace:
