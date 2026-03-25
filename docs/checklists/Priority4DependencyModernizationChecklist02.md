@@ -85,7 +85,7 @@ QC mode: Conformance QC
     - "Step-level smoke/process evidence: Pass: every accepted upgrade step records the validation commands run immediately after that step, and the loop stops when a failure exceeds the step's approved local scope." (Validation Strategy)
     - "Treat tool output as evidence, not authority." (Constraints)
 
-- [ ] T02 `[validation]` Step-level smoke validation: after each file-removal item, run the exact local validation commands for that step and record the outcomes in the validation notes:
+- [x] T02 `[validation]` Step-level smoke validation: after each file-removal item, run the exact local validation commands for that step and record the outcomes in the validation notes:
   - C02: `rg -n "createTestEnv" .`, `yarn knip`
   - C03: `rg -n "mockComment\\.mjs|scripts/mockComment" .`, `yarn knip`
   - C04: `rg -n "IconToggle" .`, `yarn knip`, `yarn build:frontend`
