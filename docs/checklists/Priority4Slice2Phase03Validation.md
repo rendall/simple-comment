@@ -57,7 +57,9 @@ Baseline captured on 2026-03-25 before Phase 03 implementation:
   - rationale: Knip consistently reports `src/entry/index.ts` as a redundant explicit entry because the current frontend entry surface is already covered by the remaining explicit Vite inputs
   - result: removing the redundant entry eliminated the final Knip configuration hint
 - C11 unused exports/types disposition:
-  - pending
+  - decision: defer
+  - rationale: the remaining 27 unused exports and 22 unused exported types are code-surface cleanup candidates, not dependency-state changes; resolving them would require a broader source-level review than the low-risk dependency loop approved for Slice 2
+  - destination: later Priority 4 follow-on or separate repo-health cleanup slice after Slice 2 completes
 
 ## Command Evidence
 

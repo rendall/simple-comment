@@ -111,7 +111,7 @@ QC mode: Conformance QC
     - "Treat tool output as evidence, not authority." (Constraints)
     - "patch/minor updates and similarly low-blast-radius changes that provide immediate maintenance value." (Planned Slices)
 
-- [ ] C11 `[docs]` Document the disposition of the remaining unused exports and unused exported types report by classifying it as either in-slice cleanup work or a later Priority 4 follow-on, with rationale.
+- [x] C11 `[docs]` Document the disposition of the remaining unused exports and unused exported types report by classifying it as either in-slice cleanup work or a later Priority 4 follow-on, with rationale.
   - Depends on: C01.
   - Validation: T01, T03.
   - Trace:
