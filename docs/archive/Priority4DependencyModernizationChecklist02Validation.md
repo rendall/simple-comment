@@ -2,7 +2,7 @@
 
 Status: complete
 
-Checklist: `docs/checklists/Priority4DependencyModernizationChecklist02.md`
+Checklist: `docs/archive/Priority4DependencyModernizationChecklist02.md`
 
 ## Baseline Residual File Findings
 
