@@ -32,7 +32,9 @@ Baseline captured on 2026-03-25 before Phase 03 implementation:
   - decision: remove
   - rationale: repo search found no live usage outside package metadata, lockfile, and prior planning documents
 - C04 `@xstate/test`:
-  - pending
+  - decision: remove
+  - rationale: repo search found no live usage outside package metadata, lockfile, and prior planning documents
+  - note: the first `yarn test:frontend` attempt failed because the interrupted Yarn remove/install tail left `node_modules` transiently incomplete (`jest-resolve` missing); a clean reinstall restored the workspace and the rerun passed, so the item remains accepted as a package-manager churn issue rather than a real dependency coupling issue
 - C05 `mongodb-memory-server`:
   - pending
 - C06 `ts-node`:
@@ -65,7 +67,12 @@ Baseline captured on 2026-03-25 before Phase 03 implementation:
     - passed
     - frontend build completed successfully after the dependency removal
 - C04:
-  - pending
+  - `rg -n "@xstate/test|xstate/test" .`
+    - confirmed matches were limited to `package.json`, lockfile, and documentation
+  - `yarn knip`
+    - pass condition met for this step: `@xstate/test` is no longer reported in the unused dependency list
+  - `yarn test:frontend`
+    - passed on clean rerun: 6 suites, 139 tests
 - C05:
   - pending
 - C06:

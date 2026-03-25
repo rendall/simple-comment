@@ -62,7 +62,7 @@ QC mode: Conformance QC
     - "`knip` findings are treated as triage inputs and require manual verification before any removal or replacement decision." (Acceptance Criteria)
     - "patch/minor updates and similarly low-blast-radius changes that provide immediate maintenance value." (Planned Slices)
 
-- [ ] C04 `[triage]` Assess `@xstate/test` and either remove it if no live repo usage remains, or document a defer-to-frontend/build rationale in the validation notes.
+- [x] C04 `[triage]` Assess `@xstate/test` and either remove it if no live repo usage remains, or document a defer-to-frontend/build rationale in the validation notes.
   - Depends on: C01.
   - Validation: T01, T02 (`rg -n "@xstate/test|xstate/test" .`, `yarn knip`, and if removed `yarn test:frontend`).
   - Trace:
