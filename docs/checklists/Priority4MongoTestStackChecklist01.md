@@ -30,7 +30,7 @@ QC mode: Conformance QC
 
 ## Atomic Checklist Items
 
-- [ ] C01 `[docs]` Create `docs/checklists/Priority4MongoTestStackChecklist01Validation.md` with sections for baseline package/config state, active-doc inventory, per-item command evidence, before/after backend test results, and the open replica-set follow-up reference.
+- [x] C01 `[docs]` Create `docs/checklists/Priority4MongoTestStackChecklist01Validation.md` with sections for baseline package/config state, active-doc inventory, per-item command evidence, before/after backend test results, and the open replica-set follow-up reference.
   - Depends on: none.
   - Validation: T03.
   - Trace:
