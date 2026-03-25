@@ -2588,13 +2588,6 @@
   dependencies:
     "@netlify/types" "2.3.0"
 
-"@netlify/functions@^1.0.0":
-  version "1.6.0"
-  resolved "https://registry.yarnpkg.com/@netlify/functions/-/functions-1.6.0.tgz#c373423e6fef0e6f7422ac0345e8bbf2cb692366"
-  integrity sha512-6G92AlcpFrQG72XU8YH8pg94eDnq7+Q0YJhb8x4qNpdGsvuzvrfHWBmqFGp/Yshmv4wex9lpsTRZOocdrA2erQ==
-  dependencies:
-    is-promise "^4.0.0"
-
 "@netlify/git-utils@^6.0.3":
   version "6.0.4"
   resolved "https://registry.yarnpkg.com/@netlify/git-utils/-/git-utils-6.0.4.tgz#16920ecd605d7f149d0d94310e1d593ef87608f2"

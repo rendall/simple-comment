@@ -49,7 +49,7 @@ QC mode: Conformance QC
     - "Treat tool output as evidence, not authority." (Constraints)
     - "Every candidate dependency or dependency ecosystem can be placed into one of these buckets..." (Acceptance Criteria)
 
-- [ ] C03 `[deps]` Remove direct `@netlify/functions` from `package.json` and `yarn.lock` if repo-aware verification still shows no live source/runtime need for it, or document an explicit runtime/platform defer rationale in the validation notes if that evidence changes.
+- [x] C03 `[deps]` Remove direct `@netlify/functions` from `package.json` and `yarn.lock` if repo-aware verification still shows no live source/runtime need for it, or document an explicit runtime/platform defer rationale in the validation notes if that evidence changes.
   - Depends on: C02.
   - Validation: T01, T02.
   - Trace:

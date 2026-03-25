@@ -32,6 +32,15 @@ Baseline inventory after C02:
 - provisional classification:
   - `@netlify/functions`: `remove now`
 
+Outcome after C03:
+
+- direct dependency removal accepted
+- remaining matches after removal are limited to:
+  - Netlify CLI command strings such as `netlify functions:serve`
+  - transitive Netlify-tooling lockfile entries
+  - active Priority 4 planning/checklist references
+- `yarn knip` no longer reports `@netlify/functions` as an unused dependency
+
 ## Backend Warning Investigation
 
 Baseline inventory after C02:
@@ -57,6 +66,21 @@ Baseline inventory after C02:
   - `yarn build`
     - passed
     - reproduced the current backend warning pair for the runtime/platform slice baseline
+- C03:
+  - `yarn remove @netlify/functions`
+    - removed the direct dependency entry from `package.json`
+    - local Yarn remove/install tail stalled after lockfile regeneration began in this session
+  - local install-tail note:
+    - the direct dependency was removed cleanly from `package.json`
+    - the stale `@netlify/functions@^1.0.0` lockfile entry was pruned manually to match the now-updated dependency graph
+  - `rg -n "from ['\\\"]@netlify/functions|require\\(['\\\"]@netlify/functions|@netlify/functions|functions:" . --glob '!docs/archive/**'`
+    - confirmed no repo-managed source import surfaced after the removal
+    - confirmed remaining matches are command strings, transitive lockfile entries, and planning/checklist references
+  - `yarn knip`
+    - pass condition met for this step: `@netlify/functions` no longer appears in the unused dependency list
+  - `yarn build:backend`
+    - passed
+    - backend build retained the same two MongoDB-related warnings and did not surface new Netlify/runtime regressions
 
 ## Validation Outcomes
 
