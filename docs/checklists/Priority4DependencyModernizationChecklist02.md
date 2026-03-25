@@ -36,7 +36,7 @@ QC mode: Conformance QC
 
 ## Atomic Checklist Items
 
-- [ ] C01 `[docs]` Create `docs/checklists/Priority4DependencyModernizationChecklist02Validation.md` with sections for baseline residual file findings, per-step file changes, command evidence, before/after Knip comparison, and deferred follow-up notes.
+- [x] C01 `[docs]` Create `docs/checklists/Priority4DependencyModernizationChecklist02Validation.md` with sections for baseline residual file findings, per-step file changes, command evidence, before/after Knip comparison, and deferred follow-up notes.
   - Depends on: none.
   - Validation: T01, T03.
   - Trace:
