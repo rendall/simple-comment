@@ -74,7 +74,6 @@
     "jsonwebtoken": "^9.0.3",
     "merge": "^2.1.1",
     "mongodb": "^5.8.0",
-    "mongodb-memory-server": "^11.0.1",
     "normalize-url": "^8.0.0",
     "picomatch": "^2.3.1",
     "prando": "^6.0.1",

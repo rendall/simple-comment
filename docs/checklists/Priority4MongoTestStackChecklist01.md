@@ -44,7 +44,7 @@ QC mode: Conformance QC
     - "Include a documentation pass that inventories active MongoDB mentions and updates any active testing guidance that would become stale." (In Scope)
     - "Explicitly document the repo's current practice versus MongoDB's more production-like replica-set recommendation, and record that the shift decision remains under investigation." (Documentation Pass)
 
-- [ ] C03 `[deps]` Update `package.json` and `yarn.lock` to modernize the backend Mongo test stack by upgrading `@shelf/jest-mongodb` to the current supported line and removing the direct `mongodb-memory-server` dependency if the updated preset provides the modern memory-server runtime transitively.
+- [x] C03 `[deps]` Update `package.json` and `yarn.lock` to modernize the backend Mongo test stack by upgrading `@shelf/jest-mongodb` to the current supported line and removing the direct `mongodb-memory-server` dependency if the updated preset provides the modern memory-server runtime transitively.
   - Depends on: C01.
   - Validation: T01.
   - Trace:

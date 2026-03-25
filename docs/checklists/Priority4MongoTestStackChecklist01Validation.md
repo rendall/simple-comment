@@ -53,7 +53,22 @@ Replica-set follow-up:
 
 ## Per-Item Command Evidence
 
-To be completed item by item.
+- C03:
+  - `npm view @shelf/jest-mongodb version`
+    - returned `6.0.2`
+  - `npm view mongodb-memory-server version`
+    - returned `11.0.1`
+  - `node -e "const p=require('./node_modules/@shelf/jest-mongodb/package.json'); console.log(JSON.stringify({version:p.version,deps:p.dependencies},null,2))"`
+    - confirmed the installed preset is `@shelf/jest-mongodb@6.0.2`
+    - confirmed the preset bundles `mongodb-memory-server@10.3.0` transitively
+  - `node -e "console.log(require.resolve('@shelf/jest-mongodb/node_modules/mongodb-memory-server/package.json'))"`
+    - confirmed the preset resolves its own bundled `mongodb-memory-server` runtime from inside `node_modules/@shelf/jest-mongodb/...`
+  - `yarn remove mongodb-memory-server`
+    - removed the direct dependency entry from `package.json`
+    - local Yarn remove/install tail stalled after lockfile regeneration began in this session
+  - local install-tail note:
+    - repeated `yarn install` attempts in this Codex session stalled after dependency linking, so the orphaned `11.0.1` lockfile entries were pruned manually to match the already-updated dependency graph
+    - this does not change the intended runtime pairing: the preset-bundled `mongodb-memory-server@10.3.0` remains present and is the version actually resolved from inside `@shelf/jest-mongodb`
 
 ## Before / After Backend Test Results
 
