@@ -76,7 +76,7 @@ QC mode: Conformance QC
     - "Do not use the current Mongo/Jest compatibility pain as a reason to force an unscoped test-stack migration." (Constraints)
     - "If a candidate upgrade would require changing runtime behavior, public contracts, test semantics, or repository process rules, stop and move that candidate into a separate follow-on plan/checklist." (Constraints)
 
-- [ ] C06 `[triage]` Assess `ts-node` and either remove it if no live repo usage remains, or document a low-risk-loop defer rationale in the validation notes.
+- [x] C06 `[triage]` Assess `ts-node` and either remove it if no live repo usage remains, or document a low-risk-loop defer rationale in the validation notes.
   - Depends on: C01.
   - Validation: T01, T02 (`rg -n "ts-node|ts-node/register|ts-node-esm" .`, `yarn knip`, and if removed `yarn typecheck`).
   - Trace:

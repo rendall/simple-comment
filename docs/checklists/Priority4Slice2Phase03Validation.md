@@ -40,7 +40,8 @@ Baseline captured on 2026-03-25 before Phase 03 implementation:
   - rationale: repo search ties the package directly to the active Jest Mongo preset path, pinned MongoDB 6.x behavior, and existing `MONGOMS_DOWNLOAD_URL` parity handling; removing it here would force test-stack behavior decisions that belong in the dedicated test-stack slice
   - destination: Priority 4 test-stack modernization slice
 - C06 `ts-node`:
-  - pending
+  - decision: remove
+  - rationale: repo search found no live `ts-node` usage in scripts, configs, or source imports; typecheck continues to run through `tsc`
 - C07 `webpack-bundle-analyzer`:
   - pending
 - C08 `webpack-license-plugin`:
@@ -82,7 +83,13 @@ Baseline captured on 2026-03-25 before Phase 03 implementation:
     - package remains reported as unused
     - defer decision recorded instead of forcing a test-stack removal in Slice 2
 - C06:
-  - pending
+  - `rg -n "ts-node|ts-node/register|ts-node-esm" .`
+    - confirmed matches were limited to `package.json`, lockfile, and documentation
+  - `yarn knip`
+    - pass condition met for this step: `ts-node` is no longer reported in the unused dependency list
+  - `yarn typecheck`
+    - passed
+    - frontend and Netlify functions TypeScript projects both completed successfully after the dependency removal
 - C07:
   - pending
 - C08:
