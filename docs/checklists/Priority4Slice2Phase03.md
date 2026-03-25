@@ -1,6 +1,6 @@
 # Priority 4, Slice 2, Phase 03 — Residual Dependency Triage Loop
 
-Status: proposed
+Status: complete
 
 Source plan: `docs/plans/Priority4DependencyModernizationPlan.md`
 
@@ -100,6 +100,7 @@ QC mode: Conformance QC
 - [x] C09 `[triage]` Assess the direct `yarn` package dependency and either remove it if no repo-managed module usage remains, or document a low-risk-loop defer rationale in the validation notes.
   - Depends on: C01.
   - Validation: T01, T02 (`rg -n "require\\(['\\\"]yarn|from ['\\\"]yarn|\\byarn\\b" .`, `yarn knip`, and if removed `yarn build`).
+  - Outcome note: accepted as a removal after a clean-workspace retry completed `yarn install --non-interactive`, `yarn knip`, and `yarn build` successfully on the same post-removal tree.
   - Trace:
     - "`knip` findings are treated as triage inputs and require manual verification before any removal or replacement decision." (Acceptance Criteria)
     - "Run agreed validation after each upgrade step, not only after the entire sequence." (Constraints)

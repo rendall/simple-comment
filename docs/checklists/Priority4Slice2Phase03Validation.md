@@ -49,9 +49,9 @@ Baseline captured on 2026-03-25 before Phase 03 implementation:
   - decision: remove
   - rationale: repo search found no live webpack config usage or other source-level references outside package metadata, lockfile, and planning docs
 - C09 `yarn`:
-  - decision: defer
-  - rationale: removing the direct `yarn` package entry caused the required `yarn build` validation to fail in the frontend preprocess path with `Cannot find module 'mkdirp'` from the `svelte-preprocess`/`sander` chain, which indicates hidden build coupling outside the intended low-risk scope
-  - destination: remain deferred until a later build/tooling-focused slice can investigate the hidden coupling directly
+  - decision: remove
+  - rationale: repo search found no repo-managed module import of `yarn`, and a clean-workspace retry confirmed the direct dependency can be removed safely when the tree is reinstalled fully before validation
+  - note: the earlier `mkdirp` failure after temporary removal did not reproduce on a clean reinstall; the accepted outcome is therefore removal, with the earlier failure reclassified as transient install-tree churn rather than stable build coupling
 - C10 `knip.json` configuration hint:
   - decision: fix in place
   - rationale: Knip consistently reports `src/entry/index.ts` as a redundant explicit entry because the current frontend entry surface is already covered by the remaining explicit Vite inputs
@@ -117,12 +117,14 @@ Baseline captured on 2026-03-25 before Phase 03 implementation:
 - C09:
   - `rg -n "require\\(['\\\"]yarn|from ['\\\"]yarn|\\byarn\\b" .`
     - confirmed there is no repo-managed module import of `yarn`; matches are command/documentation usage plus package metadata
-  - `yarn knip`
-    - after temporary removal, the package dropped out of the unused dependency list as expected
-  - `yarn build`
-    - failed after temporary removal
-    - failure signature: `Cannot find module 'mkdirp'` during Svelte preprocess inside the frontend build
-    - action taken: restored the direct `yarn` dependency declaration and deferred removal rather than broadening Slice 2 into hidden build-coupling repair
+  - clean-workspace retry:
+    - `yarn install --non-interactive`
+      - passed after a full reinstall on the post-removal tree and saved the updated lockfile
+    - `yarn knip`
+      - passed for the intended signal: `yarn` no longer appears in the unused dependency list, leaving only `@netlify/functions` and `mongodb-memory-server` as residual unused dependencies
+    - `yarn build`
+      - passed
+      - backend build retained the same known MongoDB warning, and frontend build completed successfully
 - C10:
   - `yarn knip`
     - pass condition met for this step: the redundant `src/entry/index.ts` configuration hint is no longer reported
@@ -150,7 +152,6 @@ After C02-C11:
 - `yarn knip` now reports only these unused dependencies:
   - `@netlify/functions`
   - `mongodb-memory-server`
-  - `yarn`
 - each remaining unused dependency has an explicit defer rationale and destination recorded in this document
 - the remaining code-surface follow-up is unchanged but explicitly classified:
   - 27 unused exports
@@ -164,8 +165,6 @@ After C02-C11:
   - `@netlify/functions`
 - deferred to test-stack slice:
   - `mongodb-memory-server`
-- deferred to later build/tooling follow-on:
-  - `yarn` direct dependency removal, because the temporary removal exposed hidden frontend build coupling through missing `mkdirp`
 - deferred to later code-surface cleanup:
   - unused exports report
   - unused exported types report
@@ -179,4 +178,4 @@ Slice 2 no longer has any untriaged `yarn knip` dependency findings or unaddress
 - Every residual issue category present at the start of the phase now has an explicit outcome:
   - removed/fixed in Slice 2, or
   - deferred with rationale and destination.
-- The only stop-condition breach encountered was the hidden build coupling exposed by temporary `yarn` removal; that candidate was restored/deferred instead of expanding scope.
+- An earlier temporary `mkdirp` failure during `yarn` removal did not survive a clean reinstall retry, so the accepted final outcome remains within Slice 2 low-risk scope.
