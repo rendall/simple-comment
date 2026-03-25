@@ -91,7 +91,7 @@ QC mode: Conformance QC
     - "Pass: the backend test suite runs successfully against the updated Mongo-backed test path." (Validation Strategy)
     - "Pass: local parity surfaces and CI surfaces describe and use the same Mongo test model." (Validation Strategy)
 
-- [ ] T03 `[validation]` Documentation/parity validation: use repo search plus the updated files to confirm active docs/config no longer describe the old `MONGOMS_DOWNLOAD_URL` / MongoDB `6.0.14` workaround as current practice, while historical/archive references remain classified rather than rewritten.
+- [x] T03 `[validation]` Documentation/parity validation: use repo search plus the updated files to confirm active docs/config no longer describe the old `MONGOMS_DOWNLOAD_URL` / MongoDB `6.0.14` workaround as current practice, while historical/archive references remain classified rather than rewritten.
   - Trace:
     - "Pass: active docs that mention MongoDB testing no longer describe the old pinned `MONGOMS_*` / MongoDB `6.0.14` workaround path as the current recommended workflow, and they record the open replica-set investigation clearly." (Validation Strategy)
     - "Do **not** rewrite `docs/archive/*` as if historical `mongodb-memory-server` work never happened." (Documentation Pass)

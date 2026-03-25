@@ -24,18 +24,24 @@ In plain language, success means:
 
 ## Current Baseline
 
-Current repo behavior and documentation show that backend tests still depend on the `@shelf/jest-mongodb` + `mongodb-memory-server` stack:
+Current repo behavior shows that backend tests still depend on the `@shelf/jest-mongodb` + `mongodb-memory-server` stack, but the old `6.0.14` workaround path has already been retired:
 
 - `jest.backend.config.ts` composes the `@shelf/jest-mongodb` preset into the backend Jest config.
-- `jest-mongodb-config.js` pins the Mongo binary to `6.0.14` because the current path depends on `mongodb-memory-server` behavior that does not carry cleanly into newer Mongo versions.
-- `.github/workflows/netlify-api-test.yml` and `scripts/ci-local.sh` both export `MONGOMS_DOWNLOAD_URL` to work around archive/platform mismatches during backend test setup.
+- `jest-mongodb-config.js` now pins the Mongo binary to `8.2.1`.
+- `.github/workflows/netlify-api-test.yml` and `scripts/ci-local.sh` no longer export `MONGOMS_DOWNLOAD_URL`.
 - `src/tests/backend/mongoDb.test.ts` and `src/tests/backend/MongodbService.test.ts` consume the preset-provided `__MONGO_URI__` / `__MONGO_DB_NAME__` globals.
-- `package.json` still carries direct dependencies on `@shelf/jest-mongodb` and `mongodb-memory-server`.
+- `package.json` keeps `@shelf/jest-mongodb` as the active test preset dependency, while the direct `mongodb-memory-server` dependency has been removed because the preset provides the runtime transitively.
+
+Historical baseline that motivated this mini-plan:
+
+- the repo previously pinned `jest-mongodb-config.js` to MongoDB `6.0.14`
+- parity surfaces previously exported `MONGOMS_DOWNLOAD_URL`
+- those controls existed to stabilize an older `mongodb-memory-server` setup against platform/archive mismatch behavior
 
 Observed repo-health signal:
 
-- The current test path is functionally workable but fragile, because it relies on download-time binary selection, compatibility pinning, and Jest-preset-driven bootstrapping.
-- Priority 4 Slice 2 explicitly deferred `mongodb-memory-server` removal because it is not a low-risk cleanup item; it is a test-stack decision.
+- The current test path is functionally workable but still somewhat fragile because it remains Jest-preset-driven and backend validation behaves differently across environments.
+- Priority 4 Slice 2 explicitly deferred `mongodb-memory-server` removal because it was not a low-risk cleanup item; this mini-plan became the dedicated place to re-evaluate that decision.
 
 Relevant current docs mention MongoDB testing/setup in active surfaces such as:
 
@@ -58,7 +64,7 @@ As of 2026-03-25, the current upstream guidance is more nuanced than "memory-ser
 
 Planning interpretation:
 
-- The repo's current problem is not that `mongodb-memory-server` is inherently obsolete; it is that this repo is pinned to an old `@shelf/jest-mongodb` / MongoDB `6.0.14` setup with download-workaround baggage.
+- The repo's underlying problem is not that `mongodb-memory-server` is inherently obsolete; it was that this repo had been pinned to an old `@shelf/jest-mongodb` / MongoDB `6.0.14` setup with download-workaround baggage.
 - The lower-risk Priority 4 move is to modernize the current Mongo test stack in place first.
 - MongoDB's own replica-set guidance is still relevant, but it should be treated as a documented follow-up investigation rather than automatically replacing the current test harness in the first implementation pass.
 

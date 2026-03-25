@@ -35,9 +35,9 @@ Inventory captured on 2026-03-25 across the checklist-scoped active surfaces:
 | --- | --- | --- |
 | `README.md` | `update now` | Contributor-facing test guidance should explain the modernized Mongo-backed backend test path and record issue `#167` as the open replica-set follow-up. |
 | `docs/MONGODB_ATLAS.md` | `reviewed no change` | Atlas setup guide is about application runtime/cloud setup rather than backend test bootstrap. |
-| `docs/norms/ci-parity.md` | `reviewed no change` | Still accurate as a parity norm; `MONGOMS_DOWNLOAD_URL` appears only as an example env value, not as current required practice. |
+| `docs/norms/ci-parity.md` | `update now` | Generic parity norm stayed correct, but the example env list no longer needed to name the retired Mongo download override. |
 | `docs/plans/Priority4DependencyModernizationPlan.md` | `reviewed no change` | Still correctly describes the dedicated Mongo/test-stack follow-on lane within Priority 4. |
-| `docs/plans/Priority4MongoReplicaSetTestingMiniPlan.md` | `reviewed no change` | Retains planning baseline and the open architectural replica-set follow-up; no implementation-status rewrite needed here. |
+| `docs/plans/Priority4MongoReplicaSetTestingMiniPlan.md` | `update now` | Active mini-plan needed current-state wording so it no longer described the retired `6.0.14` / `MONGOMS_DOWNLOAD_URL` path as if it were still present. |
 | `jest.backend.config.ts` | `reviewed no change` | Preset composition remains the active backend Jest contract; no checklist change needed in this file. |
 | `jest-mongodb-config.js` | `update now` | Active Mongo test bootstrap config must reflect the post-`6.0.14` modernized path. |
 | `.github/workflows/netlify-api-test.yml` | `update now` | CI parity surface must no longer carry the old download URL workaround. |
@@ -107,6 +107,21 @@ Before checklist execution:
 After checklist execution:
 
 - To be completed in T01/T02.
+
+## Documentation / Parity Validation
+
+- T03:
+  - `rg -n "MONGOMS_DOWNLOAD_URL|6\\.0\\.14" README.md docs/MONGODB_ATLAS.md docs/norms/ci-parity.md docs/plans/Priority4DependencyModernizationPlan.md docs/plans/Priority4MongoReplicaSetTestingMiniPlan.md jest.backend.config.ts jest-mongodb-config.js .github/workflows/netlify-api-test.yml scripts/ci-local.sh docs/checklists/Priority4MongoTestStackChecklist01.md docs/checklists/Priority4MongoTestStackChecklist01Validation.md docs/checklists/Priority4Slice2Phase03Validation.md`
+    - confirmed there are no remaining active config/runtime surfaces that still set or require `MONGOMS_DOWNLOAD_URL`
+    - confirmed `README.md` no longer teaches the old `6.0.14` / `MONGOMS_*` workaround as the current contributor workflow
+    - confirmed `docs/plans/Priority4MongoReplicaSetTestingMiniPlan.md` now describes the old workaround path as retired historical baseline, not current practice
+    - confirmed remaining matches are limited to:
+      - checklist language and validation notes that explicitly describe the retired workaround while auditing its removal
+      - historical reasoning in active plan/checklist artifacts
+      - older phase evidence in `docs/checklists/Priority4Slice2Phase03Validation.md`
+  - result:
+    - pass
+    - active docs/config no longer describe the old workaround path as the current recommended workflow
 
 ## Open Replica-Set Follow-Up
 
