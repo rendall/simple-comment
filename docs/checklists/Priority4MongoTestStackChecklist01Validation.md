@@ -1,6 +1,6 @@
 # Priority 4 Mongo Test Stack Checklist 01 Validation
 
-Status: in progress
+Status: complete
 
 Checklist: `docs/checklists/Priority4MongoTestStackChecklist01.md`
 
@@ -121,9 +121,13 @@ After checklist execution:
     - completed in `170.82s` wall time / `68.427s` Jest time
   - status: pass on retry
 - T02 backend smoke/parity validation:
-  - command: `timeout 180s yarn test:backend`
-  - local outcome in this Codex session: same backend Jest stall pattern as T01
-  - status: blocked locally
+  - initial local outcome in this Codex session: same backend Jest stall pattern as the first T01 attempt
+  - retry command: `timeout 300s yarn test:backend`
+  - retry outcome: passed
+    - 11 suites passed
+    - 180 tests passed
+    - completed in `194.69s` wall time / `86.588s` Jest time
+  - status: pass on retry
   - command: `yarn build`
   - outcome: passed
   - retained warning signals:
@@ -155,6 +159,6 @@ After checklist execution:
 
 ## Current Checklist Outcome
 
-- C01-C06 and T03 are complete.
-- T01 and T02 remain open because backend Jest still hangs in this Codex environment after config loading succeeds.
-- The repo state is materially modernized compared with the old `6.0.14` / `MONGOMS_DOWNLOAD_URL` path, but this checklist should not be marked complete until backend validation is captured from a working environment.
+- C01-C07 and T01-T03 are complete.
+- The repo state is materially modernized compared with the old `6.0.14` / `MONGOMS_DOWNLOAD_URL` path.
+- The only notable residual signal from local validation is the retained backend build warning pair already recorded above.

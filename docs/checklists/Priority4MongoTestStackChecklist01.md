@@ -1,6 +1,6 @@
 # Priority 4 — Mongo Test Stack Checklist 01
 
-Status: in progress
+Status: complete
 
 Source plan: `docs/plans/Priority4MongoReplicaSetTestingMiniPlan.md`
 
@@ -86,7 +86,7 @@ QC mode: Conformance QC
     - "Pass: the backend test suite runs successfully against the updated Mongo-backed test path." (Validation Strategy)
     - "Fail: the modernization leaves backend tests broken or still dependent on the old pinned workaround assumptions." (Validation Strategy)
 
-- [ ] T02 `[validation]` Backend smoke/parity validation: run `yarn test:backend` and `yarn build` after the parity/config updates and record pass/fail status plus any remaining non-new warning signals in the validation notes.
+- [x] T02 `[validation]` Backend smoke/parity validation: run `yarn test:backend` and `yarn build` after the parity/config updates and record pass/fail status plus any remaining non-new warning signals in the validation notes.
   - Trace:
     - "Pass: the backend test suite runs successfully against the updated Mongo-backed test path." (Validation Strategy)
     - "Pass: local parity surfaces and CI surfaces describe and use the same Mongo test model." (Validation Strategy)
