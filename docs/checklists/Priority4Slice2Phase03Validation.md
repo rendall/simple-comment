@@ -49,7 +49,9 @@ Baseline captured on 2026-03-25 before Phase 03 implementation:
   - decision: remove
   - rationale: repo search found no live webpack config usage or other source-level references outside package metadata, lockfile, and planning docs
 - C09 `yarn`:
-  - pending
+  - decision: defer
+  - rationale: removing the direct `yarn` package entry caused the required `yarn build` validation to fail in the frontend preprocess path with `Cannot find module 'mkdirp'` from the `svelte-preprocess`/`sander` chain, which indicates hidden build coupling outside the intended low-risk scope
+  - destination: remain deferred until a later build/tooling-focused slice can investigate the hidden coupling directly
 - C10 `knip.json` configuration hint:
   - pending
 - C11 unused exports/types disposition:
@@ -109,7 +111,14 @@ Baseline captured on 2026-03-25 before Phase 03 implementation:
     - passed
     - backend build retained the same known MongoDB warning and did not surface new webpack/plugin regressions
 - C09:
-  - pending
+  - `rg -n "require\\(['\\\"]yarn|from ['\\\"]yarn|\\byarn\\b" .`
+    - confirmed there is no repo-managed module import of `yarn`; matches are command/documentation usage plus package metadata
+  - `yarn knip`
+    - after temporary removal, the package dropped out of the unused dependency list as expected
+  - `yarn build`
+    - failed after temporary removal
+    - failure signature: `Cannot find module 'mkdirp'` during Svelte preprocess inside the frontend build
+    - action taken: restored the direct `yarn` dependency declaration and deferred removal rather than broadening Slice 2 into hidden build-coupling repair
 - C10:
   - pending
 

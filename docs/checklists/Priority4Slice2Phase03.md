@@ -97,7 +97,7 @@ QC mode: Conformance QC
     - "Treat tool output as evidence, not authority." (Constraints)
     - "patch/minor updates and similarly low-blast-radius changes that provide immediate maintenance value." (Planned Slices)
 
-- [ ] C09 `[triage]` Assess the direct `yarn` package dependency and either remove it if no repo-managed module usage remains, or document a low-risk-loop defer rationale in the validation notes.
+- [x] C09 `[triage]` Assess the direct `yarn` package dependency and either remove it if no repo-managed module usage remains, or document a low-risk-loop defer rationale in the validation notes.
   - Depends on: C01.
   - Validation: T01, T02 (`rg -n "require\\(['\\\"]yarn|from ['\\\"]yarn|\\byarn\\b" .`, `yarn knip`, and if removed `yarn build`).
   - Trace:
