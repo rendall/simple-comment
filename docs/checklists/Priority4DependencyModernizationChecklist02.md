@@ -50,7 +50,7 @@ QC mode: Conformance QC
     - "`knip` findings are treated as triage inputs and require manual verification before any removal or replacement decision." (Acceptance Criteria)
     - "patch/minor updates and similarly low-blast-radius changes that provide immediate maintenance value." (Planned Slices)
 
-- [ ] C03 `[cleanup]` Remove `scripts/mockComment.mjs` and update stale generated-script usage notes in `src/tests/mockComment.ts` so the live test helper source no longer points at a deleted artifact.
+- [x] C03 `[cleanup]` Remove `scripts/mockComment.mjs` and update stale generated-script usage notes in `src/tests/mockComment.ts` so the live test helper source no longer points at a deleted artifact.
   - Depends on: C01.
   - Validation: T01, T02 (`rg -n "mockComment\\.mjs|scripts/mockComment" .`, `yarn knip`).
   - Trace:

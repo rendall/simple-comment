@@ -1,24 +1,8 @@
 /**
  * Generates a paragraph of random grammatical sentences in various scripts and languages.
- * 
- * Use: `node ./scripts/mockComment.mjs`
- * 
- * Compile:
- * 
- * 1) `npx tsc src/tests/mockComment.ts --module es6 --lib es6 --target esnext --skipLibCheck true --outDir ./scripts  --rootDir ./src/tests/ --removeComments true`
- * 2) rename the file (important): `mv ./scripts/mockComment.js ./scripts/mockComment.mjs`
- * 
- * Watch:
- * on commandline in two separate terminals:
- * 
- * 1) `npx tsc src/tests/mockComment.ts --module es6 --lib es6 --target esnext --skipLibCheck true --outDir ./scripts  --rootDir ./src/tests/ --removeComments true --watch`
- * 2) `while true; do inotifywait -e create,modify ./scripts/ && mv ./scripts/mockComment.js ./scripts/mockComment.mjs; done`
- * 
- * (to install inotifywait: `sudo apt install inotify-tools`)
- * 
- * 
+ *
  * Example output:
-
+ *
  * Margaret Davis
  * margaret.davis@example.com
  * Αυτοί προσπαθουν να ξεπεράσω. Αυτός ακολουθει το παρελθόν. Εσύ πλένεις το αυτοκίνητο. Αυτή τρώει το γιαούρτι. Εσύ βάφεις το ξύλο. Αυτό ακολουθει τη διαδρομή. Αυτή κοιτάζει τα αστέρια. Αυτοί βάφουν το αυτοκίνητο. Εγώ μαθαίω μουσική.
