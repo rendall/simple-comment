@@ -83,8 +83,36 @@ Before this checklist:
 
 After C02-C05:
 
-- pending
+- `yarn knip` no longer reports any unused files
+- the residual unused dependency list is now:
+  - `@netlify/functions`
+  - `@xstate/cli`
+  - `@xstate/test`
+  - `mongodb-memory-server`
+  - `ts-node`
+  - `webpack-bundle-analyzer`
+  - `webpack-license-plugin`
+  - `yarn`
+- the residual export follow-up remains:
+  - 27 unused exports
+  - 22 unused exported types
+- the residual configuration follow-up remains:
+  - redundant `src/entry/index.ts` entry hint from `knip.json`
 
 ## Deferred Follow-Up Notes
 
-- pending
+- deferred dependency removals:
+  - `@netlify/functions`
+  - `@xstate/cli`
+  - `@xstate/test`
+  - `mongodb-memory-server`
+  - `ts-node`
+  - `webpack-bundle-analyzer`
+  - `webpack-license-plugin`
+  - `yarn`
+- deferred Knip follow-up:
+  - redundant `src/entry/index.ts` entry hint from `knip.json`
+  - remaining unused exports report
+  - remaining unused exported types report
+
+This checklist intentionally stopped after clearing the high-confidence residual file queue. It did not expand into ambiguous dependency removals or export/type cleanup.

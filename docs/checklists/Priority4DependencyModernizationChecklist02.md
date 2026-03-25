@@ -71,7 +71,7 @@ QC mode: Conformance QC
     - "Treat each upgrade step as the smallest logical reviewable unit; some steps may be paired package updates when versions are obviously coupled." (Constraints)
     - "stop when the fallout exceeds the approved local step scope." (Planned Slices)
 
-- [ ] C06 `[docs]` Finalize `docs/checklists/Priority4DependencyModernizationChecklist02Validation.md` with before/after Knip evidence, step-level validation outcomes, and the narrowed residual queue for later Priority 4 work.
+- [x] C06 `[docs]` Finalize `docs/checklists/Priority4DependencyModernizationChecklist02Validation.md` with before/after Knip evidence, step-level validation outcomes, and the narrowed residual queue for later Priority 4 work.
   - Depends on: C02, C03, C04, C05.
   - Validation: T01, T03.
   - Trace:
