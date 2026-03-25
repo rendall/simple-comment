@@ -25,7 +25,9 @@ Baseline captured on 2026-03-25 before Phase 03 implementation:
 ## Per-Item Decisions
 
 - C02 `@netlify/functions`:
-  - pending
+  - decision: defer
+  - rationale: repo search found no direct source imports, but this package sits on the runtime/platform boundary already named in the Priority 4 plan; removing it in Slice 2 would force a runtime/tooling judgment better handled in the dedicated runtime/platform follow-on
+  - destination: Priority 4 runtime/platform modernization slice
 - C03 `@xstate/cli`:
   - pending
 - C04 `@xstate/test`:
@@ -48,7 +50,11 @@ Baseline captured on 2026-03-25 before Phase 03 implementation:
 ## Command Evidence
 
 - C02:
-  - pending
+  - `rg -n "@netlify/functions|functions:" .`
+    - confirmed direct references are limited to `package.json`, lockfile, plan/checklist docs, and Netlify command strings rather than source imports
+  - `yarn knip`
+    - package remains reported as unused
+    - defer decision recorded instead of forcing a runtime/platform removal in Slice 2
 - C03:
   - pending
 - C04:

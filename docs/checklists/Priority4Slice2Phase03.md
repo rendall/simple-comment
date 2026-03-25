@@ -48,7 +48,7 @@ QC mode: Conformance QC
     - "Define the first implementation loop as a sequence of atomic upgrade steps that each run validation before the next step begins." (In Scope)
     - "Triage evidence: Pass: every candidate in the first checklist has recorded ecosystem grouping, risk class, and rationale for `refresh`, `replace`, `remove`, `defer`, or `plan separately`." (Validation Strategy)
 
-- [ ] C02 `[triage]` Assess `@netlify/functions` and either remove it if repo-aware verification shows a low-risk unused direct dependency, or document a defer-to-runtime/platform rationale in the validation notes.
+- [x] C02 `[triage]` Assess `@netlify/functions` and either remove it if repo-aware verification shows a low-risk unused direct dependency, or document a defer-to-runtime/platform rationale in the validation notes.
   - Depends on: C01.
   - Validation: T01, T02 (`rg -n "@netlify/functions|functions:" .`, `yarn knip`, and if removed `yarn build:backend`).
   - Trace:
