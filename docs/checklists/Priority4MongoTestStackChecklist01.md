@@ -26,7 +26,7 @@ QC mode: Conformance QC
 - This checklist includes the active-doc inventory/update pass for MongoDB testing guidance.
 - This checklist does not implement a shift to an externally managed local replica set.
 - This checklist does not change application runtime MongoDB behavior, Atlas configuration, or backend data/service contracts.
-- Current execution note: backend Jest config loading still depends on `ts-node`; the rationale for keeping/restoring `ts-node` is documented in `docs/checklists/Priority4Slice2Phase03Validation.md`, and this checklist should not proceed until that prerequisite is satisfied.
+- Current execution note: backend Jest config loading still depends on `ts-node`; that prerequisite is now satisfied, and the rationale for keeping/restoring `ts-node` remains documented in `docs/checklists/Priority4Slice2Phase03Validation.md`.
 
 ## Atomic Checklist Items
 
@@ -37,7 +37,7 @@ QC mode: Conformance QC
     - "Include a documentation pass that inventories active MongoDB mentions and updates any active testing guidance that would become stale." (In Scope)
     - "The plan explicitly records the open follow-up question of whether the repo should later shift from the modernized memory-server path to an actual local replica set." (Acceptance Criteria)
 
-- [ ] C02 `[inventory]` Inventory active MongoDB testing mentions across `README.md`, `docs/MONGODB_ATLAS.md`, `docs/norms/ci-parity.md`, `docs/plans/Priority4DependencyModernizationPlan.md`, `jest.backend.config.ts`, `jest-mongodb-config.js`, `.github/workflows/netlify-api-test.yml`, `scripts/ci-local.sh`, `package.json`, and active `docs/checklists/*` Mongo artifacts; classify each as `update now`, `reviewed no change`, or `historical leave as-is` in the validation notes, and record issue `#167` as the open replica-set follow-up.
+- [x] C02 `[inventory]` Inventory active MongoDB testing mentions across `README.md`, `docs/MONGODB_ATLAS.md`, `docs/norms/ci-parity.md`, `docs/plans/Priority4DependencyModernizationPlan.md`, `jest.backend.config.ts`, `jest-mongodb-config.js`, `.github/workflows/netlify-api-test.yml`, `scripts/ci-local.sh`, `package.json`, and active `docs/checklists/*` Mongo artifacts; classify each as `update now`, `reviewed no change`, or `historical leave as-is` in the validation notes, and record issue `#167` as the open replica-set follow-up.
   - Depends on: C01.
   - Validation: T03.
   - Trace:
