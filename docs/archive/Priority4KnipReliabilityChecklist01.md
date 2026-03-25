@@ -1,6 +1,6 @@
 # Priority 4 Checklist 01 — Knip Reliability Calibration
 
-Status: proposed
+Status: complete
 
 Source plan: `docs/plans/Priority4KnipReliabilityMiniPlan.md`
 

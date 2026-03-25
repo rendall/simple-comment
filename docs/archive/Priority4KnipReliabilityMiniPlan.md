@@ -1,6 +1,6 @@
 # Priority 4 Mini-Plan — Knip Reliability Calibration
 
-Status: proposed
+Status: archived
 
 Parent phase: `docs/plans/Priority4DependencyModernizationPlan.md`
 

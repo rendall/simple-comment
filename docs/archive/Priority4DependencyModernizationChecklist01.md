@@ -1,6 +1,6 @@
 # Priority 4 Checklist 01 — Residual Dependency Declaration Fixes
 
-Status: proposed
+Status: completed
 
 Source plan: `docs/plans/Priority4DependencyModernizationPlan.md`
 
