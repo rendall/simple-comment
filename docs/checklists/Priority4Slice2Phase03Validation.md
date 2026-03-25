@@ -36,7 +36,9 @@ Baseline captured on 2026-03-25 before Phase 03 implementation:
   - rationale: repo search found no live usage outside package metadata, lockfile, and prior planning documents
   - note: the first `yarn test:frontend` attempt failed because the interrupted Yarn remove/install tail left `node_modules` transiently incomplete (`jest-resolve` missing); a clean reinstall restored the workspace and the rerun passed, so the item remains accepted as a package-manager churn issue rather than a real dependency coupling issue
 - C05 `mongodb-memory-server`:
-  - pending
+  - decision: defer
+  - rationale: repo search ties the package directly to the active Jest Mongo preset path, pinned MongoDB 6.x behavior, and existing `MONGOMS_DOWNLOAD_URL` parity handling; removing it here would force test-stack behavior decisions that belong in the dedicated test-stack slice
+  - destination: Priority 4 test-stack modernization slice
 - C06 `ts-node`:
   - pending
 - C07 `webpack-bundle-analyzer`:
@@ -74,7 +76,11 @@ Baseline captured on 2026-03-25 before Phase 03 implementation:
   - `yarn test:frontend`
     - passed on clean rerun: 6 suites, 139 tests
 - C05:
-  - pending
+  - `rg -n "mongodb-memory-server|jest-mongodb|MONGOMS" .`
+    - confirmed the package is intertwined with `@shelf/jest-mongodb`, `jest-mongodb-config.js`, and the documented Mongo test-runtime compatibility controls
+  - `yarn knip`
+    - package remains reported as unused
+    - defer decision recorded instead of forcing a test-stack removal in Slice 2
 - C06:
   - pending
 - C07:

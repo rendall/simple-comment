@@ -69,7 +69,7 @@ QC mode: Conformance QC
     - "`knip` findings are treated as triage inputs and require manual verification before any removal or replacement decision." (Acceptance Criteria)
     - "Run agreed validation after each upgrade step, not only after the entire sequence." (Constraints)
 
-- [ ] C05 `[triage]` Assess `mongodb-memory-server` and either remove it if repo-aware verification proves that the direct dependency is safely redundant, or document a defer-to-test-stack rationale in the validation notes.
+- [x] C05 `[triage]` Assess `mongodb-memory-server` and either remove it if repo-aware verification proves that the direct dependency is safely redundant, or document a defer-to-test-stack rationale in the validation notes.
   - Depends on: C01.
   - Validation: T01, T02 (`rg -n "mongodb-memory-server|jest-mongodb|MONGOMS" .`, `yarn knip`).
   - Trace:
