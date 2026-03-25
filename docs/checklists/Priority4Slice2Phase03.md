@@ -41,7 +41,7 @@ QC mode: Conformance QC
 
 ## Atomic Checklist Items
 
-- [ ] C01 `[docs]` Create `docs/checklists/Priority4Slice2Phase03Validation.md` with sections for the starting residual queue, per-item triage decisions, command evidence, before/after Knip comparison, and remaining Priority 4 handoff notes.
+- [x] C01 `[docs]` Create `docs/checklists/Priority4Slice2Phase03Validation.md` with sections for the starting residual queue, per-item triage decisions, command evidence, before/after Knip comparison, and remaining Priority 4 handoff notes.
   - Depends on: none.
   - Validation: T01, T03.
   - Trace:
