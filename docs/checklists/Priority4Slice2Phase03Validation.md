@@ -147,8 +147,27 @@ Before this phase:
 
 After C02-C11:
 
-- pending
+- `yarn knip` now reports only these unused dependencies:
+  - `@netlify/functions`
+  - `mongodb-memory-server`
+  - `yarn`
+- each remaining unused dependency has an explicit defer rationale and destination recorded in this document
+- the remaining code-surface follow-up is unchanged but explicitly classified:
+  - 27 unused exports
+  - 22 unused exported types
+- the previous Knip configuration hint is gone:
+  - redundant `src/entry/index.ts` entry pattern removed from `knip.json`
 
 ## Post-Slice-2 Handoff Notes
 
-- pending
+- deferred to runtime/platform slice:
+  - `@netlify/functions`
+- deferred to test-stack slice:
+  - `mongodb-memory-server`
+- deferred to later build/tooling follow-on:
+  - `yarn` direct dependency removal, because the temporary removal exposed hidden frontend build coupling through missing `mkdirp`
+- deferred to later code-surface cleanup:
+  - unused exports report
+  - unused exported types report
+
+Slice 2 no longer has any untriaged `yarn knip` dependency findings or unaddressed Knip configuration hints. The remaining items are all explicitly classified as deferred follow-up work.

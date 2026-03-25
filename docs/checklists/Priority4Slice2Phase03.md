@@ -118,7 +118,7 @@ QC mode: Conformance QC
     - "Classify each candidate using both upgrade risk and dependency-noise rationale." (In Scope)
     - "Every candidate dependency or dependency ecosystem can be placed into one of these buckets: low-risk refresh now, test-stack follow-on, lint/format/tooling follow-on, frontend/build follow-on, runtime/platform follow-on, or intentional deferment." (Acceptance Criteria)
 
-- [ ] C12 `[docs]` Finalize `docs/checklists/Priority4Slice2Phase03Validation.md` with the full triage ledger, before/after Knip evidence, implemented removals, defer rationales, and the post-Slice-2 handoff queue.
+- [x] C12 `[docs]` Finalize `docs/checklists/Priority4Slice2Phase03Validation.md` with the full triage ledger, before/after Knip evidence, implemented removals, defer rationales, and the post-Slice-2 handoff queue.
   - Depends on: C02, C03, C04, C05, C06, C07, C08, C09, C10, C11.
   - Validation: T01, T03.
   - Trace:
