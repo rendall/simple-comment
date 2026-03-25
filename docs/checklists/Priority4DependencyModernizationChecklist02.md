@@ -80,7 +80,7 @@ QC mode: Conformance QC
 
 ## Validation Items
 
-- [ ] T01 `[validation]` Residual-signal validation: run `yarn knip` after C02-C05 and confirm the calibrated report no longer lists the removed files while preserving intentionally deferred dependency and export/type follow-up work.
+- [x] T01 `[validation]` Residual-signal validation: run `yarn knip` after C02-C05 and confirm the calibrated report no longer lists the removed files while preserving intentionally deferred dependency and export/type follow-up work.
   - Trace:
     - "Step-level smoke/process evidence: Pass: every accepted upgrade step records the validation commands run immediately after that step, and the loop stops when a failure exceeds the step's approved local scope." (Validation Strategy)
     - "Treat tool output as evidence, not authority." (Constraints)
