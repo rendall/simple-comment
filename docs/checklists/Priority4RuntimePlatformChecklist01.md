@@ -63,7 +63,7 @@ QC mode: Conformance QC
     - "Contract/parity evidence" requires that build/test/tooling changes do not silently change current contracts or parity expectations. (Validation Strategy)
     - "Non-functional evidence" requires meaningful warning deltas to be recorded clearly. (Validation Strategy)
 
-- [ ] C05 `[backend]` Investigate the `mongodb/lib/utils.js` critical dependency warning and either implement the lowest-risk backend bundler-side remediation that preserves current behavior or record an explicit in-scope tolerance/defer decision with rationale in the validation notes.
+- [x] C05 `[backend]` Investigate the `mongodb/lib/utils.js` critical dependency warning and either implement the lowest-risk backend bundler-side remediation that preserves current behavior or record an explicit in-scope tolerance/defer decision with rationale in the validation notes.
   - Depends on: C02.
   - Validation: T02.
   - Trace:

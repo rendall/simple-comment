@@ -91,6 +91,19 @@ Baseline inventory after C02:
   - disposition:
     - accepted as a low-risk backend bundler-side remediation
     - no runtime-behavior change observed; the warning removal matches the existing optional-dependency ignore pattern already used for other MongoDB driver peers
+- C05:
+  - investigation inputs:
+    - current `yarn build:backend` after C04 leaves exactly one warning:
+      - `mongodb/lib/utils.js`: `Critical dependency: the request of a dependency is an expression`
+    - archived backend warning register:
+      - `docs/archive/priority2-track-c/warning-register-current.md` records the same warning signature as `TOLERATE`
+    - current webpack config already suppresses several optional MongoDB dependency-resolution paths, including the newly added `@aws-sdk/credential-providers`, without touching the driver's dynamic `require()` pattern in `mongodb/lib/utils.js`
+  - disposition:
+    - tolerate in place for this slice
+    - rationale:
+      - the remaining warning still comes from the MongoDB driver's dynamic optional dependency path rather than a repo-local import pattern
+      - the lower-risk warning elimination already happened in C04; removing the final dynamic-require warning would likely require a more invasive bundler or dependency-level intervention than this runtime/platform slice approves
+      - the current warning remains consistent with the previously accepted archived backend warning rationale for the current-stack MongoDB driver pattern
 
 ## Validation Outcomes
 
