@@ -1,6 +1,6 @@
 # Priority 4 Plan — Dependency Modernization
 
-Status: proposed
+Status: archived
 
 Source backlog: `docs/RepoHealthImprovementBacklog.md` (`Priority 4: Dependency Modernization`)
 
