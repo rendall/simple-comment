@@ -334,15 +334,9 @@ export const getCookieToken = (
   cookieHeader
     ? cookieHeader
         .split("; ")
-        .reduce<string | null>(
-          (auth, pair) =>
-            auth
-              ? auth
-              : pair.startsWith("simple_comment_token")
-              ? pair.split("=")[1]
-              : auth,
-          null
-        )
+        .reduce<
+          string | null
+        >((auth, pair) => (auth ? auth : pair.startsWith("simple_comment_token") ? pair.split("=")[1] : auth), null)
     : getCookieToken(headers, getHeaderValue(headers, "Cookie"))
 
 /** Checks the Authorization header for "Bearer" + token and returns true if found, false otherwise */

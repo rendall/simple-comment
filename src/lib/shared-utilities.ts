@@ -61,8 +61,11 @@ export const validateUserId = (userId: string): ValidationResult => {
       isValidResult(result)
         ? joinedResult
         : isValidResult(joinedResult)
-        ? result
-        : { isValid: false, reason: `${joinedResult.reason} ${result.reason}` },
+          ? result
+          : {
+              isValid: false,
+              reason: `${joinedResult.reason} ${result.reason}`,
+            },
     { isValid: true } as ValidResult
   )
 

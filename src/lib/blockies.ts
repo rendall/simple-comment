@@ -45,7 +45,7 @@ type BlockiesBuildOpts = {
   rand: () => number
 }
 
-export const buildOpts = (
+const buildOpts = (
   opts: Partial<BlockiesBuildOpts> = {}
 ): BlockiesBuildOpts => {
   const seed =
@@ -62,7 +62,7 @@ export const buildOpts = (
   return { seed, size, scale, color, bgcolor, spotcolor, rand }
 }
 
-export const renderIcon = (
+const renderIcon = (
   opts: Partial<BlockiesBuildOpts>,
   canvas: HTMLCanvasElement
 ): HTMLCanvasElement => {
@@ -101,7 +101,7 @@ export const renderIcon = (
   return canvas
 }
 
-export const createIcon = (
+const createIcon = (
   opts: Partial<BlockiesBuildOpts> = buildOpts(),
   canvas = document.createElement("canvas")
 ) => renderIcon(opts, canvas)

@@ -68,6 +68,7 @@ import {
   error500UpdateError,
   success200OK,
   success201UserCreated,
+  success201CommentCreated,
   success202CommentDeleted,
   success202LoggedOut,
   success202TopicDeleted,
@@ -629,7 +630,7 @@ export class MongodbService extends AbstractDbService {
       }
 
       return {
-        statusCode: 201,
+        ...success201CommentCreated,
         body: { ...insertComment, user: adminSafeUser },
       }
     } catch (e) {

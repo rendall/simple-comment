@@ -17,7 +17,7 @@ Local parity in this repository applies to dependency-resolution + validation be
 
 - Local parity commands MUST run install with the same lockfile/options as the mirrored CI workflow.
 - Local parity commands MUST run the same validation sequence as the mirrored CI workflow (lint/format/build/test steps).
-- CI env values that affect determinism or runtime behavior (for example `TZ`, `MONGOMS_DOWNLOAD_URL`) MUST be mirrored exactly in local parity.
+- CI env values that affect determinism or runtime behavior (for example `TZ`) MUST be mirrored exactly in local parity.
 - Any change to mirrored CI steps/env MUST include the corresponding local parity update in the same PR.
 
 ## Explicit Non-Goals

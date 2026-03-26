@@ -3,19 +3,12 @@ export const error400BadRequest: Error = {
   statusCode: 400,
   body: "Bad Request",
 }
-export const error400CommentIdMissing: Error = {
-  statusCode: 400,
-  body: "Comment id missing",
-}
+
 export const error400NoUpdate: Error = {
   statusCode: 400,
   body: "Comment text is same",
 }
 
-export const error400UserIdMissing: Error = {
-  statusCode: 400,
-  body: "UserId missing",
-}
 export const error400PasswordMissing: Error = {
   statusCode: 400,
   body: "Password missing",
@@ -82,14 +75,12 @@ export const error500UpdateError: Error = {
   body: "Update error",
 }
 export const success200OK: Success = { statusCode: 200, body: "OK" }
-export const success204NoContent: Success<undefined> = {
-  statusCode: 204,
-  body: undefined,
-}
+
 export const success201CommentCreated: Success = {
   statusCode: 201,
   body: "Comment created",
 }
+
 export const success201UserCreated: Success = {
   statusCode: 201,
   body: "User created",

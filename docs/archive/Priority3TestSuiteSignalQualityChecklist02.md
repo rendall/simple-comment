@@ -1,6 +1,6 @@
 # Priority 3 Checklist 02 — `userGET` Investigate Resolution
 
-Status: superseded by `docs/checklists/Priority3TestSuiteSignalQualityChecklist02A.md` and `docs/checklists/Priority3TestSuiteSignalQualityChecklist02B.md`
+Status: archived and superseded by `Priority3TestSuiteSignalQualityChecklist02A.md` and `Priority3TestSuiteSignalQualityChecklist02B.md`
 
 Source plan: `docs/plans/Priority3TestSuiteSignalQualityPlan.md`
 

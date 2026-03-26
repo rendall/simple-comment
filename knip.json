@@ -1,0 +1,35 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "cypress": {
+    "config": ["cypress.config.ts"]
+  },
+  "entry": [
+    "src/entry/icebreakers/index.ts",
+    "src/simple-comment.ts",
+    "src/simple-comment-icebreakers.ts",
+    "src/scss/simple-comment-style.scss"
+  ],
+  "eslint": {
+    "config": ["eslint.config.mjs"]
+  },
+  "ignoreBinaries": ["cypress", "netlify"],
+  "ignoreDependencies": [
+    "http-server",
+    "jest-environment-jsdom",
+    "prettier-plugin-svelte",
+    "svelte-eslint-parser",
+    "ts-node"
+  ],
+  "ignoreFiles": ["jest-mongodb-config.js", "src/tests/mockComment.ts"],
+  "ignoreIssues": {
+    "src/apiClient.ts": ["exports"],
+    "src/lib/backend-utilities.ts": ["exports"]
+  },
+  "jest": {
+    "config": ["jest.backend.config.ts", "jest.frontend.config.ts"]
+  },
+  "tags": ["-lintignore"],
+  "webpack": {
+    "config": ["webpack.netlify.functions.cjs"]
+  }
+}

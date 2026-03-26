@@ -43,8 +43,8 @@
   // "refs" object keeps them sorted by id.
   let refs = {}
 
-  let canEdit = (_comment: Comment) => false
-  let canDelete = (_comment: Comment) => false
+  let canEdit: (comment: Comment) => boolean
+  let canDelete: (comment: Comment) => boolean
 
   const onEditClick = (comment: Comment) => {
     const commentId = comment?.id

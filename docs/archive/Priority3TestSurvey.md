@@ -1,6 +1,6 @@
 # Priority 3 Test Survey
 
-Status: active planning artifact (non-executable)
+Status: archived
 
 This document is a first-pass survey for Priority 3: Test Suite Signal Quality.
 

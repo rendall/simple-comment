@@ -307,7 +307,7 @@
       await getOneUser(id)
       userIdHelperText = `The handle '${id}' is already taken. Please try another one.`
       userIdStatus = "error"
-    } catch (error) {
+    } catch {
       userIdHelperText = "This handle is available."
       userIdStatus = "success"
     }

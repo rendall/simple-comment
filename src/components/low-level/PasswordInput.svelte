@@ -5,7 +5,6 @@
 
   export let value
   export let togglePassword = true
-  let IconComponent = View
   let inputProps
 
   const onClick = e => {
@@ -18,9 +17,6 @@
     const { value, type, ...rest } = $$props
     inputProps = rest
   }
-  $: {
-    IconComponent = togglePassword ? View : ViewOff
-  }
 </script>
 
 <InputField
@@ -29,5 +25,9 @@
   onIconClick={onClick}
   {...inputProps}
 >
-  <svelte:component this={IconComponent} slot="icon" size={32} />
+  <svelte:component
+    this={togglePassword ? View : ViewOff}
+    slot="icon"
+    size={32}
+  />
 </InputField>
