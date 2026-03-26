@@ -203,7 +203,6 @@ export const debounceFunc = <T extends (...args: any[]) => void>(
 ) => {
   let debounceTimeout: number | null = null
   return (...args: Parameters<T>): void => {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     window.clearTimeout(debounceTimeout!)
     debounceTimeout = window.setTimeout(() => {
       func(...args)

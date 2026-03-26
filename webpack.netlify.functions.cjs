@@ -3,7 +3,6 @@ const fs = require("fs")
 const webpack = require("webpack")
 
 const mode = process.env.NODE_ENV ?? "production"
-const isProduction = mode === "production"
 
 const entry = fs
   .readdirSync("./src/functions")

@@ -9,7 +9,7 @@
 
   let loginStateValue
   let loginStateNextEvents
-  let isProcessing = true
+  let isProcessing: boolean
 
   loginStateStore.subscribe(state => {
     const { state: stateValue, nextEvents, select } = state

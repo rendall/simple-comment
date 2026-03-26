@@ -5,7 +5,7 @@
 
   export let value
   export let togglePassword = true
-  let IconComponent = View
+  let IconComponent: typeof View
   let inputProps
 
   const onClick = e => {
