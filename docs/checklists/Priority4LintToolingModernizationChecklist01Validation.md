@@ -27,6 +27,12 @@
 - Migration-leftover baseline:
   - repo search found no active `FlatCompat`/compat usage in the current flat-config path
   - `@eslint/eslintrc` is already absent from `package.json`
+- T01 command validation after the accepted implementation step:
+  - after C03 (`eslint.config.mjs` structure-only cleanup):
+    - `yarn lint` passes
+    - `yarn run prettier --list-different .` passes
+    - `yarn typecheck` passes
+  - C04 and C05 were documentation/disposition-only in this repo copy and did not change executable tooling state
 
 ## Representative TS / Svelte / Cypress Config Probes
 

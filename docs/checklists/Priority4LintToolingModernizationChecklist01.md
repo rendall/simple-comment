@@ -82,7 +82,7 @@ QC mode: Conformance QC
 
 ## Validation Items
 
-- [ ] T01 `[validation]` Command validation: run `yarn lint`, `yarn run prettier --list-different .`, and `yarn typecheck` after each accepted config/dependency step and confirm the contributor-facing entry points remain green and meaningful.
+- [x] T01 `[validation]` Command validation: run `yarn lint`, `yarn run prettier --list-different .`, and `yarn typecheck` after each accepted config/dependency step and confirm the contributor-facing entry points remain green and meaningful.
   - Trace:
     - "Pass: accepted changes keep the primary commands runnable and meaningful..." (Validation Strategy)
 
