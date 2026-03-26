@@ -3,7 +3,7 @@
 import { assign, createMachine } from "xstate"
 import type { Discussion, ServerResponse } from "./simple-comment-types"
 
-export type DiscussionMachineState =
+type DiscussionMachineState =
   | "idle"
   | "error"
   | "loading"
@@ -11,17 +11,17 @@ export type DiscussionMachineState =
   | "creating"
   | "created"
 
-export type DiscussionTypestate = {
+type DiscussionTypestate = {
   value: DiscussionMachineState
   context: DiscussionMachineContext
 }
 
-export type DiscussionMachineContext = {
+type DiscussionMachineContext = {
   error?: ServerResponse
   discussion?: Discussion
 }
 
-export type DiscussionMachineEvent =
+type DiscussionMachineEvent =
   | { type: "CREATE" }
   | { type: "RETRY" }
   | { type: "LOAD" }

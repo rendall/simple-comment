@@ -5,7 +5,6 @@ export type AuthToken = string
 export type CommentId = string
 export type TopicId = string
 export type Email = string
-export type URL = string
 export type UserId = string
 
 export type Headers = { [key: string]: string }

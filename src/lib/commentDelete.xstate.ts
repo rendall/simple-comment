@@ -1,23 +1,19 @@
 import { assign, createMachine } from "xstate"
 import type { CommentId, ServerResponseError } from "./simple-comment-types"
 
-export type CommentDeleteMachineState =
-  | "idle"
-  | "deleting"
-  | "deleted"
-  | "error"
+type CommentDeleteMachineState = "idle" | "deleting" | "deleted" | "error"
 
-export type CommentDeleteTypestate = {
+type CommentDeleteTypestate = {
   value: CommentDeleteMachineState
   context: CommentDeleteMachineContext
 }
 
-export type CommentDeleteMachineContext = {
+type CommentDeleteMachineContext = {
   error?: ServerResponseError | string
   commentId?: CommentId
 }
 
-export type CommentDeleteMachineEvent =
+type CommentDeleteMachineEvent =
   | { type: "DELETE"; commentId: CommentId }
   | { type: "RESET" }
   | { type: "ERROR"; error: ServerResponseError | string }

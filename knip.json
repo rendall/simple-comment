@@ -10,15 +10,21 @@
     "src/scss/simple-comment-style.scss"
   ],
   "eslint": {
-    "config": ["src/.eslintrc.json"]
+    "config": ["eslint.config.mjs"]
   },
   "ignoreBinaries": ["cypress", "netlify"],
   "ignoreDependencies": [
     "http-server",
     "jest-environment-jsdom",
-    "prettier-plugin-svelte"
+    "prettier-plugin-svelte",
+    "svelte-eslint-parser",
+    "ts-node"
   ],
   "ignoreFiles": ["jest-mongodb-config.js", "src/tests/mockComment.ts"],
+  "ignoreIssues": {
+    "src/apiClient.ts": ["exports"],
+    "src/lib/backend-utilities.ts": ["exports"]
+  },
   "jest": {
     "config": ["jest.backend.config.ts", "jest.frontend.config.ts"]
   },

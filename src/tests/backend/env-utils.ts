@@ -5,7 +5,7 @@ export type ExampleEnvEntry = {
   value: string
 }
 
-export const exampleEnvPath = `${process.cwd()}/example.env`
+const exampleEnvPath = `${process.cwd()}/example.env`
 
 export const isSensitiveEnvKey = (key: string) =>
   key.includes("SECRET") || key.includes("PASSWORD")
