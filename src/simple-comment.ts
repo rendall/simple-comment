@@ -1,4 +1,3 @@
-/// <reference types="svelte" />
 import { mount } from "svelte"
 import { getDefaultDiscussionId } from "./apiClient"
 import SimpleComment from "./components/SimpleComment.svelte"

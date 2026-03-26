@@ -8,7 +8,13 @@ import tsParser from "@typescript-eslint/parser"
 export default defineConfig([
   // Base ignores for generated and intentionally skipped files.
   {
-    ignores: ["*.js", "functions/**/*.js", "dist/**/*.js", "src/policy.ts"],
+    ignores: [
+      "*.js",
+      ".netlify/**",
+      "functions/**/*.js",
+      "dist/**/*.js",
+      "src/policy.ts",
+    ],
   },
 
   // Shared repo defaults.
