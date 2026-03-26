@@ -86,7 +86,7 @@ QC mode: Conformance QC
   - Trace:
     - "Pass: accepted changes keep the primary commands runnable and meaningful..." (Validation Strategy)
 
-- [ ] T02 `[validation]` Behavior-preservation validation: run representative ESLint probes for one TypeScript file, one Svelte file, and one Cypress file before and after the `eslint.config.mjs` cleanup, and confirm parser/globals/rule behavior stays intentional rather than being lost in block moves.
+- [x] T02 `[validation]` Behavior-preservation validation: run representative ESLint probes for one TypeScript file, one Svelte file, and one Cypress file before and after the `eslint.config.mjs` cleanup, and confirm parser/globals/rule behavior stays intentional rather than being lost in block moves.
   - Trace:
     - "Pass: lint/tooling changes do not silently change the repo's contributor quality-gate contract..." (Validation Strategy)
     - "Prefer the smallest reviewable modernization steps..." (Constraints)

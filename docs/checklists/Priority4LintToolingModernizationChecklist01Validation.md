@@ -49,6 +49,18 @@
       - `cy`
       - `Cypress`
       - Mocha `describe`
+- T02 before/after comparison after C03:
+  - TypeScript probe:
+    - parser unchanged
+    - `@typescript-eslint/no-unused-vars` unchanged
+  - Svelte probe:
+    - top-level parser unchanged
+    - TS handoff in `parserOptions` unchanged
+    - `@typescript-eslint/no-unused-vars` unchanged
+  - Cypress probe:
+    - `cy` global unchanged
+    - `Cypress` global unchanged
+    - Mocha `describe` global unchanged
 
 ## ESLint Config Cleanup Decisions
 
