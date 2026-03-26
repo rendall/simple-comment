@@ -131,15 +131,15 @@
   {:else if comment.dateDeleted}
     <header class="comment-header">
       <div class="user-avatar">
-        <div class="gray-block" />
+        <div class="gray-block"></div>
       </div>
       <div class="comment-info">
         <div class="user-name">
-          <div class="gray-block" />
-          <div class="gray-block" />
+          <div class="gray-block"></div>
+          <div class="gray-block"></div>
         </div>
         <div class="comment-date">
-          <div class="gray-block" />
+          <div class="gray-block"></div>
         </div>
       </div>
     </header>

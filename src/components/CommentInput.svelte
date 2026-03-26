@@ -210,7 +210,7 @@
     {autofocus}
     {placeholder}
     dir="auto"
-  />
+  ></textarea>
   <Login {currentUser} />
   {#if !currentUser || (commentText && commentText.length)}
     <div class="button-row">

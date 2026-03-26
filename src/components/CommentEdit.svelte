@@ -125,7 +125,7 @@
     {autofocus}
     {placeholder}
     dir="auto"
-  />
+  ></textarea>
   {#if errorText && errorText.length > 0}
     <p class="is-error">{errorText}</p>
   {/if}
