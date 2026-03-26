@@ -66,7 +66,7 @@ QC mode: Conformance QC
     - "Record any compatibility boundary that must be handed forward..." (In Scope)
     - "If a tooling upgrade requires broader build/test/package changes than this slice can justify, stop and record the handoff..." (Constraints)
 
-- [ ] C05 `[prettier]` Record the current Prettier alignment disposition in the validation notes by deciding whether the current green formatter path is accepted for this checklist or whether `prettier` / `prettier-plugin-svelte` modernization must be handed forward into a separate follow-on checklist, without triggering a broad formatting rewrite in this slice.
+- [x] C05 `[prettier]` Record the current Prettier alignment disposition in the validation notes by deciding whether the current green formatter path is accepted for this checklist or whether `prettier` / `prettier-plugin-svelte` modernization must be handed forward into a separate follow-on checklist, without triggering a broad formatting rewrite in this slice.
   - Depends on: C02.
   - Validation: T01, T03.
   - Trace:

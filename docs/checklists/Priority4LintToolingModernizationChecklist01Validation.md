@@ -61,7 +61,13 @@
 
 ## Prettier Alignment Disposition
 
-Pending.
+- C05 disposition:
+  - the current formatter path is accepted for this checklist
+  - evidence:
+    - `yarn run prettier --list-different .` is green
+    - `prettier` is already on `3.8.1`
+    - `prettier-plugin-svelte` is already on `^3.5.1`
+  - no separate Prettier modernization follow-on is required to close this lint/tooling lane
 
 ## Residual Follow-on Notes
 
