@@ -48,7 +48,7 @@
   import PasswordInput from "./low-level/PasswordInput.svelte"
   import PasswordTwinInput from "./low-level/PasswordTwinInput.svelte"
   import Avatar from "./low-level/Avatar.svelte"
-  import { StateValue } from "xstate"
+  import type { StateValue } from "xstate"
 
   const DISPLAY_NAME_HELPER_TEXT = "This is the name that others will see"
   const USER_EMAIL_HELPER_TEXT =

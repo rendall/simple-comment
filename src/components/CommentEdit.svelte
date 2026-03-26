@@ -1,7 +1,7 @@
 <script lang="ts">
   import SkeletonCommentInput from "./low-level/SkeletonCommentInput.svelte"
   import type { CommentId } from "../lib/simple-comment-types"
-  import { StateValue } from "xstate"
+  import type { StateValue } from "xstate"
   import { commentEditMachine } from "../lib/commentEdit.xstate"
   import { onMount } from "svelte"
   import { isResponseOk } from "../frontend-utilities"
