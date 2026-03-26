@@ -89,4 +89,15 @@
 
 ## Residual Follow-on Notes
 
-Pending.
+- Before/after config summary:
+  - before this checklist:
+    - the WSL-native copy already had a working flat config with green lint/format/typecheck commands
+    - the config structure was functional but unlabeled
+  - after this checklist:
+    - the config remains functionally identical
+    - section boundaries are explicit and easier to scan
+    - the old compat-bridge dependency is confirmed absent
+    - the formatter lane is explicitly accepted as current
+- Follow-on decision:
+  - no additional Prettier follow-on is required
+  - no additional lint/tooling cleanup checklist is required for this lane on the current branch state

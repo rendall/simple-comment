@@ -73,7 +73,7 @@ QC mode: Conformance QC
     - "Define the safest modernization path for: ... Prettier ... `prettier-plugin-svelte`" (In Scope)
     - "require the checklist to separate dependency/config modernization from any broad formatting rewrites" (Risks and Mitigations)
 
-- [ ] C06 `[docs]` Finalize `docs/checklists/Priority4LintToolingModernizationChecklist01Validation.md` with the before/after config structure summary, representative TS/Svelte/Cypress validation evidence, `@eslint/eslintrc` disposition, and the explicit Prettier follow-on decision.
+- [x] C06 `[docs]` Finalize `docs/checklists/Priority4LintToolingModernizationChecklist01Validation.md` with the before/after config structure summary, representative TS/Svelte/Cypress validation evidence, `@eslint/eslintrc` disposition, and the explicit Prettier follow-on decision.
   - Depends on: C02, C03, C04, C05.
   - Validation: T03.
   - Trace:
