@@ -16,11 +16,11 @@
     "module": "ESNext",
     "lib": ["es6", "dom"],
     "isolatedModules": true,
-    "verbatimModuleSyntax": false,
+    "verbatimModuleSyntax": true,
     "skipLibCheck": true,
     "outDir": "./",
     "rootDir": "./src/",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "esModuleInterop": true,
     "resolveJsonModule": true
   }

@@ -22,5 +22,6 @@ export default {
       },
     ],
   },
-  transformIgnorePatterns: ["/node_modules/(?!svelte)"],
+  transformIgnorePatterns: ["/node_modules/(?!svelte|esm-env)"],
+  extensionsToTreatAsEsm: [".ts"],
 }

@@ -7,7 +7,7 @@
     ServerResponse,
     User,
   } from "../lib/simple-comment-types"
-  import { StateValue } from "xstate"
+  import type { StateValue } from "xstate"
   import { commentPostMachine } from "../lib/commentPost.xstate"
   import { createEventDispatcher, onDestroy, onMount } from "svelte"
   import { dispatchableStore, loginStateStore } from "../lib/svelte-stores"
@@ -210,7 +210,7 @@
     {autofocus}
     {placeholder}
     dir="auto"
-  />
+  ></textarea>
   <Login {currentUser} />
   {#if !currentUser || (commentText && commentText.length)}
     <div class="button-row">

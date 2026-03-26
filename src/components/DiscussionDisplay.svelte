@@ -249,6 +249,6 @@
   {/if}
   {#if $state.value === "loading"}
     <SkeletonComment />
-    <div style="margin-bottom:10rem" />
+    <div style="margin-bottom:10rem"></div>
   {/if}
 </section>

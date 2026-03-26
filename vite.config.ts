@@ -33,7 +33,11 @@ export default defineConfig(async ({ mode }) => {
     plugins: [
       svelte({
         emitCss: false,
-        preprocess: [sveltePreprocess()],
+        preprocess: [
+          sveltePreprocess({
+            typescript: { tsconfigFile: "tsconfig.frontend.json" },
+          }),
+        ],
         compilerOptions: { dev: !isProduction },
       }),
       {

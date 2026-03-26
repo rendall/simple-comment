@@ -29,13 +29,13 @@
 {#if paragraph}
   <div {...$$restProps}>
     {#each rows as { width }}
-      <p class="skeleton line" style:width style:height />
+      <p class="skeleton line" style:width style:height></p>
     {/each}
   </div>
 {:else if avatar}
-  <div class="skeleton avatar" />
+  <div class="skeleton avatar"></div>
 {:else}
-  <div class="skeleton line" style:width style:height />
+  <div class="skeleton line" style:width style:height></div>
 {/if}
 
 <style lang="scss">

@@ -1,4 +1,4 @@
-/// <reference types="svelte" />
+import { mount } from "svelte"
 import { getDefaultDiscussionId } from "./apiClient"
 import SimpleComment from "./components/SimpleComment.svelte"
 
@@ -57,7 +57,7 @@ window.setSimpleCommentDiscussion = (discussionId: string) =>
 
 const loadSimpleComment = (setupOptions: Options) => {
   options = { ...options, ...setupOptions }
-  simpleComment = new SimpleComment({
+  simpleComment = mount(SimpleComment, {
     target: options.target,
     props: { discussionId: options.discussionId, title: options.title },
   })

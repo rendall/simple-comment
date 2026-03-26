@@ -40,7 +40,11 @@ const fetchAndStoreQuestions = () =>
     fetchQuestions(currentTimestamp, resolve, reject)
   })
 
-const fetchQuestions = async (currentTimestamp, resolve, reject) => {
+const fetchQuestions = async (
+  currentTimestamp: string,
+  resolve: (questions: string[]) => void,
+  reject: (reason?: unknown) => void
+) => {
   try {
     const questionFile = await fetch(
       "https://raw.githubusercontent.com/rendall/icebreakers/master/QUESTIONS.md"
