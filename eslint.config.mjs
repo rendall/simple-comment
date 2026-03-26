@@ -6,9 +6,12 @@ import typescriptEslint from "@typescript-eslint/eslint-plugin"
 import tsParser from "@typescript-eslint/parser"
 
 export default defineConfig([
+  // Base ignores for generated and intentionally skipped files.
   {
     ignores: ["*.js", "functions/**/*.js", "dist/**/*.js", "src/policy.ts"],
   },
+
+  // Shared repo defaults.
   js.configs.recommended,
   {
     languageOptions: {
@@ -18,6 +21,8 @@ export default defineConfig([
       },
     },
   },
+
+  // Cypress specs run with browser, Mocha, Chai, and Cypress globals.
   {
     files: ["cypress/**/*.js"],
     languageOptions: {
@@ -30,6 +35,8 @@ export default defineConfig([
       },
     },
   },
+
+  // Svelte base rules and TS-in-Svelte parsing.
   ...svelte.configs.base,
   {
     files: ["src/**/*.svelte"],
@@ -53,6 +60,8 @@ export default defineConfig([
       ],
     },
   },
+
+  // TypeScript rules for repo source files.
   {
     files: ["src/**/*.ts"],
     plugins: {

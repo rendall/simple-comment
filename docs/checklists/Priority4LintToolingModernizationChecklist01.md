@@ -52,7 +52,7 @@ QC mode: Conformance QC
     - "Inventory the active lint/format/typecheck packages and config surfaces that belong to this lane." (In Scope)
     - "Pass: accepted changes keep the primary commands runnable and meaningful..." (Validation Strategy)
 
-- [ ] C03 `[eslint]` Simplify `eslint.config.mjs` mechanically by deduplicating repeated ignore blocks, grouping the config into clearly labeled base/Cypress/Svelte/TypeScript sections, and preserving existing parser, globals, and rule intent without introducing new rule behavior.
+- [x] C03 `[eslint]` Simplify `eslint.config.mjs` mechanically by deduplicating repeated ignore blocks, grouping the config into clearly labeled base/Cypress/Svelte/TypeScript sections, and preserving existing parser, globals, and rule intent without introducing new rule behavior.
   - Depends on: C02.
   - Validation: T01, T02.
   - Trace:

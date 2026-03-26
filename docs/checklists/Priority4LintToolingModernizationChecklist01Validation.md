@@ -46,7 +46,15 @@
 
 ## ESLint Config Cleanup Decisions
 
-Pending.
+- C03 mechanical cleanup:
+  - preserved the existing working flat-config behavior
+  - added explicit section comments for:
+    - base ignores
+    - shared defaults
+    - Cypress globals
+    - Svelte / TS-in-Svelte handling
+    - TypeScript rules
+  - did not change rule intent, parser selection, or file globs during the cleanup
 
 ## Prettier Alignment Disposition
 
