@@ -20,6 +20,7 @@
 
   $: {
     isProcessing =
+      loginStateValue === undefined ||
       loginStateValue === "verifying" ||
       loginStateValue === "loggingIn" ||
       loginStateValue === "loggingOut"
