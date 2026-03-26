@@ -38,7 +38,7 @@ QC mode: Conformance QC
 
 ## Atomic Checklist Items
 
-- [ ] C01 `[docs]` Create `docs/checklists/Priority4LintToolingModernizationChecklist01Validation.md` with sections for current lint/format/typecheck command evidence, representative TS/Svelte/Cypress config probes, ESLint config cleanup decisions, Prettier alignment disposition, and residual follow-on notes.
+- [x] C01 `[docs]` Create `docs/checklists/Priority4LintToolingModernizationChecklist01Validation.md` with sections for current lint/format/typecheck command evidence, representative TS/Svelte/Cypress config probes, ESLint config cleanup decisions, Prettier alignment disposition, and residual follow-on notes.
   - Depends on: none.
   - Validation: T03.
   - Trace:
