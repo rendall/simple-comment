@@ -20,7 +20,7 @@
     "skipLibCheck": true,
     "outDir": "./",
     "rootDir": "./src/",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "esModuleInterop": true,
     "resolveJsonModule": true
   }
