@@ -45,7 +45,7 @@ QC mode: Conformance QC
     - "Define the exact validation path for accepted lint/tooling changes." (In Scope)
     - "Pass: any meaningful new warning/error patterns, formatting churn, or typecheck-scope changes are recorded clearly." (Validation Strategy)
 
-- [ ] C02 `[inventory]` Record the current lint/tooling baseline in the validation notes, including the active `eslint.config.mjs` structure, the current Prettier package/plugin versions, the presence of migration leftovers such as `@eslint/eslintrc`, and the current green status of `yarn lint`, `yarn run prettier --list-different .`, and `yarn typecheck`.
+- [x] C02 `[inventory]` Record the current lint/tooling baseline in the validation notes, including the active `eslint.config.mjs` structure, the current Prettier package/plugin versions, the presence of migration leftovers such as `@eslint/eslintrc`, and the current green status of `yarn lint`, `yarn run prettier --list-different .`, and `yarn typecheck`.
   - Depends on: C01.
   - Validation: T01, T03.
   - Trace:
