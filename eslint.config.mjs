@@ -11,9 +11,6 @@ export default defineConfig([
   },
   js.configs.recommended,
   {
-    ignores: ["*.js", "functions/**/*.js", "dist/**/*.js", "src/policy.ts"],
-  },
-  {
     languageOptions: {
       globals: {
         ...globals.browser,
