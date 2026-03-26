@@ -91,7 +91,7 @@ QC mode: Conformance QC
     - "Pass: lint/tooling changes do not silently change the repo's contributor quality-gate contract..." (Validation Strategy)
     - "Prefer the smallest reviewable modernization steps..." (Constraints)
 
-- [ ] T03 `[validation]` Documentation/process validation: confirm the checklist state, validation notes, and any defer decisions are internally consistent and sufficient to declare whether the lint/tooling lane is done or requires one more follow-on checklist.
+- [x] T03 `[validation]` Documentation/process validation: confirm the checklist state, validation notes, and any defer decisions are internally consistent and sufficient to declare whether the lint/tooling lane is done or requires one more follow-on checklist.
   - Trace:
     - "Pass: any meaningful new warning/error patterns, formatting churn, or typecheck-scope changes are recorded clearly." (Validation Strategy)
 

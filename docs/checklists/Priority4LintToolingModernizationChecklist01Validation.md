@@ -101,3 +101,8 @@
 - Follow-on decision:
   - no additional Prettier follow-on is required
   - no additional lint/tooling cleanup checklist is required for this lane on the current branch state
+- T03 documentation/process validation:
+  - checklist state and validation notes agree on all completed items
+  - the resulting disposition for this lane is clear:
+    - lint/tooling modernization is complete on the current WSL-native branch state
+    - no immediate lint/tooling follow-on checklist is required before moving to the next Priority 4 lane
