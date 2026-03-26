@@ -7,7 +7,7 @@ import type {
   ServerResponseSuccess,
 } from "./simple-comment-types"
 
-export type CommentMachineState =
+type CommentMachineState =
   | "idle"
   | "validating"
   | "validated"
@@ -19,16 +19,16 @@ export type CommentMachineState =
   | "deleted"
   | "error"
 
-export type CommentTypestate = {
+type CommentTypestate = {
   value: CommentMachineState
   context: CommentMachineContext
 }
 
-export type CommentMachineContext = {
+type CommentMachineContext = {
   error?: ServerResponseError | string
   response?: ServerResponseSuccess<Comment>
 }
-export type CommentMachineEvent =
+type CommentMachineEvent =
   | { type: "SUBMIT" }
   | { type: "LOG_IN" }
   | { type: "POST" }

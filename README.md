@@ -196,11 +196,15 @@ Assumes a unix-like environment, like Ubuntu.
 1. `yarn install`
 1. `yarn run build`
 1. Install and run [MongoDB Community Edition](https://www.mongodb.com/docs/manual/administration/install-community/)
+   - This is for local application runtime/development workflows such as `yarn run start`.
+   - Backend Jest tests use the repo's `@shelf/jest-mongodb` + `mongodb-memory-server` bootstrap and do not require a separately running local `mongod`.
 
 ### Test
 
 1. `yarn run test:backend`
    - Backend tests do not require `.env` on disk. Test env values are injected from `example.env` during Jest setup.
+   - Backend tests use the repo-managed Mongo test harness via `@shelf/jest-mongodb` and `jest-mongodb-config.js`; contributors do not need to export the old `MONGOMS_*` workaround variables.
+   - The repo is intentionally staying on the modernized memory-server path for now while the broader "should tests later move to an actual local replica set?" question remains open in [issue #167](https://github.com/rendall/simple-comment/issues/167).
 2. `yarn run test:frontend`
    - Frontend locale/date tests run under `TZ=UTC` for deterministic output while preserving full locale matrix coverage.
 3. `yarn run test`

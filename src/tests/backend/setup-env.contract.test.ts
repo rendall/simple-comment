@@ -20,6 +20,7 @@ const bootstrapWithEntries = (
 
   try {
     jest.isolateModules(() => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       require("./setup-env")
       bootstrappedEnv = entries.reduce<NodeJS.ProcessEnv>((env, { key }) => {
         env[key] = process.env[key]

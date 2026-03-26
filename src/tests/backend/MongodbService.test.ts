@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import type {
   AdminSafeUser,
   AuthToken,
@@ -155,7 +154,6 @@ const newCommentTest: Pick<Comment, "text" | "userId" | "parentId"> = {
 describe("Full API service test", () => {
   let testAllUsers: User[] = []
   let service: MongodbService
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let _client: MongoClient
   let db: Db
 

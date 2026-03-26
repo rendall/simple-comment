@@ -8,7 +8,7 @@
   export let onBlur = undefined
   export let onIconClick = undefined
 
-  let inputProps = {}
+  let inputProps
   $: {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { labelText, helperText, value, onInput, onBlur, status, ...rest } =

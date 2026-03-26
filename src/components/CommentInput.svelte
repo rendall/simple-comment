@@ -22,7 +22,7 @@
   export let placeholder = "Your comment"
 
   let commentText = ""
-  let buttonCopy = "Add comment"
+  let buttonCopy: string
   let loginStateValue
   let textareaRef
   let textAreaWidth = "100%"

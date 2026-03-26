@@ -35,7 +35,7 @@ const getRequiredEnv = (
   return value
 }
 
-export type BackendEnv = Readonly<{
+type BackendEnv = Readonly<{
   dbConnectionString: string
   databaseName: string
   jwtSecret: string

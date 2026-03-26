@@ -6,8 +6,8 @@ const mergedConfig = merge.recursive(ts_preset, jest_mongodb_preset)
 const presetSetupFiles = Array.isArray(mergedConfig.setupFiles)
   ? mergedConfig.setupFiles
   : mergedConfig.setupFiles
-  ? [mergedConfig.setupFiles]
-  : []
+    ? [mergedConfig.setupFiles]
+    : []
 export default {
   ...mergedConfig,
   clearMocks: true,

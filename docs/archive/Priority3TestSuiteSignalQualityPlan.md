@@ -1,6 +1,6 @@
 # Priority 3 Plan — Test Suite Signal Quality
 
-Status: completed
+Status: archived
 
 Source backlog: `docs/RepoHealthImprovementBacklog.md` (`Priority 3: Test Suite Signal Quality`)
 
