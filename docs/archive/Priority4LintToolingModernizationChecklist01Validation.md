@@ -1,5 +1,9 @@
 # Priority 4 — Lint / Tooling Checklist 01 Validation
 
+Status: archived
+
+Checklist: `docs/archive/Priority4LintToolingModernizationChecklist01.md`
+
 ## Current Lint / Format / Typecheck Command Evidence
 
 - Baseline command run in `/home/rendall/projects/simple-comment` on `priority-4`:

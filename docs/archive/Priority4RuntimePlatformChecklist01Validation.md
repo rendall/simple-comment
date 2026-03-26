@@ -1,8 +1,8 @@
 # Priority 4 Runtime / Platform Checklist 01 Validation
 
-Status: complete
+Status: archived
 
-Checklist: `docs/checklists/Priority4RuntimePlatformChecklist01.md`
+Checklist: `docs/archive/Priority4RuntimePlatformChecklist01.md`
 
 ## Baseline Runtime / Platform Evidence
 

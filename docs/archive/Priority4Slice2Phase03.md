@@ -1,6 +1,6 @@
 # Priority 4, Slice 2, Phase 03 — Residual Dependency Triage Loop
 
-Status: complete
+Status: archived
 
 Source plan: `docs/plans/Priority4DependencyModernizationPlan.md`
 

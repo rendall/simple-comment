@@ -1,8 +1,8 @@
 # Priority 4, Slice 2, Phase 03 Validation — Residual Dependency Triage Loop
 
-Status: complete
+Status: archived
 
-Checklist: `docs/checklists/Priority4Slice2Phase03.md`
+Checklist: `docs/archive/Priority4Slice2Phase03.md`
 
 ## Starting Residual Queue
 

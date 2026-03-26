@@ -1,6 +1,6 @@
 # Priority 4 Mini-Plan — Lint / Tooling Modernization
 
-Status: proposed
+Status: archived
 
 Source plan: `docs/plans/Priority4DependencyModernizationPlan.md`
 

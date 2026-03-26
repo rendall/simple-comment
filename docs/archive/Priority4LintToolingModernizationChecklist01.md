@@ -1,8 +1,8 @@
 # Priority 4 — Lint / Tooling Checklist 01
 
-Status: proposed
+Status: archived
 
-Source plan: `docs/plans/Priority4LintToolingModernizationPlan.md`
+Source plan: `docs/archive/Priority4LintToolingModernizationPlan.md`
 
 QC mode: Conformance QC
 

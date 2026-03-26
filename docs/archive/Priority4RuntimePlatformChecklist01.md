@@ -1,6 +1,6 @@
 # Priority 4 — Runtime / Platform Checklist 01
 
-Status: complete
+Status: archived
 
 Source plan: `docs/plans/Priority4DependencyModernizationPlan.md`
 
