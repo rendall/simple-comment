@@ -55,6 +55,9 @@
     - Svelte / TS-in-Svelte handling
     - TypeScript rules
   - did not change rule intent, parser selection, or file globs during the cleanup
+- C04 migration-leftover disposition:
+  - `@eslint/eslintrc` required no removal in this repo copy because it was already absent from `package.json` and `yarn.lock`
+  - no active `FlatCompat` or compat bridge usage remains in the current flat-config path
 
 ## Prettier Alignment Disposition
 

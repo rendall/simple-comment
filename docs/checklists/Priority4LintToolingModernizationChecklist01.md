@@ -59,7 +59,7 @@ QC mode: Conformance QC
     - "Prefer the smallest reviewable modernization steps that preserve the current contributor entry points..." (Constraints)
     - "This slice should improve contributor trust in the repo's code-quality gate, not create a surprise ecosystem migration." (Intent)
 
-- [ ] C04 `[deps]` Remove `@eslint/eslintrc` from `package.json` and `yarn.lock` if repo search still shows no active usage in the current flat-config path, or document an explicit defer rationale in the validation notes if new evidence appears.
+- [x] C04 `[deps]` Remove `@eslint/eslintrc` from `package.json` and `yarn.lock` if repo search still shows no active usage in the current flat-config path, or document an explicit defer rationale in the validation notes if new evidence appears.
   - Depends on: C02.
   - Validation: T01, T03.
   - Trace:
