@@ -148,7 +148,7 @@ export const Action: ValueMap<typeof actionValues> = actionValues.reduce(
   (acc, value) => ({ ...acc, value }),
   {} as ValueMap<typeof actionValues>
 )
-export type ActionType = typeof Action[keyof typeof Action]
+export type ActionType = (typeof Action)[keyof typeof Action]
 
 export type Policy = {
   isGuestAccountAllowed: boolean // if true, a visitor can post anonymously using a guest account. if false, only authenticated users can comment.
