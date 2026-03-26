@@ -1506,8 +1506,9 @@ export class MongodbService extends AbstractDbService {
   authDELETE = (): Promise<Success> => {
     const pastDate = new Date(0).toUTCString()
     const COOKIE_HEADER = {
-      "Set-Cookie": `simple_comment_token=logged-out; path=/; SameSite=${this.isCrossSite ? "None; Secure; " : "Strict; "
-        }HttpOnly; Expires=${pastDate};`,
+      "Set-Cookie": `simple_comment_token=logged-out; path=/; SameSite=${
+        this.isCrossSite ? "None; Secure; " : "Strict; "
+      }HttpOnly; Expires=${pastDate};`,
     }
     return Promise.resolve({ ...success202LoggedOut, headers: COOKIE_HEADER })
   }
