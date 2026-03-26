@@ -7,9 +7,6 @@ export default defineConfig({
   viewportWidth: 1536,
 
   e2e: {
-    setupNodeEvents(on, config) {
-      return require("./cypress/plugins/index.js")(on, config)
-    },
     baseUrl: "http://localhost:5000",
     supportFile: "cypress/support/e2e.js",
     // baseUrl: "https://simple-comment.netlify.app",
