@@ -28,19 +28,81 @@ Out of scope:
 
 ## Atomic Checklist Items
 
+### Reviewer-Requested Explicit Export Contracts (C01-C03)
+
+To remove ambiguity, C01-C03 must include the following concrete exports:
+
+- C01 `auth-storage.ts` exports:
+  - `AUTH_STORAGE_KEYS`
+  - `readStoredSession`, `writeStoredSession`
+  - `readStoredLoginTab`, `writeStoredLoginTab`
+  - `clearStoredAuthState`
+- C02 `auth-workflows.ts` exports:
+  - `verifySessionWorkflow`, `loginWorkflow`, `signupWorkflow`
+  - `guestLoginWorkflow`, `logoutWorkflow`, `updateProfileWorkflow`
+  - `toAuthWorkflowError`
+- C03 `auth-controller.ts` exports:
+  - `createAuthController`
+  - returned controller contract includes `subscribe`, `getSnapshot`, `init`, `login`, `signup`, `guestLogin`, `logout`, `setTab`, `destroy` (and optional `requestLogin`)
+
+### C01-C03 File Contract Definitions (Quick Reference)
+
+This section is a reviewer-facing summary so contracts are visible without scanning each checklist item body.
+
+| Item | File | Required named exports |
+| --- | --- | --- |
+| C01 | `src/lib/auth/auth-storage.ts` | `AUTH_STORAGE_KEYS`, `readStoredSession`, `writeStoredSession`, `readStoredLoginTab`, `writeStoredLoginTab`, `clearStoredAuthState` |
+| C02 | `src/lib/auth/auth-workflows.ts` | `verifySessionWorkflow`, `loginWorkflow`, `signupWorkflow`, `guestLoginWorkflow`, `logoutWorkflow`, `updateProfileWorkflow`, `toAuthWorkflowError` |
+| C03 | `src/lib/auth/auth-controller.ts` | `createAuthController` (returns `AuthController` with `subscribe`, `getSnapshot`, `init`, `login`, `signup`, `guestLogin`, `logout`, `setTab`, `destroy`; optional `requestLogin`) |
+
 - [ ] C01 `[frontend]` Create `src/lib/auth/auth-storage.ts` to centralize `localStorage` reads/writes for login/session persistence keys currently embedded in `Login.svelte`.
   - Depends on: none.
+  - Contract + exports:
+    - `AUTH_STORAGE_KEYS`: readonly key map for `"simple_comment_user"` and `"simple_comment_login_tab"`.
+    - `type StoredAuthSession = { user: SimpleCommentUser | null }`.
+    - `type StoredLoginTab = "login" | "signup" | "guest"`.
+    - `readStoredSession(): StoredAuthSession | null` (never throws on malformed JSON; returns `null` fallback).
+    - `writeStoredSession(session: StoredAuthSession | null): void`.
+    - `readStoredLoginTab(): StoredLoginTab` (returns safe default, e.g. `"login"`).
+    - `writeStoredLoginTab(tab: StoredLoginTab): void`.
+    - `clearStoredAuthState(): void` (removes both keys).
   - Trace:
     - "it reads from and writes to `localStorage`" (Priority 5)
     - "That component currently does more than render login UI" (Priority 5)
 
 - [ ] C02 `[frontend]` Create `src/lib/auth/auth-workflows.ts` to orchestrate auth workflows by composing existing `src/apiClient.ts` functions (no duplicated transport/client logic) and normalizing workflow-level error/result handling currently mixed in component handlers.
   - Depends on: C01.
+  - Contract + exports:
+    - `type AuthWorkflowResult<T> = { ok: true; data: T } | { ok: false; error: string; code?: number }`.
+    - `verifySessionWorkflow(): Promise<AuthWorkflowResult<VerifiedUser>>`.
+    - `loginWorkflow(credentials: { username: string; password: string }): Promise<AuthWorkflowResult<LoginPayload>>`.
+    - `signupWorkflow(input: SignupPayload): Promise<AuthWorkflowResult<SignupPayload>>`.
+    - `guestLoginWorkflow(): Promise<AuthWorkflowResult<LoginPayload>>`.
+    - `logoutWorkflow(): Promise<AuthWorkflowResult<{ loggedOut: true }>>`.
+    - `updateProfileWorkflow(input: UpdateUserPayload): Promise<AuthWorkflowResult<UpdatedUser>>`.
+    - `toAuthWorkflowError(error: unknown): { error: string; code?: number }` (shared normalization helper).
+    - All workflow functions must call `src/apiClient.ts` exports rather than implementing transport logic directly.
   - Trace:
     - "it performs auth-related API calls such as verify, login, signup, guest creation, profile reads, profile updates, and logout" (Priority 5)
 
 - [ ] C03 `[frontend]` Create `src/lib/auth/auth-controller.ts` that centralizes (does not remove) `loginMachine` orchestration and transition/effect execution outside `Login.svelte`; keep `src/lib/login.xstate.ts` as the state-machine source of truth and expose typed commands (`init`, `login`, `signup`, `guestLogin`, `logout`, `setTab`) plus subscription API.
   - Depends on: C02.
+  - Contract + exports:
+    - `type AuthControllerSnapshot = { state: LoginMachineState; context: LoginMachineContext; uiTab: StoredLoginTab; message?: string; error?: string }`.
+    - `type AuthController = {`
+      - `subscribe(run: (snapshot: AuthControllerSnapshot) => void): () => void`
+      - `getSnapshot(): AuthControllerSnapshot`
+      - `init(): Promise<void>`
+      - `login(input: { username: string; password: string }): Promise<void>`
+      - `signup(input: SignupPayload): Promise<void>`
+      - `guestLogin(): Promise<void>`
+      - `logout(): Promise<void>`
+      - `setTab(tab: StoredLoginTab): void`
+      - `requestLogin?(reason?: string): void` (optional convenience intent used by non-login components)
+      - `destroy(): void`
+      - `}`
+    - `createAuthController(deps?: AuthControllerDeps): AuthController` as the module factory export.
+    - `createAuthController` owns machine interpreter lifecycle but does not redefine `loginMachine`.
   - Trace:
     - "it drives the `loginMachine` state machine" (Priority 5)
     - "clarify boundaries between view components, state machines, and auth/workflow logic" (Priority 5)
