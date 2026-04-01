@@ -239,7 +239,7 @@ This section is a reviewer-facing summary so contracts are visible without scann
     - "centralize auth-related shared-state publication behind one auth boundary" (In Scope)
     - "Auth workflow orchestration is moved into dedicated frontend modules that reuse existing ... auth-store surfaces instead of duplicating them." (Acceptance Criteria)
 
-- [ ] C05 `[frontend]` Refactor `src/components/Login.svelte` into render-focused container + child form components (`src/components/auth/LoginForm.svelte`, `SignupForm.svelte`, `GuestForm.svelte`) that emit intent payloads to the controller.
+- [x] C05 `[frontend]` Refactor `src/components/Login.svelte` into render-focused container + child form components (`src/components/auth/LoginForm.svelte`, `SignupForm.svelte`, `GuestForm.svelte`) that emit intent payloads to the controller.
   - Depends on: C03, C04.
   - Validated by: T02, T03.
   - Boundary rule:
