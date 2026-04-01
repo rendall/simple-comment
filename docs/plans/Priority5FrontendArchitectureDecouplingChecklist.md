@@ -152,7 +152,7 @@ This section is a reviewer-facing summary so contracts are visible without scann
 | --- | --- | --- |
 | C01 | `src/lib/auth/auth-storage.ts` | `AUTH_STORAGE_KEYS`, `readStoredSession`, `writeStoredSession`, `readStoredLoginTab`, `writeStoredLoginTab`, `clearStoredAuthState` |
 | C02 | `src/lib/auth/auth-workflows.ts` | `verifySessionWorkflow`, `loginWorkflow`, `signupWorkflow`, `guestLoginWorkflow`, `logoutWorkflow`, `updateProfileWorkflow`, `toAuthWorkflowError` |
-| C03 | `src/lib/auth/auth-controller.ts` | `createAuthController` (returns `AuthController` with `subscribe`, `getSnapshot`, `init`, `login`, `signup`, `guestLogin`, `logout`, `setTab`, `destroy`) |
+| C03 | `src/lib/auth/auth-controller.ts` | `createAuthController` (returns `AuthController` with `subscribe`, `getSnapshot`, `init`, `login`, `signup`, `guestLogin`, `logout`, `setTab`, `reset`, `destroy`) |
 
 - [x] C01 `[frontend]` Create `src/lib/auth/auth-storage.ts` to centralize `localStorage` reads/writes for login/session persistence keys currently embedded in `Login.svelte`.
   - Depends on: none.
@@ -193,20 +193,21 @@ This section is a reviewer-facing summary so contracts are visible without scann
     - "extract auth-related API orchestration currently embedded in `Login.svelte`" (In Scope)
     - "Auth workflow orchestration is moved into dedicated frontend modules that reuse existing `apiClient.ts`" (Acceptance Criteria)
 
-- [ ] C03 `[frontend]` Create `src/lib/auth/auth-controller.ts` that centralizes (does not remove) `loginMachine` orchestration and transition/effect execution outside `Login.svelte`; keep `src/lib/login.xstate.ts` as the state-machine source of truth and expose typed commands (`init`, `login`, `signup`, `guestLogin`, `logout`, `setTab`) plus subscription API.
+- [x] C03 `[frontend]` Create `src/lib/auth/auth-controller.ts` that centralizes (does not remove) `loginMachine` orchestration and transition/effect execution outside `Login.svelte`; keep `src/lib/login.xstate.ts` as the state-machine source of truth and expose typed commands (`init`, `login`, `signup`, `guestLogin`, `logout`, `setTab`) plus subscription API.
   - Depends on: C02.
   - Validated by: T01, T03.
   - Contract + exports:
-    - `type AuthControllerSnapshot = { state: LoginMachineState; context: LoginMachineContext; uiTab: StoredLoginTab; message?: string; error?: string }`.
+    - `type AuthControllerSnapshot = { state: LoginMachineState; context: LoginMachineContext; uiTab: StoredLoginTab; nextEvents: string[]; currentUser?: User; message?: string; error?: string }`.
     - `type AuthController = {`
       - `subscribe(run: (snapshot: AuthControllerSnapshot) => void): () => void`
       - `getSnapshot(): AuthControllerSnapshot`
       - `init(): Promise<void>`
       - `login(input: { username: string; password: string }): Promise<void>`
       - `signup(input: SignupPayload): Promise<void>`
-      - `guestLogin(): Promise<void>`
+      - `guestLogin(input: { name: string; email: string }): Promise<void>`
       - `logout(): Promise<void>`
       - `setTab(tab: StoredLoginTab): void`
+      - `reset(): void`
       - `destroy(): void`
       - `}`
     - `createAuthController(deps?: AuthControllerDeps): AuthController` as the module factory export.
