@@ -262,7 +262,9 @@ This section is a reviewer-facing summary so contracts are visible without scann
     - "centralize auth controller/runtime ownership outside `Login.svelte`" (In Scope)
     - "Auth controller/runtime ownership is scoped to the current `SimpleComment` instance and does not depend on `Login.svelte` being the lifecycle owner." (Acceptance Criteria)
 
-- [ ] C07 `[frontend]` Update `src/components/CommentInput.svelte` to consume the controller/store interface instead of relay login events (`loginIntent`) and ad-hoc cross-machine synchronization.
+- [ ] C07 `[frontend]` This item is superseded by `C09-C10`; keep this item as the original discovery point, but do not implement it directly.
+  - Original item text:
+    - Update `src/components/CommentInput.svelte` to consume the controller/store interface instead of relay login events (`loginIntent`) and ad-hoc cross-machine synchronization.
   - Depends on: C04, C06.
   - Validated by: T03.
   - Consumer-boundary rule:
@@ -284,6 +286,35 @@ This section is a reviewer-facing summary so contracts are visible without scann
     - "migrate `CommentInput.svelte` and `SelfDisplay.svelte` off relay-event coupling (`loginIntent` / `logoutIntent`) onto the new controller/store boundary" (In Scope)
     - "`CommentInput.svelte` and `SelfDisplay.svelte` no longer depend on legacy relay-event coupling as their primary auth coordination mechanism." (Acceptance Criteria)
 
+Implementation note:
+
+- C07 exposed a previously unmodeled requirement: removing `loginIntent` cleanly from `CommentInput.svelte` requires a small instance-scoped auth UI intent/state boundary. `C09-C10` capture that discovered requirement without redefining completed items.
+
+- [ ] C09 `[frontend]` Add instance-scoped auth UI intent/state to the existing auth controller/store boundary so components can request auth UI behavior without dispatching relay login events or directly calling `Login.svelte`.
+  - Depends on: C06.
+  - Validated by: T03.
+  - Contract:
+    - this item must keep auth UI intent/state scoped to the current `SimpleComment` instance
+    - this item must reuse the existing auth runtime/controller/store boundary rather than introducing a page-global singleton or a second event bus
+    - this item must publish only the narrow UI intent/state needed for cross-component coordination, such as preferred auth tab and auth request reason
+    - this item must not move login/signup/guest form field ownership out of `Login.svelte`
+    - if implementation reveals that the existing auth boundary cannot carry this UI intent/state cleanly, implementation must stop and document why before introducing a new shape
+  - Trace:
+    - "clarify boundaries between view components, state machines, and auth/workflow logic" (In Scope)
+    - "auth and identity flows are less dependent on component presence" (Success signals)
+
+- [ ] C10 `[frontend]` Update `src/components/CommentInput.svelte` to use the instance-scoped auth UI intent/state boundary from C09 instead of `loginIntent` relay dispatch when comment submission requires authentication.
+  - Depends on: C09.
+  - Validated by: T03.
+  - Consumer-boundary rule:
+    - this item must remove `dispatchableStore.dispatch("loginIntent")` usage from `CommentInput.svelte`
+    - this item must not make `CommentInput.svelte` own login/signup/guest form payload state
+    - this item must not directly call `Login.svelte`
+    - this item must preserve current user-visible behavior for comment submission and auth-required transitions
+  - Trace:
+    - "migrate `CommentInput.svelte` ... off relay-event coupling (`loginIntent` / `logoutIntent`) onto the new controller/store boundary" (In Scope)
+    - "`CommentInput.svelte` ... no longer depend on legacy relay-event coupling as their primary auth coordination mechanism." (Acceptance Criteria)
+
 - [ ] T01 `[validation]` Add unit tests for `auth-controller` transition/effect mapping (verify/login/signup/guest/logout/error) with mocked `auth-workflows` and `auth-storage`.
   - Depends on: C03.
   - Trace:
@@ -297,7 +328,7 @@ This section is a reviewer-facing summary so contracts are visible without scann
     - "Integration evidence: Add integration coverage proving auth lifecycle works when `Login.svelte` is not mounted at startup, while interactive login still works once `Login.svelte` is rendered." (Validation Strategy)
 
 - [ ] T03 `[validation]` Run focused frontend validation and auth smoke coverage (login/signup/guest/logout happy-path + one error-path), then record parity notes against current behavior.
-  - Depends on: C07, C08, T01, T02.
+  - Depends on: C08, C09, C10, T01, T02.
   - Validation guardrail:
     - classify failing auth-related tests against `P01`-`P10` before changing code or tests
     - keep existing Cypress auth coverage green unless a parity-matrix-backed test update is explicitly documented in validation notes
@@ -328,7 +359,7 @@ This section is a reviewer-facing summary so contracts are visible without scann
 ### Slice D
 
 - Goal: decouple consumer components from relay-event coupling with incremental, lower-risk migration.
-- Items: C07, C08.
+- Items: C07, C08, C09, C10.
 - Type: behavior.
 
 ### Slice E
