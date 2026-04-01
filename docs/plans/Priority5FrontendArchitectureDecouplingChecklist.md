@@ -315,6 +315,32 @@ Implementation note:
     - "migrate `CommentInput.svelte` ... off relay-event coupling (`loginIntent` / `logoutIntent`) onto the new controller/store boundary" (In Scope)
     - "`CommentInput.svelte` ... no longer depend on legacy relay-event coupling as their primary auth coordination mechanism." (Acceptance Criteria)
 
+- T03 exposed concrete regressions in the new auth-state publication shape: `CommentInput.svelte` was no longer consuming the selected auth tab correctly, and `SelfDisplay.svelte` was no longer consuming logout-capable auth state correctly. `C11-C12` capture these bounded regression fixes without reopening earlier completed items.
+
+- [ ] C11 `[frontend]` Restore correct auth tab consumption in `src/components/CommentInput.svelte` so comment-submit auth requests continue to honor the currently selected login/signup/guest mode under the new controller/store publication shape.
+  - Depends on: C10.
+  - Validated by: T03.
+  - Regression-fix rule:
+    - this item must fix only the discovered auth-tab consumption regression
+    - this item must use the existing published auth state/store shape rather than introducing a new relay path or parallel selector state
+    - this item must preserve the current `C09-C10` controller/request-auth-ui boundary
+    - if the published auth snapshot cannot support correct tab consumption without broader redesign, implementation must stop and document why before changing the boundary
+  - Trace:
+    - "migrate `CommentInput.svelte` ... off relay-event coupling (`loginIntent` / `logoutIntent`) onto the new controller/store boundary" (In Scope)
+    - "`CommentInput.svelte` ... no longer depend on legacy relay-event coupling as their primary auth coordination mechanism." (Acceptance Criteria)
+
+- [ ] C12 `[frontend]` Restore correct logout-capable auth state consumption in `src/components/SelfDisplay.svelte` so authenticated self-display behavior and logout affordance remain intact under the new controller/store publication shape.
+  - Depends on: C08.
+  - Validated by: T03.
+  - Regression-fix rule:
+    - this item must fix only the discovered `SelfDisplay.svelte` auth-state consumption regression
+    - this item must use the existing published auth state/store shape rather than reintroducing relay logout events or a new state channel
+    - this item must preserve the current controller-driven logout path
+    - if the published auth snapshot cannot support correct logout-capable display behavior without broader redesign, implementation must stop and document why before changing the boundary
+  - Trace:
+    - "migrate `SelfDisplay.svelte` off relay-event/logout coupling and onto the new auth controller/runtime boundary so logout is controller-driven rather than event-bus-driven" (In Scope)
+    - "`SelfDisplay.svelte` consumes the controller/store boundary rather than relay logout events." (Acceptance Criteria)
+
 - [x] T01 `[validation]` Add unit tests for `auth-controller` transition/effect mapping (verify/login/signup/guest/logout/error) with mocked `auth-workflows` and `auth-storage`.
   - Depends on: C03.
   - Trace:
@@ -329,7 +355,7 @@ Implementation note:
     - "Integration evidence: Add integration coverage proving auth lifecycle works when `Login.svelte` is not mounted at startup, while interactive login still works once `Login.svelte` is rendered." (Validation Strategy)
 
 - [ ] T03 `[validation]` Run focused frontend validation and auth smoke coverage (login/signup/guest/logout happy-path + one error-path), then record parity notes against current behavior.
-  - Depends on: C08, C09, C10, T01, T02.
+  - Depends on: C08, C09, C10, C11, C12, T01, T02.
   - Validation guardrail:
     - classify failing auth-related tests against `P01`-`P10` before changing code or tests
     - keep existing Cypress auth coverage green unless a parity-matrix-backed test update is explicitly documented in validation notes
@@ -360,7 +386,7 @@ Implementation note:
 ### Slice D
 
 - Goal: decouple consumer components from relay-event coupling with incremental, lower-risk migration.
-- Items: C07, C08, C09, C10.
+- Items: C07, C08, C09, C10, C11, C12.
 - Type: behavior.
 
 ### Slice E
