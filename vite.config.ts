@@ -56,6 +56,10 @@ export default defineConfig(async ({ mode }) => {
         input: {
           index: path.resolve(viteRoot, "index.html"),
           icebreakers: path.resolve(viteRoot, "icebreakers/index.html"),
+          "auth-runtime-without-login-harness": path.resolve(
+            viteRoot,
+            "cypress/auth-runtime-without-login-harness.ts"
+          ),
           "simple-comment": path.resolve(__dirname, "src/simple-comment.ts"),
           "simple-comment-icebreakers": path.resolve(
             __dirname,
