@@ -102,6 +102,29 @@ Implementation guardrail for Cypress work:
 - If selector changes become necessary to preserve a parity contract, document the reason in validation notes rather than silently rewriting tests “to get green.”
 - If additional coverage is needed for `P02`, `P07`, or `P08`, add it only as part of the approved validation scope for this checklist.
 
+## Explicit Duplication Guardrails
+
+These existing systems are at elevated risk of accidental duplication during Priority 5. Implementation must extract from or reuse them; it must not recreate them under new names.
+
+- `src/components/Login.svelte`
+  - implementation must treat this file as the extraction source for current auth orchestration, persistence wiring, error mapping, and guest-auth sequencing
+  - if a planned module cannot extract or relocate one of these concerns cleanly, implementation must stop and explain rather than reimplementing the logic from scratch
+- `src/lib/login.xstate.ts`
+  - implementation must use this file as the auth state-machine source of truth
+  - implementation must not create a second controller-owned state model that duplicates machine semantics
+- `src/lib/svelte-stores.ts`
+  - implementation must use, wrap, relocate, or re-export the existing auth-related stores from this module
+  - implementation must not create a parallel auth store family beside `currentUserStore`, `loginStateStore`, and `dispatchableStore`
+- `src/frontend-utilities.ts` and `src/lib/shared-utilities.ts`
+  - implementation must not introduce a third validation layer for auth/user-id/email/display-name rules
+  - implementation must extract, unify, or reuse the existing validation helpers and must stop and explain if the existing helpers cannot be reused safely
+- `src/simple-comment.ts` and `src/components/SimpleComment.svelte`
+  - implementation must integrate runtime ownership with the existing widget bootstrap and lifecycle boundaries
+  - implementation must not introduce a second bootstrap or mount path for auth
+- `src/apiClient.ts`
+  - implementation must use the existing auth-facing client functions for transport and response handling
+  - implementation must not duplicate request sequencing, response parsing, or auth endpoint semantics in workflow/controller code
+
 ## Atomic Checklist Items
 
 ### Reviewer-Requested Explicit Export Contracts (C01-C03)
@@ -133,6 +156,7 @@ This section is a reviewer-facing summary so contracts are visible without scann
 
 - [ ] C01 `[frontend]` Create `src/lib/auth/auth-storage.ts` to centralize `localStorage` reads/writes for login/session persistence keys currently embedded in `Login.svelte`.
   - Depends on: none.
+  - Validated by: T01, T03.
   - Contract + exports:
     - `AUTH_STORAGE_KEYS`: readonly key map for `"simple_comment_user"` and `"simple_comment_login_tab"`.
     - `type StoredAuthSession = { user: SimpleCommentUser | null }`.
@@ -144,11 +168,12 @@ This section is a reviewer-facing summary so contracts are visible without scann
     - `clearStoredAuthState(): void` (removes both keys).
     - Existing persisted values must remain readable; this item does not introduce a storage schema migration.
   - Trace:
-    - "it reads from and writes to `localStorage`" (Priority 5)
-    - "That component currently does more than render login UI" (Priority 5)
+    - "extract login/session persistence currently embedded in `Login.svelte`" (In Scope)
+    - "`Login.svelte` no longer owns auth persistence" (Acceptance Criteria)
 
 - [ ] C02 `[frontend]` Create `src/lib/auth/auth-workflows.ts` to orchestrate auth workflows by composing existing `src/apiClient.ts` functions (no duplicated transport/client logic) and normalizing workflow-level error/result handling currently mixed in component handlers.
   - Depends on: C01.
+  - Validated by: T01, T03.
   - Contract + exports:
     - `type AuthWorkflowResult<T> = { ok: true; data: T } | { ok: false; error: string; code?: number }`.
     - `verifySessionWorkflow(): Promise<AuthWorkflowResult<VerifiedUser>>`.
@@ -165,10 +190,12 @@ This section is a reviewer-facing summary so contracts are visible without scann
     - Error normalization rule:
       - preserve current user-visible behavior by normalizing transport/API errors into existing message semantics rather than inventing new UX wording in this checklist
   - Trace:
-    - "it performs auth-related API calls such as verify, login, signup, guest creation, profile reads, profile updates, and logout" (Priority 5)
+    - "extract auth-related API orchestration currently embedded in `Login.svelte`" (In Scope)
+    - "Auth workflow orchestration is moved into dedicated frontend modules that reuse existing `apiClient.ts`" (Acceptance Criteria)
 
 - [ ] C03 `[frontend]` Create `src/lib/auth/auth-controller.ts` that centralizes (does not remove) `loginMachine` orchestration and transition/effect execution outside `Login.svelte`; keep `src/lib/login.xstate.ts` as the state-machine source of truth and expose typed commands (`init`, `login`, `signup`, `guestLogin`, `logout`, `setTab`) plus subscription API.
   - Depends on: C02.
+  - Validated by: T01, T03.
   - Contract + exports:
     - `type AuthControllerSnapshot = { state: LoginMachineState; context: LoginMachineContext; uiTab: StoredLoginTab; message?: string; error?: string }`.
     - `type AuthController = {`
@@ -194,31 +221,36 @@ This section is a reviewer-facing summary so contracts are visible without scann
       - `init()` must be safe to call once during startup and safe against duplicate startup invocation
       - command methods must preserve current behavior if called while another auth workflow is active; if current behavior is ambiguous, stop and document the boundary before broadening semantics
   - Trace:
-    - "it drives the `loginMachine` state machine" (Priority 5)
-    - "clarify boundaries between view components, state machines, and auth/workflow logic" (Priority 5)
+    - "`src/lib/login.xstate.ts` must remain the state-machine source of truth for this phase." (Constraints)
+    - "clarify boundaries between view components, state machines, and auth/workflow logic" (In Scope)
 
 - [ ] C04 `[frontend]` Add `src/lib/auth/auth-stores.ts` and migrate login/session shared-state publication out of `Login.svelte` reactive blocks into controller-owned store updates.
   - Depends on: C03.
+  - Validated by: T01, T03.
   - Contract:
     - this file is the publication boundary for auth-related shared state
     - this file must become the single place where controller-owned auth state is published for consumers
-    - this item must reuse, wrap, relocate, or re-export the existing auth-related stores from `src/lib/svelte-stores.ts` where feasible
+    - this item must reuse, wrap, relocate, or re-export the existing auth-related stores from `src/lib/svelte-stores.ts`
     - this item must not create a second parallel auth store family that duplicates `currentUserStore`, `loginStateStore`, or `dispatchableStore` semantics without retiring or folding those semantics into the new boundary in the same slice
+    - if implementation reveals that reuse or relocation of the existing auth-related stores is not viable, implementation must stop and document why before introducing a replacement shape
     - this item does not introduce a new page-global auth singleton
   - Trace:
-    - "it subscribes to and updates shared Svelte stores such as `currentUserStore`, `dispatchableStore`, and `loginStateStore`" (Priority 5)
+    - "centralize auth-related shared-state publication behind one auth boundary" (In Scope)
+    - "Auth workflow orchestration is moved into dedicated frontend modules that reuse existing ... auth-store surfaces instead of duplicating them." (Acceptance Criteria)
 
 - [ ] C05 `[frontend]` Refactor `src/components/Login.svelte` into render-focused container + child form components (`src/components/auth/LoginForm.svelte`, `SignupForm.svelte`, `GuestForm.svelte`) that emit intent payloads to the controller.
   - Depends on: C03, C04.
+  - Validated by: T02, T03.
   - Boundary rule:
     - `Login.svelte` may keep view-local rendering concerns such as tab selection presentation, helper text presentation, and wiring child-form submit intents to controller commands
     - `Login.svelte` should no longer own storage reads/writes, direct auth API orchestration, or machine-interpreter lifecycle
   - Trace:
-    - "That component currently does more than render login UI" (Priority 5)
-    - inline TODO: login functionality should move away from `Login.svelte`
+    - "Reduce auth/login coupling to component presence by moving auth persistence, workflow orchestration, and shared-state publication out of `Login.svelte`" (Goal)
+    - "`Login.svelte` no longer owns auth persistence, direct auth API orchestration, or auth machine lifecycle." (Acceptance Criteria)
 
 - [ ] C06 `[frontend]` Add `src/lib/auth/auth-runtime.ts` and wire it into `src/components/SimpleComment.svelte` lifecycle so auth verification/session lifecycle runs independently of `Login.svelte` visibility.
   - Depends on: C03, C04.
+  - Validated by: T02, T03.
   - Runtime rule:
     - runtime ownership is scoped to the current `SimpleComment` instance
     - the runtime lives in plain TypeScript rather than a non-visual Svelte component
@@ -226,40 +258,42 @@ This section is a reviewer-facing summary so contracts are visible without scann
     - this item must integrate with the existing widget lifecycle in `src/simple-comment.ts` and `src/components/SimpleComment.svelte` rather than creating a second bootstrap or mount path
     - this item must not duplicate app bootstrap, widget initialization, or component mount responsibilities that already exist outside auth
   - Trace:
-    - "auth/session behavior is coupled to component presence and lifecycle" (Priority 5)
-    - success target: "auth and identity flows are less dependent on component presence" (Priority 5)
+    - "centralize auth controller/runtime ownership outside `Login.svelte`" (In Scope)
+    - "Auth controller/runtime ownership is scoped to the current `SimpleComment` instance and does not depend on `Login.svelte` being the lifecycle owner." (Acceptance Criteria)
 
 - [ ] C07 `[frontend]` Update `src/components/CommentInput.svelte` to consume the controller/store interface instead of relay login events (`loginIntent`) and ad-hoc cross-machine synchronization.
   - Depends on: C04, C06.
+  - Validated by: T03.
   - Consumer-boundary rule:
     - consumer components should read auth state from the published auth store/snapshot boundary
     - consumer components may call narrow controller commands only when they need to trigger auth behavior
     - this item should not recreate relay-event coupling under a different name
   - Trace:
-    - "clarify boundaries between view components, state machines, and auth/workflow logic" (Priority 5)
-    - success target: "login-related state, side effects, and rendering responsibilities are easier to explain as separate concerns" (Priority 5)
+    - "migrate `CommentInput.svelte` ... off relay-event coupling (`loginIntent` / `logoutIntent`) onto the new controller/store boundary" (In Scope)
+    - "`CommentInput.svelte` ... no longer depend on legacy relay-event coupling as their primary auth coordination mechanism." (Acceptance Criteria)
 
 - [ ] C08 `[frontend]` Update `src/components/SelfDisplay.svelte` to consume the controller/store interface instead of relay logout events (`logoutIntent`) and direct dependency on legacy login-state relay semantics.
   - Depends on: C04, C06.
+  - Validated by: T03.
   - Consumer-boundary rule:
     - consumer components should read auth state from the published auth store/snapshot boundary
     - consumer components may call narrow controller commands only when they need to trigger auth behavior
     - this item should not recreate relay-event coupling under a different name
   - Trace:
-    - "clarify boundaries between view components, state machines, and auth/workflow logic" (Priority 5)
-    - success target: "login-related state, side effects, and rendering responsibilities are easier to explain as separate concerns" (Priority 5)
+    - "migrate `CommentInput.svelte` and `SelfDisplay.svelte` off relay-event coupling (`loginIntent` / `logoutIntent`) onto the new controller/store boundary" (In Scope)
+    - "`CommentInput.svelte` and `SelfDisplay.svelte` no longer depend on legacy relay-event coupling as their primary auth coordination mechanism." (Acceptance Criteria)
 
 - [ ] T01 `[validation]` Add unit tests for `auth-controller` transition/effect mapping (verify/login/signup/guest/logout/error) with mocked `auth-workflows` and `auth-storage`.
   - Depends on: C03.
   - Trace:
-    - success target: "UI modules are easier to test at the right boundary" (Priority 5)
+    - "Unit evidence: Add controller-focused tests that cover verify/login/signup/guest/logout/error transition and effect mapping." (Validation Strategy)
 
 - [ ] T02 `[validation]` Add integration tests proving auth lifecycle works when `Login.svelte` is not mounted at startup (runtime mounted only), while interactive login still works once `Login.svelte` is rendered.
   - Depends on: C05, C06.
   - Harness rule:
     - test the plain runtime/controller lifecycle boundary explicitly rather than relying only on full-page behavior
   - Trace:
-    - success target: "auth and identity flows are less dependent on component presence" (Priority 5)
+    - "Integration evidence: Add integration coverage proving auth lifecycle works when `Login.svelte` is not mounted at startup, while interactive login still works once `Login.svelte` is rendered." (Validation Strategy)
 
 - [ ] T03 `[validation]` Run focused frontend validation and auth smoke coverage (login/signup/guest/logout happy-path + one error-path), then record parity notes against current behavior.
   - Depends on: C07, C08, T01, T02.
@@ -267,7 +301,8 @@ This section is a reviewer-facing summary so contracts are visible without scann
     - classify failing auth-related tests against `P01`-`P10` before changing code or tests
     - keep existing Cypress auth coverage green unless a parity-matrix-backed test update is explicitly documented in validation notes
   - Trace:
-    - risk note: "it carries a higher risk of accidental behavioral drift than earlier priorities" (Priority 5)
+    - "Smoke evidence: Run focused frontend validation covering login/signup/guest/logout happy-path flows plus at least one error path." (Validation Strategy)
+    - "Contract/parity evidence: Preserve and use the Priority 5 parity matrix (`P01-P10`) as the behavioral source of truth during implementation." (Validation Strategy)
 
 ## Behavior Slices
 
