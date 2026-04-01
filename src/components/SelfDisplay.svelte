@@ -1,7 +1,9 @@
 <script lang="ts">
+  import { onDestroy } from "svelte"
   import SkeletonText from "./low-level/SkeletonText.svelte"
   import type { User } from "../lib/simple-comment-types"
-  import { dispatchableStore, loginStateStore } from "../lib/svelte-stores"
+  import { loginStateStore } from "../lib/auth/auth-stores"
+  import { useAuthRuntime } from "../lib/auth/auth-runtime"
   import { fade } from "svelte/transition"
   import { idIconDataUrl } from "../frontend-utilities"
 
@@ -11,7 +13,9 @@
   let loginStateNextEvents
   let isProcessing: boolean
 
-  loginStateStore.subscribe(state => {
+  const authController = useAuthRuntime().controller
+
+  const unsubscribeLoginState = loginStateStore.subscribe(state => {
     const { state: stateValue, nextEvents, select } = state
     if (select !== undefined) return
     loginStateValue = stateValue
@@ -27,8 +31,12 @@
   }
   const onLogoutClick = (e: Event) => {
     e.preventDefault()
-    dispatchableStore.dispatch("logoutIntent")
+    void authController.logout()
   }
+
+  onDestroy(() => {
+    unsubscribeLoginState()
+  })
 </script>
 
 <div
