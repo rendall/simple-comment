@@ -273,7 +273,7 @@ This section is a reviewer-facing summary so contracts are visible without scann
     - "migrate `CommentInput.svelte` ... off relay-event coupling (`loginIntent` / `logoutIntent`) onto the new controller/store boundary" (In Scope)
     - "`CommentInput.svelte` ... no longer depend on legacy relay-event coupling as their primary auth coordination mechanism." (Acceptance Criteria)
 
-- [ ] C08 `[frontend]` Update `src/components/SelfDisplay.svelte` to consume the controller/store interface instead of relay logout events (`logoutIntent`) and direct dependency on legacy login-state relay semantics.
+- [x] C08 `[frontend]` Update `src/components/SelfDisplay.svelte` to consume the controller/store interface instead of relay logout events (`logoutIntent`) and direct dependency on legacy login-state relay semantics.
   - Depends on: C04, C06.
   - Validated by: T03.
   - Consumer-boundary rule:
