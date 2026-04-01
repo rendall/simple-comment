@@ -2,7 +2,6 @@ import { blockiesMemoized } from "./lib/blockies"
 import type {
   ServerResponse,
   ServerResponseSuccess,
-  UserId,
   ValidationResult,
 } from "./lib/simple-comment-types"
 
@@ -113,37 +112,6 @@ export const formatUserId = (displayName: string) => {
     .replace(/\s+/g, "-")
     .replace(/[^a-z0-9-]/g, (match: string) => transliterate(match))
     .replace(/[^a-z0-9-]/g, "-")
-}
-
-export const validateUserId = (userId: UserId): ValidationResult => {
-  if (userId.length === 0) {
-    return { isValid: false, reason: "User handle is required." }
-  }
-
-  const isValid = /^[a-z0-9-]*$/.test(userId)
-  if (!isValid) {
-    return {
-      isValid: false,
-      reason:
-        "User handle is not valid. Please use only lowercase letters (a-z), numbers (0-9), and hyphens (-).",
-    }
-  }
-
-  const isTooShort = userId.length < 4
-  if (isTooShort) {
-    return {
-      isValid: false,
-      reason:
-        "User handle is too short. This id must be at least 4 characters.",
-    }
-  }
-
-  const isTooLong = userId.length > 30
-  if (isTooLong) {
-    return { isValid: false, reason: "User handle is too long." }
-  }
-
-  return { isValid: true }
 }
 
 export const validatePassword = (password: string): ValidationResult => {
