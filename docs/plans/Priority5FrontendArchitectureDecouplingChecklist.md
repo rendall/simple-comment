@@ -290,7 +290,7 @@ Implementation note:
 
 - C07 exposed a previously unmodeled requirement: removing `loginIntent` cleanly from `CommentInput.svelte` requires a small instance-scoped auth UI intent/state boundary. `C09-C10` capture that discovered requirement without redefining completed items.
 
-- [ ] C09 `[frontend]` Add instance-scoped auth UI intent/state to the existing auth controller/store boundary so components can request auth UI behavior without dispatching relay login events or directly calling `Login.svelte`.
+- [x] C09 `[frontend]` Add instance-scoped auth UI intent/state to the existing auth controller/store boundary so components can request auth UI behavior without dispatching relay login events or directly calling `Login.svelte`.
   - Depends on: C06.
   - Validated by: T03.
   - Contract:
