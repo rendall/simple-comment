@@ -225,7 +225,7 @@ This section is a reviewer-facing summary so contracts are visible without scann
     - "`src/lib/login.xstate.ts` must remain the state-machine source of truth for this phase." (Constraints)
     - "clarify boundaries between view components, state machines, and auth/workflow logic" (In Scope)
 
-- [ ] C04 `[frontend]` Add `src/lib/auth/auth-stores.ts` and migrate login/session shared-state publication out of `Login.svelte` reactive blocks into controller-owned store updates.
+- [x] C04 `[frontend]` Add `src/lib/auth/auth-stores.ts` and migrate login/session shared-state publication out of `Login.svelte` reactive blocks into controller-owned store updates.
   - Depends on: C03.
   - Validated by: T01, T03.
   - Contract:

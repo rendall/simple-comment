@@ -14,11 +14,7 @@
     formatUserId,
   } from "../frontend-utilities"
   import InputField from "./low-level/InputField.svelte"
-  import {
-    currentUserStore,
-    dispatchableStore,
-    loginStateStore,
-  } from "../lib/svelte-stores"
+  import { dispatchableStore } from "../lib/auth/auth-stores"
   import {
     readStoredLoginTab,
     readStoredSession,
@@ -472,17 +468,10 @@
   })
 
   onDestroy(() => {
-    currentUserStore.set(self)
     unsubscribeAuthController()
     authController.destroy()
     unsubscribeDispatchableStore()
   })
-
-  $: currentUserStore.set(self)
-
-  $: loginStateStore.set({ state: authStateValue, nextEvents })
-
-  $: loginStateStore.set({ select: selectedIndex })
 
   $: {
     if (userId.length < 3 && !userIdStatus)
