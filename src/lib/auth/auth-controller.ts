@@ -240,6 +240,10 @@ export const createAuthController = (
     async signup(input) {
       await init()
       pendingSignupInput = input
+      pendingLoginInput = {
+        username: input.id,
+        password: input.password,
+      }
       if (sendResetIfNeeded()) return
       service.send("SIGNUP")
     },
