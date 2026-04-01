@@ -37,6 +37,12 @@
     loginStateStore,
   } from "../lib/svelte-stores"
   import {
+    readStoredLoginTab,
+    readStoredSession,
+    writeStoredLoginTab,
+    writeStoredSession,
+  } from "../lib/auth/auth-storage"
+  import {
     isGuestId,
     isValidResult,
     joinValidations,
@@ -87,11 +93,23 @@
   let userPasswordMessage = undefined
   let userPasswordStatus = undefined
 
-  let selectedIndex = isNaN(
-    parseInt(localStorage.getItem("simple_comment_login_tab"))
-  )
-    ? LoginTab.guest
-    : parseInt(localStorage.getItem("simple_comment_login_tab"))
+  const storedLoginTabToIndex = (storedLoginTab: "login" | "signup" | "guest") =>
+    ({
+      guest: LoginTab.guest,
+      login: LoginTab.login,
+      signup: LoginTab.signup,
+    })[storedLoginTab]
+
+  const loginTabToStoredLoginTab = (
+    tab: LoginTab
+  ): "login" | "signup" | "guest" =>
+    ({
+      [LoginTab.guest]: "guest",
+      [LoginTab.login]: "login",
+      [LoginTab.signup]: "signup",
+    })[tab]
+
+  let selectedIndex = storedLoginTabToIndex(readStoredLoginTab())
 
   let lastIdChecked
 
@@ -162,7 +180,7 @@
       verifySelf()
         .then((user: AdminSafeUser) => {
           self = user
-          localStorage.setItem("simple_comment_user", JSON.stringify(user))
+          writeStoredSession({ user })
           send({ type: "SUCCESS" })
         })
         .catch(error => {
@@ -467,18 +485,10 @@
       return
     }
 
-    const storedItem: string | null = localStorage.getItem(
-      "simple_comment_user"
-    )
-
-    const storedUser = storedItem
-      ? (JSON.parse(storedItem) as {
-          id?: string
-          name?: string
-          email?: string
-          challenge?: string
-        })
-      : { id: undefined, challenge: undefined }
+    const storedUser = readStoredSession()?.user ?? {
+      id: undefined,
+      challenge: undefined,
+    }
 
     const {
       id: storedId,
@@ -604,7 +614,7 @@
     e.preventDefault()
     updateStatusDisplay()
     selectedIndex = tab
-    localStorage.setItem("simple_comment_login_tab", selectedIndex.toString())
+    writeStoredLoginTab(loginTabToStoredLoginTab(selectedIndex))
     switch (selectedIndex) {
       case LoginTab.signup: {
         const hasDisplayName = displayName && displayName.trim().length > 0
@@ -624,16 +634,8 @@
 
   onMount(() => {
     self = currentUser
-    const storedItem: string | null = localStorage.getItem(
-      "simple_comment_user"
-    )
-    if (storedItem) {
-      const storedUser = JSON.parse(storedItem) as {
-        id?: string
-        name?: string
-        email?: string
-      }
-
+    const storedUser = readStoredSession()?.user
+    if (storedUser) {
       const { id, name, email } = storedUser
 
       if (id && !isGuestId(id)) userId = id
