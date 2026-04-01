@@ -16,8 +16,7 @@
   const authController = useAuthRuntime().controller
 
   const unsubscribeLoginState = loginStateStore.subscribe(state => {
-    const { state: stateValue, nextEvents, select } = state
-    if (select !== undefined) return
+    const { state: stateValue, nextEvents } = state
     loginStateValue = stateValue
     loginStateNextEvents = nextEvents
   })

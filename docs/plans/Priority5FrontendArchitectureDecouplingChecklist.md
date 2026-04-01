@@ -329,7 +329,7 @@ Implementation note:
     - "migrate `CommentInput.svelte` ... off relay-event coupling (`loginIntent` / `logoutIntent`) onto the new controller/store boundary" (In Scope)
     - "`CommentInput.svelte` ... no longer depend on legacy relay-event coupling as their primary auth coordination mechanism." (Acceptance Criteria)
 
-- [ ] C12 `[frontend]` Restore correct logout-capable auth state consumption in `src/components/SelfDisplay.svelte` so authenticated self-display behavior and logout affordance remain intact under the new controller/store publication shape.
+- [x] C12 `[frontend]` Restore correct logout-capable auth state consumption in `src/components/SelfDisplay.svelte` so authenticated self-display behavior and logout affordance remain intact under the new controller/store publication shape.
   - Depends on: C08.
   - Validated by: T03.
   - Regression-fix rule:
