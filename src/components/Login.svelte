@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { fly } from "svelte/transition"
   import type {
     User,
     UserId,
@@ -13,7 +12,6 @@
     validatePassword,
     formatUserId,
   } from "../frontend-utilities"
-  import InputField from "./low-level/InputField.svelte"
   import { dispatchableStore } from "../lib/auth/auth-stores"
   import {
     readStoredLoginTab,
@@ -28,9 +26,9 @@
     validateUserId,
   } from "../lib/shared-utilities"
   import { onDestroy, onMount } from "svelte"
-  import PasswordInput from "./low-level/PasswordInput.svelte"
-  import PasswordTwinInput from "./low-level/PasswordTwinInput.svelte"
-  import Avatar from "./low-level/Avatar.svelte"
+  import GuestForm from "./auth/GuestForm.svelte"
+  import LoginForm from "./auth/LoginForm.svelte"
+  import SignupForm from "./auth/SignupForm.svelte"
   import {
     createAuthController,
   } from "../lib/auth/auth-controller"
@@ -116,8 +114,7 @@
   //TODO: Move the log in *functionality* away from the Login.svelte *component*. Currently the Login component must be on the page for login functionality to occur.
 
   /** Note that usually these onClick events will not be used. Rather, "loginIntent" will be sent.*/
-  const onGuestClick = async (e: Event) => {
-    e.preventDefault()
+  const onGuestClick = async () => {
     updateStatusDisplay()
 
     const validations = [
@@ -134,8 +131,7 @@
     else updateStatusDisplay(result.reason, true)
   }
 
-  const onLoginClick = async (e: Event) => {
-    e.preventDefault()
+  const onLoginClick = async () => {
     updateStatusDisplay()
 
     const result = checkLoginValid()
@@ -148,8 +144,7 @@
     else updateStatusDisplay(result.reason, true)
   }
 
-  const onSignupClick = async (e: Event) => {
-    e.preventDefault()
+  const onSignupClick = async () => {
     updateStatusDisplay()
 
     const result = joinValidations([
@@ -504,158 +499,63 @@
 
     <div class="form-container">
       {#if selectedIndex === LoginTab.guest}
-        <form
-          class="guest-login-form login-form"
-          id="guest-login-form"
-          in:fly={{ y: 0, duration: 250 }}
+        <GuestForm
+          bind:displayName
+          bind:userEmail
+          {displayNameHelperText}
+          {displayNameStatus}
+          {userEmailHelperText}
+          {userEmailStatus}
+          {statusMessage}
+          {isError}
+          {onGuestDisplayNameInput}
+          {checkDisplayNameValid}
+          {onUserEmailInput}
+          {checkUserEmailValid}
           on:submit={onGuestClick}
-        >
-          {#if statusMessage && statusMessage.length}
-            <p
-              id="status-display"
-              class="call-to-action"
-              class:is-error={isError}
-            >
-              {statusMessage}
-            </p>
-          {:else}
-            <p class="call-to-action">
-              To comment as a guest, enter a display name and email below.
-            </p>
-          {/if}
-
-          <InputField
-            bind:value={displayName}
-            helperText={displayNameHelperText}
-            id="guest-name"
-            labelText="Display Name"
-            onInput={onGuestDisplayNameInput}
-            onBlur={checkDisplayNameValid}
-            status={displayNameStatus}
-            required
-          />
-          <InputField
-            bind:value={userEmail}
-            helperText={userEmailHelperText}
-            id="guest-email"
-            labelText="Email"
-            onInput={onUserEmailInput}
-            onBlur={checkUserEmailValid}
-            status={userEmailStatus}
-            required
-          />
-        </form>
+        />
       {/if}
 
       {#if selectedIndex === LoginTab.login}
-        <form
-          class="user-login-form login-form"
-          id="user-login-form"
-          in:fly={{ y: 0, duration: 250 }}
+        <LoginForm
+          bind:userId
+          bind:userPassword
+          {userIdStatus}
+          {loginUserIdHelperText}
+          {userPasswordMessage}
+          {userPasswordStatus}
+          {statusMessage}
+          {isError}
           on:submit={onLoginClick}
-        >
-          {#if statusMessage && statusMessage.length}
-            <p
-              id="status-display"
-              class="call-to-action"
-              class:is-error={isError}
-            >
-              {statusMessage}
-            </p>
-          {:else}
-            <p class="call-to-action">
-              If you have an account, this is where you enter your user handle
-              and password to log in.
-            </p>
-          {/if}
-          <InputField
-            id="login-user-id"
-            labelText="User handle"
-            helperText={loginUserIdHelperText}
-            status={userIdStatus}
-            bind:value={userId}
-            required
-          >
-            <Avatar {userId} status={userIdStatus} slot="icon" />
-          </InputField>
-
-          <PasswordInput
-            labelText="Password"
-            helperText={userPasswordMessage}
-            status={userPasswordStatus}
-            id="login-password"
-            bind:value={userPassword}
-            required
-          />
-        </form>
+        />
       {/if}
 
       {#if selectedIndex === LoginTab.signup}
-        <form
-          class="signup-form login-form"
-          id="signup-form"
-          in:fly={{ y: 0, duration: 250 }}
+        <SignupForm
+          bind:displayName
+          bind:userId
+          bind:userEmail
+          bind:userPassword
+          bind:userPasswordConfirm
+          bind:isPasswordView
+          {displayNameHelperText}
+          {displayNameStatus}
+          {userIdStatus}
+          {userIdHelperText}
+          {userEmailHelperText}
+          {userEmailStatus}
+          {userPasswordMessage}
+          {userPasswordStatus}
+          {statusMessage}
+          {isError}
+          {onSignupDisplayNameInput}
+          {checkDisplayNameValid}
+          {onUserIdBlur}
+          {onUserIdInput}
+          {onUserEmailInput}
+          {handleSignupPasswordInput}
           on:submit={onSignupClick}
-        >
-          {#if statusMessage && statusMessage.length}
-            <p
-              id="status-display"
-              class="call-to-action"
-              class:is-error={isError}
-            >
-              {statusMessage}
-            </p>
-          {:else}
-            <p class="call-to-action">
-              Unlock the full power of our platform with a quick sign-up. Secure
-              your ability to edit and manage your posts from any device,
-              anytime. Don't just join the conversation, own it. Sign up today!
-            </p>
-          {/if}
-          <InputField
-            bind:value={displayName}
-            helperText={displayNameHelperText}
-            status={displayNameStatus}
-            id="signup-name"
-            labelText="Display name"
-            onInput={onSignupDisplayNameInput}
-            onBlur={checkDisplayNameValid}
-            required
-          />
-          <InputField
-            bind:value={userId}
-            status={userIdStatus}
-            helperText={userIdHelperText}
-            id="signup-user-id"
-            labelText="User handle"
-            onBlur={onUserIdBlur}
-            onInput={onUserIdInput}
-          >
-            <Avatar {userId} status={userIdStatus} slot="icon" />
-          </InputField>
-
-          <InputField
-            bind:value={userEmail}
-            helperText={userEmailHelperText}
-            status={userEmailStatus}
-            id="signup-email"
-            labelText="Email"
-            required
-            type="email"
-            onInput={onUserEmailInput}
-          />
-          <PasswordTwinInput
-            bind:value={userPassword}
-            bind:confirmValue={userPasswordConfirm}
-            bind:isPasswordView
-            id="signup-password"
-            labelText="Password"
-            helperText={userPasswordMessage}
-            status={userPasswordStatus}
-            onInput={handleSignupPasswordInput}
-            required
-          />
-        </form>
+        />
       {/if}
     </div>
   {/if}
