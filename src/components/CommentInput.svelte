@@ -10,7 +10,9 @@
   import type { StateValue } from "xstate"
   import { commentPostMachine } from "../lib/commentPost.xstate"
   import { createEventDispatcher, onDestroy, onMount } from "svelte"
-  import { dispatchableStore, loginStateStore } from "../lib/svelte-stores"
+  import { loginStateStore } from "../lib/auth/auth-stores"
+  import type { StoredLoginTab } from "../lib/auth/auth-storage"
+  import { useAuthRuntime } from "../lib/auth/auth-runtime"
   import { isResponseOk } from "../frontend-utilities"
   import { postComment } from "../apiClient"
   import { useMachine } from "@xstate/svelte"
@@ -28,9 +30,18 @@
   let textAreaWidth = "100%"
   let textAreaHeight = "7rem"
   let loginTabSelect: LoginTab = LoginTab.guest
+  let hasPendingAuthRequest = false
 
   const { state, send } = useMachine(commentPostMachine)
   const dispatch = createEventDispatcher()
+  const authController = useAuthRuntime().controller
+
+  const loginTabToStoredLoginTab = (tab: LoginTab): StoredLoginTab =>
+    ({
+      [LoginTab.guest]: "guest",
+      [LoginTab.login]: "login",
+      [LoginTab.signup]: "signup",
+    })[tab]
 
   const onSubmit = e => {
     e.preventDefault()
@@ -54,7 +65,13 @@
   }
 
   const loggingInStateHandler = () => {
-    dispatchableStore.dispatch("loginIntent")
+    if (hasPendingAuthRequest) return
+
+    authController.requestAuthUi({
+      preferredTab: loginTabToStoredLoginTab(loginTabSelect),
+      reason: "comment-submit",
+    })
+    hasPendingAuthRequest = true
   }
 
   const unsubscribeLoginState = loginStateStore.subscribe(loginState => {
@@ -69,13 +86,12 @@
         case "loggingIn":
           switch (loginStateValue) {
             case "loggedIn":
+              hasPendingAuthRequest = false
               setTimeout(() => send("SUCCESS"), 1)
               break
             case "error":
+              hasPendingAuthRequest = false
               setTimeout(() => send({ type: "ERROR", error: "Login error" }))
-              break
-            case "loggedOut":
-              dispatchableStore.dispatch("loginIntent")
               break
 
             default:
@@ -191,6 +207,10 @@
   $: isProcessing = (
     ["validating", "loggingIn", "posting", "deleting"] as StateValue[]
   ).includes($state.value)
+
+  $: {
+    if ($state.value !== "loggingIn") hasPendingAuthRequest = false
+  }
 
   $: buttonCopy = getButtonCopy(loginTabSelect, commentText, loginStateValue)
 </script>
