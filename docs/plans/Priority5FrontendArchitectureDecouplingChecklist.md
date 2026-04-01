@@ -320,7 +320,7 @@ Implementation note:
   - Trace:
     - "Unit evidence: Add controller-focused tests that cover verify/login/signup/guest/logout/error transition and effect mapping." (Validation Strategy)
 
-- [ ] T02 `[validation]` Add split integration evidence proving auth lifecycle works when `Login.svelte` is not mounted at startup (runtime mounted only), while interactive login still works once `Login.svelte` is later rendered.
+- [x] T02 `[validation]` Add split integration evidence proving auth lifecycle works when `Login.svelte` is not mounted at startup (runtime mounted only), while interactive login still works once `Login.svelte` is later rendered.
   - Depends on: C05, C06.
   - Harness rule:
     - add a frontend Jest integration test that proves the plain runtime/controller lifecycle boundary explicitly without `Login.svelte` mounted
