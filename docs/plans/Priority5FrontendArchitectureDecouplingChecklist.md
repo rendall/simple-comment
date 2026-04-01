@@ -354,7 +354,7 @@ Implementation note:
   - Trace:
     - "Integration evidence: Add integration coverage proving auth lifecycle works when `Login.svelte` is not mounted at startup, while interactive login still works once `Login.svelte` is rendered." (Validation Strategy)
 
-- [ ] T03 `[validation]` Run focused frontend validation and auth smoke coverage (login/signup/guest/logout happy-path + one error-path), then record parity notes against current behavior.
+- [x] T03 `[validation]` Run focused frontend validation and auth smoke coverage (login/signup/guest/logout happy-path + one error-path), then record parity notes against current behavior.
   - Depends on: C08, C09, C10, C11, C12, T01, T02.
   - Validation guardrail:
     - classify failing auth-related tests against `P01`-`P10` before changing code or tests
