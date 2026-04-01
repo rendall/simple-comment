@@ -317,7 +317,7 @@ Implementation note:
 
 - T03 exposed concrete regressions in the new auth-state publication shape: `CommentInput.svelte` was no longer consuming the selected auth tab correctly, and `SelfDisplay.svelte` was no longer consuming logout-capable auth state correctly. `C11-C12` capture these bounded regression fixes without reopening earlier completed items.
 
-- [ ] C11 `[frontend]` Restore correct auth tab consumption in `src/components/CommentInput.svelte` so comment-submit auth requests continue to honor the currently selected login/signup/guest mode under the new controller/store publication shape.
+- [x] C11 `[frontend]` Restore correct auth tab consumption in `src/components/CommentInput.svelte` so comment-submit auth requests continue to honor the currently selected login/signup/guest mode under the new controller/store publication shape.
   - Depends on: C10.
   - Validated by: T03.
   - Regression-fix rule:

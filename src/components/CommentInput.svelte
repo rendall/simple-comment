@@ -77,6 +77,10 @@
   const unsubscribeLoginState = loginStateStore.subscribe(loginState => {
     const { state: stateValue, select } = loginState
 
+    if (select !== undefined) {
+      loginTabSelect = select
+    }
+
     if (stateValue) {
       loginStateValue = stateValue
       const commentInputStateValue = $state.value
@@ -105,8 +109,6 @@
         default:
           break
       }
-    } else if (select !== undefined) {
-      loginTabSelect = select
     }
   })
 
