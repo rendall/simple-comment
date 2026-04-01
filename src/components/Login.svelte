@@ -30,8 +30,8 @@
   import LoginForm from "./auth/LoginForm.svelte"
   import SignupForm from "./auth/SignupForm.svelte"
   import {
-    createAuthController,
-  } from "../lib/auth/auth-controller"
+    useAuthRuntime,
+  } from "../lib/auth/auth-runtime"
   import type { LoginMachineState } from "../lib/login.xstate"
 
   const DISPLAY_NAME_HELPER_TEXT = "This is the name that others will see"
@@ -97,7 +97,7 @@
     isError = error
   }
 
-  const authController = createAuthController({ initialUser: currentUser })
+  const authController = useAuthRuntime().controller
   const unsubscribeAuthController = authController.subscribe(snapshot => {
     authStateValue = snapshot.state
     nextEvents = snapshot.nextEvents ?? []
@@ -458,13 +458,10 @@
       if (name) displayName = name
       if (email) userEmail = email
     }
-
-    void authController.init()
   })
 
   onDestroy(() => {
     unsubscribeAuthController()
-    authController.destroy()
     unsubscribeDispatchableStore()
   })
 

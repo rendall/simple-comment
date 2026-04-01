@@ -249,7 +249,7 @@ This section is a reviewer-facing summary so contracts are visible without scann
     - "Reduce auth/login coupling to component presence by moving auth persistence, workflow orchestration, and shared-state publication out of `Login.svelte`" (Goal)
     - "`Login.svelte` no longer owns auth persistence, direct auth API orchestration, or auth machine lifecycle." (Acceptance Criteria)
 
-- [ ] C06 `[frontend]` Add `src/lib/auth/auth-runtime.ts` and wire it into `src/components/SimpleComment.svelte` lifecycle so auth verification/session lifecycle runs independently of `Login.svelte` visibility.
+- [x] C06 `[frontend]` Add `src/lib/auth/auth-runtime.ts` and wire it into `src/components/SimpleComment.svelte` lifecycle so auth verification/session lifecycle runs independently of `Login.svelte` visibility.
   - Depends on: C03, C04.
   - Validated by: T02, T03.
   - Runtime rule:
