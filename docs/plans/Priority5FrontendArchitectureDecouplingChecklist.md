@@ -303,7 +303,7 @@ Implementation note:
     - "clarify boundaries between view components, state machines, and auth/workflow logic" (In Scope)
     - "auth and identity flows are less dependent on component presence" (Success signals)
 
-- [ ] C10 `[frontend]` Update `src/components/CommentInput.svelte` to use the instance-scoped auth UI intent/state boundary from C09 instead of `loginIntent` relay dispatch when comment submission requires authentication.
+- [x] C10 `[frontend]` Update `src/components/CommentInput.svelte` to use the instance-scoped auth UI intent/state boundary from C09 instead of `loginIntent` relay dispatch when comment submission requires authentication.
   - Depends on: C09.
   - Validated by: T03.
   - Consumer-boundary rule:
