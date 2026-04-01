@@ -39,9 +39,9 @@ describe("Login tab persistence", () => {
     cy.get("#signup-form").should("exist")
 
     cy.window().then(contentWindow => {
-      expect(contentWindow.localStorage.getItem("simple_comment_login_tab")).to.eq(
-        "2"
-      )
+      expect(
+        contentWindow.localStorage.getItem("simple_comment_login_tab")
+      ).to.eq("2")
     })
 
     cy.reload()

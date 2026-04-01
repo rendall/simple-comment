@@ -70,7 +70,10 @@ const isServerResponseError = (
 
 const ok = <T>(data: T): AuthWorkflowResult<T> => ({ ok: true, data })
 
-const fail = ({ error, code }: AuthWorkflowError): AuthWorkflowResult<never> => ({
+const fail = ({
+  error,
+  code,
+}: AuthWorkflowError): AuthWorkflowResult<never> => ({
   ok: false,
   error,
   code,
@@ -87,10 +90,7 @@ export const toAuthWorkflowError = (error: unknown): AuthWorkflowError => {
     if (match) {
       const [expectedStatus, _body, friendlyMessage] = match
 
-      if (
-        expectedStatus !== undefined &&
-        expectedStatus !== error.status
-      ) {
+      if (expectedStatus !== undefined && expectedStatus !== error.status) {
         console.warn(
           `Error response code ${error.status} does not match error message code ${expectedStatus}`
         )
