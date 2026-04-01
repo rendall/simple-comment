@@ -89,6 +89,7 @@
     })[tab]
 
   let selectedIndex = storedLoginTabToIndex(readStoredLoginTab())
+  let lastHandledAuthUiRequestId = 0
 
   let lastIdChecked
 
@@ -109,6 +110,20 @@
     if (snapshot.state === "error" && snapshot.error)
       updateStatusDisplay(snapshot.error, true)
     else if (snapshot.state !== "error") updateStatusDisplay()
+
+    if (
+      snapshot.authUiRequest &&
+      snapshot.authUiRequest.id !== lastHandledAuthUiRequestId
+    ) {
+      lastHandledAuthUiRequestId = snapshot.authUiRequest.id
+
+      void attemptSelectedAuth(
+        storedLoginTabToIndex(
+          snapshot.authUiRequest.preferredTab ?? snapshot.uiTab
+        )
+      )
+      authController.clearAuthUiRequest()
+    }
   })
 
   //TODO: Move the log in *functionality* away from the Login.svelte *component*. Currently the Login component must be on the page for login functionality to occur.
@@ -163,6 +178,23 @@
         password: userPassword,
       })
     else updateStatusDisplay(result.reason, true)
+  }
+
+  const attemptSelectedAuth = async (tab: LoginTab = selectedIndex) => {
+    switch (tab) {
+      case LoginTab.guest:
+        await onGuestClick()
+        break
+      case LoginTab.signup:
+        await onSignupClick()
+        break
+      case LoginTab.login:
+        await onLoginClick()
+        break
+      default:
+        updateStatusDisplay(`Unknown selectedTabIndex ${tab}`, true)
+        break
+    }
   }
 
   const checkUserIdExists = async (idToCheck?: UserId) => {

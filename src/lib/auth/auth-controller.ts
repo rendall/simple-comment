@@ -28,8 +28,15 @@ export type AuthControllerSnapshot = {
   uiTab: StoredLoginTab
   nextEvents: string[]
   currentUser?: User
+  authUiRequest?: AuthUiRequest
   message?: string
   error?: string
+}
+
+export type AuthUiRequest = {
+  id: number
+  preferredTab?: StoredLoginTab
+  reason?: "comment-submit" | "reply-submit" | "manual"
 }
 
 export type AuthController = {
@@ -41,6 +48,8 @@ export type AuthController = {
   guestLogin(input: GuestLoginInput): Promise<void>
   logout(): Promise<void>
   setTab(tab: StoredLoginTab): void
+  requestAuthUi(input?: Omit<AuthUiRequest, "id">): void
+  clearAuthUiRequest(): void
   reset(): void
   destroy(): void
 }
@@ -60,6 +69,7 @@ export const createAuthController = (
   let pendingLoginInput: { username: string; password: string } | undefined
   let pendingSignupInput: SignupPayload | undefined
   let pendingGuestInput: GuestLoginInput | undefined
+  let authUiRequestId = 0
 
   let snapshot: AuthControllerSnapshot = {
     state: loginMachine.initialState.value as LoginMachineState,
@@ -247,6 +257,30 @@ export const createAuthController = (
     setTab(tab) {
       writeStoredLoginTab(tab)
       updateSnapshot({ uiTab: tab })
+    },
+    requestAuthUi(input = {}) {
+      authUiRequestId += 1
+
+      const nextRequest: AuthUiRequest = {
+        id: authUiRequestId,
+        ...input,
+      }
+
+      const updates: Partial<AuthControllerSnapshot> = {
+        authUiRequest: nextRequest,
+      }
+
+      if (input.preferredTab) {
+        writeStoredLoginTab(input.preferredTab)
+        updates.uiTab = input.preferredTab
+      }
+
+      updateSnapshot(updates)
+    },
+    clearAuthUiRequest() {
+      if (snapshot.authUiRequest) {
+        updateSnapshot({ authUiRequest: undefined })
+      }
     },
     reset() {
       if (initialized) service.send("RESET")
