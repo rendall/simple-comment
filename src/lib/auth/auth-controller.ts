@@ -11,6 +11,7 @@ import {
   writeStoredLoginTab,
   writeStoredSession,
 } from "./auth-storage"
+import { publishAuthSnapshot } from "./auth-stores"
 import {
   guestLoginWorkflow,
   loginWorkflow,
@@ -70,6 +71,7 @@ export const createAuthController = (
   }
 
   const publish = () => {
+    publishAuthSnapshot(snapshot)
     listeners.forEach(listener => listener(snapshot))
   }
 
