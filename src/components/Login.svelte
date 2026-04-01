@@ -28,7 +28,6 @@
     isValidationTrue,
     isResponseOk,
     validatePassword,
-    validateUserId,
     formatUserId,
   } from "../frontend-utilities"
   import InputField from "./low-level/InputField.svelte"
@@ -43,6 +42,7 @@
     joinValidations,
     validateDisplayName,
     validateEmail,
+    validateUserId,
   } from "../lib/shared-utilities"
   import { onDestroy, onMount } from "svelte"
   import PasswordInput from "./low-level/PasswordInput.svelte"
