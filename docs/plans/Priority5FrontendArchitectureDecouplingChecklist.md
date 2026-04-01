@@ -171,7 +171,7 @@ This section is a reviewer-facing summary so contracts are visible without scann
     - "extract login/session persistence currently embedded in `Login.svelte`" (In Scope)
     - "`Login.svelte` no longer owns auth persistence" (Acceptance Criteria)
 
-- [ ] C02 `[frontend]` Create `src/lib/auth/auth-workflows.ts` to orchestrate auth workflows by composing existing `src/apiClient.ts` functions (no duplicated transport/client logic) and normalizing workflow-level error/result handling currently mixed in component handlers.
+- [x] C02 `[frontend]` Create `src/lib/auth/auth-workflows.ts` to orchestrate auth workflows by composing existing `src/apiClient.ts` functions (no duplicated transport/client logic) and normalizing workflow-level error/result handling currently mixed in component handlers.
   - Depends on: C01.
   - Validated by: T01, T03.
   - Contract + exports:
@@ -179,7 +179,7 @@ This section is a reviewer-facing summary so contracts are visible without scann
     - `verifySessionWorkflow(): Promise<AuthWorkflowResult<VerifiedUser>>`.
     - `loginWorkflow(credentials: { username: string; password: string }): Promise<AuthWorkflowResult<LoginPayload>>`.
     - `signupWorkflow(input: SignupPayload): Promise<AuthWorkflowResult<SignupPayload>>`.
-    - `guestLoginWorkflow(): Promise<AuthWorkflowResult<LoginPayload>>`.
+    - `guestLoginWorkflow(input: { name: string; email: string }): Promise<AuthWorkflowResult<LoginPayload>>`.
     - `logoutWorkflow(): Promise<AuthWorkflowResult<{ loggedOut: true }>>`.
     - `updateProfileWorkflow(input: UpdateUserPayload): Promise<AuthWorkflowResult<UpdatedUser>>`.
     - `toAuthWorkflowError(error: unknown): { error: string; code?: number }` (shared normalization helper).

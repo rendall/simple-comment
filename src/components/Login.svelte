@@ -1,10 +1,7 @@
 <script lang="ts">
   import { fly } from "svelte/transition"
   import type {
-    AdminSafeUser,
     ServerResponse,
-    ServerResponseSuccess,
-    TokenClaim,
     User,
     UserId,
     ValidationResult,
@@ -12,21 +9,17 @@
   import { LoginTab } from "../lib/simple-comment-types"
   import { useMachine } from "@xstate/svelte"
   import { loginMachine } from "../lib/login.xstate"
+  import { getOneUser } from "../apiClient"
   import {
-    createGuestUser,
-    createUser,
-    deleteAuth,
-    getGuestToken,
-    getOneUser,
-    postAuth,
-    updateUser,
-    verifySelf,
-    verifyUser,
-  } from "../apiClient"
+    guestLoginWorkflow,
+    loginWorkflow,
+    logoutWorkflow,
+    signupWorkflow,
+    verifySessionWorkflow,
+  } from "../lib/auth/auth-workflows"
   import {
     debounceFunc,
     isValidationTrue,
-    isResponseOk,
     validatePassword,
     formatUserId,
   } from "../frontend-utilities"
@@ -177,17 +170,14 @@
 
     if (self || currentUser) send({ type: "SUCCESS" })
     else
-      verifySelf()
-        .then((user: AdminSafeUser) => {
-          self = user
-          writeStoredSession({ user })
+      verifySessionWorkflow().then(result => {
+        if (result.ok) {
+          self = result.data
+          writeStoredSession({ user: result.data })
           send({ type: "SUCCESS" })
-        })
-        .catch(error => {
-          const { status } = error
-          if (status === 401) send({ type: "FIRST_VISIT" })
-          else send({ type: "ERROR", error })
-        })
+        } else if (result.code === 401) send({ type: "FIRST_VISIT" })
+        else send({ type: "ERROR", error: result.error })
+      })
   }
 
   const loggingInStateHandler = () => {
@@ -197,17 +187,16 @@
       send({ type: "ERROR", error: result.reason })
       return
     }
-    postAuth(userId, userPassword)
-      .then(response => {
-        if (isResponseOk(response)) {
-          send("SUCCESS")
-        } else {
-          send({ type: "ERROR", error: response })
-        }
-      })
-      .catch(error => {
-        send({ type: "ERROR", error })
-      })
+
+    loginWorkflow({
+      username: userId,
+      password: userPassword,
+    }).then(result => {
+      if (result.ok) send("SUCCESS")
+      else {
+        send({ type: "ERROR", error: result.error })
+      }
+    })
   }
 
   const signingUpStateHandler = () => {
@@ -224,15 +213,15 @@
       return
     }
 
-    const userInfo = {
+    signupWorkflow({
       id: userId,
       name: displayName,
       email: userEmail,
       password: userPassword,
-    }
-    createUser(userInfo)
-      .then(() => send("SUCCESS"))
-      .catch(error => send({ type: "ERROR", error }))
+    }).then(result => {
+      if (result.ok) send("SUCCESS")
+      else send({ type: "ERROR", error: result.error })
+    })
   }
 
   const loggedInStateHandler = () => {
@@ -241,9 +230,11 @@
 
   const loggingOutStateHandler = () => {
     updateStatusDisplay()
-    deleteAuth()
-      .then(() => send("SUCCESS"))
-      .catch(error => send({ type: "ERROR", error }))
+
+    logoutWorkflow().then(result => {
+      if (result.ok) send("SUCCESS")
+      else send({ type: "ERROR", error: result.error })
+    })
   }
 
   const loggedOutStateHandler = () => {
@@ -485,57 +476,13 @@
       return
     }
 
-    const storedUser = readStoredSession()?.user ?? {
-      id: undefined,
-      challenge: undefined,
-    }
-
-    const {
-      id: storedId,
-      challenge: storedChallenge,
-      name: storedName,
-      email: storedEmail,
-    } = storedUser
-
-    const postAuthFlow = () =>
-      postAuth(storedId, storedChallenge)
-        .then(() => verifyUser())
-        .then((response: ServerResponseSuccess<TokenClaim>) => response)
-        .then(response => {
-          if (isResponseOk(response)) {
-            send("SUCCESS")
-          } else getTokenFlow()
-        })
-        .catch(getTokenFlow)
-
-    const getTokenFlow = () =>
-      getGuestToken()
-        .then(() => verifyUser())
-        .then(
-          (response: ServerResponseSuccess<TokenClaim>) => response.body.user
-        )
-        .then(id =>
-          createGuestUser({ id, name: displayName, email: userEmail })
-        )
-        .then(response => {
-          if (isResponseOk(response)) send("SUCCESS")
-          else send({ type: "ERROR", error: response })
-        })
-        .catch(error => {
-          console.error(error)
-          send({ type: "ERROR", error })
-        })
-
-    const updateIfChanged = () => {
-      if (displayName !== storedName || userEmail !== storedEmail) {
-        updateUser({ id: storedId, name: displayName, email: userEmail }).catch(
-          error => send({ type: "ERROR", error })
-        )
-      }
-    }
-
-    if (storedId && storedChallenge) postAuthFlow().then(updateIfChanged)
-    else getTokenFlow()
+    guestLoginWorkflow({
+      name: displayName,
+      email: userEmail,
+    }).then(result => {
+      if (result.ok) send("SUCCESS")
+      else send({ type: "ERROR", error: result.error })
+    })
   }
 
   const unsubscribeDispatchableStore = dispatchableStore.subscribe(event => {
