@@ -1,22 +1,12 @@
 <script lang="ts">
   import { fly } from "svelte/transition"
   import type {
-    ServerResponse,
     User,
     UserId,
     ValidationResult,
   } from "../lib/simple-comment-types"
   import { LoginTab } from "../lib/simple-comment-types"
-  import { useMachine } from "@xstate/svelte"
-  import { loginMachine } from "../lib/login.xstate"
   import { getOneUser } from "../apiClient"
-  import {
-    guestLoginWorkflow,
-    loginWorkflow,
-    logoutWorkflow,
-    signupWorkflow,
-    verifySessionWorkflow,
-  } from "../lib/auth/auth-workflows"
   import {
     debounceFunc,
     isValidationTrue,
@@ -32,8 +22,6 @@
   import {
     readStoredLoginTab,
     readStoredSession,
-    writeStoredLoginTab,
-    writeStoredSession,
   } from "../lib/auth/auth-storage"
   import {
     isGuestId,
@@ -47,7 +35,10 @@
   import PasswordInput from "./low-level/PasswordInput.svelte"
   import PasswordTwinInput from "./low-level/PasswordTwinInput.svelte"
   import Avatar from "./low-level/Avatar.svelte"
-  import type { StateValue } from "xstate"
+  import {
+    createAuthController,
+  } from "../lib/auth/auth-controller"
+  import type { LoginMachineState } from "../lib/login.xstate"
 
   const DISPLAY_NAME_HELPER_TEXT = "This is the name that others will see"
   const USER_EMAIL_HELPER_TEXT =
@@ -62,6 +53,7 @@
 
   let nextEvents = []
   let statusMessage = ""
+  let authStateValue: LoginMachineState = "idle"
 
   let displayName = ""
   let displayNameHelperText = DISPLAY_NAME_HELPER_TEXT
@@ -106,11 +98,24 @@
 
   let lastIdChecked
 
-  const { state, send } = useMachine(loginMachine)
   const updateStatusDisplay = (message = "", error = false) => {
     statusMessage = message
     isError = error
   }
+
+  const authController = createAuthController({ initialUser: currentUser })
+  const unsubscribeAuthController = authController.subscribe(snapshot => {
+    authStateValue = snapshot.state
+    nextEvents = snapshot.nextEvents ?? []
+    selectedIndex = storedLoginTabToIndex(snapshot.uiTab)
+    self = snapshot.currentUser
+    isLoaded =
+      isLoaded || ["loggedIn", "loggedOut", "error"].includes(snapshot.state)
+
+    if (snapshot.state === "error" && snapshot.error)
+      updateStatusDisplay(snapshot.error, true)
+    else if (snapshot.state !== "error") updateStatusDisplay()
+  })
 
   //TODO: Move the log in *functionality* away from the Login.svelte *component*. Currently the Login component must be on the page for login functionality to occur.
 
@@ -126,8 +131,11 @@
     const result = joinValidations(validations)
 
     if (isValidResult(result))
-      send({ type: "GUEST", guest: { name: displayName, email: userEmail } })
-    else send({ type: "ERROR", error: result.reason })
+      await authController.guestLogin({
+        name: displayName,
+        email: userEmail,
+      })
+    else updateStatusDisplay(result.reason, true)
   }
 
   const onLoginClick = async (e: Event) => {
@@ -136,12 +144,12 @@
 
     const result = checkLoginValid()
 
-    if (isValidResult(result)) send({ type: "LOGIN" })
-    else
-      send({
-        type: "ERROR",
-        error: result.reason,
+    if (isValidResult(result))
+      await authController.login({
+        username: userId,
+        password: userPassword,
       })
+    else updateStatusDisplay(result.reason, true)
   }
 
   const onSignupClick = async (e: Event) => {
@@ -156,155 +164,14 @@
       checkPasswordsMatch(),
     ])
 
-    if (isValidResult(result)) send({ type: "SIGNUP" })
-    else
-      send({
-        type: "ERROR",
-        error: result.reason,
+    if (isValidResult(result))
+      await authController.signup({
+        id: userId,
+        name: displayName,
+        email: userEmail,
+        password: userPassword,
       })
-  }
-
-  /** Handler for XState "verifying" state */
-  const verifyingStateHandler = () => {
-    updateStatusDisplay()
-
-    if (self || currentUser) send({ type: "SUCCESS" })
-    else
-      verifySessionWorkflow().then(result => {
-        if (result.ok) {
-          self = result.data
-          writeStoredSession({ user: result.data })
-          send({ type: "SUCCESS" })
-        } else if (result.code === 401) send({ type: "FIRST_VISIT" })
-        else send({ type: "ERROR", error: result.error })
-      })
-  }
-
-  const loggingInStateHandler = () => {
-    updateStatusDisplay()
-    const result = checkLoginValid()
-    if (!isValidResult(result)) {
-      send({ type: "ERROR", error: result.reason })
-      return
-    }
-
-    loginWorkflow({
-      username: userId,
-      password: userPassword,
-    }).then(result => {
-      if (result.ok) send("SUCCESS")
-      else {
-        send({ type: "ERROR", error: result.error })
-      }
-    })
-  }
-
-  const signingUpStateHandler = () => {
-    updateStatusDisplay()
-    const result = joinValidations([
-      checkDisplayNameValid(),
-      checkUserIdValid(),
-      checkUserEmailValid(),
-      checkPasswordValid(),
-      checkPasswordsMatch(),
-    ])
-    if (!isValidResult(result)) {
-      send({ type: "ERROR", error: result.reason })
-      return
-    }
-
-    signupWorkflow({
-      id: userId,
-      name: displayName,
-      email: userEmail,
-      password: userPassword,
-    }).then(result => {
-      if (result.ok) send("SUCCESS")
-      else send({ type: "ERROR", error: result.error })
-    })
-  }
-
-  const loggedInStateHandler = () => {
-    updateStatusDisplay()
-  }
-
-  const loggingOutStateHandler = () => {
-    updateStatusDisplay()
-
-    logoutWorkflow().then(result => {
-      if (result.ok) send("SUCCESS")
-      else send({ type: "ERROR", error: result.error })
-    })
-  }
-
-  const loggedOutStateHandler = () => {
-    updateStatusDisplay()
-    self = undefined
-  }
-
-  const errorStateHandler = () => {
-    updateStatusDisplay()
-
-    const error = $state.context.error
-    if (!error) {
-      updateStatusDisplay(
-        "Apologies. An unknown error occurred. Please reload the page and try again. If the error persists, contact the site administrator",
-        true
-      )
-      console.error("Unknown error")
-      console.trace()
-    } else if (typeof error === "string") {
-      updateStatusDisplay(error, true)
-    } else {
-      const { status, statusText, ok, body } = error as ServerResponse
-      if (ok) console.warn("Error handler caught an OK response", error)
-
-      const errorMessages = [
-        [
-          401,
-          "Policy violation: no authentication and canPublicCreateUser is false",
-          "Sorry, new user registration is currently closed. Please contact the site administrator for assistance.",
-        ],
-        [
-          401,
-          "Bad credentials",
-          "Oops! The password you entered is incorrect. Please try again. If you've forgotten your password, you can reset it.",
-        ],
-        [
-          403,
-          "Cannot modify root credentials",
-          "Sorry, but the changes you're trying to make are not allowed. The administrator credentials you're attempting to modify are secured and can only be updated through the appropriate channels. If you need to make changes, please contact your system administrator or refer to your system documentation for the correct procedure.",
-        ],
-        [
-          404,
-          "Unknown user",
-          "It seems we couldn't find an account associated with the provided user id. Please double-check your input for any typos. If you don't have an account yet, feel free to create one. We'd love to have you join our community!",
-        ],
-        [
-          404,
-          "Authenticating user is unknown",
-          "It seems there's an issue with your current session. Please log out and log back in again. If the problem persists, contact the site administrator for assistance.",
-        ],
-        [
-          undefined,
-          undefined,
-          "Unknown error. Possibly the comment server is unreachable. Try reloading.",
-        ],
-      ]
-
-      const messageTuple = errorMessages.find(
-        ([_code, text, _friendly]) => text === body
-      )
-      if (messageTuple) {
-        const [code, _text, friendly] = messageTuple as [number, string, string]
-        if (code !== status)
-          console.warn(
-            `Error response code ${status} does not match error message code ${code}`
-          )
-        updateStatusDisplay(friendly, true)
-      } else updateStatusDisplay(`${status}:${statusText} ${body}`, true)
-    }
-    // send("RESET")
+    else updateStatusDisplay(result.reason, true)
   }
 
   const checkUserIdExists = async (idToCheck?: UserId) => {
@@ -465,32 +332,12 @@
     checkUserIdExists_debounced(userId)
   }
 
-  const guestLoggingInStateHandler = () => {
-    const guestValidationResult = joinValidations([
-      checkDisplayNameValid(),
-      checkUserEmailValid(),
-    ])
-
-    if (!isValidResult(guestValidationResult)) {
-      send({ type: "ERROR", error: guestValidationResult.reason })
-      return
-    }
-
-    guestLoginWorkflow({
-      name: displayName,
-      email: userEmail,
-    }).then(result => {
-      if (result.ok) send("SUCCESS")
-      else send({ type: "ERROR", error: result.error })
-    })
-  }
-
   const unsubscribeDispatchableStore = dispatchableStore.subscribe(event => {
     switch (event.name) {
       case "logoutIntent": {
         const canLogout = nextEvents?.includes("LOGOUT")
-        if (canLogout) send("LOGOUT")
-        else console.warn("Received logoutIntent at state", $state.value)
+        if (canLogout) void authController.logout()
+        else console.warn("Received logoutIntent at state", authStateValue)
         break
       }
 
@@ -501,23 +348,54 @@
         if (canLogin) {
           switch (selectedIndex) {
             case LoginTab.guest:
-              send("GUEST")
+              if (
+                isValidResult(
+                  joinValidations([
+                    checkDisplayNameValid(),
+                    checkUserEmailValid(),
+                  ])
+                )
+              )
+                void authController.guestLogin({
+                  name: displayName,
+                  email: userEmail,
+                })
               break
             case LoginTab.signup:
-              send("SIGNUP")
+              if (
+                isValidResult(
+                  joinValidations([
+                    checkDisplayNameValid(),
+                    checkUserIdValid(),
+                    checkUserEmailValid(),
+                    checkPasswordValid(),
+                    checkPasswordsMatch(),
+                  ])
+                )
+              )
+                void authController.signup({
+                  id: userId,
+                  name: displayName,
+                  email: userEmail,
+                  password: userPassword,
+                })
               break
             case LoginTab.login:
-              send("LOGIN")
+              if (isValidResult(checkLoginValid()))
+                void authController.login({
+                  username: userId,
+                  password: userPassword,
+                })
               break
             default:
-              send({
-                type: "ERROR",
-                error: `Unknown selectedTabIndex ${selectedIndex}`,
-              })
+              updateStatusDisplay(
+                `Unknown selectedTabIndex ${selectedIndex}`,
+                true
+              )
               break
           }
-        } else if ($state.value === "error") send("RESET")
-        else console.warn("Received loginIntent at state", $state.value)
+        } else if (authStateValue === "error") authController.reset()
+        else console.warn("Received loginIntent at state", authStateValue)
         break
       }
 
@@ -561,7 +439,7 @@
     e.preventDefault()
     updateStatusDisplay()
     selectedIndex = tab
-    writeStoredLoginTab(loginTabToStoredLoginTab(selectedIndex))
+    authController.setTab(loginTabToStoredLoginTab(selectedIndex))
     switch (selectedIndex) {
       case LoginTab.signup: {
         const hasDisplayName = displayName && displayName.trim().length > 0
@@ -589,39 +467,20 @@
       if (name) displayName = name
       if (email) userEmail = email
     }
+
+    void authController.init()
   })
 
   onDestroy(() => {
     currentUserStore.set(self)
+    unsubscribeAuthController()
+    authController.destroy()
     unsubscribeDispatchableStore()
   })
 
-  $: {
-    const stateHandlers: [string, () => void][] = [
-      ["verifying", verifyingStateHandler],
-      ["guestLoggingIn", guestLoggingInStateHandler],
-      ["loggingIn", loggingInStateHandler],
-      ["signingUp", signingUpStateHandler],
-      ["loggedIn", loggedInStateHandler],
-      ["loggingOut", loggingOutStateHandler],
-      ["loggedOut", loggedOutStateHandler],
-      ["error", errorStateHandler],
-    ]
-
-    isLoaded =
-      isLoaded ||
-      (["loggedIn", "loggedOut", "error"] as StateValue[]).includes(
-        $state.value
-      )
-
-    nextEvents = $state.nextEvents ?? []
-    loginStateStore.set({ state: $state.value, nextEvents })
-    stateHandlers.forEach(([stateValue, stateHandler]) => {
-      if ($state.value === stateValue) setTimeout(stateHandler, 1)
-    })
-  }
-
   $: currentUserStore.set(self)
+
+  $: loginStateStore.set({ state: authStateValue, nextEvents })
 
   $: loginStateStore.set({ select: selectedIndex })
 
