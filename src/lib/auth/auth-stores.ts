@@ -16,9 +16,7 @@ const storedLoginTabToLoginTab = (storedLoginTab: StoredLoginTab): LoginTab =>
 
 export { currentUserStore, dispatchableStore, loginStateStore }
 
-export const publishAuthSnapshot = (
-  snapshot: AuthControllerSnapshot
-): void => {
+export const publishAuthSnapshot = (snapshot: AuthControllerSnapshot): void => {
   currentUserStore.set(snapshot.currentUser)
   loginStateStore.set({
     state: snapshot.state,
