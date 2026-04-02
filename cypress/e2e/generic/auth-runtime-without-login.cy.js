@@ -102,4 +102,35 @@ describe("Auth runtime without Login.svelte", () => {
     cy.get("#self-display").should("contain", "Runtime User")
     cy.get("#self-display").should("contain", "@runtime-user")
   })
+
+  it("does not authenticate from the legacy loginIntent relay once Login.svelte is rendered", () => {
+    cy.intercept("GET", "/.netlify/functions/verify", req => {
+      req.reply({
+        statusCode: 401,
+        body: { message: "Unauthenticated" },
+      })
+    }).as("verify")
+
+    cy.intercept("POST", "/.netlify/functions/auth", req => {
+      req.reply({
+        statusCode: 200,
+        body: "OK",
+      })
+    }).as("postAuth")
+
+    cy.visit("/cypress/auth-runtime-without-login-host.html")
+
+    cy.wait("@verify")
+    cy.get("#show-login-button").click()
+    cy.get(".simple-comment-login").should("exist")
+    cy.get(".selection-tab-login").click()
+    cy.get("#login-user-id").type(userId)
+    cy.get("#login-password").type("top-secret")
+    cy.get("#dispatch-legacy-login-intent-button").click()
+
+    cy.wait(250)
+
+    cy.get("@postAuth.all").should("have.length", 0)
+    cy.get("#self-display").should("not.exist")
+  })
 })
