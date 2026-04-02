@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Singleton Load Host</title>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="/css/simple-comment-style.css"
+    />
+  </head>
+  <body>
+    <button id="load-twice-button" type="button">Load twice</button>
+    <div id="first-target"></div>
+    <div id="second-target"></div>
+    <script type="module" src="/js/simple-comment.js"></script>
+    <script type="module">
+      window.setSimpleCommentOptions({ cancel: true })
+
+      document.getElementById("load-twice-button").addEventListener("click", () => {
+        window.loadSimpleComment({
+          cancel: true,
+          discussionId: "singleton-first-discussion",
+          target: document.getElementById("first-target"),
+          title: "Singleton first discussion",
+        })
+
+        window.loadSimpleComment({
+          cancel: true,
+          discussionId: "singleton-second-discussion",
+          target: document.getElementById("second-target"),
+          title: "Singleton second discussion",
+        })
+      })
+    </script>
+  </body>
+</html>
