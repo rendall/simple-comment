@@ -1,14 +1,12 @@
 <script lang="ts">
   import { onDestroy, onMount } from "svelte"
   import type { User } from "../../lib/simple-comment-types"
-  import {
-    currentUserStore,
-    dispatchableStore,
-  } from "../../lib/auth/auth-stores"
+  import { currentUserStore } from "../../lib/auth/auth-stores"
   import {
     createAuthRuntime,
     provideAuthRuntime,
   } from "../../lib/auth/auth-runtime"
+  import { dispatchableStore } from "../../lib/svelte-stores"
   import Login from "../../components/Login.svelte"
   import SelfDisplay from "../../components/SelfDisplay.svelte"
 
