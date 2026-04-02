@@ -12,6 +12,12 @@ declare global {
 
 let simpleComment
 
+const warnSingletonMount = () => {
+  console.warn(
+    "Simple Comment supports only one mounted widget per page. Ignoring additional loadSimpleComment call."
+  )
+}
+
 let options = {
   cancel: false,
   discussionId: getDefaultDiscussionId(),
@@ -56,6 +62,11 @@ window.setSimpleCommentDiscussion = (discussionId: string) =>
   window.setSimpleCommentOptions({ discussionId })
 
 const loadSimpleComment = (setupOptions: Options) => {
+  if (simpleComment) {
+    warnSingletonMount()
+    return
+  }
+
   options = { ...options, ...setupOptions }
   simpleComment = mount(SimpleComment, {
     target: options.target,
