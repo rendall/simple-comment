@@ -1,10 +1,10 @@
 # Priority 5 Frontend Architecture Decoupling Checklist
 
-Status: planning
+Status: archived
 
-Classification: proposed implementation checklist draft (not approved)
+Classification: archived historical artifact
 
-Source plan: `docs/plans/Priority5FrontendArchitectureDecouplingPlan.md`
+Source plan: `docs/archive/Priority5FrontendArchitectureDecouplingPlan.md`
 
 ## Scope Lock (from Source Plan)
 
