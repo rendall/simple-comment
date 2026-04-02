@@ -32,7 +32,7 @@
     "posttest": "rimraf ./globalConfig.json",
     "prebuild": "rimraf ./functions && rimraf ./dist/js && mkdir -p ./dist/js",
     "start:db": "sudo systemctl start mongod",
-    "start:backend": "yarn run build:backend && netlify functions:serve --functions functions --port 9999",
+    "start:backend": "netlify functions:serve --functions src/functions --port 9999",
     "start:frontend": "yarn run build:frontend && vite preview --config ./vite.config.ts --host 0.0.0.0 --port 5000",
     "start": "concurrently \"yarn run start:backend\" \"yarn run start:frontend\" --kill-others",
     "dev:frontend": "vite dev --config ./vite.config.ts --host 0.0.0.0 --port 5173",
