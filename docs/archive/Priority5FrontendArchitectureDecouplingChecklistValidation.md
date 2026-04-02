@@ -1,8 +1,8 @@
 # Priority 5 Frontend Architecture Decoupling Checklist Validation
 
-Status: active
+Status: archived
 
-Checklist: `docs/plans/Priority5FrontendArchitectureDecouplingChecklist.md`
+Checklist: `docs/archive/Priority5FrontendArchitectureDecouplingChecklist.md`
 
 ## Command Evidence
 

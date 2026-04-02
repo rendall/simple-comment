@@ -1,13 +1,13 @@
 # Priority 5 Frontend Architecture Decoupling Plan
 
-Status: planning
+Status: archived
 
-Classification: formal plan draft
+Classification: archived historical artifact
 
 Source input:
 
 - `docs/RepoHealthImprovementBacklog.md` (Priority 5: Frontend Architecture Decoupling)
-- `docs/plans/Priority5FrontendArchitectureDecouplingChecklist.md` (current checklist draft used as source of truth for plan back-propagation)
+- `docs/archive/Priority5FrontendArchitectureDecouplingChecklist.md` (archived checklist used as source of truth for plan back-propagation)
 
 ## Goal
 
