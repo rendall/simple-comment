@@ -12,7 +12,6 @@
     validatePassword,
     formatUserId,
   } from "../frontend-utilities"
-  import { dispatchableStore } from "../lib/auth/auth-stores"
   import {
     readStoredLoginTab,
     readStoredSession,
@@ -32,7 +31,6 @@
   import {
     useAuthRuntime,
   } from "../lib/auth/auth-runtime"
-  import type { LoginMachineState } from "../lib/login.xstate"
 
   const DISPLAY_NAME_HELPER_TEXT = "This is the name that others will see"
   const USER_EMAIL_HELPER_TEXT =
@@ -45,9 +43,7 @@
   let isError = false
   let isLoaded = false // Hide the component until isLoaded is true
 
-  let nextEvents = []
   let statusMessage = ""
-  let authStateValue: LoginMachineState = "idle"
 
   let displayName = ""
   let displayNameHelperText = DISPLAY_NAME_HELPER_TEXT
@@ -100,8 +96,6 @@
 
   const authController = useAuthRuntime().controller
   const unsubscribeAuthController = authController.subscribe(snapshot => {
-    authStateValue = snapshot.state
-    nextEvents = snapshot.nextEvents ?? []
     selectedIndex = storedLoginTabToIndex(snapshot.uiTab)
     self = snapshot.currentUser
     isLoaded =
@@ -128,7 +122,7 @@
 
   //TODO: Move the log in *functionality* away from the Login.svelte *component*. Currently the Login component must be on the page for login functionality to occur.
 
-  /** Note that usually these onClick events will not be used. Rather, "loginIntent" will be sent.*/
+  /** These click handlers support direct interaction with the rendered auth form. */
   const onGuestClick = async () => {
     updateStatusDisplay()
 
@@ -355,79 +349,6 @@
     checkUserIdExists_debounced(userId)
   }
 
-  const unsubscribeDispatchableStore = dispatchableStore.subscribe(event => {
-    switch (event.name) {
-      case "logoutIntent": {
-        const canLogout = nextEvents?.includes("LOGOUT")
-        if (canLogout) void authController.logout()
-        else console.warn("Received logoutIntent at state", authStateValue)
-        break
-      }
-
-      case "loginIntent": {
-        const canLogin = nextEvents?.some(event =>
-          ["LOGIN", "GUEST", "SIGNUP"].includes(event)
-        )
-        if (canLogin) {
-          switch (selectedIndex) {
-            case LoginTab.guest:
-              if (
-                isValidResult(
-                  joinValidations([
-                    checkDisplayNameValid(),
-                    checkUserEmailValid(),
-                  ])
-                )
-              )
-                void authController.guestLogin({
-                  name: displayName,
-                  email: userEmail,
-                })
-              break
-            case LoginTab.signup:
-              if (
-                isValidResult(
-                  joinValidations([
-                    checkDisplayNameValid(),
-                    checkUserIdValid(),
-                    checkUserEmailValid(),
-                    checkPasswordValid(),
-                    checkPasswordsMatch(),
-                  ])
-                )
-              )
-                void authController.signup({
-                  id: userId,
-                  name: displayName,
-                  email: userEmail,
-                  password: userPassword,
-                })
-              break
-            case LoginTab.login:
-              if (isValidResult(checkLoginValid()))
-                void authController.login({
-                  username: userId,
-                  password: userPassword,
-                })
-              break
-            default:
-              updateStatusDisplay(
-                `Unknown selectedTabIndex ${selectedIndex}`,
-                true
-              )
-              break
-          }
-        } else if (authStateValue === "error") authController.reset()
-        else console.warn("Received loginIntent at state", authStateValue)
-        break
-      }
-
-      default:
-        // Intentionally left blank.  Do not respond to other events.
-        break
-    }
-  })
-
   const checkPasswordValid = () => {
     const result = validatePassword(userPassword)
 
@@ -494,7 +415,6 @@
 
   onDestroy(() => {
     unsubscribeAuthController()
-    unsubscribeDispatchableStore()
   })
 
   $: {

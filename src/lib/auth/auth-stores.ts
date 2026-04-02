@@ -1,7 +1,6 @@
 import { LoginTab } from "../simple-comment-types"
 import {
   currentUserStore,
-  dispatchableStore,
   loginStateStore,
 } from "../svelte-stores"
 import type { StoredLoginTab } from "./auth-storage"
@@ -14,7 +13,7 @@ const storedLoginTabToLoginTab = (storedLoginTab: StoredLoginTab): LoginTab =>
     signup: LoginTab.signup,
   })[storedLoginTab]
 
-export { currentUserStore, dispatchableStore, loginStateStore }
+export { currentUserStore, loginStateStore }
 
 export const publishAuthSnapshot = (snapshot: AuthControllerSnapshot): void => {
   currentUserStore.set(snapshot.currentUser)
