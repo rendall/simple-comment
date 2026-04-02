@@ -1,7 +1,10 @@
 <script lang="ts">
   import { onDestroy, onMount } from "svelte"
   import type { User } from "../../lib/simple-comment-types"
-  import { currentUserStore } from "../../lib/auth/auth-stores"
+  import {
+    currentUserStore,
+    dispatchableStore,
+  } from "../../lib/auth/auth-stores"
   import {
     createAuthRuntime,
     provideAuthRuntime,
@@ -22,6 +25,10 @@
     showLogin = true
   }
 
+  const onDispatchLegacyLoginIntentClick = () => {
+    dispatchableStore.dispatch("loginIntent")
+  }
+
   onMount(() => {
     void authRuntime.start()
   })
@@ -40,6 +47,13 @@
   <SelfDisplay {currentUser} />
 
   {#if showLogin}
+    <button
+      id="dispatch-legacy-login-intent-button"
+      type="button"
+      on:click={onDispatchLegacyLoginIntentClick}
+    >
+      Dispatch legacy login intent
+    </button>
     <Login {currentUser} />
   {/if}
 </section>
