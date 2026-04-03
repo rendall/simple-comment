@@ -39,6 +39,24 @@ export type AuthUiRequest = {
   reason?: "comment-submit" | "reply-submit" | "manual"
 }
 
+/**
+ * The non-visual auth boundary for a mounted Simple Comment widget.
+ *
+ * This controller owns the auth lifecycle: session verification, 
+ * login, signup, guest login, logout, selected auth-tab persistence, and 
+ * the small amount of cross-component auth UI coordination needed by
+ * the comment flows.
+ *
+ * Internally it interprets `loginMachine`, runs the matching workflow for each
+ * machine state transition, persists the relevant auth state, and publishes a
+ * normalized snapshot for the current widget runtime.
+ *
+ * UI components are expected to consume it in two ways:
+ * - subscribe to snapshots for read-side state such as the current user,
+ *   selected tab, next events, and error state
+ * - call its command methods to request auth work instead of talking directly
+ *   to other components or to the underlying workflows
+ */
 export type AuthController = {
   subscribe(run: (snapshot: AuthControllerSnapshot) => void): () => void
   getSnapshot(): AuthControllerSnapshot
