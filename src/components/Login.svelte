@@ -28,9 +28,7 @@
   import GuestForm from "./auth/GuestForm.svelte"
   import LoginForm from "./auth/LoginForm.svelte"
   import SignupForm from "./auth/SignupForm.svelte"
-  import {
-    useAuthRuntime,
-  } from "../lib/auth/auth-runtime"
+  import { useAuthRuntime } from "../lib/auth/auth-runtime"
 
   const DISPLAY_NAME_HELPER_TEXT = "This is the name that others will see"
   const USER_EMAIL_HELPER_TEXT =
@@ -68,7 +66,9 @@
   let userPasswordMessage = undefined
   let userPasswordStatus = undefined
 
-  const storedLoginTabToIndex = (storedLoginTab: "login" | "signup" | "guest") =>
+  const storedLoginTabToIndex = (
+    storedLoginTab: "login" | "signup" | "guest"
+  ) =>
     ({
       guest: LoginTab.guest,
       login: LoginTab.login,
@@ -78,11 +78,13 @@
   const loginTabToStoredLoginTab = (
     tab: LoginTab
   ): "login" | "signup" | "guest" =>
-    ({
-      [LoginTab.guest]: "guest",
-      [LoginTab.login]: "login",
-      [LoginTab.signup]: "signup",
-    })[tab]
+    (
+      ({
+        [LoginTab.guest]: "guest",
+        [LoginTab.login]: "login",
+        [LoginTab.signup]: "signup",
+      }) as const
+    )[tab]
 
   let selectedIndex = storedLoginTabToIndex(readStoredLoginTab())
   let lastHandledAuthUiRequestId = 0
@@ -103,7 +105,7 @@
 
     if (snapshot.state === "error" && snapshot.error)
       updateStatusDisplay(snapshot.error, true)
-    else if (snapshot.state !== "error") updateStatusDisplay()
+    // else if (snapshot.state !== "error") updateStatusDisplay()
 
     if (
       snapshot.authUiRequest &&
@@ -126,11 +128,10 @@
   const onGuestClick = async () => {
     updateStatusDisplay()
 
-    const validations = [
-      () => validateDisplayName(displayName),
-      () => validateEmail(userEmail),
-    ].map(validation => validation())
-    const result = joinValidations(validations)
+    const result = joinValidations([
+      checkDisplayNameValid(),
+      checkUserEmailValid(),
+    ])
 
     if (isValidResult(result))
       await authController.guestLogin({

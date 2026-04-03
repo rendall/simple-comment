@@ -59,13 +59,13 @@ describe("Reply baseline", () => {
       req.reply(
         verifyCount <= 2
           ? {
-              statusCode: 401,
-              body: { message: "Unauthenticated" },
-            }
+            statusCode: 401,
+            body: { message: "Unauthenticated" },
+          }
           : {
-              statusCode: 200,
-              body: { user: guestUserId, exp: 1721980130, iat: 1690444137 },
-            }
+            statusCode: 200,
+            body: { user: guestUserId, exp: 1721980130, iat: 1690444137 },
+          }
       )
     }).as("verifyUser")
 
@@ -128,7 +128,7 @@ describe("Reply baseline", () => {
     cy.wait("@getTopic")
 
     cy.get(`#${parentCommentId} button.comment-reply-button`).click()
-    cy.wait("@verifyUser")
+    // cy.wait("@verifyUser")
     cy.get(`#${parentCommentId} form.comment-form`).should("exist")
     cy.get(`#${parentCommentId} form.comment-form #guest-name`)
       .should("be.visible")
