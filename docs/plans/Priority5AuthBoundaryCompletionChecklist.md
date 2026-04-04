@@ -68,7 +68,7 @@ C04 completion note: the auth/request seam work discovered two additional atomic
     - "Add or update focused tests for the controller-readable outcome state boundary" (Validation Strategy)
     - "Pass means controller-readable outcome state makes local validation failure, auth failure, and auth success distinguishable in a direct test." (Validation Strategy)
 
-- [ ] T02 `[tests]` Re-run and, only if required for the approved boundary, update the existing auth runtime integration coverage in `src/tests/frontend/auth-runtime.test.ts` so auth lifecycle still works when `Login.svelte` is not mounted at startup.
+- [x] T02 `[tests]` Re-run and, only if required for the approved boundary, update the existing auth runtime integration coverage in `src/tests/frontend/auth-runtime.test.ts` so auth lifecycle still works when `Login.svelte` is not mounted at startup.
   - Depends on: C01, C02, C03, C04a, C04b, C04c.
   - Trace:
     - "Re-run frontend integration coverage that proves auth lifecycle still works when `Login.svelte` is not mounted at startup." (Validation Strategy)
