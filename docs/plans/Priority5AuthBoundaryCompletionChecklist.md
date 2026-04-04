@@ -21,7 +21,7 @@ Source plan:
     - "`Login.svelte` may own auth form fields, field-level validation state, and local status display, but it must not regain ownership of auth workflow orchestration" (Constraints)
     - "make outcome ownership explicit so the UI can distinguish local auth-form validation failure from remote auth failure" (Risks and Mitigations)
 
-- [ ] C03 `[frontend]` Update `src/components/CommentInput.svelte` to consume controller-readable outcome state and recover from local auth validation failure, auth workflow failure, and auth success without remaining hidden or stuck in `loggingIn`.
+- [x] C03 `[frontend]` Update `src/components/CommentInput.svelte` to consume controller-readable outcome state and recover from local auth validation failure, auth workflow failure, and auth success without remaining hidden or stuck in `loggingIn`.
   - Depends on: C01, C02.
   - Validated by: T01, T03, T04.
   - Trace:

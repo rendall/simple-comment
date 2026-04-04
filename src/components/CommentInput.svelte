@@ -1,6 +1,7 @@
 <script lang="ts">
   import Login from "./Login.svelte"
   import SkeletonCommentInput from "./low-level/SkeletonCommentInput.svelte"
+  import type { AuthOutcome } from "../lib/auth/auth-controller"
   import type {
     Comment,
     CommentId,
@@ -31,6 +32,7 @@
   let textAreaHeight = "7rem"
   let loginTabSelect: LoginTab = LoginTab.guest
   let hasPendingAuthRequest = false
+  let authOutcome: AuthOutcome = { kind: "idle" }
 
   const { state, send } = useMachine(commentPostMachine)
   const dispatch = createEventDispatcher()
@@ -75,11 +77,17 @@
   }
 
   const unsubscribeLoginState = loginStateStore.subscribe(loginState => {
-    const { state: stateValue, select } = loginState
+    const {
+      state: stateValue,
+      select,
+      authOutcome: nextAuthOutcome = { kind: "idle" },
+    } = loginState
 
     if (select !== undefined) {
       loginTabSelect = select
     }
+
+    authOutcome = nextAuthOutcome
 
     if (stateValue) {
       loginStateValue = stateValue
@@ -88,20 +96,24 @@
       //TODO: This state handling should be done via XState, probably by combining these state machines
       switch (commentInputStateValue) {
         case "loggingIn":
-          switch (loginStateValue) {
-            case "loggedIn":
+          switch (authOutcome.kind) {
+            case "success":
               hasPendingAuthRequest = false
+              authController.clearAuthOutcome()
               setTimeout(() => send("SUCCESS"), 1)
               break
-            case "error":
+            case "localValidationError":
+            case "authError":
               hasPendingAuthRequest = false
-              setTimeout(() => send({ type: "ERROR", error: "Login error" }))
+              authController.clearAuthOutcome()
+              setTimeout(() => send({ type: "ERROR", error: authOutcome.error }))
               break
 
             default:
-              console.warn(
-                `Unhandled loginState '${loginStateValue}' in CommentInput`
-              )
+              if (loginStateValue === "loggedIn") {
+                hasPendingAuthRequest = false
+                setTimeout(() => send("SUCCESS"), 1)
+              }
               break
           }
           break
@@ -144,6 +156,7 @@
 
     if (typeof error === "string") {
       console.error(error)
+      send({ type: "RESET" })
       return
     }
 
