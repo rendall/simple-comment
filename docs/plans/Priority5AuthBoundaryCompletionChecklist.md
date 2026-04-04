@@ -6,7 +6,7 @@ Source plan:
 
 - `docs/plans/Priority5AuthBoundaryCompletionPlan.md`
 
-- [ ] C01 `[frontend]` Add controller-readable auth outcome state to `AuthControllerSnapshot` in `src/lib/auth/auth-controller.ts` and publish that outcome through `src/lib/auth/auth-stores.ts` without introducing a second coordination channel.
+- [x] C01 `[frontend]` Add controller-readable auth outcome state to `AuthControllerSnapshot` in `src/lib/auth/auth-controller.ts` and publish that outcome through `src/lib/auth/auth-stores.ts` without introducing a second coordination channel.
   - Depends on: none.
   - Validated by: T01, T02.
   - Trace:

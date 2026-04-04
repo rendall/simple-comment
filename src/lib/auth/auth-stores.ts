@@ -21,5 +21,6 @@ export const publishAuthSnapshot = (snapshot: AuthControllerSnapshot): void => {
     state: snapshot.state,
     nextEvents: snapshot.nextEvents,
     select: storedLoginTabToLoginTab(snapshot.uiTab),
+    authOutcome: snapshot.authOutcome,
   })
 }
