@@ -59,9 +59,8 @@
       send({ type: "ERROR", error: "Comment is required." })
       return
     }
-    const hasCurrentUser =
-      authSnapshot.currentUser !== undefined || authSnapshot.state === "loggedIn"
-    if (hasCurrentUser) send({ type: "SUCCESS" })
+    const hasAuthenticatedUser = authSnapshot.currentUser !== undefined
+    if (hasAuthenticatedUser) send({ type: "SUCCESS" })
     else send("LOG_IN")
   }
 
@@ -254,8 +253,8 @@
     {placeholder}
     dir="auto"
   ></textarea>
-  <Login {currentUser} />
-  {#if !currentUser || (commentText && commentText.length)}
+  <Login currentUser={authSnapshot.currentUser} />
+  {#if !authSnapshot.currentUser || (commentText && commentText.length)}
     <div class="button-row">
       {#if onCancel !== null}
         <button class="comment-cancel-button" type="button" on:click={onCancel}
