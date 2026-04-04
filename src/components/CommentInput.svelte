@@ -35,6 +35,7 @@
   let loginTabSelect: LoginTab = LoginTab.guest
   let hasPendingAuthRequest = false
   let authOutcome: AuthOutcome = { kind: "idle" }
+  let handledAuthOutcomeRequestId: number | undefined
 
   const { state, send } = useMachine(commentPostMachine)
   const dispatch = createEventDispatcher()
@@ -97,15 +98,23 @@
       case "loggingIn":
         switch (authOutcome.kind) {
           case "success":
+            if (handledAuthOutcomeRequestId === authOutcome.requestId) break
+            handledAuthOutcomeRequestId = authOutcome.requestId
             hasPendingAuthRequest = false
-            authController.clearAuthOutcome()
-            setTimeout(() => send("SUCCESS"), 1)
+            setTimeout(() => {
+              send("SUCCESS")
+              authController.clearAuthOutcome()
+            }, 1)
             break
           case "localValidationError":
           case "authError":
+            if (handledAuthOutcomeRequestId === authOutcome.requestId) break
+            handledAuthOutcomeRequestId = authOutcome.requestId
             hasPendingAuthRequest = false
-            authController.clearAuthOutcome()
-            setTimeout(() => send({ type: "ERROR", error: authOutcome.error }))
+            setTimeout(() => {
+              send({ type: "ERROR", error: authOutcome.error })
+              authController.clearAuthOutcome()
+            }, 1)
             break
 
           default:
@@ -220,7 +229,10 @@
   ).includes($state.value)
 
   $: {
-    if ($state.value !== "loggingIn") hasPendingAuthRequest = false
+    if ($state.value !== "loggingIn") {
+      hasPendingAuthRequest = false
+      handledAuthOutcomeRequestId = undefined
+    }
   }
 
   $: buttonCopy = getButtonCopy(loginTabSelect, commentText, loginStateValue)
