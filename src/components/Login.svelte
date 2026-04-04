@@ -138,7 +138,10 @@
         name: displayName,
         email: userEmail,
       })
-    else updateStatusDisplay(result.reason, true)
+    else {
+      updateStatusDisplay(result.reason, true)
+      authController.reportLocalValidationError(result.reason)
+    }
   }
 
   const onLoginClick = async () => {
@@ -151,7 +154,10 @@
         username: userId,
         password: userPassword,
       })
-    else updateStatusDisplay(result.reason, true)
+    else {
+      updateStatusDisplay(result.reason, true)
+      authController.reportLocalValidationError(result.reason)
+    }
   }
 
   const onSignupClick = async () => {
@@ -172,7 +178,10 @@
         email: userEmail,
         password: userPassword,
       })
-    else updateStatusDisplay(result.reason, true)
+    else {
+      updateStatusDisplay(result.reason, true)
+      authController.reportLocalValidationError(result.reason)
+    }
   }
 
   const attemptSelectedAuth = async (tab: LoginTab = selectedIndex) => {
