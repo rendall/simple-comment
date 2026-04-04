@@ -46,7 +46,7 @@ C04 completion note: the auth/request seam work discovered two additional atomic
     - "A component that requests auth can distinguish, through controller-readable outcome state on the approved boundary" (Acceptance Criteria)
     - "Pass means true regressions are fixed" (Validation Strategy)
 
-- [ ] C04c `[frontend]` Update `src/components/CommentInput.svelte` validating and post-auth continuation logic to use controller-authenticated state for the post-auth transition, preserving the existing `posting` to `posted` response path and local thread update behavior.
+- [x] C04c `[frontend]` Update `src/components/CommentInput.svelte` validating and post-auth continuation logic to use controller-authenticated state for the post-auth transition, preserving the existing `posting` to `posted` response path and local thread update behavior.
   - Depends on: C04a, C04b.
   - Validated by: T03, T04.
   - Trace:
