@@ -13,7 +13,7 @@ Source plan:
     - "represent that request/recovery contract as controller-readable outcome state on the existing auth boundary" (In Scope)
     - "The missing request/recovery contract must be represented as controller-readable outcome state" (Constraints)
 
-- [ ] C02 `[frontend]` Update `src/components/Login.svelte` to report local auth-form validation outcomes through controller-readable outcome state while keeping auth form fields and field-level validation UI local to `Login.svelte`.
+- [x] C02 `[frontend]` Update `src/components/Login.svelte` to report local auth-form validation outcomes through controller-readable outcome state while keeping auth form fields and field-level validation UI local to `Login.svelte`.
   - Depends on: C01.
   - Validated by: T01, T03.
   - Trace:
