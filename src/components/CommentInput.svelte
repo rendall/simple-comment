@@ -1,7 +1,10 @@
 <script lang="ts">
   import Login from "./Login.svelte"
   import SkeletonCommentInput from "./low-level/SkeletonCommentInput.svelte"
-  import type { AuthOutcome } from "../lib/auth/auth-controller"
+  import type {
+    AuthControllerSnapshot,
+    AuthOutcome,
+  } from "../lib/auth/auth-controller"
   import type {
     Comment,
     CommentId,
@@ -11,7 +14,6 @@
   import type { StateValue } from "xstate"
   import { commentPostMachine } from "../lib/commentPost.xstate"
   import { createEventDispatcher, onDestroy, onMount } from "svelte"
-  import { loginStateStore } from "../lib/auth/auth-stores"
   import type { StoredLoginTab } from "../lib/auth/auth-storage"
   import { useAuthRuntime } from "../lib/auth/auth-runtime"
   import { isResponseOk } from "../frontend-utilities"
@@ -37,6 +39,7 @@
   const { state, send } = useMachine(commentPostMachine)
   const dispatch = createEventDispatcher()
   const authController = useAuthRuntime().controller
+  let authSnapshot: AuthControllerSnapshot = authController.getSnapshot()
 
   const loginTabToStoredLoginTab = (tab: LoginTab): StoredLoginTab =>
     ({
@@ -56,7 +59,7 @@
       return
     }
     const hasCurrentUser =
-      currentUser !== undefined || loginStateValue === "loggedIn"
+      authSnapshot.currentUser !== undefined || authSnapshot.state === "loggedIn"
     if (hasCurrentUser) send({ type: "SUCCESS" })
     else send("LOG_IN")
   }
@@ -77,49 +80,45 @@
     hasPendingAuthRequest = true
   }
 
-  const unsubscribeLoginState = loginStateStore.subscribe(loginState => {
-    const {
-      state: stateValue,
-      select,
-      authOutcome: nextAuthOutcome = { kind: "idle" },
-    } = loginState
+  const syncFromAuthSnapshot = (snapshot: AuthControllerSnapshot) => {
+    authSnapshot = snapshot
+    loginTabSelect = ({
+      guest: LoginTab.guest,
+      login: LoginTab.login,
+      signup: LoginTab.signup,
+    })[snapshot.uiTab]
+    authOutcome = snapshot.authOutcome
+    loginStateValue = snapshot.state
 
-    if (select !== undefined) {
-      loginTabSelect = select
+    const commentInputStateValue = $state.value
+
+    //TODO: This state handling should be done via XState, probably by combining these state machines
+    switch (commentInputStateValue) {
+      case "loggingIn":
+        switch (authOutcome.kind) {
+          case "success":
+            hasPendingAuthRequest = false
+            authController.clearAuthOutcome()
+            setTimeout(() => send("SUCCESS"), 1)
+            break
+          case "localValidationError":
+          case "authError":
+            hasPendingAuthRequest = false
+            authController.clearAuthOutcome()
+            setTimeout(() => send({ type: "ERROR", error: authOutcome.error }))
+            break
+
+          default:
+            break
+        }
+        break
+
+      default:
+        break
     }
+  }
 
-    authOutcome = nextAuthOutcome
-
-    if (stateValue) {
-      loginStateValue = stateValue
-      const commentInputStateValue = $state.value
-
-      //TODO: This state handling should be done via XState, probably by combining these state machines
-      switch (commentInputStateValue) {
-        case "loggingIn":
-          switch (authOutcome.kind) {
-            case "success":
-              hasPendingAuthRequest = false
-              authController.clearAuthOutcome()
-              setTimeout(() => send("SUCCESS"), 1)
-              break
-            case "localValidationError":
-            case "authError":
-              hasPendingAuthRequest = false
-              authController.clearAuthOutcome()
-              setTimeout(() => send({ type: "ERROR", error: authOutcome.error }))
-              break
-
-            default:
-              break
-          }
-          break
-
-        default:
-          break
-      }
-    }
-  })
+  const unsubscribeAuthController = authController.subscribe(syncFromAuthSnapshot)
 
   const postingStateHandler = async () => {
     try {
@@ -198,7 +197,7 @@
   })
 
   onDestroy(() => {
-    unsubscribeLoginState()
+    unsubscribeAuthController()
   })
 
   $: {

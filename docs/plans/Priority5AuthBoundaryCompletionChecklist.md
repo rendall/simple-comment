@@ -32,7 +32,7 @@ Source plan:
 
 C04 completion note: the auth/request seam work discovered two additional atomic `CommentInput.svelte` items that must remain separate so the checklist stays committable and reviewable.
 
-- [ ] C04a `[frontend]` Replace `src/components/CommentInput.svelte` auth-read mixing with one controller-owned read model by subscribing to `AuthController` snapshots directly, and stop using `currentUser` prop and `loginStateStore.state` as independent success signals during the auth-required submit flow.
+- [x] C04a `[frontend]` Replace `src/components/CommentInput.svelte` auth-read mixing with one controller-owned read model by subscribing to `AuthController` snapshots directly, and stop using `currentUser` prop and `loginStateStore.state` as independent success signals during the auth-required submit flow.
   - Depends on: C03.
   - Validated by: T01, T03.
   - Trace:
