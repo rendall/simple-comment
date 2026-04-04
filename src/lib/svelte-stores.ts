@@ -1,5 +1,6 @@
 import type { StateValue } from "xstate"
 import type { User } from "../lib/simple-comment-types"
+import type { AuthOutcome } from "./auth/auth-controller"
 import { writable } from "svelte/store"
 import { LoginTab } from "../lib/simple-comment-types"
 
@@ -22,10 +23,12 @@ export const loginStateStore = writable<{
   state?: StateValue
   nextEvents?: string[]
   select?: LoginTab
+  authOutcome: AuthOutcome
 }>({
   state: undefined,
   nextEvents: undefined,
   select: undefined,
+  authOutcome: { kind: "idle" },
 })
 
 export const currentUserStore = writable<User | undefined>(undefined)

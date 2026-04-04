@@ -29,6 +29,7 @@ export type AuthControllerSnapshot = {
   nextEvents: string[]
   currentUser?: User
   authUiRequest?: AuthUiRequest
+  authOutcome: AuthOutcome
   message?: string
   error?: string
 }
@@ -38,6 +39,29 @@ export type AuthUiRequest = {
   preferredTab?: StoredLoginTab
   reason?: "comment-submit" | "reply-submit" | "manual"
 }
+
+export type AuthOutcome =
+  | {
+      kind: "idle"
+    }
+  | {
+      kind: "pending"
+      requestId: number
+    }
+  | {
+      kind: "localValidationError"
+      requestId: number
+      error: string
+    }
+  | {
+      kind: "authError"
+      requestId: number
+      error: string
+    }
+  | {
+      kind: "success"
+      requestId: number
+    }
 
 /**
  * The non-visual auth boundary for a mounted Simple Comment widget.
@@ -67,6 +91,8 @@ export type AuthController = {
   logout(): Promise<void>
   setTab(tab: StoredLoginTab): void
   requestAuthUi(input?: Omit<AuthUiRequest, "id">): void
+  reportLocalValidationError(error: string): void
+  clearAuthOutcome(): void
   clearAuthUiRequest(): void
   reset(): void
   destroy(): void
@@ -95,6 +121,7 @@ export const createAuthController = (
     uiTab: readStoredLoginTab(),
     nextEvents: loginMachine.initialState.nextEvents ?? [],
     currentUser: deps.initialUser,
+    authOutcome: { kind: "idle" },
     error: undefined,
   }
 
@@ -108,6 +135,11 @@ export const createAuthController = (
     publish()
   }
 
+  const getPendingAuthRequestId = () =>
+    snapshot.authOutcome.kind === "pending"
+      ? snapshot.authOutcome.requestId
+      : undefined
+
   const syncSnapshotFromService = () => {
     const stateValue = service.state.value as LoginMachineState
     const context = service.state.context
@@ -118,10 +150,26 @@ export const createAuthController = (
           : toAuthWorkflowError(context.error).error
         : undefined
 
+    const pendingRequestId = getPendingAuthRequestId()
+    const authOutcome =
+      stateValue === "error" && error && pendingRequestId !== undefined
+        ? {
+            kind: "authError" as const,
+            requestId: pendingRequestId,
+            error,
+          }
+        : stateValue === "loggedIn" && pendingRequestId !== undefined
+          ? {
+              kind: "success" as const,
+              requestId: pendingRequestId,
+            }
+          : snapshot.authOutcome
+
     updateSnapshot({
       state: stateValue,
       context,
       nextEvents: service.state.nextEvents ?? [],
+      authOutcome,
       error,
     })
   }
@@ -290,6 +338,10 @@ export const createAuthController = (
 
       const updates: Partial<AuthControllerSnapshot> = {
         authUiRequest: nextRequest,
+        authOutcome: {
+          kind: "pending",
+          requestId: nextRequest.id,
+        },
       }
 
       if (input.preferredTab) {
@@ -298,6 +350,24 @@ export const createAuthController = (
       }
 
       updateSnapshot(updates)
+    },
+    reportLocalValidationError(error) {
+      const pendingRequestId = getPendingAuthRequestId()
+
+      if (pendingRequestId === undefined) return
+
+      updateSnapshot({
+        authOutcome: {
+          kind: "localValidationError",
+          requestId: pendingRequestId,
+          error,
+        },
+      })
+    },
+    clearAuthOutcome() {
+      if (snapshot.authOutcome.kind !== "idle") {
+        updateSnapshot({ authOutcome: { kind: "idle" } })
+      }
     },
     clearAuthUiRequest() {
       if (snapshot.authUiRequest) {
