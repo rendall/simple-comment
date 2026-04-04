@@ -62,7 +62,7 @@ C04 completion note: the auth/request seam work discovered two additional atomic
     - "reply-click causing an extra `/verify`" (Risks and Mitigations)
     - "`reply.cy.js` no longer depends on a stale extra `/verify`" (Acceptance Criteria)
 
-- [ ] T01 `[tests]` Add or update focused frontend tests in `src/tests/frontend/auth-controller.test.ts` so controller-readable outcome state directly proves local validation failure, auth workflow failure, and auth success are distinguishable without browser-timing inference.
+- [x] T01 `[tests]` Add or update focused frontend tests in `src/tests/frontend/auth-controller.test.ts` so controller-readable outcome state directly proves local validation failure, auth workflow failure, and auth success are distinguishable without browser-timing inference.
   - Depends on: C01, C02, C04a.
   - Trace:
     - "Add or update focused tests for the controller-readable outcome state boundary" (Validation Strategy)
