@@ -32,6 +32,7 @@ The result must feel principled rather than patched together. `Login.svelte` mus
 ## In Scope
 
 - define and implement the missing contract between auth-requesting comment/reply flows and the decoupled auth UI/runtime boundary
+- represent that request/recovery contract as controller-readable outcome state on the existing auth boundary
 - preserve the current architectural direction where auth lifecycle ownership stays outside `Login.svelte`
 - fix real regressions in guest/login/signup error recovery caused by the incomplete seam
 - clarify which auth outcomes are local UI validation outcomes versus controller/runtime outcomes
@@ -53,6 +54,7 @@ The result must feel principled rather than patched together. `Login.svelte` mus
 
 - `src/lib/login.xstate.ts` must remain the auth machine source of truth for this phase.
 - `src/lib/auth/auth-controller.ts` must remain the non-visual auth lifecycle boundary.
+- The missing request/recovery contract must be represented as controller-readable outcome state rather than a separate relay channel, component-to-component signaling path, or UI-only side effect.
 - `Login.svelte` may own auth form fields, field-level validation state, and local status display, but it must not regain ownership of auth workflow orchestration or auth lifecycle startup.
 - `CommentInput.svelte` and reply flows must not depend on mounting or rendering `Login.svelte` to infer auth lifecycle progress through side effects.
 - The single-widget-per-page contract remains the supported product contract for this phase.
@@ -72,18 +74,18 @@ The result must feel principled rather than patched together. `Login.svelte` mus
 - Risk: status messaging and field error decoration drift apart across guest/login/signup flows.
   - Mitigation: reuse the existing field-state helpers and make status clearing/reset behavior explicit instead of relying on broad snapshot-side clearing.
 
-## Open Questions / Assumptions
+## Assumptions / Decisions
 
 - Assumption: the supported contract remains one mounted `SimpleComment` widget per page.
 - Assumption: auth form field ownership remains inside `Login.svelte`.
-- Open question to resolve during checklist authoring: whether the missing request/recovery contract is best represented as controller-readable outcome state, a narrow auth UI outcome channel, or another equally explicit boundary that keeps lifecycle ownership outside `Login.svelte`.
+- Decision: the missing request/recovery contract is represented as controller-readable outcome state on the existing auth boundary.
 
 ## Acceptance Criteria
 
 This plan is successful when all of the following are true:
 
 1. Auth lifecycle ownership remains outside `Login.svelte`.
-2. A component that requests auth can distinguish, through the approved boundary, between:
+2. A component that requests auth can distinguish, through controller-readable outcome state on the approved boundary, between:
    - local auth-form validation failure
    - auth workflow failure
    - auth success
@@ -100,8 +102,8 @@ Because this plan changes frontend auth behavior ownership at the UI/runtime sea
 
 Unit evidence:
 
-- Add or update focused tests for the chosen request/recovery boundary so the requesting flow can be validated without relying on browser timing guesses.
-- Pass means the chosen boundary makes local validation failure, auth failure, and auth success distinguishable in a direct test.
+- Add or update focused tests for the controller-readable outcome state boundary so the requesting flow can be validated without relying on browser timing guesses.
+- Pass means controller-readable outcome state makes local validation failure, auth failure, and auth success distinguishable in a direct test.
 
 Integration evidence:
 
