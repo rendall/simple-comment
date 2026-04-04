@@ -30,23 +30,32 @@ Source plan:
     - "A component that requests auth can distinguish, through controller-readable outcome state on the approved boundary" (Acceptance Criteria)
     - "`CommentInput.svelte` and reply forms do not remain hidden or stuck in processing after local auth validation failure" (Acceptance Criteria)
 
-- [ ] C04 `[frontend]` Make status clearing and field-decoration behavior explicit in `src/components/Login.svelte` so guest, login, and signup flows preserve or intentionally clarify prior user-visible validation messaging without relying on broad snapshot-side clearing.
-  - Depends on: C02.
-  - Validated by: T03, T04.
-  - Trace:
-    - "preserve or restore field-level validation decoration and status messaging for guest, login, and signup flows" (In Scope)
-    - "reuse the existing field-state helpers and make status clearing/reset behavior explicit instead of relying on broad snapshot-side clearing" (Risks and Mitigations)
-    - "Guest/login/signup field-level validation and user-visible status behavior are preserved or intentionally clarified" (Acceptance Criteria)
+C04 completion note: the auth/request seam work discovered two additional atomic `CommentInput.svelte` items that must remain separate so the checklist stays committable and reviewable.
 
-- [ ] C04a `[frontend]` Remove duplicate auth-success handling in `src/components/CommentInput.svelte` so the comment-post flow advances exactly once from `loggingIn` when controller-readable outcome state reports success, preserving the normal `posting` to `posted` response path.
+- [ ] C04a `[frontend]` Replace `src/components/CommentInput.svelte` auth-read mixing with one controller-owned read model by subscribing to `AuthController` snapshots directly, and stop using `currentUser` prop and `loginStateStore.state` as independent success signals during the auth-required submit flow.
   - Depends on: C03.
+  - Validated by: T01, T03.
+  - Trace:
+    - "represent that request/recovery contract as controller-readable outcome state on the existing auth boundary" (In Scope)
+    - "`CommentInput.svelte` and reply flows must not depend on mounting or rendering `Login.svelte` to infer auth lifecycle progress through side effects." (Constraints)
+
+- [ ] C04b `[frontend]` Update `src/components/CommentInput.svelte` so the `loggingIn` state advances exactly once from controller-readable auth outcome state, with no duplicate success or fallback success path.
+  - Depends on: C04a.
   - Validated by: T03, T04.
   - Trace:
     - "A component that requests auth can distinguish, through controller-readable outcome state on the approved boundary" (Acceptance Criteria)
     - "Pass means true regressions are fixed" (Validation Strategy)
 
+- [ ] C04c `[frontend]` Update `src/components/CommentInput.svelte` validating and post-auth continuation logic to use controller-authenticated state for the post-auth transition, preserving the existing `posting` to `posted` response path and local thread update behavior.
+  - Depends on: C04a, C04b.
+  - Validated by: T03, T04.
+  - Trace:
+    - "returning to an interactive comment or reply form without getting stuck hidden or mid-process" (Intent)
+    - "`CommentInput.svelte` and reply forms do not remain hidden or stuck in processing after local auth validation failure." (Acceptance Criteria)
+    - "Pass means the user-visible auth flows remain coherent and recoverable end-to-end." (Validation Strategy)
+
 - [ ] C05 `[frontend]` Update `cypress/e2e/generic/reply.cy.js` to remove the stale extra `/verify` expectation that depended on rendering the login UI, and do not change other auth Cypress specs unless T03 documents a parity-backed stale-test classification.
-  - Depends on: C03, C04, C04a.
+  - Depends on: C03, C04a, C04b, C04c.
   - Validated by: T03.
   - Trace:
     - "update Cypress tests only when they are proven to assert the old coupling instead of the intended behavior contract" (In Scope)
@@ -54,28 +63,29 @@ Source plan:
     - "`reply.cy.js` no longer depends on a stale extra `/verify`" (Acceptance Criteria)
 
 - [ ] T01 `[tests]` Add or update focused frontend tests in `src/tests/frontend/auth-controller.test.ts` so controller-readable outcome state directly proves local validation failure, auth workflow failure, and auth success are distinguishable without browser-timing inference.
-  - Depends on: C01, C02.
+  - Depends on: C01, C02, C04a.
   - Trace:
     - "Add or update focused tests for the controller-readable outcome state boundary" (Validation Strategy)
     - "Pass means controller-readable outcome state makes local validation failure, auth failure, and auth success distinguishable in a direct test." (Validation Strategy)
 
 - [ ] T02 `[tests]` Re-run and, only if required for the approved boundary, update the existing auth runtime integration coverage in `src/tests/frontend/auth-runtime.test.ts` so auth lifecycle still works when `Login.svelte` is not mounted at startup.
-  - Depends on: C01, C02, C03, C04, C04a.
+  - Depends on: C01, C02, C03, C04a, C04b, C04c.
   - Trace:
     - "Re-run frontend integration coverage that proves auth lifecycle still works when `Login.svelte` is not mounted at startup." (Validation Strategy)
     - "Pass means the original Priority 5 runtime/controller decoupling remains intact while the seam is completed." (Validation Strategy)
 
-- [ ] T03 `[tests]` Re-run the auth-related Cypress contract/parity suite for `cypress/e2e/generic/reply.cy.js`, `cypress/e2e/generic/error-recovery.cy.js`, and `cypress/e2e/generic/input-validation.cy.js`; document any stale-test classification before changing a spec.
-  - Depends on: C01, C02, C03, C04, C04a, C05, T01, T02.
+- [ ] T03 `[tests]` Re-run the auth-related Cypress contract/parity suite for `cypress/e2e/generic/reply.cy.js`, `cypress/e2e/generic/error-recovery.cy.js`, `cypress/e2e/generic/input-validation.cy.js`, and `cypress/e2e/generic/public-comment.cy.js`; document any stale-test classification before changing a spec.
+  - Depends on: C01, C02, C03, C04a, C04b, C04c, C05, T01, T02.
   - Trace:
     - "Re-run the auth-related Cypress suite with specific attention to:" (Validation Strategy)
     - "`reply.cy.js`" (Validation Strategy)
     - "`error-recovery.cy.js`" (Validation Strategy)
     - "`input-validation.cy.js`" (Validation Strategy)
+    - "existing login/signup/guest/logout/auth-runtime smoke coverage" (Validation Strategy)
     - "Pass means true regressions are fixed and any test change is justified against intended behavior rather than old coupling." (Validation Strategy)
 
 - [ ] T04 `[tests]` Re-run guest comment, reply, login, signup, logout, and auth-runtime-late-render smoke coverage after the seam is completed and confirm the user-visible auth flows remain coherent and recoverable end-to-end.
-  - Depends on: C01, C02, C03, C04, C04a, C05, T01, T02.
+  - Depends on: C01, C02, C03, C04a, C04b, C04c, C05, T01, T02.
   - Trace:
     - "Verify guest comment, reply, login, signup, logout, and auth-runtime-late-render paths after the seam is completed." (Validation Strategy)
     - "Pass means the user-visible auth flows remain coherent and recoverable end-to-end." (Validation Strategy)
@@ -94,7 +104,7 @@ Type: behavior
 
 Goal: make comment and reply flows recover through controller-readable outcome state instead of hidden `Login.svelte` side effects.
 
-Items: C03, C04, C04a, T02
+Items: C03, C04a, C04b, C04c, T02
 
 Type: behavior
 

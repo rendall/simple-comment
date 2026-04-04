@@ -55,7 +55,8 @@
       send({ type: "ERROR", error: "Comment is required." })
       return
     }
-    const hasCurrentUser = currentUser !== undefined
+    const hasCurrentUser =
+      currentUser !== undefined || loginStateValue === "loggedIn"
     if (hasCurrentUser) send({ type: "SUCCESS" })
     else send("LOG_IN")
   }
@@ -110,10 +111,6 @@
               break
 
             default:
-              if (loginStateValue === "loggedIn") {
-                hasPendingAuthRequest = false
-                setTimeout(() => send("SUCCESS"), 1)
-              }
               break
           }
           break

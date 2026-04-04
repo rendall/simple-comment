@@ -10,7 +10,7 @@ declare global {
   }
 }
 
-let simpleComment
+let simpleComment: ReturnType<typeof mount> | null = null
 
 const warnSingletonMount = () => {
   console.warn(
