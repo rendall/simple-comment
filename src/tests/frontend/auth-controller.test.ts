@@ -275,6 +275,87 @@ describe("auth-controller", () => {
     controller.destroy()
   })
 
+  test("reports local validation failure through controller-readable auth outcome state", () => {
+    const controller = createAuthController()
+
+    controller.requestAuthUi({ preferredTab: "guest", reason: "comment-submit" })
+    controller.reportLocalValidationError("Display name is required.")
+
+    expect(controller.getSnapshot().authOutcome).toEqual({
+      kind: "localValidationError",
+      requestId: 1,
+      error: "Display name is required.",
+    })
+
+    controller.destroy()
+  })
+
+  test("reports auth workflow failure through controller-readable auth outcome state", async () => {
+    mockVerifySessionWorkflow.mockResolvedValueOnce({
+      ok: false,
+      error: "Unauthorized",
+      code: 401,
+    })
+    mockLoginWorkflow.mockResolvedValue({
+      ok: false,
+      error: "Login failed",
+    })
+
+    const controller = createAuthController()
+
+    await controller.init()
+    await waitForSnapshot(controller, snapshot => snapshot.state === "loggedOut")
+    controller.requestAuthUi({ preferredTab: "login", reason: "comment-submit" })
+    await controller.login({ username: "test-user", password: "wrong-password" })
+
+    const snapshot = await waitForSnapshot(
+      controller,
+      nextSnapshot => nextSnapshot.authOutcome.kind === "authError"
+    )
+
+    expect(snapshot.authOutcome).toEqual({
+      kind: "authError",
+      requestId: 1,
+      error: "Login failed",
+    })
+
+    controller.destroy()
+  })
+
+  test("reports auth success through controller-readable auth outcome state", async () => {
+    mockVerifySessionWorkflow
+      .mockResolvedValueOnce({
+        ok: false,
+        error: "Unauthorized",
+        code: 401,
+      })
+      .mockResolvedValueOnce({ ok: true, data: existingUser })
+    mockLoginWorkflow.mockResolvedValue({
+      ok: true,
+      data: { authenticated: true },
+    })
+
+    const controller = createAuthController()
+
+    await controller.init()
+    await waitForSnapshot(controller, snapshot => snapshot.state === "loggedOut")
+    controller.requestAuthUi({ preferredTab: "login", reason: "comment-submit" })
+    await controller.login({ username: "test-user", password: "secret" })
+
+    const snapshot = await waitForSnapshot(
+      controller,
+      nextSnapshot => nextSnapshot.authOutcome.kind === "success"
+    )
+
+    expect(snapshot.authOutcome).toEqual({
+      kind: "success",
+      requestId: 1,
+    })
+    expect(snapshot.currentUser).toEqual(existingUser)
+
+    controller.destroy()
+  })
+
   test("persists selected tab through the controller boundary", () => {
     const controller = createAuthController()
 
