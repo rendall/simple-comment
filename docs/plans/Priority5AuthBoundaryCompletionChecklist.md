@@ -39,7 +39,7 @@ C04 completion note: the auth/request seam work discovered two additional atomic
     - "represent that request/recovery contract as controller-readable outcome state on the existing auth boundary" (In Scope)
     - "`CommentInput.svelte` and reply flows must not depend on mounting or rendering `Login.svelte` to infer auth lifecycle progress through side effects." (Constraints)
 
-- [ ] C04b `[frontend]` Update `src/components/CommentInput.svelte` so the `loggingIn` state advances exactly once from controller-readable auth outcome state, with no duplicate success or fallback success path.
+- [x] C04b `[frontend]` Update `src/components/CommentInput.svelte` so the `loggingIn` state advances exactly once from controller-readable auth outcome state, with no duplicate success or fallback success path.
   - Depends on: C04a.
   - Validated by: T03, T04.
   - Trace:
