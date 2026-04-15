@@ -41,13 +41,13 @@ Execution note:
 
 ## Atomic Checklist Items
 
-- [ ] C01 `[frontend]` Add the minimal slice-1 runtime scaffold to `src/lib/auth-service.ts` by defining `AuthSessionState` from `src/lib/login.xstate.ts`, adding `destroy` to the `AuthService` lifecycle contract, and preserving exploratory request/outcome, current-user, and auth-command surfaces unless they directly conflict with the slice-1 runtime contract.
+- [x] C01 `[frontend]` Add the minimal slice-1 runtime scaffold to `src/lib/auth-service.ts` by defining `AuthSessionState` from `src/lib/login.xstate.ts`, adding `destroy` to the `AuthService` lifecycle contract, and preserving exploratory request/outcome, current-user, and auth-command surfaces unless they directly conflict with the slice-1 runtime contract.
   - Depends on: none.
   - Trace:
     - "clarify boundaries between view components, state machines, and auth/workflow logic" (Priority 5)
     - "auth/session behavior is coupled to component presence and lifecycle rather than being owned by a smaller dedicated workflow/service boundary" (Priority 5)
 
-- [ ] T01 `[tests]` Add fail-first frontend tests for the slice-1 `auth-service` contract in `src/tests/frontend/auth-service.test.ts` that prove `createAuthService()` returns an object with readable `sessionState`, that `sessionState` uses the `loginMachine` session vocabulary, and that `destroy()` is part of the public lifecycle contract.
+- [ ] T01 `[tests]` Add fail-first frontend tests for `src/lib/auth-service.ts` in `src/tests/frontend/auth-service.test.ts` that prove `createAuthService()` creates and owns a live interpreted `src/lib/login.xstate.ts` runtime, publishes `sessionState` from that runtime, and disposes the runtime when `destroy()` is called.
   - Depends on: C01.
   - Trace:
     - "UI modules are easier to test at the right boundary" (Priority 5)
