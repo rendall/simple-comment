@@ -47,7 +47,7 @@ Execution note:
     - "clarify boundaries between view components, state machines, and auth/workflow logic" (Priority 5)
     - "auth/session behavior is coupled to component presence and lifecycle rather than being owned by a smaller dedicated workflow/service boundary" (Priority 5)
 
-- [ ] T01 `[tests]` Add fail-first frontend tests for `src/lib/auth-service.ts` in `src/tests/frontend/auth-service.test.ts` that prove `createAuthService()` creates and owns a live interpreted `src/lib/login.xstate.ts` runtime, publishes `sessionState` from that runtime, and disposes the runtime when `destroy()` is called.
+- [x] T01 `[tests]` Add fail-first frontend tests for `src/lib/auth-service.ts` in `src/tests/frontend/auth-service.test.ts` that prove `createAuthService()` creates and owns a live interpreted `src/lib/login.xstate.ts` runtime, publishes `sessionState` from that runtime, and disposes the runtime when `destroy()` is called.
   - Depends on: C01.
   - Trace:
     - "UI modules are easier to test at the right boundary" (Priority 5)
