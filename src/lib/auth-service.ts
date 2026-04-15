@@ -23,6 +23,7 @@
  */
 import type { Readable } from "svelte/store"
 import { get, writable } from "svelte/store"
+import { interpret } from "xstate"
 import type { StateValueFrom } from "xstate"
 import { loginMachine } from "./login.xstate"
 import type { Email, ServerResponse, User, UserId } from "./simple-comment-types"
@@ -131,12 +132,11 @@ export const createAuthService = (
   const { initialUser } = options
 
   let requestSequence = 0
-
+  const authRuntime = interpret(loginMachine)
   const initialLoginState = loginMachine.initialState.value
 
-  if (typeof initialLoginState !== "string") {
+  if (typeof initialLoginState !== "string")
     throw new Error("Expected a flat login machine state")
-  }
 
   const sessionStateStore = writable<AuthSessionState>(
     initialUser ? "loggedIn" : (initialLoginState as AuthSessionState)
@@ -144,6 +144,15 @@ export const createAuthService = (
   const currentUserStore = writable<User | undefined>(initialUser)
   const authRequestStore = writable<AuthRequestState>({ status: "idle" })
   const authOutcomeStore = writable<AuthOutcomeState>({ status: "none" })
+
+  authRuntime.onTransition(state => {
+    if (typeof state.value !== "string")
+      throw new Error("Expected a flat login machine state")
+
+    sessionStateStore.set(state.value as AuthSessionState)
+  })
+
+  authRuntime.start()
 
   const getPendingRequest = (): PendingAuthRequest | undefined => {
     const activeRequest = get(authRequestStore)
@@ -245,6 +254,8 @@ export const createAuthService = (
     logout: async () => {
       return notImplemented("logout")
     },
-    destroy: () => { },
+    destroy: () => {
+      authRuntime.stop()
+    },
   }
 }
