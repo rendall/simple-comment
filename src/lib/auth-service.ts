@@ -1,3 +1,26 @@
+/**
+ * Widget-scoped auth service for Simple Comment.
+ *
+ * This module owns the live auth machine/runtime instance and the auth API
+ * side effects for a single mounted widget. It exposes the auth session state,
+ * current user, auth request state, and auth request outcome as a single
+ * shared boundary for auth-aware components.
+ *
+ * `Login.svelte` uses this service to submit login, signup, guest-login, and
+ * logout commands while retaining ownership of form-local field state and
+ * field-level validation UI. `CommentInput.svelte` and reply flows use this
+ * service to request authentication and observe request-scoped outcomes
+ * without depending on `Login.svelte` mount timing or component-mediated side
+ * effects. `SelfDisplay.svelte` uses this service to read the authenticated
+ * user and trigger logout.
+ *
+ * The auth session lifecycle vocabulary comes from `login.xstate.ts`, which
+ * remains the source of truth for auth machine states and transitions. This
+ * service interprets that machine, publishes readable session state derived
+ * from it, and keeps request bookkeeping separate from machine lifecycle
+ * state so callers can distinguish auth session status from the outcome of a
+ * specific auth request.
+ */
 import type { Readable } from "svelte/store"
 import { get, writable } from "svelte/store"
 import type { StateValueFrom } from "xstate"
