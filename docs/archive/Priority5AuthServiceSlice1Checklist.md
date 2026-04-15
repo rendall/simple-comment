@@ -1,6 +1,6 @@
 # Priority 5 Auth Service Slice 1 Checklist
 
-Status: planning
+Status: archived
 
 Classification: proposed implementation checklist draft (not approved)
 
@@ -53,7 +53,7 @@ Execution note:
     - "UI modules are easier to test at the right boundary" (Priority 5)
     - "clarify boundaries between view components, state machines, and auth/workflow logic" (Priority 5)
 
-- [ ] C02 `[frontend]` Implement slice-1 runtime ownership in `src/lib/auth-service.ts` so `createAuthService()` owns a live interpreted instance of `src/lib/login.xstate.ts`, publishes session state from that runtime rather than manual string stores, and disposes the runtime through `destroy()`.
+- [x] C02 `[frontend]` Implement slice-1 runtime ownership in `src/lib/auth-service.ts` so `createAuthService()` owns a live interpreted instance of `src/lib/login.xstate.ts`, publishes session state from that runtime rather than manual string stores, and disposes the runtime through `destroy()`.
   - Depends on: T01.
   - Validated by: T01.
   - Trace:
