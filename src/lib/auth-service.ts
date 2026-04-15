@@ -27,9 +27,9 @@ import type { StateValueFrom } from "xstate"
 import { loginMachine } from "./login.xstate"
 import type { Email, ServerResponse, User, UserId } from "./simple-comment-types"
 
-type LoginMachineStateValue = StateValueFrom<typeof loginMachine>
+type LoginMachineState = StateValueFrom<typeof loginMachine>
 
-export type AuthSessionState = LoginMachineStateValue
+export type AuthSessionState = LoginMachineState
 
 export type AuthRequestReason =
   | "comment-submit"
@@ -111,6 +111,7 @@ export type AuthService = {
   signup: (payload: SignupPayload) => Promise<void>
   loginGuest: (payload: GuestLoginPayload) => Promise<void>
   logout: () => Promise<void>
+  destroy: () => void
 }
 
 const notImplemented = async (methodName: string): Promise<never> => {
@@ -131,7 +132,15 @@ export const createAuthService = (
 
   let requestSequence = 0
 
-  const sessionStateStore = writable<AuthSessionState>(initialUser ? "loggedIn" : "idle")
+  const initialLoginState = loginMachine.initialState.value
+
+  if (typeof initialLoginState !== "string") {
+    throw new Error("Expected a flat login machine state")
+  }
+
+  const sessionStateStore = writable<AuthSessionState>(
+    initialUser ? "loggedIn" : (initialLoginState as AuthSessionState)
+  )
   const currentUserStore = writable<User | undefined>(initialUser)
   const authRequestStore = writable<AuthRequestState>({ status: "idle" })
   const authOutcomeStore = writable<AuthOutcomeState>({ status: "none" })
@@ -236,5 +245,6 @@ export const createAuthService = (
     logout: async () => {
       return notImplemented("logout")
     },
+    destroy: () => { },
   }
 }

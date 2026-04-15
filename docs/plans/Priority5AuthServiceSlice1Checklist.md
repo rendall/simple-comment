@@ -41,7 +41,7 @@ Execution note:
 
 ## Atomic Checklist Items
 
-- [ ] C01 `[frontend]` Reduce `src/lib/auth-service.ts` to the minimal slice-1 export scaffold that defines `AuthSessionState` from `src/lib/login.xstate.ts`, exports `AuthService` with only `sessionState` and `destroy`, and exports `createAuthService` without request/outcome, current-user, or auth-command surfaces.
+- [ ] C01 `[frontend]` Add the minimal slice-1 runtime scaffold to `src/lib/auth-service.ts` by defining `AuthSessionState` from `src/lib/login.xstate.ts`, adding `destroy` to the `AuthService` lifecycle contract, and preserving exploratory request/outcome, current-user, and auth-command surfaces unless they directly conflict with the slice-1 runtime contract.
   - Depends on: none.
   - Trace:
     - "clarify boundaries between view components, state machines, and auth/workflow logic" (Priority 5)
@@ -65,7 +65,7 @@ Execution note:
 
 ### Slice 1A
 
-Goal: define the minimal public contract for auth-service runtime ownership without pre-committing later auth surfaces.
+Goal: define the minimal public contract for auth-service runtime ownership while preserving non-conflicting exploratory auth-service surfaces for later slices.
 
 Items: C01
 
