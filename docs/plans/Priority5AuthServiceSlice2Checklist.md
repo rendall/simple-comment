@@ -55,7 +55,7 @@ Execution note:
     - "UI modules are easier to test at the right boundary" (Priority 5)
     - "auth and identity flows are less dependent on component presence" (Priority 5)
 
-- [ ] C02 `[frontend]` Implement slice-2 bootstrap behavior in `src/lib/auth-service.ts` so `init()` owns the `verifySelf` auth API side effect, maps verification outcomes onto the live interpreted `src/lib/login.xstate.ts` runtime, and publishes `currentUser` from the service rather than from `Login.svelte`.
+- [x] C02 `[frontend]` Implement slice-2 bootstrap behavior in `src/lib/auth-service.ts` so `init()` owns the `verifySelf` auth API side effect, maps verification outcomes onto the live interpreted `src/lib/login.xstate.ts` runtime, and publishes `currentUser` from the service rather than from `Login.svelte`.
   - Depends on: T01.
   - Validated by: T01.
   - Trace:

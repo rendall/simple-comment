@@ -25,6 +25,7 @@ import type { Readable } from "svelte/store"
 import { get, writable } from "svelte/store"
 import { interpret } from "xstate"
 import type { StateValueFrom } from "xstate"
+import { verifySelf } from "../apiClient"
 import { loginMachine } from "./login.xstate"
 import type { Email, ServerResponse, User, UserId } from "./simple-comment-types"
 
@@ -232,8 +233,27 @@ export const createAuthService = (
       subscribe: authOutcomeStore.subscribe,
     },
     init: async () => {
-      sessionStateStore.set("verifying")
-      sessionStateStore.set(initialUser ? "loggedIn" : "loggedOut")
+      if (initialUser !== undefined) {
+        currentUserStore.set(initialUser)
+        authRuntime.send("SUCCESS")
+        return
+      }
+
+      currentUserStore.set(undefined)
+
+      try {
+        const verifiedUser = await verifySelf()
+
+        currentUserStore.set(verifiedUser)
+        authRuntime.send("SUCCESS")
+      } catch (error) {
+        currentUserStore.set(undefined)
+
+        const { status } = (error ?? {}) as { status?: number }
+
+        if (status === 401) authRuntime.send("FIRST_VISIT")
+        else authRuntime.send({ type: "ERROR", error: error as ServerResponse | string })
+      }
     },
     requestAuth,
     clearAuthOutcome,
