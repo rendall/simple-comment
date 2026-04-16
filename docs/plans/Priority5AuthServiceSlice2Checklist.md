@@ -42,7 +42,7 @@ Execution note:
 
 ## Atomic Checklist Items
 
-- [ ] C01 `[frontend]` Tighten the slice-2 public contract in `src/lib/auth-service.ts` so `currentUser`, `init`, and `CreateAuthServiceOptions.initialUser` are the explicit public surface for initial auth verification and authenticated-user publication, while preserving non-conflicting exploratory auth-service command and request/outcome surfaces unchanged.
+- [x] C01 `[frontend]` Tighten the slice-2 public contract in `src/lib/auth-service.ts` so `currentUser`, `init`, and `CreateAuthServiceOptions.initialUser` are the explicit public surface for initial auth verification and authenticated-user publication, while preserving non-conflicting exploratory auth-service command and request/outcome surfaces unchanged.
   - Depends on: none.
   - Validated by: T01.
   - Trace:
