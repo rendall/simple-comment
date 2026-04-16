@@ -42,7 +42,7 @@ Execution note:
 
 ## Atomic Checklist Items
 
-- [ ] C01 `[frontend]` Tighten the slice-3 public contract in `src/lib/auth-service.ts` so `login` and `logout` are the explicit slice-owned command surfaces for authenticated-session command ownership, while preserving non-conflicting exploratory `signup`, `loginGuest`, and request/outcome surfaces unchanged.
+- [x] C01 `[frontend]` Tighten the slice-3 public contract in `src/lib/auth-service.ts` so `login` and `logout` are the explicit slice-owned command surfaces for authenticated-session command ownership, while preserving non-conflicting exploratory `signup`, `loginGuest`, and request/outcome surfaces unchanged.
   - Depends on: none.
   - Validated by: T01, T02.
   - Trace:
