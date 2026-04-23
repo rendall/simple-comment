@@ -44,7 +44,7 @@ to `src/apiClient.ts` rather than creating a one-off client inside
 
 ## Atomic Checklist Items
 
-- [ ] C01 `[frontend]` Tighten the `loginGuest` public contract in `src/lib/auth-service.ts` so `GuestLoginPayload` can carry the submitted guest display name/email plus optional reusable stored guest identity (`id`, `challenge`, stored `name`, stored `email`) without making `auth-service` read from `localStorage`.
+- [x] C01 `[frontend]` Tighten the `loginGuest` public contract in `src/lib/auth-service.ts` so `GuestLoginPayload` can carry the submitted guest display name/email plus optional reusable stored guest identity (`id`, `challenge`, stored `name`, stored `email`) without making `auth-service` read from `localStorage`.
   - Depends on: none.
   - Validated by: T01.
   - Trace:
@@ -95,4 +95,3 @@ Goal: move stored-guest reuse, new-guest creation, and update-if-changed side ef
 Items: C02
 
 Type: behavior
-
