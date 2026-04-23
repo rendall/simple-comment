@@ -63,7 +63,7 @@ to `src/apiClient.ts` rather than creating a one-off client inside
     - "guest login flow reads stored guest credentials, attempts `postAuth(storedId, storedChallenge)`, calls `verifyUser()`, falls back to `getGuestToken()`, calls `verifyUser()` again, creates a guest with `createGuestUser(...)`, and sends success/error machine events." (`docs/plans/Priority5Completion.md`, Item 3 findings)
     - "UI modules are easier to test at the right boundary" (`docs/RepoHealthImprovementBacklog.md`, Priority 5)
 
-- [ ] C02 `[frontend]` Implement `loginGuest` command ownership in `src/lib/auth-service.ts` so `loginGuest()` composes existing `src/apiClient.ts` guest/auth/user primitives, maps success/error onto the live interpreted `src/lib/login.xstate.ts` runtime, and publishes authenticated user state from the service rather than from `Login.svelte`.
+- [x] C02 `[frontend]` Implement `loginGuest` command ownership in `src/lib/auth-service.ts` so `loginGuest()` composes existing `src/apiClient.ts` guest/auth/user primitives, maps success/error onto the live interpreted `src/lib/login.xstate.ts` runtime, and publishes authenticated user state from the service rather than from `Login.svelte`.
   - Depends on: T01.
   - Validated by: T01.
   - Trace:

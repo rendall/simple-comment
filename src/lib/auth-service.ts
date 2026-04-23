@@ -25,7 +25,16 @@ import type { Readable } from "svelte/store"
 import { get, writable } from "svelte/store"
 import { interpret } from "xstate"
 import type { StateValueFrom } from "xstate"
-import { createUser, deleteAuth, postAuth, verifySelf } from "../apiClient"
+import {
+  createGuestUser,
+  createUser,
+  deleteAuth,
+  getGuestToken,
+  postAuth,
+  updateUser,
+  verifySelf,
+  verifyUser,
+} from "../apiClient"
 import { loginMachine } from "./login.xstate"
 import type { Email, ServerResponse, User, UserId } from "./simple-comment-types"
 
@@ -326,9 +335,83 @@ export const createAuthService = (
         })
       }
     },
-    loginGuest: async payload => {
-      void payload
-      return notImplemented("loginGuest")
+    loginGuest: async ({ displayName, email, storedGuest }) => {
+      currentUserStore.set(undefined)
+      authRuntime.send({ type: "GUEST", guest: { name: displayName, email } })
+
+      const createNewGuest = async (): Promise<void> => {
+        const guestTokenResponse = await getGuestToken()
+
+        if (!guestTokenResponse.ok) throw guestTokenResponse
+
+        const tokenClaimResponse = await verifyUser()
+
+        if (!tokenClaimResponse.ok) throw tokenClaimResponse
+
+        const createGuestResponse = await createGuestUser({
+          id: tokenClaimResponse.body.user,
+          name: displayName,
+          email,
+        })
+
+        if (!createGuestResponse.ok) throw createGuestResponse
+      }
+
+      const reuseStoredGuest = async (): Promise<boolean> => {
+        const { id, challenge } = storedGuest ?? {}
+
+        if (!id || !challenge) return false
+
+        try {
+          const authResponse = await postAuth(id, challenge)
+
+          if (!authResponse.ok) return false
+
+          const verifyResponse = await verifyUser()
+
+          if (!verifyResponse.ok) return false
+
+          return true
+        } catch {
+          return false
+        }
+      }
+
+      try {
+        const reusedStoredGuest = await reuseStoredGuest()
+
+        if (!reusedStoredGuest) await createNewGuest()
+
+        const { id, name: storedName, email: storedEmail } = storedGuest ?? {}
+
+        const shouldUpdateStoredGuest =
+          reusedStoredGuest &&
+          id &&
+          (displayName !== storedName || email !== storedEmail)
+
+        if (shouldUpdateStoredGuest) {
+          const updateResponse = await updateUser({
+            id,
+            name: displayName,
+            email,
+          })
+
+          if (!updateResponse.ok) throw updateResponse
+        }
+
+        authRuntime.send("SUCCESS")
+
+        const verifiedUser = await verifySelf()
+
+        currentUserStore.set(verifiedUser)
+        authRuntime.send("SUCCESS")
+      } catch (error) {
+        currentUserStore.set(undefined)
+        authRuntime.send({
+          type: "ERROR",
+          error: error as ServerResponse | string,
+        })
+      }
     },
     logout: async () => {
       authRuntime.send("LOGOUT")
