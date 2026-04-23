@@ -62,7 +62,7 @@ Execution note:
     - "it performs auth-related API calls such as ... login" (Priority 5)
     - success target: "login-related state, side effects, and rendering responsibilities are easier to explain as separate concerns" (Priority 5)
 
-- [ ] T02 `[tests]` Add fail-first frontend tests for `logout` command ownership in `src/tests/frontend/auth-service.logout.test.ts` that prove `auth-service.logout()` owns the `deleteAuth` side effect, drives the live `src/lib/login.xstate.ts` runtime through the logout success/error path rather than leaving the behavior in `Login.svelte`, clears `currentUser` on successful logout, and transitions to `error` on failed logout.
+- [x] T02 `[tests]` Add fail-first frontend tests for `logout` command ownership in `src/tests/frontend/auth-service.logout.test.ts` that prove `auth-service.logout()` owns the `deleteAuth` side effect, drives the live `src/lib/login.xstate.ts` runtime through the logout success/error path rather than leaving the behavior in `Login.svelte`, clears `currentUser` on successful logout, and transitions to `error` on failed logout.
   - Depends on: C01, C02.
   - Trace:
     - "it performs auth-related API calls such as ... logout" (Priority 5)
