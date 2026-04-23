@@ -46,7 +46,16 @@
   - Kept out of scope: `Login.svelte` UI rewiring, form-local signup validation, guest-login behavior, localStorage handling, shared-store publication, `CommentInput.svelte`, and `SelfDisplay.svelte`.
   - The proposed slice preserves current behavior intent: successful signup should create the user and continue through the existing post-signup login/session verification path to publish authenticated `currentUser`.
 
-- 5. [ ] Draft a slice for `loginGuest()` command ownership in `auth-service`, including existing guest-token, verify, create guest, and update-if-changed behavior.
+- 5. [x] Draft a slice for `loginGuest()` command ownership in `auth-service`, including existing guest-token, verify, create guest, and update-if-changed behavior.
+
+  Findings:
+
+  - Created `docs/plans/Priority5AuthServiceSlice5Checklist.md` as the proposed slice-5 checklist draft.
+  - Kept the slice narrow: `loginGuest()` command ownership in `auth-service` only.
+  - Captured the storage seam explicitly: preserving stored guest reuse requires stored guest `id`/`challenge`/profile data, but this slice should not move `localStorage` ownership into `auth-service`; the service contract should accept reusable stored guest identity as explicit command input/dependency.
+  - Required reuse of existing `src/apiClient.ts` primitives: `postAuth`, `verifyUser`, `getGuestToken`, `createGuestUser`, `updateUser`, and `verifySelf`.
+  - Preserved the test/code separation convention: C01 tightens the command contract, T01 adds fail-first tests, C02 implements production code later, and implementation must stop if tests cannot be made green without changing tests.
+  - Kept out of scope: `Login.svelte` UI rewiring, guest form-local validation, `localStorage` extraction, shared-store publication, `CommentInput.svelte`, and `SelfDisplay.svelte`.
 
 - 6. [ ] Draft a slice for moving session/localStorage persistence out of `Login.svelte` only if it blocks service ownership or component decoupling.
 
