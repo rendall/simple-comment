@@ -133,12 +133,6 @@ export type AuthService = {
   destroy: () => void
 }
 
-const notImplemented = async (methodName: string): Promise<never> => {
-  throw new Error(
-    `auth-service scaffold method '${methodName}' is not implemented`
-  )
-}
-
 const matchesRequestId = (
   value: { requestId: string },
   requestId?: string
