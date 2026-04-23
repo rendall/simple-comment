@@ -83,9 +83,17 @@ export type SignupPayload = {
   email: Email
 }
 
+export type StoredGuestIdentity = {
+  id?: UserId
+  challenge?: string
+  name?: string
+  email?: Email
+}
+
 export type GuestLoginPayload = {
   displayName: string
   email: Email
+  storedGuest?: StoredGuestIdentity
 }
 
 export type ReportLocalValidationErrorInput = {
