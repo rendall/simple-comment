@@ -49,7 +49,7 @@ than creating a one-off client inside `auth-service`.
     - "Draft a slice for `signup()` command ownership in `auth-service`, with fail-first tests first and implementation in a separate pass." (`docs/plans/Priority5Completion.md`, Item 4)
     - "UI modules are easier to test at the right boundary" (`docs/RepoHealthImprovementBacklog.md`, Priority 5)
 
-- [ ] C01 `[frontend]` Implement `signup` command ownership in `src/lib/auth-service.ts` so `signup()` owns the `createUser` side effect by importing it from `src/apiClient.ts`, maps success/error onto the live interpreted `src/lib/login.xstate.ts` runtime, reuses the existing service-owned login/session verification path after successful signup, and publishes authenticated user state from the service rather than from `Login.svelte`.
+- [x] C01 `[frontend]` Implement `signup` command ownership in `src/lib/auth-service.ts` so `signup()` owns the `createUser` side effect by importing it from `src/apiClient.ts`, maps success/error onto the live interpreted `src/lib/login.xstate.ts` runtime, reuses the existing service-owned login/session verification path after successful signup, and publishes authenticated user state from the service rather than from `Login.svelte`.
   - Depends on: T01.
   - Validated by: T01.
   - Trace:
