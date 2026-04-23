@@ -1,6 +1,9 @@
 # Priority 5 Auth Service Slice 3 Checklist
 
-Status: planning
+Status: archived, completed
+
+Archived after all slice-3 checklist items were completed and focused
+auth-service validation passed.
 
 Classification: proposed implementation checklist draft (not approved)
 
@@ -68,7 +71,7 @@ Execution note:
     - "it performs auth-related API calls such as ... logout" (Priority 5)
     - "UI modules are easier to test at the right boundary" (Priority 5)
 
-- [ ] C03 `[frontend]` Implement `logout` command ownership in `src/lib/auth-service.ts` so `logout()` owns the `deleteAuth` side effect, maps success/error onto the live interpreted `src/lib/login.xstate.ts` runtime, and clears authenticated user state from the service rather than from `Login.svelte`.
+- [x] C03 `[frontend]` Implement `logout` command ownership in `src/lib/auth-service.ts` so `logout()` owns the `deleteAuth` side effect, maps success/error onto the live interpreted `src/lib/login.xstate.ts` runtime, and clears authenticated user state from the service rather than from `Login.svelte`.
   - Depends on: T02.
   - Validated by: T02.
   - Trace:
