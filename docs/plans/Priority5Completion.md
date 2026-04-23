@@ -57,7 +57,16 @@
   - Preserved the test/code separation convention: C01 tightens the command contract, T01 adds fail-first tests, C02 implements production code later, and implementation must stop if tests cannot be made green without changing tests.
   - Kept out of scope: `Login.svelte` UI rewiring, guest form-local validation, `localStorage` extraction, shared-store publication, `CommentInput.svelte`, and `SelfDisplay.svelte`.
 
-- 6. [ ] Draft a slice for moving session/localStorage persistence out of `Login.svelte` only if it blocks service ownership or component decoupling.
+- 6. [x] Draft a slice for moving session/localStorage persistence out of `Login.svelte` only if it blocks service ownership or component decoupling.
+
+  Findings:
+
+  - Resolved the conditional in favor of moving session/guest persistence out of `Login.svelte`: auth/session continuity and guest reuse should not depend on the `Login.svelte` component being mounted.
+  - Created `docs/plans/Priority5AuthServiceSlice6Checklist.md` as the proposed slice-6 checklist draft.
+  - Kept the slice narrow: move only `simple_comment_user` session/guest persistence behind a small auth persistence boundary, then let `auth-service` consume that boundary through an injectable dependency.
+  - Explicitly kept `simple_comment_login_tab` persistence out of scope because it is UI preference state owned by `Login.svelte`, not auth/session persistence.
+  - Preserved server verification as the source of truth: persisted user data is cache/form/guest-reuse support, not authoritative authentication state.
+  - Avoided broad architecture churn: no auth controller, no runtime component, no workflow module, no new event bus, and no `CommentInput.svelte` / `SelfDisplay.svelte` rewiring in this slice.
 
 - 7. [ ] Draft a slice for wiring `Login.svelte` to call `auth-service` commands while keeping form-local state and field validation in `Login.svelte`.
 
