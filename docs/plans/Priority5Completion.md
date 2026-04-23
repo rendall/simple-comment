@@ -11,7 +11,16 @@
   - Validation evidence: `yarn test:frontend --runInBand src/tests/frontend/auth-service.test.ts src/tests/frontend/auth-service.init.test.ts src/tests/frontend/auth-service.login.test.ts src/tests/frontend/auth-service.logout.test.ts` passed with 4 suites and 12 tests passing.
   - Scope caveat: this confirms the service baseline only. `Login.svelte` still contains legacy direct auth side-effect handlers and has not yet been rewired to use `auth-service`; that remains future completion work.
 
-- 2. [ ] Archive or mark completed any finished auth-service slice docs so active planning only shows unfinished work.
+- 2. [x] Archive or mark completed any finished auth-service slice docs so active planning only shows unfinished work.
+
+  Findings:
+
+  - Confirmed no `Priority5AuthServiceSlice*Checklist.md` files remain under `docs/plans/`.
+  - Confirmed completed auth-service slice checklists are archived under `docs/archive/`: `Priority5AuthServiceSlice1Checklist.md`, `Priority5AuthServiceSlice2Checklist.md`, and `Priority5AuthServiceSlice3Checklist.md`.
+  - Confirmed all checklist items in slices 1, 2, and 3 are checked.
+  - Updated slice 1 and slice 2 archive headers from `Status: archived` to `Status: archived, completed` so they match the completed state already shown by their checked items.
+  - Slice 3 was already marked `Status: archived, completed`.
+  - Active planning surface is now clear for auth-service slices: future Priority 5 planning should start from this completion inventory rather than any stale active slice checklist.
 
 - 3. [ ] Identify remaining direct auth side effects in `Login.svelte`, limited to signup, guest login, guest profile update, session/localStorage handling, and shared-store publication.
 
