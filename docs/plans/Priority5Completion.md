@@ -22,9 +22,29 @@
   - Slice 3 was already marked `Status: archived, completed`.
   - Active planning surface is now clear for auth-service slices: future Priority 5 planning should start from this completion inventory rather than any stale active slice checklist.
 
-- 3. [ ] Identify remaining direct auth side effects in `Login.svelte`, limited to signup, guest login, guest profile update, session/localStorage handling, and shared-store publication.
+- 3. [x] Identify remaining direct auth side effects in `Login.svelte`, limited to signup, guest login, guest profile update, session/localStorage handling, and shared-store publication.
 
-- 4. [ ] Draft a slice for `signup()` command ownership in `auth-service`, with fail-first tests first and implementation in a separate pass.
+  Findings:
+
+  - Important caveat: the item wording is too narrow if read literally. `Login.svelte` still contains legacy direct calls for behaviors now owned by `auth-service`: `verifySelf()`, `postAuth()`, and `deleteAuth()`. These should not be treated as new service-surface work, but they must be removed when `Login.svelte` is rewired to call `auth-service`.
+  - Already service-owned but still duplicated in `Login.svelte`: initial verification uses `verifySelf()` and writes `simple_comment_user`; user login uses `postAuth(userId, userPassword)`; logout uses `deleteAuth()`.
+  - Still not owned by `auth-service`: signup uses `createUser(userInfo)` from the `signingUp` state handler. This is the cleanest next command-ownership candidate because it is simpler than guest login and already maps onto the existing `SIGNUP -> signedUp -> loggingIn` machine path.
+  - Still not owned by `auth-service`: guest login flow reads stored guest credentials, attempts `postAuth(storedId, storedChallenge)`, calls `verifyUser()`, falls back to `getGuestToken()`, calls `verifyUser()` again, creates a guest with `createGuestUser(...)`, and sends success/error machine events.
+  - Still not owned by `auth-service`: guest profile update uses `updateUser({ id: storedId, name: displayName, email: userEmail })` when stored guest identity differs from the submitted guest form values.
+  - Session/localStorage handling remains in `Login.svelte`: login tab selection reads/writes `simple_comment_login_tab`; verified/current user state reads/writes `simple_comment_user`; guest login reads stored `simple_comment_user` to reuse guest credentials; mount logic hydrates form fields from stored user data.
+  - Shared-store publication remains in `Login.svelte`: `currentUserStore.set(self)` runs on destroy and reactively; `loginStateStore.set({ state, nextEvents })` publishes machine state; `loginStateStore.set({ select: selectedIndex })` publishes selected tab state.
+  - Relay coupling remains in `Login.svelte`: it subscribes to `dispatchableStore` and reacts to `loginIntent` / `logoutIntent` by driving its local machine. This is the component-side half of the later `CommentInput.svelte` / `SelfDisplay.svelte` decoupling work.
+  - Recommendation: do not plan all of these as one implementation phase. Keep the next slice to one command surface, preferably `signup()` first, then guest login/profile update, then rewiring/removal of legacy verify/login/logout handlers from `Login.svelte`.
+
+- 4. [x] Draft a slice for `signup()` command ownership in `auth-service`, with fail-first tests first and implementation in a separate pass.
+
+  Findings:
+
+  - Created `docs/plans/Priority5AuthServiceSlice4Checklist.md` as the proposed slice-4 checklist draft.
+  - Kept the slice narrow: `signup()` command ownership in `auth-service` only.
+  - Preserved the test/code separation convention: T01 adds fail-first tests, C01 implements production code later, and the checklist explicitly says implementation must stop if tests cannot be made green without changing tests.
+  - Kept out of scope: `Login.svelte` UI rewiring, form-local signup validation, guest-login behavior, localStorage handling, shared-store publication, `CommentInput.svelte`, and `SelfDisplay.svelte`.
+  - The proposed slice preserves current behavior intent: successful signup should create the user and continue through the existing post-signup login/session verification path to publish authenticated `currentUser`.
 
 - 5. [ ] Draft a slice for `loginGuest()` command ownership in `auth-service`, including existing guest-token, verify, create guest, and update-if-changed behavior.
 
