@@ -25,7 +25,7 @@ import type { Readable } from "svelte/store"
 import { get, writable } from "svelte/store"
 import { interpret } from "xstate"
 import type { StateValueFrom } from "xstate"
-import { postAuth, verifySelf } from "../apiClient"
+import { deleteAuth, postAuth, verifySelf } from "../apiClient"
 import { loginMachine } from "./login.xstate"
 import type { Email, ServerResponse, User, UserId } from "./simple-comment-types"
 
@@ -294,7 +294,24 @@ export const createAuthService = (
       return notImplemented("loginGuest")
     },
     logout: async () => {
-      return notImplemented("logout")
+      authRuntime.send("LOGOUT")
+
+      try {
+        const logoutResponse = await deleteAuth()
+
+        if (!logoutResponse.ok) {
+          authRuntime.send({ type: "ERROR", error: logoutResponse })
+          return
+        }
+
+        currentUserStore.set(undefined)
+        authRuntime.send("SUCCESS")
+      } catch (error) {
+        authRuntime.send({
+          type: "ERROR",
+          error: error as ServerResponse | string,
+        })
+      }
     },
     destroy: () => {
       authRuntime.stop()
