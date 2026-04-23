@@ -49,13 +49,13 @@ Execution note:
     - "clarify boundaries between view components, state machines, and auth/workflow logic" (Priority 5)
     - "auth/session behavior is coupled to component presence and lifecycle rather than being owned by a smaller dedicated workflow/service boundary" (Priority 5)
 
-- [ ] T01 `[tests]` Add fail-first frontend tests for `login` command ownership in `src/tests/frontend/auth-service.login.test.ts` that prove `auth-service.login()` owns the `postAuth` side effect, drives the live `src/lib/login.xstate.ts` runtime through the login success/error path rather than leaving the behavior in `Login.svelte`, publishes authenticated user state on successful login, and leaves `currentUser` undefined while transitioning to `error` on failed login.
+- [x] T01 `[tests]` Add fail-first frontend tests for `login` command ownership in `src/tests/frontend/auth-service.login.test.ts` that prove `auth-service.login()` owns the `postAuth` side effect, drives the live `src/lib/login.xstate.ts` runtime through the login success/error path rather than leaving the behavior in `Login.svelte`, publishes authenticated user state on successful login, and leaves `currentUser` undefined while transitioning to `error` on failed login.
   - Depends on: C01.
   - Trace:
     - "it performs auth-related API calls such as ... login" (Priority 5)
     - "UI modules are easier to test at the right boundary" (Priority 5)
 
-- [ ] C02 `[frontend]` Implement `login` command ownership in `src/lib/auth-service.ts` so `login()` owns the `postAuth` side effect, maps success/error onto the live interpreted `src/lib/login.xstate.ts` runtime, and publishes authenticated user state from the service rather than from `Login.svelte`.
+- [x] C02 `[frontend]` Implement `login` command ownership in `src/lib/auth-service.ts` so `login()` owns the `postAuth` side effect, maps success/error onto the live interpreted `src/lib/login.xstate.ts` runtime, and publishes authenticated user state from the service rather than from `Login.svelte`.
   - Depends on: T01.
   - Validated by: T01.
   - Trace:
