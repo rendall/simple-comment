@@ -25,7 +25,7 @@ import type { Readable } from "svelte/store"
 import { get, writable } from "svelte/store"
 import { interpret } from "xstate"
 import type { StateValueFrom } from "xstate"
-import { verifySelf } from "../apiClient"
+import { postAuth, verifySelf } from "../apiClient"
 import { loginMachine } from "./login.xstate"
 import type { Email, ServerResponse, User, UserId } from "./simple-comment-types"
 
@@ -259,9 +259,31 @@ export const createAuthService = (
     clearAuthOutcome,
     cancelAuthRequest,
     reportLocalValidationError,
-    login: async payload => {
-      void payload
-      return notImplemented("login")
+    login: async ({ userId, password }) => {
+      currentUserStore.set(undefined)
+      authRuntime.send("LOGIN")
+
+      try {
+        const authResponse = await postAuth(userId, password)
+
+        if (!authResponse.ok) {
+          authRuntime.send({ type: "ERROR", error: authResponse })
+          return
+        }
+
+        authRuntime.send("SUCCESS")
+
+        const verifiedUser = await verifySelf()
+
+        currentUserStore.set(verifiedUser)
+        authRuntime.send("SUCCESS")
+      } catch (error) {
+        currentUserStore.set(undefined)
+        authRuntime.send({
+          type: "ERROR",
+          error: error as ServerResponse | string,
+        })
+      }
     },
     signup: async payload => {
       void payload
