@@ -42,7 +42,7 @@ than creating a one-off client inside `auth-service`.
 
 ## Atomic Checklist Items
 
-- [ ] T01 `[tests]` Add fail-first frontend tests for `signup` command ownership in `src/tests/frontend/auth-service.signup.test.ts` proving `auth-service.signup()` owns the `createUser` side effect via `src/apiClient.ts`, maps the service payload to the existing `createUser` input shape, drives the live `src/lib/login.xstate.ts` runtime through the signup success path, performs the existing post-signup authentication/verification continuation through existing `apiClient.ts` primitives, publishes authenticated `currentUser` on successful signup, and leaves `currentUser` undefined while transitioning to `error` on signup failure.
+- [x] T01 `[tests]` Add fail-first frontend tests for `signup` command ownership in `src/tests/frontend/auth-service.signup.test.ts` proving `auth-service.signup()` owns the `createUser` side effect via `src/apiClient.ts`, maps the service payload to the existing `createUser` input shape, drives the live `src/lib/login.xstate.ts` runtime through the signup success path, performs the existing post-signup authentication/verification continuation through existing `apiClient.ts` primitives, publishes authenticated `currentUser` on successful signup, and leaves `currentUser` undefined while transitioning to `error` on signup failure.
   - Depends on: none.
   - Trace:
     - "`Login.svelte` still contains legacy direct calls ... signup uses `createUser(userInfo)` from the `signingUp` state handler." (`docs/plans/Priority5Completion.md`, Item 3 findings)
