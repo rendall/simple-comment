@@ -1,8 +1,8 @@
 # Priority 5 Auth Service Slice 5 Checklist
 
-Status: planning
+Status: archived, completed
 
-Classification: proposed implementation checklist draft (not approved)
+Classification: completed implementation checklist
 
 Source plan: `docs/plans/Priority5Completion.md` (Item 5: Draft a slice for `loginGuest()` command ownership in `auth-service`)
 
