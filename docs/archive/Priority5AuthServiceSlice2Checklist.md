@@ -1,6 +1,6 @@
 # Priority 5 Auth Service Slice 2 Checklist
 
-Status: planning
+Status: archived
 
 Classification: proposed implementation checklist draft (not approved)
 
