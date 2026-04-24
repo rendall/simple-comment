@@ -62,9 +62,9 @@ Because `CommentInput.svelte` and `SelfDisplay.svelte` still depend on `loginSta
     - "Prefer direct `auth-service` API or a thin service-backed store; avoid introducing another ad-hoc event bus." (`docs/plans/Priority5Completion.md`, Item 12)
     - "Resolved the conditional in favor of moving session/guest persistence out of `Login.svelte`: auth/session continuity and guest reuse should not depend on the `Login.svelte` component being mounted." (`docs/plans/Priority5Completion.md`, Item 6 findings)
 
-- [ ] C02 `[frontend]` Extend `src/lib/auth-service.ts` with the minimal readable auth-runtime metadata needed for `Login.svelte` to mirror the service-owned machine into the existing `loginStateStore` shape without running a second interpreted auth machine inside the component.
+- [ ] C02 `[frontend]` Extend `src/lib/auth-service.ts` with one readable auth-runtime snapshot store that exposes the service-owned machine state needed by `Login.svelte` to preserve the existing `loginStateStore` compatibility contract (`state`, `nextEvents`, and any required error context), without running a second interpreted auth machine inside the component.
   - Depends on: T01.
-  - Validated by: T01.
+  - Validated by: T01.08.
   - Trace:
     - "Relay coupling remains in `Login.svelte`: it subscribes to `dispatchableStore` and reacts to `loginIntent` / `logoutIntent` by driving its local machine." (`docs/plans/Priority5Completion.md`, Item 3 findings)
     - "Draft a slice for replacing `Login.svelte` shared-store publication with auth-service state subscriptions." (`docs/plans/Priority5Completion.md`, Item 8)
