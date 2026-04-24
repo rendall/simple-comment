@@ -23,4 +23,3 @@ debug.log
 !/dist/css/simple-comment-style.css
 !/cypress/**/*.js
 deno.lock
-.codex
