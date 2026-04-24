@@ -16,8 +16,8 @@ export default defineConfig({
   ],
   resolve: process.env.VITEST
     ? {
-      conditions: ["browser"],
-    }
+        conditions: ["browser"],
+      }
     : undefined,
   test: {
     clearMocks: true,
