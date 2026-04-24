@@ -38,7 +38,7 @@ Out of scope:
     - "Add a separate Vitest component-test configuration instead of retrofitting the current Jest frontend config to compile `.svelte`." (`Approach`)
     - "Add one shared component-test setup file for DOM matchers and per-test cleanup of browser-local state that can leak across `Login.svelte` tests" (`Approach`)
 
-- [ ] C02 `[frontend]` Update `package.json` and `yarn.lock` to add `vitest`, `@testing-library/svelte`, and `@testing-library/jest-dom`, then wire dedicated frontend component-test scripts and compose them into the required `yarn test:frontend` entry point while keeping the current Jest frontend suite intact.
+- [x] C02 `[frontend]` Update `package.json` and `yarn.lock` to add `vitest`, `@testing-library/svelte`, and `@testing-library/jest-dom`, then wire dedicated frontend component-test scripts and compose them into the required `yarn test:frontend` entry point while keeping the current Jest frontend suite intact.
   - Depends on: C01.
   - Validated by: `yarn test:frontend`.
   - Trace:
