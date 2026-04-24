@@ -11,7 +11,12 @@ export default {
   coverageProvider: "v8",
   resetMocks: true,
   roots: ["<rootDir>/src/tests/frontend/"],
-  testPathIgnorePatterns: ["\\\\node_modules\\\\", "RAW", ".js$"],
+  testPathIgnorePatterns: [
+    "\\\\node_modules\\\\",
+    "RAW",
+    ".js$",
+    "<rootDir>/src/tests/frontend/components/",
+  ],
   transform: {
     "^.+\\.js$": "babel-jest",
     "^.+\\.ts$": [
