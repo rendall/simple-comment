@@ -44,7 +44,7 @@
     "test:backend": "jest --config jest.backend.config.ts",
     "test:cypress": "cypress run",
     "test:frontend": "yarn test:frontend:unit && yarn test:frontend:components",
-    "test:frontend:components": "cross-env TZ=UTC vitest --config vitest.components.config.ts run --passWithNoTests",
+    "test:frontend:components": "cross-env TZ=UTC vitest --config vitest.components.config.ts run",
     "test:frontend:unit": "cross-env TZ=UTC jest --config jest.frontend.config.ts",
     "typecheck": "tsc --noEmit -p tsconfig.frontend.json && tsc --noEmit -p tsconfig.netlify.functions.json",
     "watch:backend": "webpack --config ./webpack.netlify.functions.cjs --watch",
