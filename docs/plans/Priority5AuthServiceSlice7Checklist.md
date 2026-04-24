@@ -69,7 +69,7 @@ Because `CommentInput.svelte` and `SelfDisplay.svelte` still depend on `loginSta
     - "Relay coupling remains in `Login.svelte`: it subscribes to `dispatchableStore` and reacts to `loginIntent` / `logoutIntent` by driving its local machine." (`docs/plans/Priority5Completion.md`, Item 3 findings)
     - "Draft a slice for replacing `Login.svelte` shared-store publication with auth-service state subscriptions." (`docs/plans/Priority5Completion.md`, Item 8)
 
-- [ ] C03 `[frontend]` Replace direct auth API calls and local auth-machine ownership in `src/components/Login.svelte` with `auth-service` command delegation and service-state subscriptions, while preserving component-local validation/UI behavior and the current `loginStateStore` publication contract for unreworked consumers.
+- [ ] C03 `[frontend]` Replace direct auth API calls and local auth-machine ownership in `src/components/Login.svelte` with `auth-service` command delegation and subscriptions to the auth-runtime snapshot store added in `C02`, then publish the existing `loginStateStore` compatibility shape from that observed service state while preserving component-local validation/UI behavior for unreworked consumers.
   - Depends on: C01, C02.
   - Validated by: T01.
   - Trace:
