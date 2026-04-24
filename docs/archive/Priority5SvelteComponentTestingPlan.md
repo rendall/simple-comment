@@ -1,6 +1,6 @@
 # Priority 5 Svelte Component Testing Plan
 
-Status: planning
+Status: archived
 
 Related artifacts:
 

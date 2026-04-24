@@ -1,10 +1,10 @@
 # Priority 5 Svelte Component Testing Checklist
 
-Status: planning
+Status: archived
 
-Classification: proposed implementation checklist draft (not approved)
+Classification: archived implementation checklist
 
-Source plan: `docs/plans/Priority5SvelteComponentTestingPlan.md`
+Source plan: `docs/archive/Priority5SvelteComponentTestingPlan.md`
 
 ## Scope Lock
 
