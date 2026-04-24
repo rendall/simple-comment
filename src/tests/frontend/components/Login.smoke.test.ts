@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/svelte"
+import { render, screen, waitFor } from "@testing-library/svelte"
 import { describe, expect, test, vi } from "vitest"
 import { verifySelf } from "../../../apiClient"
 import Login from "../../../components/Login.svelte"
@@ -30,5 +30,12 @@ describe("Login smoke", () => {
     ).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Signup" })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Guest" })).toBeInTheDocument()
+
+    await waitFor(() => {
+      expect(mockVerifySelf).toHaveBeenCalledTimes(1)
+      expect(
+        document.querySelector("section.simple-comment-login")
+      ).not.toHaveClass("is-loading")
+    })
   })
 })
