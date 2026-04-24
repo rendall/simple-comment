@@ -39,7 +39,7 @@ Because `CommentInput.svelte` and `SelfDisplay.svelte` still depend on `loginSta
 
 ## Atomic Checklist Items
 
-- [ ] T01 `[tests]` Add fail-first frontend component tests for `Login.svelte` auth-service delegation in `src/tests/frontend/Login.auth-service.test.ts`.
+- T01 `[tests]` Add fail-first frontend component tests for `Login.svelte` auth-service delegation in `src/tests/frontend/Login.auth-service.test.ts`.
   - Depends on: none.
   - [ ] T01.01 Add a fail-first test proving mount/init delegates the initial auth check through `authService.init()` rather than running direct `verifySelf()` logic inside `Login.svelte`.
   - [ ] T01.02 Add a fail-first test proving a valid login submission calls `authService.login({ userId, password })` with the current form values.
@@ -55,7 +55,7 @@ Because `CommentInput.svelte` and `SelfDisplay.svelte` still depend on `loginSta
     - "Still not owned by `auth-service`: signup uses `createUser(userInfo)` ..." (`docs/plans/Priority5Completion.md`, Item 3 findings)
     - "Still not owned by `auth-service`: guest login flow reads stored guest credentials..." (`docs/plans/Priority5Completion.md`, Item 3 findings)
 
-- [ ] C01 `[frontend]` Create a widget-scoped `AuthService` instance with `createAuthService()` at the current composition root and thread it explicitly through `src/components/SimpleComment.svelte`, `src/components/DiscussionDisplay.svelte`, and `src/components/CommentInput.svelte` into `src/components/Login.svelte`.
+- [ ] C01 `[frontend]` Create a widget-scoped `AuthService` instance with `createAuthService()` in `src/components/SimpleComment.svelte`, then thread it explicitly through `src/components/DiscussionDisplay.svelte` and `src/components/CommentInput.svelte` into `src/components/Login.svelte`.
   - Depends on: T01.
   - Validated by: `yarn typecheck`.
   - Trace:
