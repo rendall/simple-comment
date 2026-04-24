@@ -68,7 +68,15 @@
   - Preserved server verification as the source of truth: persisted user data is cache/form/guest-reuse support, not authoritative authentication state.
   - Avoided broad architecture churn: no auth controller, no runtime component, no workflow module, no new event bus, and no `CommentInput.svelte` / `SelfDisplay.svelte` rewiring in this slice.
 
-- 7. [ ] Draft a slice for wiring `Login.svelte` to call `auth-service` commands while keeping form-local state and field validation in `Login.svelte`.
+- 7. [x] Draft a slice for wiring `Login.svelte` to call `auth-service` commands while keeping form-local state and field validation in `Login.svelte`.
+
+  Findings:
+
+  - Created `docs/plans/Priority5AuthServiceSlice7Checklist.md` as the proposed slice-7 checklist draft.
+  - Kept the slice narrow: `Login.svelte` should stop calling auth APIs directly and instead delegate auth commands to `auth-service` while retaining form-local state, field validation, selected-tab UI, selected-tab persistence, and status-message rendering.
+  - Chose the narrowest wiring seam: create a widget-scoped `AuthService` instance and thread it explicitly through the current component path rather than introducing a singleton import, new event bus, or broad store redesign.
+  - Called out a key constraint explicitly: `Login.svelte` should not keep a second authoritative auth runtime once it is delegating to `auth-service`; it should observe service-owned auth state and preserve the existing `loginStateStore` publication shape only as transitional compatibility for unreworked consumers.
+  - Kept item 8 and the relay-removal work out of scope: `CommentInput.svelte` and `SelfDisplay.svelte` still rely on `loginStateStore` / `dispatchableStore`, so slice 7 preserves those contracts rather than removing them prematurely.
 
 - 8. [ ] Draft a slice for replacing `Login.svelte` shared-store publication with auth-service state subscriptions.
 
