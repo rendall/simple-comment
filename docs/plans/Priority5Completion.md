@@ -73,10 +73,12 @@
   Findings:
 
   - Created `docs/plans/Priority5AuthServiceSlice7Checklist.md` as the proposed slice-7 checklist draft.
+  - Backed up and created `docs/plans/Priority5AuthServiceSlice7Plan.md` per `docs/norms/plan.md`, with explicit `Intent`, `Motivation`, scope boundaries, acceptance criteria, and validation strategy.
   - Kept the slice narrow: `Login.svelte` should stop calling auth APIs directly and instead delegate auth commands to `auth-service` while retaining form-local state, field validation, selected-tab UI, selected-tab persistence, and status-message rendering.
   - Chose the narrowest wiring seam: create a widget-scoped `AuthService` instance and thread it explicitly through the current component path rather than introducing a singleton import, new event bus, or broad store redesign.
   - Called out a key constraint explicitly: `Login.svelte` should not keep a second authoritative auth runtime once it is delegating to `auth-service`; it should observe service-owned auth state and preserve the existing `loginStateStore` publication shape only as transitional compatibility for unreworked consumers.
   - Kept item 8 and the relay-removal work out of scope: `CommentInput.svelte` and `SelfDisplay.svelte` still rely on `loginStateStore` / `dispatchableStore`, so slice 7 preserves those contracts rather than removing them prematurely.
+  - The existing slice-7 checklist should now be treated as pre-plan draft input and reconciled to the approved slice-7 plan before it is used for implementation.
 
 - 8. [ ] Draft a slice for replacing `Login.svelte` shared-store publication with auth-service state subscriptions.
 
