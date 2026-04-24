@@ -50,7 +50,7 @@ Out of scope:
     - "Required frontend validation includes the Svelte component-test lane through the normal repo entry point rather than an optional side command." (`Acceptance Criteria`)
     - "Pass: the existing Jest frontend suite still passes after the component-test lane is introduced." (`Validation Strategy`)
 
-- [ ] T01 `[tests]` Add a smoke-level `Login.svelte` component test in `src/tests/frontend/components/Login.smoke.test.ts` that renders the component in the Vitest lane and asserts stable, user-visible basics such as the login/signup/guest tabs, without broader auth-behavior assertions.
+- [x] T01 `[tests]` Add a smoke-level `Login.svelte` component test in `src/tests/frontend/components/Login.smoke.test.ts` that renders the component in the Vitest lane and asserts stable, user-visible basics such as the login/signup/guest tabs, without broader auth-behavior assertions.
   - Depends on: C01, C02.
   - Validated by: `yarn test:frontend`.
   - Trace:

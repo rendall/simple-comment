@@ -14,6 +14,11 @@ export default defineConfig({
       compilerOptions: { dev: true },
     }),
   ],
+  resolve: process.env.VITEST
+    ? {
+      conditions: ["browser"],
+    }
+    : undefined,
   test: {
     clearMocks: true,
     css: true,
