@@ -29,7 +29,7 @@ Out of scope:
 
 ## Atomic Checklist Items
 
-- [ ] C01 `[frontend]` Add a dedicated Svelte component-test harness in `vitest.components.config.ts` and `src/tests/frontend/components/vitest.setup.ts` with Vite-aligned Svelte compilation, `jsdom`, DOM matchers, and per-test cleanup/reset for `localStorage` and any shared store state touched by `Login.svelte`.
+- [x] C01 `[frontend]` Add a dedicated Svelte component-test harness in `vitest.components.config.ts` and `src/tests/frontend/components/vitest.setup.ts` with Vite-aligned Svelte compilation, `jsdom`, DOM matchers, and per-test cleanup/reset for `localStorage` and any shared store state touched by `Login.svelte`.
   - Depends on: none.
   - Validated by: T01.
   - Trace:
