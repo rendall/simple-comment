@@ -17,6 +17,7 @@ import type {
   AuthService,
   AuthSessionState,
 } from "../../../lib/auth-service"
+import { dispatchableStore } from "../../../lib/svelte-stores"
 import type { User } from "../../../lib/simple-comment-types"
 
 vi.mock("../../../apiClient", () => ({
@@ -101,11 +102,9 @@ const renderLogin = ({
   currentUser?: User
 } = {}) => {
   render(Login as never, {
-    props: {
-      authService,
-      currentUser,
-    },
-  })
+    authService,
+    currentUser,
+  } as never)
 
   return { authService }
 }
@@ -276,5 +275,41 @@ describe("Login auth-service delegation", () => {
 
     expect(await screen.findByText(/Display name is required/)).toBeVisible()
     expect(authService.loginGuest).not.toHaveBeenCalled()
+  })
+
+  test("delegates allowed logout intents to authService.logout", async () => {
+    const { authService } = renderLogin({
+      currentUser: defaultUser,
+      authService: createAuthServiceStub({
+        currentUser: defaultUser,
+        snapshot: { state: "loggedIn", nextEvents: ["LOGOUT"] },
+      }),
+    })
+
+    await waitFor(() => {
+      expect(document.querySelector("section.simple-comment-login")).not.toHaveClass(
+        "is-loading"
+      )
+    })
+    dispatchableStore.dispatch("logoutIntent")
+
+    await waitFor(() => {
+      expect(authService.logout).toHaveBeenCalledTimes(1)
+    })
+    expect(mockDeleteAuth).not.toHaveBeenCalled()
+  })
+
+  test("ignores logout intents when observed auth state disallows logout", async () => {
+    const { authService } = renderLogin({
+      authService: createAuthServiceStub({
+        snapshot: { state: "loggedOut", nextEvents: ["LOGIN", "SIGNUP", "GUEST"] },
+      }),
+    })
+
+    dispatchableStore.dispatch("logoutIntent")
+
+    await waitFor(() => {
+      expect(authService.logout).not.toHaveBeenCalled()
+    })
   })
 })
