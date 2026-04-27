@@ -195,4 +195,54 @@ describe("Login auth-service delegation", () => {
     })
     expect(mockCreateUser).not.toHaveBeenCalled()
   })
+
+  test("delegates new guest submissions to authService.loginGuest", async () => {
+    const { authService } = renderLogin()
+
+    await fireEvent.input(await screen.findByLabelText("Display Name"), {
+      target: { value: "Guest Example" },
+    })
+    await fireEvent.input(screen.getByLabelText("Email"), {
+      target: { value: "guest@example.com" },
+    })
+    await submitForm("#guest-login-form")
+
+    await waitFor(() => {
+      expect(authService.loginGuest).toHaveBeenCalledWith({
+        displayName: "Guest Example",
+        email: "guest@example.com",
+      })
+    })
+    expect(mockGetGuestToken).not.toHaveBeenCalled()
+    expect(mockCreateGuestUser).not.toHaveBeenCalled()
+  })
+
+  test("passes stored guest identity through guest submissions", async () => {
+    const storedGuest = {
+      id: "guest-ab123-abc12",
+      challenge: "stored-challenge",
+      name: "Stored Guest",
+      email: "stored@example.com",
+    }
+    localStorage.setItem("simple_comment_user", JSON.stringify(storedGuest))
+    const { authService } = renderLogin()
+
+    await fireEvent.input(await screen.findByLabelText("Display Name"), {
+      target: { value: "Updated Guest" },
+    })
+    await fireEvent.input(screen.getByLabelText("Email"), {
+      target: { value: "updated@example.com" },
+    })
+    await submitForm("#guest-login-form")
+
+    await waitFor(() => {
+      expect(authService.loginGuest).toHaveBeenCalledWith({
+        displayName: "Updated Guest",
+        email: "updated@example.com",
+        storedGuest,
+      })
+    })
+    expect(mockGetGuestToken).not.toHaveBeenCalled()
+    expect(mockCreateGuestUser).not.toHaveBeenCalled()
+  })
 })
