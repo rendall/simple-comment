@@ -12,10 +12,12 @@
   import { isResponseOk, threadComments } from "../frontend-utilities"
   import CommentInput from "./CommentInput.svelte"
   import SkeletonComment from "./low-level/SkeletonComment.svelte"
+  import type { AuthService } from "../lib/auth-service"
 
   export let discussionId: string
   export let title: string = ""
   export let currentUser: User | undefined
+  export let authService: AuthService
   const emptyTopicMessages = [
     "Looks like this topic is waiting for its first thoughts. Be the pioneer and start the conversation!",
     "This space is all yours! Kick off the discussion with your insights.",
@@ -225,6 +227,7 @@
   {/if}
   {#if showReply === discussionId}
     <CommentInput
+      {authService}
       commentId={discussionId}
       {currentUser}
       on:posted={onCommentPosted}
@@ -238,6 +241,7 @@
 
   {#if discussion?.replies}
     <CommentList
+      {authService}
       {currentUser}
       {showReply}
       replies={discussion.replies}

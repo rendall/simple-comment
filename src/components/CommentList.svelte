@@ -10,8 +10,10 @@
   import { commentDeleteMachine } from "../lib/commentDelete.xstate"
   import { deleteComment } from "../apiClient"
   import CommentDisplay from "./CommentDisplay.svelte"
+  import type { AuthService } from "../lib/auth-service"
 
   export let currentUser: User | undefined
+  export let authService: AuthService
   export let replies: (Comment & { isNew?: true; isDelete?: true })[] = []
   export let depth: number = 0
   export let showReply = ""
@@ -105,6 +107,7 @@
 <ul class="comment-replies" class:is-root={isRoot} class:is-deep={depth > 4}>
   {#each replies as comment}
     <CommentDisplay
+      {authService}
       {comment}
       {currentUser}
       {depth}

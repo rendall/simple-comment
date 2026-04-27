@@ -57,7 +57,7 @@ Because `CommentInput.svelte` and `SelfDisplay.svelte` still depend on `loginSta
     - "Pass: tests show valid user actions call the appropriate `auth-service` methods, and local validation failures do not call service commands." (`docs/plans/Priority5AuthServiceSlice7Plan.md`, Validation Strategy)
     - "Fail: `Login.svelte` still calls auth APIs directly for covered command paths, or component validation behavior is lost." (`docs/plans/Priority5AuthServiceSlice7Plan.md`, Validation Strategy)
 
-- [ ] C01 `[frontend]` Create a widget-scoped `AuthService` instance with `createAuthService()` in `src/components/SimpleComment.svelte`, then thread it explicitly through `src/components/DiscussionDisplay.svelte` and `src/components/CommentInput.svelte` into `src/components/Login.svelte`.
+- [x] C01 `[frontend]` Create a widget-scoped `AuthService` instance with `createAuthService()` in `src/components/SimpleComment.svelte`, then thread it explicitly through `src/components/DiscussionDisplay.svelte` and `src/components/CommentInput.svelte` into `src/components/Login.svelte`.
   - Depends on: T01.
   - Validated by: `yarn typecheck`.
   - Trace:

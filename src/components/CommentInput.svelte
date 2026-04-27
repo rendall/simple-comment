@@ -15,8 +15,10 @@
   import { postComment } from "../apiClient"
   import { useMachine } from "@xstate/svelte"
   import { LoginTab } from "../lib/simple-comment-types"
+  import type { AuthService } from "../lib/auth-service"
   export let currentUser: User | undefined
   export let commentId: CommentId
+  export let authService: AuthService
   export let onCancel = null
   export let autofocus = false
   export let placeholder = "Your comment"
@@ -211,7 +213,7 @@
     {placeholder}
     dir="auto"
   ></textarea>
-  <Login {currentUser} />
+  <Login {authService} {currentUser} />
   {#if !currentUser || (commentText && commentText.length)}
     <div class="button-row">
       {#if onCancel !== null}

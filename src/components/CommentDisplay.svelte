@@ -18,10 +18,12 @@
   import OverflowMenuHorizontal from "carbon-icons-svelte/lib/OverflowMenuHorizontal.svelte"
   import ChevronLeft from "carbon-icons-svelte/lib/ChevronLeft.svelte"
   import { linear } from "svelte/easing"
+  import type { AuthService } from "../lib/auth-service"
 
   export let comment: (Comment & { isNew?: true }) | undefined = undefined
   export let showReply: string
   export let currentUser: User | undefined
+  export let authService: AuthService
   export let onDeleteSuccess
   export let onDeleteCommentClick
   export let onOpenCommentInput
@@ -189,6 +191,7 @@
       {/if}
       {#if showReply === comment.id && !isEditing}
         <CommentInput
+          {authService}
           placeholder="Your reply"
           autofocus={isRoot ? true : false}
           commentId={comment.id}
@@ -248,6 +251,7 @@
   {/if}
   {#if comment.replies && comment.replies.length > 0}
     <CommentList
+      {authService}
       depth={depth + 1}
       on:delete={onDeleteSuccess}
       on:posted={onPostSuccess}
