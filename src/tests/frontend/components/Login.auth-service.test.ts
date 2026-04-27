@@ -161,4 +161,38 @@ describe("Login auth-service delegation", () => {
     })
     expect(mockPostAuth).not.toHaveBeenCalled()
   })
+
+  test("delegates valid signup submissions to authService.signup", async () => {
+    const { authService } = renderLogin()
+
+    await fireEvent.click(
+      await screen.findByRole("button", { name: "Signup" })
+    )
+    await fireEvent.input(screen.getByLabelText("Display name"), {
+      target: { value: "Alice Example" },
+    })
+    await fireEvent.input(screen.getByLabelText("User handle"), {
+      target: { value: "alice-user" },
+    })
+    await fireEvent.input(screen.getByLabelText("Email"), {
+      target: { value: "alice@example.com" },
+    })
+    await fireEvent.input(screen.getByLabelText("Password"), {
+      target: { value: "secret" },
+    })
+    await fireEvent.input(screen.getByLabelText("Confirm password"), {
+      target: { value: "secret" },
+    })
+    await submitForm("#signup-form")
+
+    await waitFor(() => {
+      expect(authService.signup).toHaveBeenCalledWith({
+        userId: "alice-user",
+        password: "secret",
+        displayName: "Alice Example",
+        email: "alice@example.com",
+      })
+    })
+    expect(mockCreateUser).not.toHaveBeenCalled()
+  })
 })
