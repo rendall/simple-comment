@@ -50,7 +50,7 @@ Because `CommentInput.svelte` and `SelfDisplay.svelte` still depend on `loginSta
   - [x] T01.05 Add fail-first tests proving local validation failures still surface component-local errors and do not call `authService.login()`, `authService.signup()`, or `authService.loginGuest()`.
   - [x] T01.06 Add a fail-first test proving logout intent delegates through `authService.logout()` only when logout is currently allowed by the observed auth state.
   - [x] T01.07 Add fail-first tests proving `Login.svelte` no longer performs direct auth command calls to `verifySelf`, `verifyUser`, `postAuth`, `createUser`, `getGuestToken`, `createGuestUser`, `updateUser`, or `deleteAuth()` for the delegated flows covered by this slice.
-  - [ ] T01.08 Add a fail-first test proving `Login.svelte` publishes the existing `loginStateStore` compatibility shape from observed service-owned auth state rather than from a second authoritative local auth runtime.
+  - [x] T01.08 Add a fail-first test proving `Login.svelte` publishes the existing `loginStateStore` compatibility shape from observed service-owned auth state rather than from a second authoritative local auth runtime.
   - Trace:
     - "Add fail-first component tests that treat `Login.svelte` as the boundary under test and assert that it delegates auth actions to an injected `AuthService`." (`docs/plans/Priority5AuthServiceSlice7Plan.md`, Approach)
     - "Login.svelte delegation behavior is tested at the component boundary." (`docs/plans/Priority5AuthServiceSlice7Plan.md`, Validation Strategy)

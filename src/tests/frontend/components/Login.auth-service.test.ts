@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/svelte"
 import { readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import type { Writable } from "svelte/store"
-import { readable, writable } from "svelte/store"
+import { get, readable, writable } from "svelte/store"
 import { beforeEach, describe, expect, test, vi } from "vitest"
 import {
   createGuestUser,
@@ -19,7 +19,7 @@ import type {
   AuthService,
   AuthSessionState,
 } from "../../../lib/auth-service"
-import { dispatchableStore } from "../../../lib/svelte-stores"
+import { dispatchableStore, loginStateStore } from "../../../lib/svelte-stores"
 import type { User } from "../../../lib/simple-comment-types"
 
 vi.mock("../../../apiClient", () => ({
@@ -333,6 +333,23 @@ describe("Login auth-service delegation", () => {
 
     directAuthCommandNames.forEach(commandName => {
       expect(loginSource).not.toMatch(new RegExp(`\\b${commandName}\\s*\\(`))
+    })
+  })
+
+  test("publishes loginStateStore from observed auth-service runtime state", async () => {
+    renderLogin({
+      authService: createAuthServiceStub({
+        snapshot: { state: "loggedIn", nextEvents: ["LOGOUT"] },
+      }),
+    })
+
+    await waitFor(() => {
+      expect(get(loginStateStore)).toEqual(
+        expect.objectContaining({
+          state: "loggedIn",
+          nextEvents: ["LOGOUT"],
+        })
+      )
     })
   })
 })
