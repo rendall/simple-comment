@@ -1,8 +1,8 @@
 # Priority 5 Auth Service Slice 7 Checklist
 
-Status: planning
+Status: approved
 
-Classification: proposed implementation checklist draft (not approved)
+Classification: approved implementation checklist
 
 Source plan: `docs/plans/Priority5AuthServiceSlice7Plan.md`
 
