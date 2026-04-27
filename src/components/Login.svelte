@@ -49,6 +49,7 @@
   import PasswordTwinInput from "./low-level/PasswordTwinInput.svelte"
   import Avatar from "./low-level/Avatar.svelte"
   import type { StateValue } from "xstate"
+  import type { AuthService } from "../lib/auth-service"
 
   const DISPLAY_NAME_HELPER_TEXT = "This is the name that others will see"
   const USER_EMAIL_HELPER_TEXT =
@@ -56,6 +57,7 @@
   const USER_ID_HELPER_TEXT = "This is the user id that uniquely identifies you"
 
   export let currentUser: User | undefined
+  export let authService: AuthService
 
   let self: User = currentUser
   let isError = false
