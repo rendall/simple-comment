@@ -50,7 +50,9 @@
     "watch:backend": "webpack --config ./webpack.netlify.functions.cjs --watch",
     "watch:frontend": "vite build --config ./vite.config.ts --watch",
     "watch:lint": "esw -w ./src/**/*.ts --color --clear --changed",
-    "watch:test": "jest --watch --noStackTrace",
+    "watch:test": "concurrently \"yarn watch:test:unit\" \"yarn watch:test:components\"",
+    "watch:test:components": "cross-env TZ=UTC vitest --config vitest.components.config.ts",
+    "watch:test:unit": "jest --watch --noStackTrace",
     "knip": "knip"
   },
   "dependencies": {

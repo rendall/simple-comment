@@ -4,7 +4,9 @@ Status: planning
 
 Classification: proposed implementation checklist draft (not approved)
 
-Source plan: `docs/plans/Priority5Completion.md` (Item 7: Draft a slice for wiring `Login.svelte` to call `auth-service` commands)
+Source plan: `docs/plans/Priority5AuthServiceSlice7Plan.md`
+
+Parent plan: `docs/plans/Priority5Completion.md` (Item 7: Draft a slice for wiring `Login.svelte` to call `auth-service` commands)
 
 ## Scope Lock
 
@@ -39,43 +41,46 @@ Because `CommentInput.svelte` and `SelfDisplay.svelte` still depend on `loginSta
 
 ## Atomic Checklist Items
 
-- T01 `[tests]` Add fail-first frontend component tests for `Login.svelte` auth-service delegation in `src/tests/frontend/Login.auth-service.test.ts`.
+- T01 `[tests]` Add fail-first frontend component tests for `Login.svelte` auth-service delegation in `src/tests/frontend/components/Login.auth-service.test.ts`.
   - Depends on: none.
   - [ ] T01.01 Add a fail-first test proving mount/init delegates the initial auth check through `authService.init()` rather than running direct `verifySelf()` logic inside `Login.svelte`.
   - [ ] T01.02 Add a fail-first test proving a valid login submission calls `authService.login({ userId, password })` with the current form values.
   - [ ] T01.03 Add a fail-first test proving a valid signup submission calls `authService.signup({ userId, password, displayName, email })` with the current form values.
-  - [ ] T01.04 Add a fail-first test proving a valid guest submission calls `authService.loginGuest({ displayName, email })` when no explicit stored guest override is provided by the component.
+  - [ ] T01.04 Add fail-first tests proving a valid guest submission calls `authService.loginGuest({ displayName, email })` when no stored guest data exists and passes the stored guest identity through the service payload when stored guest data is present.
   - [ ] T01.05 Add fail-first tests proving local validation failures still surface component-local errors and do not call `authService.login()`, `authService.signup()`, or `authService.loginGuest()`.
   - [ ] T01.06 Add a fail-first test proving logout intent delegates through `authService.logout()` only when logout is currently allowed by the observed auth state.
-  - [ ] T01.07 Add fail-first tests proving `Login.svelte` no longer performs direct auth command calls to `postAuth`, `createUser`, `getGuestToken`, `createGuestUser`, `updateUser`, or `deleteAuth()` for the delegated flows covered by this slice.
+  - [ ] T01.07 Add fail-first tests proving `Login.svelte` no longer performs direct auth command calls to `verifySelf`, `verifyUser`, `postAuth`, `createUser`, `getGuestToken`, `createGuestUser`, `updateUser`, or `deleteAuth()` for the delegated flows covered by this slice.
   - [ ] T01.08 Add a fail-first test proving `Login.svelte` publishes the existing `loginStateStore` compatibility shape from observed service-owned auth state rather than from a second authoritative local auth runtime.
   - Trace:
-    - "Draft a slice for wiring `Login.svelte` to call `auth-service` commands while keeping form-local state and field validation in `Login.svelte`." (`docs/plans/Priority5Completion.md`, Item 7)
-    - "Already service-owned but still duplicated in `Login.svelte`: initial verification uses `verifySelf()` ... user login uses `postAuth(userId, userPassword)`; logout uses `deleteAuth()`." (`docs/plans/Priority5Completion.md`, Item 3 findings)
-    - "Still not owned by `auth-service`: signup uses `createUser(userInfo)` ..." (`docs/plans/Priority5Completion.md`, Item 3 findings)
-    - "Still not owned by `auth-service`: guest login flow reads stored guest credentials..." (`docs/plans/Priority5Completion.md`, Item 3 findings)
+    - "Add fail-first component tests that treat `Login.svelte` as the boundary under test and assert that it delegates auth actions to an injected `AuthService`." (`docs/plans/Priority5AuthServiceSlice7Plan.md`, Approach)
+    - "Login.svelte delegation behavior is tested at the component boundary." (`docs/plans/Priority5AuthServiceSlice7Plan.md`, Validation Strategy)
+    - "Pass: tests show valid user actions call the appropriate `auth-service` methods, and local validation failures do not call service commands." (`docs/plans/Priority5AuthServiceSlice7Plan.md`, Validation Strategy)
+    - "Fail: `Login.svelte` still calls auth APIs directly for covered command paths, or component validation behavior is lost." (`docs/plans/Priority5AuthServiceSlice7Plan.md`, Validation Strategy)
 
 - [ ] C01 `[frontend]` Create a widget-scoped `AuthService` instance with `createAuthService()` in `src/components/SimpleComment.svelte`, then thread it explicitly through `src/components/DiscussionDisplay.svelte` and `src/components/CommentInput.svelte` into `src/components/Login.svelte`.
   - Depends on: T01.
   - Validated by: `yarn typecheck`.
   - Trace:
-    - "Prefer direct `auth-service` API or a thin service-backed store; avoid introducing another ad-hoc event bus." (`docs/plans/Priority5Completion.md`, Item 12)
-    - "Resolved the conditional in favor of moving session/guest persistence out of `Login.svelte`: auth/session continuity and guest reuse should not depend on the `Login.svelte` component being mounted." (`docs/plans/Priority5Completion.md`, Item 6 findings)
+    - "Create a widget-scoped `AuthService` instance at the current composition root and thread it explicitly through the current component path into `Login.svelte`." (`docs/plans/Priority5AuthServiceSlice7Plan.md`, In Scope)
+    - "`auth-service` remains widget-scoped; do not introduce a singleton service instance." (`docs/plans/Priority5AuthServiceSlice7Plan.md`, Constraints)
+    - "The new widget-scoped service seam composes cleanly through the current component tree." (`docs/plans/Priority5AuthServiceSlice7Plan.md`, Validation Strategy)
 
 - [ ] C02 `[frontend]` Extend `src/lib/auth-service.ts` with one readable auth-runtime snapshot store that exposes the service-owned machine state needed by `Login.svelte` to preserve the existing `loginStateStore` compatibility contract (`state`, `nextEvents`, and any required error context), without running a second interpreted auth machine inside the component.
   - Depends on: T01.
   - Validated by: T01.08.
   - Trace:
-    - "Relay coupling remains in `Login.svelte`: it subscribes to `dispatchableStore` and reacts to `loginIntent` / `logoutIntent` by driving its local machine." (`docs/plans/Priority5Completion.md`, Item 3 findings)
-    - "Draft a slice for replacing `Login.svelte` shared-store publication with auth-service state subscriptions." (`docs/plans/Priority5Completion.md`, Item 8)
+    - "Make `Login.svelte` observe service-owned auth state rather than interpret its own auth machine as a second authority." (`docs/plans/Priority5AuthServiceSlice7Plan.md`, In Scope)
+    - "The slice must not create two authoritative auth runtimes after wiring is complete." (`docs/plans/Priority5AuthServiceSlice7Plan.md`, Constraints)
+    - "Preserve compatibility with the current relay/store consumers by continuing to publish the existing `loginStateStore` shape during this slice." (`docs/plans/Priority5AuthServiceSlice7Plan.md`, In Scope)
 
 - [ ] C03 `[frontend]` Replace direct auth API calls and local auth-machine ownership in `src/components/Login.svelte` with `auth-service` command delegation and subscriptions to the auth-runtime snapshot store added in `C02`, then publish the existing `loginStateStore` compatibility shape from that observed service state while preserving component-local validation/UI behavior for unreworked consumers.
   - Depends on: C01, C02.
   - Validated by: T01.
   - Trace:
-    - "Draft a slice for wiring `Login.svelte` to call `auth-service` commands while keeping form-local state and field validation in `Login.svelte`." (`docs/plans/Priority5Completion.md`, Item 7)
-    - "Keep explicitly out of scope: ... creating broad auth workflow modules, or redesigning frontend state architecture." (`docs/plans/Priority5Completion.md`, Item 14)
-    - "login-related state, side effects, and rendering responsibilities are easier to explain as separate concerns" (`docs/RepoHealthImprovementBacklog.md`, Priority 5)
+    - "Replace direct auth API command calls in `Login.svelte` with calls to `auth-service` methods" (`docs/plans/Priority5AuthServiceSlice7Plan.md`, In Scope)
+    - "`Login.svelte` delegates auth command execution to a widget-scoped `AuthService`." (`docs/plans/Priority5AuthServiceSlice7Plan.md`, Acceptance Criteria)
+    - "`Login.svelte` does not continue to run a second authoritative interpreted auth runtime after the slice is complete." (`docs/plans/Priority5AuthServiceSlice7Plan.md`, Acceptance Criteria)
+    - "The slice does not introduce a singleton auth-service, a new event bus, or a broader auth-state architecture redesign." (`docs/plans/Priority5AuthServiceSlice7Plan.md`, Acceptance Criteria)
 
 ## Behavior Slices
 
