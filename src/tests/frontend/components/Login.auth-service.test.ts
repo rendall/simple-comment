@@ -31,6 +31,19 @@ vi.mock("../../../apiClient", () => ({
   verifyUser: vi.fn(),
 }))
 
+vi.mock("../../../frontend-utilities", async importOriginal => {
+  const actual =
+    await importOriginal<typeof import("../../../frontend-utilities")>()
+
+  return {
+    ...actual,
+    idIconDataUrl: vi.fn(
+      () =>
+        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+    ),
+  }
+})
+
 type AuthRuntimeSnapshot = {
   state: AuthSessionState
   nextEvents: string[]
@@ -97,8 +110,18 @@ const renderLogin = ({
   return { authService }
 }
 
+const submitForm = async (selector: string): Promise<void> => {
+  const form = document.querySelector(selector)
+
+  expect(form).toBeInTheDocument()
+  await fireEvent.submit(form as HTMLFormElement)
+}
+
 describe("Login auth-service delegation", () => {
   beforeEach(() => {
+    Element.prototype.animate =
+      Element.prototype.animate ??
+      vi.fn(() => ({ cancel: vi.fn(), finished: Promise.resolve() }) as never)
     mockVerifySelf.mockRejectedValue({ status: 401 })
     mockPostAuth.mockResolvedValue({ ok: true } as never)
     mockCreateUser.mockResolvedValue({ ok: true } as never)
@@ -116,5 +139,26 @@ describe("Login auth-service delegation", () => {
       expect(authService.init).toHaveBeenCalledTimes(1)
     })
     expect(mockVerifySelf).not.toHaveBeenCalled()
+  })
+
+  test("delegates valid login submissions to authService.login", async () => {
+    const { authService } = renderLogin()
+
+    await fireEvent.click(await screen.findByRole("button", { name: "Login" }))
+    await fireEvent.input(screen.getByLabelText("User handle"), {
+      target: { value: "alice-user" },
+    })
+    await fireEvent.input(screen.getByLabelText("Password"), {
+      target: { value: "secret" },
+    })
+    await submitForm("#user-login-form")
+
+    await waitFor(() => {
+      expect(authService.login).toHaveBeenCalledWith({
+        userId: "alice-user",
+        password: "secret",
+      })
+    })
+    expect(mockPostAuth).not.toHaveBeenCalled()
   })
 })
