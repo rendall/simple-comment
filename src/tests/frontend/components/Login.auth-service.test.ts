@@ -1,4 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/svelte"
+import { readFileSync } from "node:fs"
+import { resolve } from "node:path"
 import type { Writable } from "svelte/store"
 import { readable, writable } from "svelte/store"
 import { beforeEach, describe, expect, test, vi } from "vitest"
@@ -63,6 +65,16 @@ const mockGetGuestToken = vi.mocked(getGuestToken)
 const mockCreateGuestUser = vi.mocked(createGuestUser)
 const mockUpdateUser = vi.mocked(updateUser)
 const mockVerifyUser = vi.mocked(verifyUser)
+const directAuthCommandNames = [
+  "verifySelf",
+  "verifyUser",
+  "postAuth",
+  "createUser",
+  "getGuestToken",
+  "createGuestUser",
+  "updateUser",
+  "deleteAuth",
+] as const
 
 const defaultUser: User = {
   id: "alice-user",
@@ -310,6 +322,17 @@ describe("Login auth-service delegation", () => {
 
     await waitFor(() => {
       expect(authService.logout).not.toHaveBeenCalled()
+    })
+  })
+
+  test("does not call direct auth API commands from Login.svelte", () => {
+    const loginSource = readFileSync(
+      resolve(process.cwd(), "src/components/Login.svelte"),
+      "utf8"
+    )
+
+    directAuthCommandNames.forEach(commandName => {
+      expect(loginSource).not.toMatch(new RegExp(`\\b${commandName}\\s*\\(`))
     })
   })
 })
