@@ -47,7 +47,7 @@ Because `CommentInput.svelte` and `SelfDisplay.svelte` still depend on `loginSta
   - [x] T01.02 Add a fail-first test proving a valid login submission calls `authService.login({ userId, password })` with the current form values.
   - [x] T01.03 Add a fail-first test proving a valid signup submission calls `authService.signup({ userId, password, displayName, email })` with the current form values.
   - [x] T01.04 Add fail-first tests proving a valid guest submission calls `authService.loginGuest({ displayName, email })` when no stored guest data exists and passes the stored guest identity through the service payload when stored guest data is present.
-  - [ ] T01.05 Add fail-first tests proving local validation failures still surface component-local errors and do not call `authService.login()`, `authService.signup()`, or `authService.loginGuest()`.
+  - [x] T01.05 Add fail-first tests proving local validation failures still surface component-local errors and do not call `authService.login()`, `authService.signup()`, or `authService.loginGuest()`.
   - [ ] T01.06 Add a fail-first test proving logout intent delegates through `authService.logout()` only when logout is currently allowed by the observed auth state.
   - [ ] T01.07 Add fail-first tests proving `Login.svelte` no longer performs direct auth command calls to `verifySelf`, `verifyUser`, `postAuth`, `createUser`, `getGuestToken`, `createGuestUser`, `updateUser`, or `deleteAuth()` for the delegated flows covered by this slice.
   - [ ] T01.08 Add a fail-first test proving `Login.svelte` publishes the existing `loginStateStore` compatibility shape from observed service-owned auth state rather than from a second authoritative local auth runtime.
