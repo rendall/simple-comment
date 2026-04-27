@@ -245,4 +245,36 @@ describe("Login auth-service delegation", () => {
     expect(mockGetGuestToken).not.toHaveBeenCalled()
     expect(mockCreateGuestUser).not.toHaveBeenCalled()
   })
+
+  test("keeps login validation local before authService.login", async () => {
+    const { authService } = renderLogin()
+
+    await fireEvent.click(await screen.findByRole("button", { name: "Login" }))
+    await submitForm("#user-login-form")
+
+    expect(await screen.findByText("User handle is required.")).toBeVisible()
+    expect(screen.getByText("Password is required.")).toBeVisible()
+    expect(authService.login).not.toHaveBeenCalled()
+  })
+
+  test("keeps signup validation local before authService.signup", async () => {
+    const { authService } = renderLogin()
+
+    await fireEvent.click(
+      await screen.findByRole("button", { name: "Signup" })
+    )
+    await submitForm("#signup-form")
+
+    expect(await screen.findByText(/Display name is required/)).toBeVisible()
+    expect(authService.signup).not.toHaveBeenCalled()
+  })
+
+  test("keeps guest validation local before authService.loginGuest", async () => {
+    const { authService } = renderLogin()
+
+    await submitForm("#guest-login-form")
+
+    expect(await screen.findByText(/Display name is required/)).toBeVisible()
+    expect(authService.loginGuest).not.toHaveBeenCalled()
+  })
 })
