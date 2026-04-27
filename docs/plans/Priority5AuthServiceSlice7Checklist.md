@@ -43,7 +43,7 @@ Because `CommentInput.svelte` and `SelfDisplay.svelte` still depend on `loginSta
 
 - T01 `[tests]` Add fail-first frontend component tests for `Login.svelte` auth-service delegation in `src/tests/frontend/components/Login.auth-service.test.ts`.
   - Depends on: none.
-  - [ ] T01.01 Add a fail-first test proving mount/init delegates the initial auth check through `authService.init()` rather than running direct `verifySelf()` logic inside `Login.svelte`.
+  - [x] T01.01 Add a fail-first test proving mount/init delegates the initial auth check through `authService.init()` rather than running direct `verifySelf()` logic inside `Login.svelte`.
   - [ ] T01.02 Add a fail-first test proving a valid login submission calls `authService.login({ userId, password })` with the current form values.
   - [ ] T01.03 Add a fail-first test proving a valid signup submission calls `authService.signup({ userId, password, displayName, email })` with the current form values.
   - [ ] T01.04 Add fail-first tests proving a valid guest submission calls `authService.loginGuest({ displayName, email })` when no stored guest data exists and passes the stored guest identity through the service payload when stored guest data is present.
