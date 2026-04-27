@@ -42,6 +42,12 @@ type LoginMachineState = StateValueFrom<typeof loginMachine>
 
 export type AuthSessionState = LoginMachineState
 
+export type AuthRuntimeSnapshot = {
+  state: AuthSessionState
+  nextEvents: string[]
+  error?: ServerResponse | string
+}
+
 export type AuthRequestReason =
   | "comment-submit"
   | "reply-submit"
@@ -119,6 +125,7 @@ export type AuthService = {
   currentUser: Readable<User | undefined>
   authRequest: Readable<AuthRequestState>
   authOutcome: Readable<AuthOutcomeState>
+  authRuntimeSnapshot: Readable<AuthRuntimeSnapshot>
   init: () => Promise<void>
   requestAuth: (reason: AuthRequestReason) => { requestId: string }
   clearAuthOutcome: (requestId?: string) => void
@@ -156,12 +163,24 @@ export const createAuthService = (
   const currentUserStore = writable<User | undefined>(initialUser)
   const authRequestStore = writable<AuthRequestState>({ status: "idle" })
   const authOutcomeStore = writable<AuthOutcomeState>({ status: "none" })
+  const authRuntimeSnapshotStore = writable<AuthRuntimeSnapshot>({
+    state: initialLoginState as AuthSessionState,
+    nextEvents: loginMachine.initialState.nextEvents ?? [],
+    error: loginMachine.initialState.context.error,
+  })
 
   authRuntime.onTransition(state => {
     if (typeof state.value !== "string")
       throw new Error("Expected a flat login machine state")
 
-    sessionStateStore.set(state.value as AuthSessionState)
+    const sessionState = state.value as AuthSessionState
+
+    sessionStateStore.set(sessionState)
+    authRuntimeSnapshotStore.set({
+      state: sessionState,
+      nextEvents: state.nextEvents ?? [],
+      error: state.context.error,
+    })
   })
 
   authRuntime.start()
@@ -242,6 +261,9 @@ export const createAuthService = (
     },
     authOutcome: {
       subscribe: authOutcomeStore.subscribe,
+    },
+    authRuntimeSnapshot: {
+      subscribe: authRuntimeSnapshotStore.subscribe,
     },
     init: async () => {
       if (initialUser !== undefined) {

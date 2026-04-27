@@ -65,7 +65,7 @@ Because `CommentInput.svelte` and `SelfDisplay.svelte` still depend on `loginSta
     - "`auth-service` remains widget-scoped; do not introduce a singleton service instance." (`docs/plans/Priority5AuthServiceSlice7Plan.md`, Constraints)
     - "The new widget-scoped service seam composes cleanly through the current component tree." (`docs/plans/Priority5AuthServiceSlice7Plan.md`, Validation Strategy)
 
-- [ ] C02 `[frontend]` Extend `src/lib/auth-service.ts` with one readable auth-runtime snapshot store that exposes the service-owned machine state needed by `Login.svelte` to preserve the existing `loginStateStore` compatibility contract (`state`, `nextEvents`, and any required error context), without running a second interpreted auth machine inside the component.
+- [x] C02 `[frontend]` Extend `src/lib/auth-service.ts` with one readable auth-runtime snapshot store that exposes the service-owned machine state needed by `Login.svelte` to preserve the existing `loginStateStore` compatibility contract (`state`, `nextEvents`, and any required error context), without running a second interpreted auth machine inside the component.
   - Depends on: T01.
   - Validated by: T01.08.
   - Trace:
