@@ -80,16 +80,18 @@
   - Kept item 8 and the relay-removal work out of scope: `CommentInput.svelte` and `SelfDisplay.svelte` still rely on `loginStateStore` / `dispatchableStore`, so slice 7 preserves those contracts rather than removing them prematurely.
   - The existing slice-7 checklist should now be treated as pre-plan draft input and reconciled to the approved slice-7 plan before it is used for implementation.
 
-- 8. [ ] Draft a slice for replacing `Login.svelte` shared-store publication with auth-service state subscriptions.
+- 8. [ ] Draft a slice for moving `Login.svelte` auth/session shared-store publication to a temporary widget-scoped `auth-service` bridge.
 
 - 9. [ ] Draft a slice for removing `dispatchableStore` / `loginStateStore` login relay behavior from `CommentInput.svelte`.
 
 - 10. [ ] Draft a slice for removing `dispatchableStore` / `loginStateStore` logout relay behavior from `SelfDisplay.svelte`.
 
-- 11. [ ] Decide whether auth state should be passed directly through component props or exposed through a thin auth-service-backed store.
+- 11. [ ] Draft a cleanup slice for removing the temporary auth-service bridge and any legacy auth/session store paths made obsolete by slices 8-10.
 
-- 12. [ ] Prefer direct `auth-service` API or a thin service-backed store; avoid introducing another ad-hoc event bus.
+- 12. [ ] Decide whether auth state should be passed directly through component props or exposed through a thin auth-service-backed store.
 
-- 13. [ ] Add validation expectations per slice: fail-first tests in one pass, production implementation in a later pass, no test edits during implementation unless the implementation session stops and explains why the test is wrong.
+- 13. [ ] Prefer direct `auth-service` API or a thin service-backed store; avoid introducing another ad-hoc event bus.
 
-- 14. [ ] Keep explicitly out of scope: splitting `Login.svelte` into form components, adding `auth-controller.ts`, adding `AuthRuntime.svelte`, creating broad auth workflow modules, or redesigning frontend state architecture.
+- 14. [ ] Add validation expectations per slice: fail-first tests in one pass, production implementation in a later pass, no test edits during implementation unless the implementation session stops and explains why the test is wrong.
+
+- 15. [ ] Keep explicitly out of scope: splitting `Login.svelte` into form components, adding `auth-controller.ts`, adding `AuthRuntime.svelte`, creating broad auth workflow modules, or redesigning frontend state architecture.
