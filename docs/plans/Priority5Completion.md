@@ -102,7 +102,16 @@
   - Preserved selected-tab-dependent button copy and guest-comment validation through direct `Login.svelte` selected-tab binding.
   - Validation evidence: `yarn run ci:local` passed after Slice 9 implementation.
 
-- 10. [ ] Draft a slice for removing `dispatchableStore` / `loginStateStore` logout relay behavior from `SelfDisplay.svelte`.
+- 10. [x] Draft a slice for removing `dispatchableStore` / `loginStateStore` logout relay behavior from `SelfDisplay.svelte`.
+
+  Findings:
+
+  - Created and approved `docs/plans/Priority5AuthServiceSlice10Plan.md` and `docs/plans/Priority5AuthServiceSlice10Checklist.md`.
+  - Confirmed the slice kept the logout-relay removal narrow: `SelfDisplay.svelte` now receives the widget-scoped `authService`, reads logout availability and processing state from `authService.authRuntimeSnapshot`, and calls `authService.logout()` directly.
+  - Confirmed `src/components/SimpleComment.svelte` passes the existing widget-scoped `authService` to `SelfDisplay.svelte`.
+  - Added `src/tests/frontend/components/SelfDisplay.auth-service.test.ts` component coverage for logout button visibility, direct `authService.logout()` delegation, processing skeleton visibility, and a source guard against legacy relay store imports.
+  - Kept out-of-scope cleanup deferred: `Login.svelte` logout relay handling, legacy store definitions, and the temporary auth-service bridge remain for the planned cleanup slice.
+  - Validation evidence: `yarn run ci:local` passed after Slice 10 implementation.
 
 - 11. [ ] Draft a cleanup slice for removing the temporary auth-service bridge and any legacy auth/session store paths made obsolete by slices 8-10.
 
