@@ -7,7 +7,6 @@ import { beforeEach, describe, expect, test, vi } from "vitest"
 import {
   createGuestUser,
   createUser,
-  deleteAuth,
   getGuestToken,
   postAuth,
   updateUser,
@@ -20,13 +19,11 @@ import type {
   AuthService,
   AuthSessionState,
 } from "../../../lib/auth-service"
-import { dispatchableStore, loginStateStore } from "../../../lib/svelte-stores"
-import { LoginTab, type User } from "../../../lib/simple-comment-types"
+import type { User } from "../../../lib/simple-comment-types"
 
 vi.mock("../../../apiClient", () => ({
   createGuestUser: vi.fn(),
   createUser: vi.fn(),
-  deleteAuth: vi.fn(),
   getGuestToken: vi.fn(),
   getOneUser: vi.fn(),
   postAuth: vi.fn(),
@@ -62,7 +59,6 @@ type AuthServiceUnderTest = AuthService & {
 const mockVerifySelf = vi.mocked(verifySelf)
 const mockPostAuth = vi.mocked(postAuth)
 const mockCreateUser = vi.mocked(createUser)
-const mockDeleteAuth = vi.mocked(deleteAuth)
 const mockGetGuestToken = vi.mocked(getGuestToken)
 const mockCreateGuestUser = vi.mocked(createGuestUser)
 const mockUpdateUser = vi.mocked(updateUser)
@@ -77,12 +73,6 @@ const directAuthCommandNames = [
   "updateUser",
   "deleteAuth",
 ] as const
-
-const defaultUser: User = {
-  id: "alice-user",
-  name: "Alice Example",
-  email: "alice@example.com",
-}
 
 const createAuthServiceStub = ({
   currentUser,
@@ -141,7 +131,6 @@ describe("Login auth-service delegation", () => {
     mockVerifySelf.mockRejectedValue({ status: 401 })
     mockPostAuth.mockResolvedValue({ ok: true } as never)
     mockCreateUser.mockResolvedValue({ ok: true } as never)
-    mockDeleteAuth.mockResolvedValue({ ok: true } as never)
     mockGetGuestToken.mockResolvedValue({ ok: true } as never)
     mockCreateGuestUser.mockResolvedValue({ ok: true } as never)
     mockUpdateUser.mockResolvedValue({ ok: true } as never)
@@ -342,45 +331,6 @@ describe("Login auth-service delegation", () => {
     expect(authService.loginGuest).not.toHaveBeenCalled()
   })
 
-  test("delegates allowed logout intents to authService.logout", async () => {
-    const { authService } = renderLogin({
-      currentUser: defaultUser,
-      authService: createAuthServiceStub({
-        currentUser: defaultUser,
-        snapshot: { state: "loggedIn", nextEvents: ["LOGOUT"] },
-      }),
-    })
-
-    await waitFor(() => {
-      expect(
-        document.querySelector("section.simple-comment-login")
-      ).not.toHaveClass("is-loading")
-    })
-    dispatchableStore.dispatch("logoutIntent")
-
-    await waitFor(() => {
-      expect(authService.logout).toHaveBeenCalledTimes(1)
-    })
-    expect(mockDeleteAuth).not.toHaveBeenCalled()
-  })
-
-  test("ignores logout intents when observed auth state disallows logout", async () => {
-    const { authService } = renderLogin({
-      authService: createAuthServiceStub({
-        snapshot: {
-          state: "loggedOut",
-          nextEvents: ["LOGIN", "SIGNUP", "GUEST"],
-        },
-      }),
-    })
-
-    dispatchableStore.dispatch("logoutIntent")
-
-    await waitFor(() => {
-      expect(authService.logout).not.toHaveBeenCalled()
-    })
-  })
-
   test("does not call direct auth API commands from Login.svelte", () => {
     const loginSource = readFileSync(
       resolve(process.cwd(), "src/components/Login.svelte"),
@@ -392,39 +342,15 @@ describe("Login auth-service delegation", () => {
     })
   })
 
-  test("does not publish auth session state to loginStateStore", async () => {
-    const setLoginState = vi.spyOn(loginStateStore, "set")
-    const { authService } = renderLogin({
-      authService: createAuthServiceStub({
-        snapshot: { state: "loggedIn", nextEvents: ["LOGOUT"] },
-      }),
-    })
+  test("does not import or handle legacy auth relay stores", () => {
+    const loginSource = readFileSync(
+      resolve(process.cwd(), "src/components/Login.svelte"),
+      "utf8"
+    )
 
-    await waitFor(() => {
-      expect(authService.init).toHaveBeenCalledTimes(1)
-    })
-    expect(setLoginState).not.toHaveBeenCalledWith({
-      state: "loggedIn",
-      nextEvents: ["LOGOUT"],
-    })
-  })
-
-  test("continues to publish selected tab state to loginStateStore", async () => {
-    const setLoginState = vi.spyOn(loginStateStore, "set")
-
-    renderLogin({
-      authService: createAuthServiceStub({
-        snapshot: {
-          state: "loggedOut",
-          nextEvents: ["LOGIN", "SIGNUP", "GUEST"],
-        },
-      }),
-    })
-
-    await fireEvent.click(await screen.findByRole("button", { name: "Login" }))
-
-    await waitFor(() => {
-      expect(setLoginState).toHaveBeenCalledWith({ select: LoginTab.login })
-    })
+    expect(loginSource).not.toMatch(/\bdispatchableStore\b/)
+    expect(loginSource).not.toMatch(/\bloginStateStore\b/)
+    expect(loginSource).not.toMatch(/\bloginIntent\b/)
+    expect(loginSource).not.toMatch(/\blogoutIntent\b/)
   })
 })

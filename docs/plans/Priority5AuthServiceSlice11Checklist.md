@@ -42,7 +42,7 @@ This slice removes the temporary migration scaffolding left after slices 8-10. A
 
 ## Atomic Checklist Items
 
-- [ ] T01 `[tests]` Add fail-first cleanup/source-guard component tests and remove migrated component-test negative relay spies.
+- [x] T01 `[tests]` Add fail-first cleanup/source-guard component tests and remove migrated component-test negative relay spies.
   - Depends on: none.
   - Required coverage:
     - `Login.svelte` source must not import `dispatchableStore` or `loginStateStore`.

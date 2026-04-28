@@ -13,7 +13,6 @@ import type {
   AuthService,
   AuthSessionState,
 } from "../../../lib/auth-service"
-import { dispatchableStore } from "../../../lib/svelte-stores"
 import type {
   Comment,
   ServerResponse,
@@ -138,7 +137,6 @@ describe("CommentInput auth-service delegation", () => {
   })
 
   test("requests auth through authService for unauthenticated comment submit", async () => {
-    const dispatchLoginIntent = vi.spyOn(dispatchableStore, "dispatch")
     const { authService } = renderCommentInput()
 
     await submitComment()
@@ -146,7 +144,6 @@ describe("CommentInput auth-service delegation", () => {
     await waitFor(() => {
       expect(authService.requestAuth).toHaveBeenCalledWith("comment-submit")
     })
-    expect(dispatchLoginIntent).not.toHaveBeenCalledWith("loginIntent")
   })
 
   test("continues posting after matching auth success outcome", async () => {
