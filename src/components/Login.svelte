@@ -42,6 +42,7 @@
 
   export let currentUser: User | undefined
   export let authService: AuthService
+  export let selectedTab: LoginTab = LoginTab.guest
 
   type PendingAuthRequest = Extract<AuthRequestState, { status: "pending" }>
 
@@ -76,11 +77,11 @@
   let userPasswordMessage = undefined
   let userPasswordStatus = undefined
 
-  let selectedIndex = isNaN(
+  let selectedIndex: LoginTab = isNaN(
     parseInt(localStorage.getItem("simple_comment_login_tab"))
   )
     ? LoginTab.guest
-    : parseInt(localStorage.getItem("simple_comment_login_tab"))
+    : (parseInt(localStorage.getItem("simple_comment_login_tab")) as LoginTab)
 
   let lastIdChecked
   let pendingAuthRequestId: string | undefined = undefined
@@ -604,6 +605,8 @@
   })
 
   $: loginStateStore.set({ select: selectedIndex })
+
+  $: selectedTab = selectedIndex
 
   $: {
     if (userId.length < 3 && !userIdStatus)

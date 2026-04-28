@@ -89,7 +89,7 @@ This slice removes the login-before-comment relay from `CommentInput.svelte`. Af
     - "Remove `loginStateStore` import and subscription." (`docs/plans/Priority5AuthServiceSlice9Plan.md`, Detailed File Impact)
     - "Pass: `CommentInput.svelte` component tests prove unauthenticated submission calls `authService.requestAuth(...)`, matching success continues posting, selected-tab behavior remains available, and legacy login stores are not used." (`docs/plans/Priority5AuthServiceSlice9Plan.md`, Validation Strategy)
 
-- [ ] C03 `[frontend]` Refactor `src/components/CommentInput.svelte` to use injected `authService` request/outcome flow and direct `Login.svelte` selected-tab binding instead of legacy login relay stores.
+- [x] C03 `[frontend]` Refactor `src/components/CommentInput.svelte` to use injected `authService` request/outcome flow and direct `Login.svelte` selected-tab binding instead of legacy login relay stores.
   - Depends on: T03.
   - Validated by: T03 and `yarn typecheck`.
   - Trace:
