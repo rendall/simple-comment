@@ -68,7 +68,7 @@ This slice removes the temporary migration scaffolding left after slices 8-10. A
     - "keep `bind:selectedTab` support through the existing `selectedTab` export and `$: selectedTab = selectedIndex`" (`docs/plans/Priority5AuthServiceSlice11Plan.md`, Detailed File Impact)
     - "keep `simple_comment_login_tab` localStorage persistence." (`docs/plans/Priority5AuthServiceSlice11Plan.md`, Detailed File Impact)
 
-- [ ] C02 `[frontend]` Replace `src/components/SimpleComment.svelte` bridge/global-store plumbing with a direct `authService.currentUser` subscription.
+- [x] C02 `[frontend]` Replace `src/components/SimpleComment.svelte` bridge/global-store plumbing with a direct `authService.currentUser` subscription.
   - Depends on: T01.
   - Validated by: T01 and `yarn typecheck`.
   - Trace:
