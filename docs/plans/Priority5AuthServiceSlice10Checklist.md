@@ -57,7 +57,7 @@ This slice removes the logout relay from `SelfDisplay.svelte`. After the slice, 
     - "call `authService.logout()` directly in `onLogoutClick`" (`docs/plans/Priority5AuthServiceSlice10Plan.md`, Detailed File Impact)
     - "remove `dispatchableStore` and `loginStateStore` imports." (`docs/plans/Priority5AuthServiceSlice10Plan.md`, Detailed File Impact)
 
-- [ ] C02 `[frontend]` Pass the widget-scoped `authService` from `src/components/SimpleComment.svelte` to `SelfDisplay.svelte`.
+- [x] C02 `[frontend]` Pass the widget-scoped `authService` from `src/components/SimpleComment.svelte` to `SelfDisplay.svelte`.
   - Depends on: C01.
   - Validated by: `yarn typecheck`.
   - Trace:
