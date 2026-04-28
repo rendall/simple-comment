@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, jest, test } from "@jest/globals"
 import { get } from "svelte/store"
 import { createAuthService } from "../../lib/auth-service"
-import type { AdminSafeUser, ServerResponse } from "../../lib/simple-comment-types"
+import type {
+  AdminSafeUser,
+  ServerResponse,
+} from "../../lib/simple-comment-types"
 import { postAuth, verifySelf } from "../../apiClient"
 
 jest.mock("../../apiClient", () => ({

@@ -15,10 +15,7 @@ import {
   verifyUser,
 } from "../../../apiClient"
 import Login from "../../../components/Login.svelte"
-import type {
-  AuthService,
-  AuthSessionState,
-} from "../../../lib/auth-service"
+import type { AuthService, AuthSessionState } from "../../../lib/auth-service"
 import { dispatchableStore, loginStateStore } from "../../../lib/svelte-stores"
 import type { User } from "../../../lib/simple-comment-types"
 
@@ -113,10 +110,13 @@ const renderLogin = ({
   authService?: AuthServiceUnderTest
   currentUser?: User
 } = {}) => {
-  render(Login as never, {
-    authService,
-    currentUser,
-  } as never)
+  render(
+    Login as never,
+    {
+      authService,
+      currentUser,
+    } as never
+  )
 
   return { authService }
 }
@@ -176,9 +176,7 @@ describe("Login auth-service delegation", () => {
   test("delegates valid signup submissions to authService.signup", async () => {
     const { authService } = renderLogin()
 
-    await fireEvent.click(
-      await screen.findByRole("button", { name: "Signup" })
-    )
+    await fireEvent.click(await screen.findByRole("button", { name: "Signup" }))
     await fireEvent.input(screen.getByLabelText("Display name"), {
       target: { value: "Alice Example" },
     })
@@ -271,9 +269,7 @@ describe("Login auth-service delegation", () => {
   test("keeps signup validation local before authService.signup", async () => {
     const { authService } = renderLogin()
 
-    await fireEvent.click(
-      await screen.findByRole("button", { name: "Signup" })
-    )
+    await fireEvent.click(await screen.findByRole("button", { name: "Signup" }))
     await submitForm("#signup-form")
 
     const displayNameErrors = await screen.findAllByText(
@@ -307,9 +303,9 @@ describe("Login auth-service delegation", () => {
     })
 
     await waitFor(() => {
-      expect(document.querySelector("section.simple-comment-login")).not.toHaveClass(
-        "is-loading"
-      )
+      expect(
+        document.querySelector("section.simple-comment-login")
+      ).not.toHaveClass("is-loading")
     })
     dispatchableStore.dispatch("logoutIntent")
 
@@ -322,7 +318,10 @@ describe("Login auth-service delegation", () => {
   test("ignores logout intents when observed auth state disallows logout", async () => {
     const { authService } = renderLogin({
       authService: createAuthServiceStub({
-        snapshot: { state: "loggedOut", nextEvents: ["LOGIN", "SIGNUP", "GUEST"] },
+        snapshot: {
+          state: "loggedOut",
+          nextEvents: ["LOGIN", "SIGNUP", "GUEST"],
+        },
       }),
     })
 
