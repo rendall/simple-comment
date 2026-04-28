@@ -77,7 +77,7 @@ This slice removes the temporary migration scaffolding left after slices 8-10. A
     - "Have `SimpleComment.svelte` subscribe directly to `authService.currentUser` to keep its local `currentUser` prop flow updated." (`docs/plans/Priority5AuthServiceSlice11Plan.md`, In Scope)
     - "`SimpleComment.svelte` subscribes directly to `authService.currentUser`, preserving the existing local `currentUser` prop flow without the temporary bridge." (`docs/plans/Priority5AuthServiceSlice11Plan.md`, Risks and Mitigations)
 
-- [ ] T02 `[tests]` Remove obsolete bridge/store test dependencies before deleting their modules.
+- [x] T02 `[tests]` Remove obsolete bridge/store test dependencies before deleting their modules.
   - Depends on: C01, C02.
   - Required cleanup:
     - remove `src/tests/frontend/auth-store-bridge.test.ts`,
