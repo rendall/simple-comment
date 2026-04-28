@@ -96,8 +96,15 @@ After Slice 7, `Login.svelte` already delegates auth commands to `auth-service`.
     - "Make `auth-service` clear stored session data on unauthenticated initial verification and confirmed logout." (`docs/plans/Priority5AuthServiceSlice6Plan.md`, In Scope)
     - "`auth-service` accepts an injectable persistence dependency." (`docs/plans/Priority5AuthServiceSlice6Plan.md`, Acceptance Criteria)
 
-- [ ] C03 `[frontend]` Remove `src/components/Login.svelte` direct `simple_comment_user` `localStorage` access by using the shared auth persistence boundary only for stored-user form hydration, leaving session save/clear and stored-guest command reuse owned by `auth-service`.
+- [x] T03 `[tests]` Update the `Login.svelte` component-boundary guest submission test so stored guest identity is not passed from the component to `authService.loginGuest()`; persisted guest reuse is covered at the `auth-service` boundary instead.
   - Depends on: C02.
+  - Trace:
+    - "Make `auth-service.loginGuest()` use persisted guest identity when command input does not include `storedGuest`." (`docs/plans/Priority5AuthServiceSlice6Plan.md`, In Scope)
+    - "Preserve `Login.svelte` form hydration from stored user data without letting the component own session saving, clearing, or guest reuse." (`docs/plans/Priority5AuthServiceSlice6Plan.md`, In Scope)
+    - "Fail: `auth-service` requires browser `localStorage` or guest reuse still depends on `Login.svelte`." (`docs/plans/Priority5AuthServiceSlice6Plan.md`, Validation Strategy)
+
+- [ ] C03 `[frontend]` Remove `src/components/Login.svelte` direct `simple_comment_user` `localStorage` access by using the shared auth persistence boundary only for stored-user form hydration, leaving session save/clear and stored-guest command reuse owned by `auth-service`.
+  - Depends on: T03.
   - Validated by: `yarn typecheck` and existing `src/tests/frontend/components/Login.auth-service.test.ts`.
   - Trace:
     - "Replace `Login.svelte` direct `simple_comment_user` `localStorage` access with the shared persistence boundary." (`docs/plans/Priority5AuthServiceSlice6Plan.md`, In Scope)
@@ -127,6 +134,6 @@ Type: behavior
 
 Goal: remove direct `simple_comment_user` storage access from `Login.svelte` without moving UI preference persistence, rewiring auth commands, or keeping guest reuse in the component.
 
-Items: C03
+Items: T03, C03
 
 Type: mechanical
