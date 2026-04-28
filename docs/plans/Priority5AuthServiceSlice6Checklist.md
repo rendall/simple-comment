@@ -74,7 +74,7 @@ After Slice 7, `Login.svelte` already delegates auth commands to `auth-service`.
     - "Make the persistence boundary tolerate missing storage, malformed JSON, incomplete stored data, and non-browser environments without throwing during normal auth flows." (`docs/plans/Priority5AuthServiceSlice6Plan.md`, In Scope)
     - "`src/lib/auth-persistence.ts` exposes typed persistence operations for `simple_comment_user`." (`docs/plans/Priority5AuthServiceSlice6Plan.md`, Acceptance Criteria)
 
-- [ ] T02 `[tests]` Add fail-first frontend tests for `auth-service` persistence integration using an injected persistence dependency rather than browser `localStorage`.
+- [x] T02 `[tests]` Add fail-first frontend tests for `auth-service` persistence integration using an injected persistence dependency rather than browser `localStorage`.
   - Depends on: C01.
   - Required coverage:
     - successful `init()`, `login()`, `signup()`, and `loginGuest()` save the verified authenticated user
