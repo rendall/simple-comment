@@ -1,6 +1,6 @@
 # Priority 5 Auth Service Slice 11 Plan
 
-Status: approved
+Status: archived, completed
 
 Source backlog: `docs/RepoHealthImprovementBacklog.md` (`Priority 5`)
 
