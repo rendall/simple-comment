@@ -28,6 +28,6 @@
 </script>
 
 <section class="simple-comment">
-  <SelfDisplay {currentUser} />
+  <SelfDisplay {authService} {currentUser} />
   <DiscussionDisplay {authService} {currentUser} {discussionId} {title} />
 </section>
