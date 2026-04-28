@@ -36,7 +36,12 @@ import {
   verifyUser,
 } from "../apiClient"
 import { loginMachine } from "./login.xstate"
-import type { Email, ServerResponse, User, UserId } from "./simple-comment-types"
+import type {
+  Email,
+  ServerResponse,
+  User,
+  UserId,
+} from "./simple-comment-types"
 
 type LoginMachineState = StateValueFrom<typeof loginMachine>
 
@@ -56,32 +61,32 @@ export type AuthRequestReason =
 export type AuthRequestState =
   | { status: "idle" }
   | {
-    status: "pending"
-    reason: AuthRequestReason
-    requestId: string
-  }
+      status: "pending"
+      reason: AuthRequestReason
+      requestId: string
+    }
 
 export type AuthOutcomeState =
   | { status: "none" }
   | {
-    status: "localValidationError"
-    message: string
-    requestId: string
-  }
+      status: "localValidationError"
+      message: string
+      requestId: string
+    }
   | {
-    status: "remoteError"
-    error: ServerResponse | string
-    requestId: string
-  }
+      status: "remoteError"
+      error: ServerResponse | string
+      requestId: string
+    }
   | {
-    status: "success"
-    user: User
-    requestId: string
-  }
+      status: "success"
+      user: User
+      requestId: string
+    }
   | {
-    status: "cancelled"
-    requestId: string
-  }
+      status: "cancelled"
+      requestId: string
+    }
 
 type PendingAuthRequest = Extract<AuthRequestState, { status: "pending" }>
 type ActiveAuthOutcome = Exclude<AuthOutcomeState, { status: "none" }>
@@ -130,9 +135,7 @@ export type AuthService = {
   requestAuth: (reason: AuthRequestReason) => { requestId: string }
   clearAuthOutcome: (requestId?: string) => void
   cancelAuthRequest: (requestId?: string) => void
-  reportLocalValidationError: (
-    input: ReportLocalValidationErrorInput
-  ) => void
+  reportLocalValidationError: (input: ReportLocalValidationErrorInput) => void
   login: (payload: LoginPayload) => Promise<void>
   signup: (payload: SignupPayload) => Promise<void>
   loginGuest: (payload: GuestLoginPayload) => Promise<void>
@@ -166,7 +169,7 @@ export const createAuthService = (
   const authRuntimeSnapshotStore = writable<AuthRuntimeSnapshot>({
     state: initialLoginState as AuthSessionState,
     nextEvents: loginMachine.initialState.nextEvents ?? [],
-    error: loginMachine.initialState.context.error,
+    error: loginMachine.initialState.context?.error,
   })
 
   authRuntime.onTransition(state => {
@@ -179,7 +182,7 @@ export const createAuthService = (
     authRuntimeSnapshotStore.set({
       state: sessionState,
       nextEvents: state.nextEvents ?? [],
-      error: state.context.error,
+      error: state.context?.error,
     })
   })
 
@@ -285,7 +288,11 @@ export const createAuthService = (
         const { status } = (error ?? {}) as { status?: number }
 
         if (status === 401) authRuntime.send("FIRST_VISIT")
-        else authRuntime.send({ type: "ERROR", error: error as ServerResponse | string })
+        else
+          authRuntime.send({
+            type: "ERROR",
+            error: error as ServerResponse | string,
+          })
       }
     },
     requestAuth,
