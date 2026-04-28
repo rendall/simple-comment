@@ -90,7 +90,17 @@
   - Confirmed `Login.svelte` still owns selected-tab UI publication only, preserving the current unreworked relay consumers for later slices.
   - Validation evidence: `yarn run ci:local` passed after slice-8 implementation.
 
-- 9. [ ] Draft a slice for removing `dispatchableStore` / `loginStateStore` login relay behavior from `CommentInput.svelte`.
+- 9. [x] Draft a slice for removing `dispatchableStore` / `loginStateStore` login relay behavior from `CommentInput.svelte`.
+
+  Findings:
+
+  - Created and approved `docs/plans/Priority5AuthServiceSlice9Plan.md` and `docs/plans/Priority5AuthServiceSlice9Checklist.md`.
+  - Confirmed the slice used the existing widget-scoped `authService.authRequest` / `authOutcome` seam rather than introducing a new event bus or singleton service.
+  - Implemented request-scoped auth outcomes in `auth-service` so pending comment-submit auth requests can complete with success or remote/local failure.
+  - Updated `Login.svelte` to consume pending auth requests from `authService` while preserving form-local validation, direct form submissions, selected-tab publication, and the existing logout relay for Slice 10.
+  - Removed `CommentInput.svelte` imports and use of `dispatchableStore` / `loginStateStore` for login-before-comment behavior.
+  - Preserved selected-tab-dependent button copy and guest-comment validation through direct `Login.svelte` selected-tab binding.
+  - Validation evidence: `yarn run ci:local` passed after Slice 9 implementation.
 
 - 10. [ ] Draft a slice for removing `dispatchableStore` / `loginStateStore` logout relay behavior from `SelfDisplay.svelte`.
 
