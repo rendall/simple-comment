@@ -113,7 +113,17 @@
   - Kept out-of-scope cleanup deferred: `Login.svelte` logout relay handling, legacy store definitions, and the temporary auth-service bridge remain for the planned cleanup slice.
   - Validation evidence: `yarn run ci:local` passed after Slice 10 implementation.
 
-- 11. [ ] Draft a cleanup slice for removing the temporary auth-service bridge and any legacy auth/session store paths made obsolete by slices 8-10.
+- 11. [x] Draft a cleanup slice for removing the temporary auth-service bridge and any legacy auth/session store paths made obsolete by slices 8-10.
+
+  Findings:
+
+  - Created and approved `docs/plans/Priority5AuthServiceSlice11Plan.md` and `docs/plans/Priority5AuthServiceSlice11Checklist.md`.
+  - Removed `Login.svelte` legacy `dispatchableStore` / `loginStateStore` relay handling, including `loginIntent`, `logoutIntent`, and selected-tab store publication, while preserving selected-tab binding and `simple_comment_login_tab` persistence.
+  - Replaced `SimpleComment.svelte` temporary bridge/global-store plumbing with a direct widget-scoped `authService.currentUser` subscription.
+  - Removed obsolete bridge/store unit tests and legacy store resets from component test setup after migrated component tests covered the auth-service path directly.
+  - Deleted `src/lib/auth-store-bridge.ts` and `src/lib/svelte-stores.ts` after repository import search confirmed no runtime or test imports remained.
+  - Validation evidence: repository import search found no `auth-store-bridge` or `svelte-stores` references under `src`, focused auth-service component tests passed, and `yarn run ci:local` passed.
+  - Cypress note: Cypress bootstrap was fixed separately in commit `53a1ec9`, but known behavioral Cypress failures remain intentionally out of scope for this cleanup slice.
 
 - 12. [ ] Decide whether auth state should be passed directly through component props or exposed through a thin auth-service-backed store.
 
