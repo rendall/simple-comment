@@ -48,7 +48,7 @@ This slice removes auth/session store publication from `Login.svelte` without re
     - "Pass: tests prove auth/session store updates can be produced from `authService` without relying on `Login.svelte` as publisher." (`docs/plans/Priority5AuthServiceSlice8Plan.md`, Validation Strategy)
     - "This helper keeps bridge behavior testable without making `auth-service.ts` import global legacy stores directly." (`docs/plans/Priority5AuthServiceSlice8Plan.md`, Detailed File Impact)
 
-- [ ] C01 `[frontend]` Implement `src/lib/auth-store-bridge.ts` as the temporary compatibility bridge from an injected widget-scoped `AuthService` to the legacy `currentUserStore` and `loginStateStore`, returning a cleanup function.
+- [x] C01 `[frontend]` Implement `src/lib/auth-store-bridge.ts` as the temporary compatibility bridge from an injected widget-scoped `AuthService` to the legacy `currentUserStore` and `loginStateStore`, returning a cleanup function.
   - Depends on: T01.
   - Validated by: T01.
   - Trace:
