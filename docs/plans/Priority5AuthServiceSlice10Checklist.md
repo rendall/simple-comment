@@ -48,7 +48,7 @@ This slice removes the logout relay from `SelfDisplay.svelte`. After the slice, 
     - "Pass: `SelfDisplay.svelte` component tests prove logout button visibility comes from `authService.authRuntimeSnapshot`, clicking Log out calls `authService.logout()`, and legacy relay stores are not imported." (`docs/plans/Priority5AuthServiceSlice10Plan.md`, Validation Strategy)
     - "Clicking the logout button calls `authService.logout()` directly." (`docs/plans/Priority5AuthServiceSlice10Plan.md`, Acceptance Criteria)
 
-- [ ] C01 `[frontend]` Refactor `src/components/SelfDisplay.svelte` to use injected `authService` runtime state and direct `authService.logout()` instead of legacy logout relay stores.
+- [x] C01 `[frontend]` Refactor `src/components/SelfDisplay.svelte` to use injected `authService` runtime state and direct `authService.logout()` instead of legacy logout relay stores.
   - Depends on: T01.
   - Validated by: T01.
   - Trace:
