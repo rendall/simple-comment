@@ -48,6 +48,9 @@ export default defineConfig(async ({ mode }) => {
         },
       },
     ],
+    resolve: {
+      conditions: ["svelte", "browser", "module", "development|production"],
+    },
     build: {
       outDir: distDir,
       emptyOutDir: true,
