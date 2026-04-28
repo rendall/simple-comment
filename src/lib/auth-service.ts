@@ -293,8 +293,7 @@ export const createAuthService = (
         if (status === 401) {
           persistence.clearStoredUser()
           authRuntime.send("FIRST_VISIT")
-        }
-        else
+        } else
           authRuntime.send({
             type: "ERROR",
             error: error as ServerResponse | string,

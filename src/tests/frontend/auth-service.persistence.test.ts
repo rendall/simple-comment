@@ -114,7 +114,9 @@ const createPersistence = ({
   loadStoredGuestIdentity: jest.fn(() => storedGuest),
 })
 
-const bootstrapLoggedOut = async (persistence: jest.Mocked<AuthPersistence>) => {
+const bootstrapLoggedOut = async (
+  persistence: jest.Mocked<AuthPersistence>
+) => {
   const authService = createAuthService({ persistence })
 
   mockVerifySelf.mockRejectedValue({ status: 401 })
