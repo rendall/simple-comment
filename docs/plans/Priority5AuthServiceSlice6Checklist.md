@@ -66,7 +66,7 @@ After Slice 7, `Login.svelte` already delegates auth commands to `auth-service`.
     - "The persistence boundary safely handles missing storage, malformed JSON, incomplete stored data, and non-browser environments." (`docs/plans/Priority5AuthServiceSlice6Plan.md`, Acceptance Criteria)
     - "Pass: tests prove missing/malformed/incomplete stored data is handled safely and valid stored users/guest identity load as expected." (`docs/plans/Priority5AuthServiceSlice6Plan.md`, Validation Strategy)
 
-- [ ] C01 `[frontend]` Implement `src/lib/auth-persistence.ts` as a small `simple_comment_user` persistence boundary with typed exports for `loadStoredUser`, `saveStoredUser`, `clearStoredUser`, and `loadStoredGuestIdentity`.
+- [x] C01 `[frontend]` Implement `src/lib/auth-persistence.ts` as a small `simple_comment_user` persistence boundary with typed exports for `loadStoredUser`, `saveStoredUser`, `clearStoredUser`, and `loadStoredGuestIdentity`.
   - Depends on: T01.
   - Validated by: T01.
   - Trace:
