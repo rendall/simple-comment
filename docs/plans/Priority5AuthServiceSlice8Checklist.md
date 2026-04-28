@@ -64,7 +64,7 @@ This slice removes auth/session store publication from `Login.svelte` without re
     - "call the temporary bridge helper with the widget-scoped `authService`" (`docs/plans/Priority5AuthServiceSlice8Plan.md`, Detailed File Impact)
     - "Keep the bridge widget-scoped and lifecycle-cleaned; do not introduce a singleton auth-service or a broad new event bus." (`docs/plans/Priority5AuthServiceSlice8Plan.md`, In Scope)
 
-- [ ] T02 `[tests]` Update `src/tests/frontend/components/Login.auth-service.test.ts` so `Login.svelte` is expected not to publish auth/session state to legacy stores while still publishing selected-tab UI state.
+- [x] T02 `[tests]` Update `src/tests/frontend/components/Login.auth-service.test.ts` so `Login.svelte` is expected not to publish auth/session state to legacy stores while still publishing selected-tab UI state.
   - Depends on: C02.
   - Required coverage:
     - observed auth runtime state from `Login.svelte` does not update `loginStateStore` with `{ state, nextEvents }`.

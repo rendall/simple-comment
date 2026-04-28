@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/svelte"
 import { readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import type { Writable } from "svelte/store"
-import { get, readable, writable } from "svelte/store"
+import { readable, writable } from "svelte/store"
 import { beforeEach, describe, expect, test, vi } from "vitest"
 import {
   createGuestUser,
@@ -17,7 +17,7 @@ import {
 import Login from "../../../components/Login.svelte"
 import type { AuthService, AuthSessionState } from "../../../lib/auth-service"
 import { dispatchableStore, loginStateStore } from "../../../lib/svelte-stores"
-import type { User } from "../../../lib/simple-comment-types"
+import { LoginTab, type User } from "../../../lib/simple-comment-types"
 
 vi.mock("../../../apiClient", () => ({
   createGuestUser: vi.fn(),
@@ -342,20 +342,39 @@ describe("Login auth-service delegation", () => {
     })
   })
 
-  test("publishes loginStateStore from observed auth-service runtime state", async () => {
-    renderLogin({
+  test("does not publish auth session state to loginStateStore", async () => {
+    const setLoginState = vi.spyOn(loginStateStore, "set")
+    const { authService } = renderLogin({
       authService: createAuthServiceStub({
         snapshot: { state: "loggedIn", nextEvents: ["LOGOUT"] },
       }),
     })
 
     await waitFor(() => {
-      expect(get(loginStateStore)).toEqual(
-        expect.objectContaining({
-          state: "loggedIn",
-          nextEvents: ["LOGOUT"],
-        })
-      )
+      expect(authService.init).toHaveBeenCalledTimes(1)
+    })
+    expect(setLoginState).not.toHaveBeenCalledWith({
+      state: "loggedIn",
+      nextEvents: ["LOGOUT"],
+    })
+  })
+
+  test("continues to publish selected tab state to loginStateStore", async () => {
+    const setLoginState = vi.spyOn(loginStateStore, "set")
+
+    renderLogin({
+      authService: createAuthServiceStub({
+        snapshot: {
+          state: "loggedOut",
+          nextEvents: ["LOGIN", "SIGNUP", "GUEST"],
+        },
+      }),
+    })
+
+    await fireEvent.click(await screen.findByRole("button", { name: "Login" }))
+
+    await waitFor(() => {
+      expect(setLoginState).toHaveBeenCalledWith({ select: LoginTab.login })
     })
   })
 })
