@@ -53,7 +53,7 @@ After Slice 7, `Login.svelte` already delegates auth commands to `auth-service`.
 
 ## Atomic Checklist Items
 
-- [ ] T01 `[tests]` Add fail-first frontend unit tests for the auth persistence boundary in `src/tests/frontend/auth-persistence.test.ts`.
+- [x] T01 `[tests]` Add fail-first frontend unit tests for the auth persistence boundary in `src/tests/frontend/auth-persistence.test.ts`.
   - Depends on: none.
   - Required coverage:
     - missing `simple_comment_user` returns `undefined`
