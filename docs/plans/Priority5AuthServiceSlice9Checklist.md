@@ -76,7 +76,7 @@ This slice removes the login-before-comment relay from `CommentInput.svelte`. Af
     - "Keep `dispatchableStore` logout handling intact for Slice 10." (`docs/plans/Priority5AuthServiceSlice9Plan.md`, Detailed File Impact)
     - "Do not move field state or validation out of `Login.svelte`." (`docs/plans/Priority5AuthServiceSlice9Plan.md`, Detailed File Impact)
 
-- [ ] T03 `[tests]` Add fail-first `CommentInput.svelte` component tests for auth-service request/outcome flow and selected-tab behavior without legacy login stores.
+- [x] T03 `[tests]` Add fail-first `CommentInput.svelte` component tests for auth-service request/outcome flow and selected-tab behavior without legacy login stores.
   - Depends on: C02.
   - Required coverage:
     - unauthenticated submit calls `authService.requestAuth(...)` instead of dispatching `loginIntent`.
