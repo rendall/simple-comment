@@ -68,7 +68,7 @@ This slice removes the login-before-comment relay from `CommentInput.svelte`. Af
     - "When a pending request is observed, submit the currently selected auth form through the existing local submit functions." (`docs/plans/Priority5AuthServiceSlice9Plan.md`, Detailed File Impact)
     - "Pass: `Login.svelte` component tests prove pending auth requests trigger the selected auth form path and local validation failures are reported through `authService`." (`docs/plans/Priority5AuthServiceSlice9Plan.md`, Validation Strategy)
 
-- [ ] C02 `[frontend]` Implement `Login.svelte` consumption of pending `authService.authRequest` values without removing existing logout relay behavior.
+- [x] C02 `[frontend]` Implement `Login.svelte` consumption of pending `authService.authRequest` values without removing existing logout relay behavior.
   - Depends on: T02.
   - Validated by: T02.
   - Trace:
