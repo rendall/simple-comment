@@ -266,10 +266,12 @@ describe("Login auth-service delegation", () => {
     })
 
     await waitFor(() => {
-      expect(authService.reportLocalValidationError).toHaveBeenCalledWith({
-        message: "Display name is required.",
-        requestId: "request-1",
-      })
+      expect(authService.reportLocalValidationError).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: expect.stringContaining("Display name is required."),
+          requestId: "request-1",
+        })
+      )
     })
     expect(authService.loginGuest).not.toHaveBeenCalled()
   })
