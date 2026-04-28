@@ -1,33 +1,42 @@
 <script lang="ts">
+  import { onDestroy } from "svelte"
   import SkeletonText from "./low-level/SkeletonText.svelte"
+  import type {
+    AuthRuntimeSnapshot,
+    AuthService,
+  } from "../lib/auth-service"
   import type { User } from "../lib/simple-comment-types"
-  import { dispatchableStore, loginStateStore } from "../lib/svelte-stores"
   import { fade } from "svelte/transition"
   import { idIconDataUrl } from "../frontend-utilities"
 
+  export let authService: AuthService
   export let currentUser: User | undefined = undefined
 
-  let loginStateValue
-  let loginStateNextEvents
+  let authState: AuthRuntimeSnapshot["state"] | undefined
+  let authNextEvents: AuthRuntimeSnapshot["nextEvents"] = []
   let isProcessing: boolean
 
-  loginStateStore.subscribe(state => {
-    const { state: stateValue, nextEvents, select } = state
-    if (select !== undefined) return
-    loginStateValue = stateValue
-    loginStateNextEvents = nextEvents
+  const unsubscribeAuthRuntimeSnapshot = authService.authRuntimeSnapshot.subscribe(
+    ({ state, nextEvents }) => {
+      authState = state
+      authNextEvents = nextEvents
+    }
+  )
+
+  onDestroy(() => {
+    unsubscribeAuthRuntimeSnapshot()
   })
 
   $: {
     isProcessing =
-      loginStateValue === undefined ||
-      loginStateValue === "verifying" ||
-      loginStateValue === "loggingIn" ||
-      loginStateValue === "loggingOut"
+      authState === undefined ||
+      authState === "verifying" ||
+      authState === "loggingIn" ||
+      authState === "loggingOut"
   }
-  const onLogoutClick = (e: Event) => {
+  const onLogoutClick = async (e: Event) => {
     e.preventDefault()
-    dispatchableStore.dispatch("logoutIntent")
+    await authService.logout()
   }
 </script>
 
@@ -60,7 +69,7 @@
         </p>
         <p id="self-email">{currentUser.email}</p>
       </div>
-      {#if loginStateNextEvents?.includes("LOGOUT")}
+      {#if authNextEvents.includes("LOGOUT")}
         <button id="log-out-button" on:click={onLogoutClick}>Log out</button>
       {/if}
     </section>
