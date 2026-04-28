@@ -16,11 +16,7 @@
     formatUserId,
   } from "../frontend-utilities"
   import InputField from "./low-level/InputField.svelte"
-  import {
-    currentUserStore,
-    dispatchableStore,
-    loginStateStore,
-  } from "../lib/svelte-stores"
+  import { dispatchableStore, loginStateStore } from "../lib/svelte-stores"
   import {
     isGuestId,
     isValidResult,
@@ -172,8 +168,6 @@
     isLoaded =
       isLoaded ||
       (["loggedIn", "loggedOut", "error"] as string[]).includes(state)
-
-    loginStateStore.set({ state, nextEvents })
 
     switch (state) {
       case "loggedIn":
@@ -538,13 +532,10 @@
   })
 
   onDestroy(() => {
-    currentUserStore.set(self)
     unsubscribeDispatchableStore()
     unsubscribeAuthRuntimeSnapshot()
     unsubscribeAuthCurrentUser()
   })
-
-  $: currentUserStore.set(self)
 
   $: loginStateStore.set({ select: selectedIndex })
 
