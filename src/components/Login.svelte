@@ -28,7 +28,11 @@
   import PasswordInput from "./low-level/PasswordInput.svelte"
   import PasswordTwinInput from "./low-level/PasswordTwinInput.svelte"
   import Avatar from "./low-level/Avatar.svelte"
-  import type { AuthRuntimeSnapshot, AuthService } from "../lib/auth-service"
+  import type {
+    AuthRequestState,
+    AuthRuntimeSnapshot,
+    AuthService,
+  } from "../lib/auth-service"
   import { loadStoredUser } from "../lib/auth-persistence"
 
   const DISPLAY_NAME_HELPER_TEXT = "This is the name that others will see"
@@ -38,6 +42,8 @@
 
   export let currentUser: User | undefined
   export let authService: AuthService
+
+  type PendingAuthRequest = Extract<AuthRequestState, { status: "pending" }>
 
   let self: User = currentUser
   let isError = false
@@ -77,6 +83,8 @@
     : parseInt(localStorage.getItem("simple_comment_login_tab"))
 
   let lastIdChecked
+  let pendingAuthRequestId: string | undefined = undefined
+  let handledAuthRequestId: string | undefined = undefined
 
   const updateStatusDisplay = (message = "", error = false) => {
     statusMessage = message
@@ -85,6 +93,15 @@
 
   const reportLocalError = (message: string) =>
     updateStatusDisplay(message, true)
+
+  const reportPendingAuthValidationError = (message: string) => {
+    if (!pendingAuthRequestId) return
+
+    authService.reportLocalValidationError({
+      message,
+      requestId: pendingAuthRequestId,
+    })
+  }
 
   /** Note that usually these onClick events will not be used. Rather, "loginIntent" will be sent.*/
   const onGuestClick = async (e: Event) => {
@@ -109,6 +126,7 @@
 
     if (!isValidResult(result)) {
       reportLocalError(result.reason)
+      reportPendingAuthValidationError(result.reason)
       return
     }
 
@@ -128,6 +146,7 @@
 
     if (!isValidResult(result)) {
       reportLocalError(result.reason)
+      reportPendingAuthValidationError(result.reason)
       return
     }
 
@@ -149,6 +168,7 @@
 
     if (!isValidResult(guestValidationResult)) {
       reportLocalError(guestValidationResult.reason)
+      reportPendingAuthValidationError(guestValidationResult.reason)
       return
     }
 
@@ -193,8 +213,52 @@
     self = user
   }
 
+  const submitSelectedAuthRequest = async ({
+    requestId,
+  }: PendingAuthRequest) => {
+    if (handledAuthRequestId === requestId) return
+
+    handledAuthRequestId = requestId
+    pendingAuthRequestId = requestId
+
+    try {
+      switch (selectedIndex) {
+        case LoginTab.guest:
+          await submitGuestLogin()
+          break
+
+        case LoginTab.signup:
+          await submitSignup()
+          break
+
+        case LoginTab.login:
+          await submitLogin()
+          break
+
+        default:
+          reportLocalError(`Unknown selectedTabIndex ${selectedIndex}`)
+          reportPendingAuthValidationError(
+            `Unknown selectedTabIndex ${selectedIndex}`
+          )
+          break
+      }
+    } finally {
+      pendingAuthRequestId = undefined
+    }
+  }
+
+  const handleAuthRequest = (authRequest: AuthRequestState) => {
+    if (authRequest.status === "idle") {
+      handledAuthRequestId = undefined
+      return
+    }
+
+    submitSelectedAuthRequest(authRequest)
+  }
+
   let unsubscribeAuthRuntimeSnapshot = () => undefined
   let unsubscribeAuthCurrentUser = () => undefined
+  let unsubscribeAuthRequest = () => undefined
 
   const hydrateStoredUserFields = () => {
     const storedUser = loadStoredUser()
@@ -528,6 +592,7 @@
     )
     unsubscribeAuthCurrentUser =
       authService.currentUser.subscribe(handleAuthCurrentUser)
+    unsubscribeAuthRequest = authService.authRequest.subscribe(handleAuthRequest)
     authService.init()
   })
 
@@ -535,6 +600,7 @@
     unsubscribeDispatchableStore()
     unsubscribeAuthRuntimeSnapshot()
     unsubscribeAuthCurrentUser()
+    unsubscribeAuthRequest()
   })
 
   $: loginStateStore.set({ select: selectedIndex })
