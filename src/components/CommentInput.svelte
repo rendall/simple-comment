@@ -30,7 +30,6 @@
   let loginTabSelect: LoginTab = LoginTab.guest
   let pendingAuthRequestId: string | undefined = undefined
   let authOutcomeUser: User | undefined = undefined
-  let effectiveCurrentUser: User | undefined = currentUser
 
   const { state, send } = useMachine(commentPostMachine)
   const dispatch = createEventDispatcher()
@@ -200,12 +199,10 @@
     ["validating", "loggingIn", "posting", "deleting"] as StateValue[]
   ).includes($state.value)
 
-  $: effectiveCurrentUser = currentUser ?? authOutcomeUser
-
   $: buttonCopy = getButtonCopy(
     loginTabSelect,
     commentText,
-    effectiveCurrentUser ? "loggedIn" : undefined
+    currentUser ?? authOutcomeUser ? "loggedIn" : undefined
   )
 </script>
 
