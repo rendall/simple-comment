@@ -57,7 +57,7 @@ This slice removes the login-before-comment relay from `CommentInput.svelte`. Af
     - "Ensure completed or failed pending auth requests return `authRequest` to idle." (`docs/plans/Priority5AuthServiceSlice9Plan.md`, Detailed File Impact)
     - "Preserve existing session state, current-user publication, and persistence behavior." (`docs/plans/Priority5AuthServiceSlice9Plan.md`, Detailed File Impact)
 
-- [ ] T02 `[tests]` Add fail-first `Login.svelte` component tests for pending `authService.authRequest` consumption and local validation failure reporting.
+- [x] T02 `[tests]` Add fail-first `Login.svelte` component tests for pending `authService.authRequest` consumption and local validation failure reporting.
   - Depends on: C01.
   - Required coverage:
     - a pending auth request triggers the currently selected auth form path without requiring `dispatchableStore.dispatch("loginIntent")`.

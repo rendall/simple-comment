@@ -15,7 +15,11 @@ import {
   verifyUser,
 } from "../../../apiClient"
 import Login from "../../../components/Login.svelte"
-import type { AuthService, AuthSessionState } from "../../../lib/auth-service"
+import type {
+  AuthRequestState,
+  AuthService,
+  AuthSessionState,
+} from "../../../lib/auth-service"
 import { dispatchableStore, loginStateStore } from "../../../lib/svelte-stores"
 import { LoginTab, type User } from "../../../lib/simple-comment-types"
 
@@ -51,6 +55,7 @@ type AuthRuntimeSnapshot = {
 }
 
 type AuthServiceUnderTest = AuthService & {
+  authRequest: Writable<AuthRequestState>
   authRuntimeSnapshot: Writable<AuthRuntimeSnapshot>
 }
 
@@ -88,7 +93,7 @@ const createAuthServiceStub = ({
 } = {}): AuthServiceUnderTest => ({
   sessionState: readable(snapshot.state),
   currentUser: readable(currentUser),
-  authRequest: readable({ status: "idle" }),
+  authRequest: writable({ status: "idle" }),
   authOutcome: readable({ status: "none" }),
   authRuntimeSnapshot: writable(snapshot),
   init: vi.fn().mockResolvedValue(undefined),
@@ -224,6 +229,49 @@ describe("Login auth-service delegation", () => {
     })
     expect(mockGetGuestToken).not.toHaveBeenCalled()
     expect(mockCreateGuestUser).not.toHaveBeenCalled()
+  })
+
+  test("submits selected auth form when authService has a pending auth request", async () => {
+    const { authService } = renderLogin()
+
+    await fireEvent.input(await screen.findByLabelText("Display Name"), {
+      target: { value: "Guest Example" },
+    })
+    await fireEvent.input(screen.getByLabelText("Email"), {
+      target: { value: "guest@example.com" },
+    })
+
+    authService.authRequest.set({
+      status: "pending",
+      reason: "comment-submit",
+      requestId: "request-1",
+    })
+
+    await waitFor(() => {
+      expect(authService.loginGuest).toHaveBeenCalledWith({
+        displayName: "Guest Example",
+        email: "guest@example.com",
+      })
+    })
+    expect(authService.reportLocalValidationError).not.toHaveBeenCalled()
+  })
+
+  test("reports local validation failures for pending auth requests", async () => {
+    const { authService } = renderLogin()
+
+    authService.authRequest.set({
+      status: "pending",
+      reason: "comment-submit",
+      requestId: "request-1",
+    })
+
+    await waitFor(() => {
+      expect(authService.reportLocalValidationError).toHaveBeenCalledWith({
+        message: "Display name is required.",
+        requestId: "request-1",
+      })
+    })
+    expect(authService.loginGuest).not.toHaveBeenCalled()
   })
 
   test("omits stored guest identity from guest submissions", async () => {
