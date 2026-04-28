@@ -56,7 +56,7 @@ This slice removes auth/session store publication from `Login.svelte` without re
     - "publish `{ state, nextEvents }` from `authRuntimeSnapshot` to `loginStateStore`" (`docs/plans/Priority5AuthServiceSlice8Plan.md`, Detailed File Impact)
     - "publish service-owned current user values to `currentUserStore`" (`docs/plans/Priority5AuthServiceSlice8Plan.md`, Detailed File Impact)
 
-- [ ] C02 `[frontend]` Install the temporary auth store bridge in `src/components/SimpleComment.svelte` using the existing widget-scoped `authService`, and clean up the bridge in `onDestroy`.
+- [x] C02 `[frontend]` Install the temporary auth store bridge in `src/components/SimpleComment.svelte` using the existing widget-scoped `authService`, and clean up the bridge in `onDestroy`.
   - Depends on: C01.
   - Validated by: `yarn typecheck`.
   - Trace:

@@ -4,6 +4,7 @@
     createAuthService,
     type AuthService,
   } from "../lib/auth-service"
+  import { createAuthStoreBridge } from "../lib/auth-store-bridge"
   import type { User } from "../lib/simple-comment-types"
   import { currentUserStore } from "../lib/svelte-stores"
   import DiscussionDisplay from "./DiscussionDisplay.svelte"
@@ -13,10 +14,17 @@
   export let currentUser: User | undefined = undefined
 
   const authService: AuthService = createAuthService({ initialUser: currentUser })
+  const destroyAuthStoreBridge = createAuthStoreBridge(authService)
 
-  currentUserStore.subscribe(value => (currentUser = value))
+  const unsubscribeCurrentUserStore = currentUserStore.subscribe(
+    value => (currentUser = value)
+  )
 
-  onDestroy(() => authService.destroy())
+  onDestroy(() => {
+    destroyAuthStoreBridge()
+    unsubscribeCurrentUserStore()
+    authService.destroy()
+  })
 </script>
 
 <section class="simple-comment">
