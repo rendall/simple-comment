@@ -125,7 +125,16 @@
   - Validation evidence: repository import search found no `auth-store-bridge` or `svelte-stores` references under `src`, focused auth-service component tests passed, and `yarn run ci:local` passed.
   - Cypress note: Cypress bootstrap was fixed separately in commit `53a1ec9`, but known behavioral Cypress failures remain intentionally out of scope for this cleanup slice.
 
-- 12. [ ] Decide whether auth state should be passed directly through component props or exposed through a thin auth-service-backed store.
+- 12. [x] Decide whether auth state should be passed directly through component props or exposed through a thin auth-service-backed store.
+
+  Findings:
+
+  - Decision: prefer the current direct widget-scoped `authService` plus explicit props architecture.
+  - `SimpleComment.svelte` remains the composition root: it creates one widget-scoped `authService`, subscribes to `authService.currentUser`, and passes `authService` / `currentUser` to children that need auth behavior or identity display.
+  - Components that need auth behavior should receive `authService`; components that only need identity display should receive `currentUser`.
+  - Do not add a new global auth store, singleton auth service, replacement event bus, or speculative `AuthRuntime.svelte` as part of Priority 5.
+  - A thin auth-service-backed store remains a possible later slice only if repeated prop threading or shared derived auth views become a concrete maintenance problem.
+  - Architectural impact: this keeps auth ownership in `auth-service.ts`, composition ownership in `SimpleComment.svelte`, and component dependencies explicit and testable.
 
 - 13. [ ] Prefer direct `auth-service` API or a thin service-backed store; avoid introducing another ad-hoc event bus.
 
