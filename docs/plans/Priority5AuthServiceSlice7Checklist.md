@@ -73,7 +73,7 @@ Because `CommentInput.svelte` and `SelfDisplay.svelte` still depend on `loginSta
     - "The slice must not create two authoritative auth runtimes after wiring is complete." (`docs/plans/Priority5AuthServiceSlice7Plan.md`, Constraints)
     - "Preserve compatibility with the current relay/store consumers by continuing to publish the existing `loginStateStore` shape during this slice." (`docs/plans/Priority5AuthServiceSlice7Plan.md`, In Scope)
 
-- [ ] C03 `[frontend]` Replace direct auth API calls and local auth-machine ownership in `src/components/Login.svelte` with `auth-service` command delegation and subscriptions to the auth-runtime snapshot store added in `C02`, then publish the existing `loginStateStore` compatibility shape from that observed service state while preserving component-local validation/UI behavior for unreworked consumers.
+- [x] C03 `[frontend]` Replace direct auth API calls and local auth-machine ownership in `src/components/Login.svelte` with `auth-service` command delegation and subscriptions to the auth-runtime snapshot store added in `C02`, then publish the existing `loginStateStore` compatibility shape from that observed service state while preserving component-local validation/UI behavior for unreworked consumers.
   - Depends on: C01, C02.
   - Validated by: T01.
   - Trace:
