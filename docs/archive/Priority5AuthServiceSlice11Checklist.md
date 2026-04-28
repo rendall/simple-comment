@@ -1,10 +1,10 @@
 # Priority 5 Auth Service Slice 11 Checklist
 
-Status: approved
+Status: archived, completed
 
 Classification: approved implementation checklist
 
-Source plan: `docs/plans/Priority5AuthServiceSlice11Plan.md`
+Source plan: `docs/archive/Priority5AuthServiceSlice11Plan.md`
 
 Parent plan: `docs/plans/Priority5Completion.md` (Item 11: Draft a cleanup slice for removing the temporary auth-service bridge and any legacy auth/session store paths made obsolete by slices 8-10)
 
