@@ -10,12 +10,11 @@
   import type { StateValue } from "xstate"
   import { commentPostMachine } from "../lib/commentPost.xstate"
   import { createEventDispatcher, onDestroy, onMount } from "svelte"
-  import { dispatchableStore, loginStateStore } from "../lib/svelte-stores"
   import { isResponseOk } from "../frontend-utilities"
   import { postComment } from "../apiClient"
   import { useMachine } from "@xstate/svelte"
   import { LoginTab } from "../lib/simple-comment-types"
-  import type { AuthService } from "../lib/auth-service"
+  import type { AuthOutcomeState, AuthService } from "../lib/auth-service"
   export let currentUser: User | undefined
   export let commentId: CommentId
   export let authService: AuthService
@@ -25,11 +24,13 @@
 
   let commentText = ""
   let buttonCopy: string
-  let loginStateValue
   let textareaRef
   let textAreaWidth = "100%"
   let textAreaHeight = "7rem"
   let loginTabSelect: LoginTab = LoginTab.guest
+  let pendingAuthRequestId: string | undefined = undefined
+  let authOutcomeUser: User | undefined = undefined
+  let effectiveCurrentUser: User | undefined = currentUser
 
   const { state, send } = useMachine(commentPostMachine)
   const dispatch = createEventDispatcher()
@@ -44,7 +45,8 @@
       send({ type: "ERROR", error: "Comment is required." })
       return
     }
-    const hasCurrentUser = currentUser !== undefined
+    const hasCurrentUser =
+      currentUser !== undefined || authOutcomeUser !== undefined
     if (hasCurrentUser) send({ type: "SUCCESS" })
     else send("LOG_IN")
   }
@@ -56,45 +58,49 @@
   }
 
   const loggingInStateHandler = () => {
-    dispatchableStore.dispatch("loginIntent")
+    if (pendingAuthRequestId) return
+
+    const { requestId } = authService.requestAuth("comment-submit")
+
+    pendingAuthRequestId = requestId
   }
 
-  const unsubscribeLoginState = loginStateStore.subscribe(loginState => {
-    const { state: stateValue, select } = loginState
+  const handleAuthOutcome = (authOutcome: AuthOutcomeState) => {
+    if (!pendingAuthRequestId || authOutcome.status === "none") return
+    if (authOutcome.requestId !== pendingAuthRequestId) return
 
-    if (stateValue) {
-      loginStateValue = stateValue
-      const commentInputStateValue = $state.value
+    pendingAuthRequestId = undefined
 
-      //TODO: This state handling should be done via XState, probably by combining these state machines
-      switch (commentInputStateValue) {
-        case "loggingIn":
-          switch (loginStateValue) {
-            case "loggedIn":
-              setTimeout(() => send("SUCCESS"), 1)
-              break
-            case "error":
-              setTimeout(() => send({ type: "ERROR", error: "Login error" }))
-              break
-            case "loggedOut":
-              dispatchableStore.dispatch("loginIntent")
-              break
+    switch (authOutcome.status) {
+      case "success":
+        authOutcomeUser = authOutcome.user
+        authService.clearAuthOutcome(authOutcome.requestId)
+        send("SUCCESS")
+        break
 
-            default:
-              console.warn(
-                `Unhandled loginState '${loginStateValue}' in CommentInput`
-              )
-              break
-          }
-          break
+      case "localValidationError":
+        authService.clearAuthOutcome(authOutcome.requestId)
+        send({ type: "ERROR", error: authOutcome.message })
+        break
 
-        default:
-          break
-      }
-    } else if (select !== undefined) {
-      loginTabSelect = select
+      case "remoteError":
+        authService.clearAuthOutcome(authOutcome.requestId)
+        send({ type: "ERROR", error: authOutcome.error })
+        break
+
+      case "cancelled":
+        authService.clearAuthOutcome(authOutcome.requestId)
+        send({ type: "ERROR", error: "Authentication cancelled" })
+        break
+
+      default:
+        break
     }
-  })
+  }
+
+  const unsubscribeAuthOutcome = authService.authOutcome.subscribe(
+    handleAuthOutcome
+  )
 
   const postingStateHandler = async () => {
     try {
@@ -172,7 +178,7 @@
   })
 
   onDestroy(() => {
-    unsubscribeLoginState()
+    unsubscribeAuthOutcome()
   })
 
   $: {
@@ -194,7 +200,13 @@
     ["validating", "loggingIn", "posting", "deleting"] as StateValue[]
   ).includes($state.value)
 
-  $: buttonCopy = getButtonCopy(loginTabSelect, commentText, loginStateValue)
+  $: effectiveCurrentUser = currentUser ?? authOutcomeUser
+
+  $: buttonCopy = getButtonCopy(
+    loginTabSelect,
+    commentText,
+    effectiveCurrentUser ? "loggedIn" : undefined
+  )
 </script>
 
 <SkeletonCommentInput
@@ -213,7 +225,7 @@
     {placeholder}
     dir="auto"
   ></textarea>
-  <Login {authService} {currentUser} />
+  <Login {authService} {currentUser} bind:selectedTab={loginTabSelect} />
   {#if !currentUser || (commentText && commentText.length)}
     <div class="button-row">
       {#if onCancel !== null}
