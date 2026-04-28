@@ -41,7 +41,7 @@
     "dev": "concurrently \"yarn run watch:backend\" \"NODE_ENV=development NODE_OPTIONS=\\\"--max-old-space-size=4096\\\" netlify dev\" --kill-others",
     "test": "yarn test:backend && yarn test:frontend",
     "test:backend": "jest --config jest.backend.config.ts",
-    "test:cypress": "cypress run",
+    "test:cypress": "cross-env ELECTRON_RUN_AS_NODE= cypress run",
     "test:frontend": "yarn test:frontend:unit && yarn test:frontend:components",
     "test:frontend:components": "cross-env TZ=UTC vitest --config vitest.components.config.ts run",
     "test:frontend:unit": "cross-env TZ=UTC jest --config jest.frontend.config.ts",
