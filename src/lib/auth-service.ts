@@ -253,6 +253,34 @@ export const createAuthService = (
     })
   }
 
+  const completePendingAuthSuccess = (user: User): void => {
+    const activeRequest = getPendingRequest()
+
+    if (!activeRequest) return
+
+    authRequestStore.set({ status: "idle" })
+    authOutcomeStore.set({
+      status: "success",
+      user,
+      requestId: activeRequest.requestId,
+    })
+  }
+
+  const completePendingAuthRemoteError = (
+    error: ServerResponse | string
+  ): void => {
+    const activeRequest = getPendingRequest()
+
+    if (!activeRequest) return
+
+    authRequestStore.set({ status: "idle" })
+    authOutcomeStore.set({
+      status: "remoteError",
+      error,
+      requestId: activeRequest.requestId,
+    })
+  }
+
   return {
     sessionState: {
       subscribe: sessionStateStore.subscribe,
@@ -313,6 +341,7 @@ export const createAuthService = (
 
         if (!authResponse.ok) {
           authRuntime.send({ type: "ERROR", error: authResponse })
+          completePendingAuthRemoteError(authResponse)
           return
         }
 
@@ -323,12 +352,14 @@ export const createAuthService = (
         currentUserStore.set(verifiedUser)
         persistence.saveStoredUser(verifiedUser)
         authRuntime.send("SUCCESS")
+        completePendingAuthSuccess(verifiedUser)
       } catch (error) {
         currentUserStore.set(undefined)
         authRuntime.send({
           type: "ERROR",
           error: error as ServerResponse | string,
         })
+        completePendingAuthRemoteError(error as ServerResponse | string)
       }
     },
     signup: async ({ userId, password, displayName, email }) => {
@@ -345,6 +376,7 @@ export const createAuthService = (
 
         if (!signupResponse.ok) {
           authRuntime.send({ type: "ERROR", error: signupResponse })
+          completePendingAuthRemoteError(signupResponse)
           return
         }
 
@@ -357,12 +389,14 @@ export const createAuthService = (
         currentUserStore.set(verifiedUser)
         persistence.saveStoredUser(verifiedUser)
         authRuntime.send("SUCCESS")
+        completePendingAuthSuccess(verifiedUser)
       } catch (error) {
         currentUserStore.set(undefined)
         authRuntime.send({
           type: "ERROR",
           error: error as ServerResponse | string,
         })
+        completePendingAuthRemoteError(error as ServerResponse | string)
       }
     },
     loginGuest: async ({ displayName, email, storedGuest }) => {
@@ -437,12 +471,14 @@ export const createAuthService = (
         currentUserStore.set(verifiedUser)
         persistence.saveStoredUser(verifiedUser)
         authRuntime.send("SUCCESS")
+        completePendingAuthSuccess(verifiedUser)
       } catch (error) {
         currentUserStore.set(undefined)
         authRuntime.send({
           type: "ERROR",
           error: error as ServerResponse | string,
         })
+        completePendingAuthRemoteError(error as ServerResponse | string)
       }
     },
     logout: async () => {

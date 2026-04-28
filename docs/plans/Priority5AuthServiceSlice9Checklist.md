@@ -49,7 +49,7 @@ This slice removes the login-before-comment relay from `CommentInput.svelte`. Af
     - "Ensure failed remote auth commands publish a matching `authOutcome` remote error when there is a pending auth request." (`docs/plans/Priority5AuthServiceSlice9Plan.md`, Detailed File Impact)
     - "Pass: `auth-service` tests prove pending auth requests produce success and remote-error outcomes from auth commands." (`docs/plans/Priority5AuthServiceSlice9Plan.md`, Validation Strategy)
 
-- [ ] C01 `[frontend]` Implement request-scoped auth outcome publication in `src/lib/auth-service.ts` while preserving existing auth command behavior.
+- [x] C01 `[frontend]` Implement request-scoped auth outcome publication in `src/lib/auth-service.ts` while preserving existing auth command behavior.
   - Depends on: T01.
   - Validated by: T01.
   - Trace:
