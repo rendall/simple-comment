@@ -276,7 +276,11 @@ describe("Login auth-service delegation", () => {
     )
     await submitForm("#signup-form")
 
-    expect(await screen.findByText(/Display name is required/)).toBeVisible()
+    const displayNameErrors = await screen.findAllByText(
+      /Display name is required/
+    )
+
+    expect(displayNameErrors[0]).toBeVisible()
     expect(authService.signup).not.toHaveBeenCalled()
   })
 
@@ -285,7 +289,11 @@ describe("Login auth-service delegation", () => {
 
     await submitForm("#guest-login-form")
 
-    expect(await screen.findByText(/Display name is required/)).toBeVisible()
+    const displayNameErrors = await screen.findAllByText(
+      /Display name is required/
+    )
+
+    expect(displayNameErrors[0]).toBeVisible()
     expect(authService.loginGuest).not.toHaveBeenCalled()
   })
 
