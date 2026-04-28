@@ -58,7 +58,7 @@ This slice removes the temporary migration scaffolding left after slices 8-10. A
     - "Do not keep `dispatchableStore` solely so tests can spy on events that no runtime component should dispatch." (`docs/plans/Priority5AuthServiceSlice11Plan.md`, Constraints)
     - "Keep positive behavior assertions against `authService` (`requestAuth()` for comments, `logout()` for self display)." (`docs/plans/Priority5AuthServiceSlice11Plan.md`, DispatchableStore Test Caveat)
 
-- [ ] C01 `[frontend]` Remove dead legacy relay handling and selected-tab store publication from `src/components/Login.svelte`.
+- [x] C01 `[frontend]` Remove dead legacy relay handling and selected-tab store publication from `src/components/Login.svelte`.
   - Depends on: T01.
   - Validated by: T01 and existing `Login.svelte` auth-service component tests.
   - Trace:

@@ -16,7 +16,6 @@
     formatUserId,
   } from "../frontend-utilities"
   import InputField from "./low-level/InputField.svelte"
-  import { dispatchableStore, loginStateStore } from "../lib/svelte-stores"
   import {
     isGuestId,
     isValidResult,
@@ -50,9 +49,7 @@
   let isError = false
   let isLoaded = false // Hide the component until isLoaded is true
 
-  let nextEvents = []
   let statusMessage = ""
-  let authState: AuthRuntimeSnapshot["state"] | undefined = undefined
 
   let displayName = ""
   let displayNameHelperText = DISPLAY_NAME_HELPER_TEXT
@@ -104,7 +101,6 @@
     })
   }
 
-  /** Note that usually these onClick events will not be used. Rather, "loginIntent" will be sent.*/
   const onGuestClick = async (e: Event) => {
     e.preventDefault()
     await submitGuestLogin()
@@ -181,11 +177,8 @@
 
   const handleAuthRuntimeSnapshot = ({
     state,
-    nextEvents: snapshotNextEvents,
     error,
   }: AuthRuntimeSnapshot) => {
-    authState = state
-    nextEvents = snapshotNextEvents ?? []
     isLoaded =
       isLoaded ||
       (["loggedIn", "loggedOut", "error"] as string[]).includes(state)
@@ -495,44 +488,6 @@
     checkUserIdExists_debounced(userId)
   }
 
-  const unsubscribeDispatchableStore = dispatchableStore.subscribe(event => {
-    switch (event.name) {
-      case "logoutIntent": {
-        const canLogout = nextEvents?.includes("LOGOUT")
-        if (canLogout) authService.logout()
-        else console.warn("Received logoutIntent at state", authState)
-        break
-      }
-
-      case "loginIntent": {
-        const canLogin = nextEvents?.some(event =>
-          ["LOGIN", "GUEST", "SIGNUP"].includes(event)
-        )
-        if (canLogin) {
-          switch (selectedIndex) {
-            case LoginTab.guest:
-              submitGuestLogin()
-              break
-            case LoginTab.signup:
-              submitSignup()
-              break
-            case LoginTab.login:
-              submitLogin()
-              break
-            default:
-              reportLocalError(`Unknown selectedTabIndex ${selectedIndex}`)
-              break
-          }
-        } else console.warn("Received loginIntent at state", authState)
-        break
-      }
-
-      default:
-        // Intentionally left blank.  Do not respond to other events.
-        break
-    }
-  })
-
   const checkPasswordValid = () => {
     const result = validatePassword(userPassword)
 
@@ -598,13 +553,10 @@
   })
 
   onDestroy(() => {
-    unsubscribeDispatchableStore()
     unsubscribeAuthRuntimeSnapshot()
     unsubscribeAuthCurrentUser()
     unsubscribeAuthRequest()
   })
-
-  $: loginStateStore.set({ select: selectedIndex })
 
   $: selectedTab = selectedIndex
 
