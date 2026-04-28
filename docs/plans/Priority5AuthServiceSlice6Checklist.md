@@ -1,16 +1,18 @@
 # Priority 5 Auth Service Slice 6 Checklist
 
-Status: planning
+Status: approved
 
-Classification: proposed implementation checklist draft (not approved)
+Classification: approved implementation checklist
 
-Source plan: `docs/plans/Priority5Completion.md` (Item 6: Draft a slice for moving session/localStorage persistence out of `Login.svelte`)
+Source plan: `docs/plans/Priority5AuthServiceSlice6Plan.md`
+
+Parent plan: `docs/plans/Priority5Completion.md` (Item 6: Draft a slice for moving session/localStorage persistence out of `Login.svelte`)
 
 ## Scope Lock
 
 In scope:
 
-- move `simple_comment_user` session/guest persistence out of `Login.svelte`
+- move `simple_comment_user` session/guest persistence ownership out of `Login.svelte`
 - create a small auth persistence boundary, such as `src/lib/auth-persistence.ts`, for `simple_comment_user` reads/writes
 - expose explicit persistence operations for stored auth user data:
   - `loadStoredUser`
@@ -21,7 +23,9 @@ In scope:
 - let `auth-service` use an injectable persistence dependency so tests and non-browser clients can provide their own storage behavior
 - have `auth-service` save verified/authenticated users and clear stored session data on confirmed logout or unauthenticated initial verification
 - have `auth-service.loginGuest()` use stored guest identity from the persistence dependency when the caller does not pass `storedGuest` explicitly
-- replace `Login.svelte` direct `simple_comment_user` localStorage reads/writes with the shared persistence boundary while preserving existing form hydration and guest reuse behavior
+- have explicit `storedGuest` command input take precedence over persisted guest identity
+- replace `Login.svelte` direct `simple_comment_user` `localStorage` reads/writes with the shared persistence boundary while preserving existing form hydration behavior
+- stop `Login.svelte` from saving authenticated users or reading stored guest identity for command submission
 - validate persistence behavior with fail-first tests before implementation
 
 Out of scope:
@@ -32,16 +36,18 @@ Out of scope:
 - adding a broad auth controller, runtime component, workflow module, or event bus
 - changing backend/API contracts
 - changing `src/apiClient.ts` HTTP transport behavior
-- rewiring `Login.svelte` to call `auth-service` commands
+- rewiring `Login.svelte` to call `auth-service` commands; Slice 7 already completed that work
 - replacing `currentUserStore`, `loginStateStore`, or `dispatchableStore`
 - modifying `CommentInput.svelte` or `SelfDisplay.svelte`
 - editing tests during an implementation pass; if fail-first tests cannot be made green through production-code changes only, stop and discuss
 
 ## Slice Intent
 
-This slice resolves the Item 6 conditional in favor of moving session and guest persistence out of `Login.svelte`. Auth/session continuity should not depend on the `Login.svelte` component being mounted, especially for future auth checks or guest reuse flows that may be initiated by `CommentInput.svelte`, `SelfDisplay.svelte`, or another auth-aware surface.
+This slice resolves the Item 6 conditional in favor of moving session and guest persistence ownership out of `Login.svelte`. Auth/session continuity should not depend on the `Login.svelte` component being mounted, especially for future auth checks or guest reuse flows that may be initiated by `CommentInput.svelte`, `SelfDisplay.svelte`, or another auth-aware surface.
 
-The safe version is intentionally small: introduce a persistence adapter for `simple_comment_user`, then let `auth-service` depend on that adapter rather than reading browser storage directly. This keeps raw `localStorage` isolated, keeps auth-service testable, and avoids reintroducing the broad frontend architecture churn that Priority 5 has been trying to avoid.
+The safe version is intentionally small: introduce a persistence adapter for `simple_comment_user`, then let `auth-service` depend on that adapter rather than `Login.svelte` reading browser storage for session/guest command behavior. This keeps raw `localStorage` isolated, keeps auth-service testable, and avoids reintroducing the broad frontend architecture churn that Priority 5 has been trying to avoid.
+
+After Slice 7, `Login.svelte` already delegates auth commands to `auth-service`. This slice should not redo that wiring. It should remove the remaining `simple_comment_user` storage ownership from the component while preserving form hydration from stored user data through the shared boundary.
 
 `simple_comment_login_tab` should stay in `Login.svelte` for this slice. It is a UI preference, not session/auth persistence, and moving it now would make the slice look cleaner while expanding its true responsibility.
 
@@ -56,15 +62,17 @@ The safe version is intentionally small: introduce a persistence adapter for `si
     - `clearStoredUser` removes the stored user
     - `loadStoredGuestIdentity` returns only the reusable guest identity fields needed by `auth-service.loginGuest()`
   - Trace:
-    - "Session/localStorage handling remains in `Login.svelte`: ... verified/current user state reads/writes `simple_comment_user`; guest login reads stored `simple_comment_user` to reuse guest credentials; mount logic hydrates form fields from stored user data." (`docs/plans/Priority5Completion.md`, Item 3 findings)
-    - "Draft a slice for moving session/localStorage persistence out of `Login.svelte` only if it blocks service ownership or component decoupling." (`docs/plans/Priority5Completion.md`, Item 6)
+    - "Add a small `simple_comment_user` persistence boundary, expected as `src/lib/auth-persistence.ts`." (`docs/plans/Priority5AuthServiceSlice6Plan.md`, In Scope)
+    - "The persistence boundary safely handles missing storage, malformed JSON, incomplete stored data, and non-browser environments." (`docs/plans/Priority5AuthServiceSlice6Plan.md`, Acceptance Criteria)
+    - "Pass: tests prove missing/malformed/incomplete stored data is handled safely and valid stored users/guest identity load as expected." (`docs/plans/Priority5AuthServiceSlice6Plan.md`, Validation Strategy)
 
 - [ ] C01 `[frontend]` Implement `src/lib/auth-persistence.ts` as a small `simple_comment_user` persistence boundary with typed exports for `loadStoredUser`, `saveStoredUser`, `clearStoredUser`, and `loadStoredGuestIdentity`.
   - Depends on: T01.
   - Validated by: T01.
   - Trace:
-    - "Session/localStorage handling remains in `Login.svelte`: ... verified/current user state reads/writes `simple_comment_user`; guest login reads stored `simple_comment_user` to reuse guest credentials; mount logic hydrates form fields from stored user data." (`docs/plans/Priority5Completion.md`, Item 3 findings)
-    - "avoid introducing another ad-hoc event bus" (`docs/plans/Priority5Completion.md`, Item 12)
+    - "Expose explicit operations for stored auth user data" (`docs/plans/Priority5AuthServiceSlice6Plan.md`, In Scope)
+    - "Make the persistence boundary tolerate missing storage, malformed JSON, incomplete stored data, and non-browser environments without throwing during normal auth flows." (`docs/plans/Priority5AuthServiceSlice6Plan.md`, In Scope)
+    - "`src/lib/auth-persistence.ts` exposes typed persistence operations for `simple_comment_user`." (`docs/plans/Priority5AuthServiceSlice6Plan.md`, Acceptance Criteria)
 
 - [ ] T02 `[tests]` Add fail-first frontend tests for `auth-service` persistence integration using an injected persistence dependency rather than browser `localStorage`.
   - Depends on: C01.
@@ -76,23 +84,26 @@ The safe version is intentionally small: introduce a persistence adapter for `si
     - `loginGuest()` uses persisted guest identity when `storedGuest` is omitted
     - explicit `storedGuest` command input takes precedence over persisted guest identity
   - Trace:
-    - "`authService.init()` calls `verifySelf()`, maps success / `401` / non-`401` outcomes onto the live login machine, and publishes `currentUser` from the service." (`docs/plans/Priority5Completion.md`, Item 1 findings)
-    - "`authService.login()` calls `postAuth()`, verifies the resulting session with `verifySelf()`, maps success/error onto the live login machine, and publishes authenticated `currentUser` from the service." (`docs/plans/Priority5Completion.md`, Item 1 findings)
-    - "guest login flow reads stored guest credentials..." (`docs/plans/Priority5Completion.md`, Item 3 findings)
+    - "Let `auth-service` receive an injectable persistence dependency so tests and non-browser clients can provide their own storage behavior." (`docs/plans/Priority5AuthServiceSlice6Plan.md`, In Scope)
+    - "Make `auth-service.loginGuest()` use persisted guest identity when command input does not include `storedGuest`." (`docs/plans/Priority5AuthServiceSlice6Plan.md`, In Scope)
+    - "Pass: tests with an injected fake persistence dependency prove save, clear, failed-command, persisted-guest, and explicit-guest precedence behavior." (`docs/plans/Priority5AuthServiceSlice6Plan.md`, Validation Strategy)
 
 - [ ] C02 `[frontend]` Integrate the auth persistence boundary into `src/lib/auth-service.ts` through an injectable persistence dependency, preserving server verification as the source of truth while saving, clearing, and reading stored guest identity through the adapter.
   - Depends on: T02.
   - Validated by: T02.
   - Trace:
-    - "login-related state, side effects, and rendering responsibilities are easier to explain as separate concerns" (`docs/RepoHealthImprovementBacklog.md`, Priority 5)
-    - "Prefer direct `auth-service` API or a thin service-backed store; avoid introducing another ad-hoc event bus." (`docs/plans/Priority5Completion.md`, Item 12)
+    - "Make `auth-service` save verified/authenticated users after successful `init()`, `login()`, `signup()`, and `loginGuest()` flows." (`docs/plans/Priority5AuthServiceSlice6Plan.md`, In Scope)
+    - "Make `auth-service` clear stored session data on unauthenticated initial verification and confirmed logout." (`docs/plans/Priority5AuthServiceSlice6Plan.md`, In Scope)
+    - "`auth-service` accepts an injectable persistence dependency." (`docs/plans/Priority5AuthServiceSlice6Plan.md`, Acceptance Criteria)
 
-- [ ] C03 `[frontend]` Replace direct `simple_comment_user` `localStorage` access in `src/components/Login.svelte` with the shared auth persistence boundary, while leaving `simple_comment_login_tab` persistence and all form-local validation/UI behavior in `Login.svelte`.
-  - Depends on: C01.
-  - Validated by: `yarn typecheck`.
+- [ ] C03 `[frontend]` Remove `src/components/Login.svelte` direct `simple_comment_user` `localStorage` access by using the shared auth persistence boundary only for stored-user form hydration, leaving session save/clear and stored-guest command reuse owned by `auth-service`.
+  - Depends on: C02.
+  - Validated by: `yarn typecheck` and existing `src/tests/frontend/components/Login.auth-service.test.ts`.
   - Trace:
-    - "Session/localStorage handling remains in `Login.svelte`: login tab selection reads/writes `simple_comment_login_tab`; verified/current user state reads/writes `simple_comment_user`; guest login reads stored `simple_comment_user` to reuse guest credentials; mount logic hydrates form fields from stored user data." (`docs/plans/Priority5Completion.md`, Item 3 findings)
-    - "Keep explicitly out of scope: splitting `Login.svelte` into form components, adding `auth-controller.ts`, adding `AuthRuntime.svelte`, creating broad auth workflow modules, or redesigning frontend state architecture." (`docs/plans/Priority5Completion.md`, Item 14)
+    - "Replace `Login.svelte` direct `simple_comment_user` `localStorage` access with the shared persistence boundary." (`docs/plans/Priority5AuthServiceSlice6Plan.md`, In Scope)
+    - "Preserve `Login.svelte` form hydration from stored user data without letting the component own session saving, clearing, or guest reuse." (`docs/plans/Priority5AuthServiceSlice6Plan.md`, In Scope)
+    - "`Login.svelte` no longer directly calls `localStorage` for `simple_comment_user`." (`docs/plans/Priority5AuthServiceSlice6Plan.md`, Acceptance Criteria)
+    - "`Login.svelte` still preserves form hydration from stored user data and still owns `simple_comment_login_tab` UI preference persistence." (`docs/plans/Priority5AuthServiceSlice6Plan.md`, Acceptance Criteria)
 
 ## Behavior Slices
 
@@ -114,7 +125,7 @@ Type: behavior
 
 ### Slice 6C
 
-Goal: remove direct `simple_comment_user` storage access from `Login.svelte` without moving UI preference persistence or rewiring auth commands.
+Goal: remove direct `simple_comment_user` storage access from `Login.svelte` without moving UI preference persistence, rewiring auth commands, or keeping guest reuse in the component.
 
 Items: C03
 
