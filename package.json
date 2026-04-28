@@ -21,7 +21,6 @@
     "vitest": "^3.2.4"
   },
   "optionalDependencies": {
-    "cypress": "^12.17.4",
     "netlify-cli": "^24.0.1"
   },
   "scripts": {
@@ -69,6 +68,7 @@
     "bcryptjs": "^2.4.3",
     "carbon-icons-svelte": "^13.10.0",
     "concurrently": "^7.1.0",
+    "cypress": "^15.14.1",
     "dotenv": "^16.0.0",
     "eslint": "^10.1.0",
     "eslint-plugin-svelte": "^3.16.0",
