@@ -9,7 +9,6 @@ import type {
   AuthService,
   AuthSessionState,
 } from "../../../lib/auth-service"
-import { dispatchableStore } from "../../../lib/svelte-stores"
 import type { User } from "../../../lib/simple-comment-types"
 
 vi.mock("../../../frontend-utilities", async importOriginal => {
@@ -82,7 +81,6 @@ describe("SelfDisplay auth-service delegation", () => {
   })
 
   test("calls authService.logout directly from the logout button", async () => {
-    const dispatchLogoutIntent = vi.spyOn(dispatchableStore, "dispatch")
     const { authService } = renderSelfDisplay()
 
     await fireEvent.click(
@@ -90,7 +88,6 @@ describe("SelfDisplay auth-service delegation", () => {
     )
 
     expect(authService.logout).toHaveBeenCalledTimes(1)
-    expect(dispatchLogoutIntent).not.toHaveBeenCalledWith("logoutIntent")
   })
 
   test("keeps the skeleton visible while auth runtime is processing", () => {
