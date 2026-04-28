@@ -11,6 +11,13 @@ export type StoredGuestIdentity = {
   email?: Email
 }
 
+export type AuthPersistence = {
+  loadStoredUser: () => User | undefined
+  saveStoredUser: (user: User) => void
+  clearStoredUser: () => void
+  loadStoredGuestIdentity: () => StoredGuestIdentity | undefined
+}
+
 const getStorage = (): StorageLike | undefined => {
   if (typeof globalThis.localStorage === "undefined") return undefined
   return globalThis.localStorage
@@ -85,4 +92,11 @@ export const loadStoredGuestIdentity = (): StoredGuestIdentity | undefined => {
   )
 
   return hasReusableGuestIdentity ? storedGuestIdentity : undefined
+}
+
+export const authPersistence: AuthPersistence = {
+  loadStoredUser,
+  saveStoredUser,
+  clearStoredUser,
+  loadStoredGuestIdentity,
 }

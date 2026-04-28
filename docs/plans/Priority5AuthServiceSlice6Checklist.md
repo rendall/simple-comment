@@ -88,7 +88,7 @@ After Slice 7, `Login.svelte` already delegates auth commands to `auth-service`.
     - "Make `auth-service.loginGuest()` use persisted guest identity when command input does not include `storedGuest`." (`docs/plans/Priority5AuthServiceSlice6Plan.md`, In Scope)
     - "Pass: tests with an injected fake persistence dependency prove save, clear, failed-command, persisted-guest, and explicit-guest precedence behavior." (`docs/plans/Priority5AuthServiceSlice6Plan.md`, Validation Strategy)
 
-- [ ] C02 `[frontend]` Integrate the auth persistence boundary into `src/lib/auth-service.ts` through an injectable persistence dependency, preserving server verification as the source of truth while saving, clearing, and reading stored guest identity through the adapter.
+- [x] C02 `[frontend]` Integrate the auth persistence boundary into `src/lib/auth-service.ts` through an injectable persistence dependency, preserving server verification as the source of truth while saving, clearing, and reading stored guest identity through the adapter.
   - Depends on: T02.
   - Validated by: T02.
   - Trace:
