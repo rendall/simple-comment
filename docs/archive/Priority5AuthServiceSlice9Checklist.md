@@ -1,6 +1,6 @@
 # Priority 5 Auth Service Slice 9 Checklist
 
-Status: approved
+Status: archived, completed
 
 Classification: approved implementation checklist
 
