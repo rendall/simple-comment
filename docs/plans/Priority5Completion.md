@@ -136,7 +136,15 @@
   - A thin auth-service-backed store remains a possible later slice only if repeated prop threading or shared derived auth views become a concrete maintenance problem.
   - Architectural impact: this keeps auth ownership in `auth-service.ts`, composition ownership in `SimpleComment.svelte`, and component dependencies explicit and testable.
 
-- 13. [ ] Prefer direct `auth-service` API or a thin service-backed store; avoid introducing another ad-hoc event bus.
+- 13. [x] Prefer direct `auth-service` API or a thin service-backed store; avoid introducing another ad-hoc event bus.
+
+  Findings:
+
+  - Resolved by item 12's architecture decision: prefer direct widget-scoped `authService` plus explicit props for current Priority 5 work.
+  - Do not introduce another ad-hoc event bus. The former `dispatchableStore` / `loginStateStore` relay path has been removed, and future auth interactions should not recreate that pattern under a new name.
+  - Use `authService` directly for auth commands and auth runtime observation at component boundaries that need behavior.
+  - Use `currentUser` props for identity display where no auth command/runtime behavior is needed.
+  - Keep a thin service-backed store as a deferred option only if a future slice demonstrates concrete prop-threading or shared-derived-state pressure.
 
 - 14. [ ] Add validation expectations per slice: fail-first tests in one pass, production implementation in a later pass, no test edits during implementation unless the implementation session stops and explains why the test is wrong.
 
