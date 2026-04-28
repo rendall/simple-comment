@@ -85,7 +85,9 @@ describe("SelfDisplay auth-service delegation", () => {
     const dispatchLogoutIntent = vi.spyOn(dispatchableStore, "dispatch")
     const { authService } = renderSelfDisplay()
 
-    await fireEvent.click(await screen.findByRole("button", { name: "Log out" }))
+    await fireEvent.click(
+      await screen.findByRole("button", { name: "Log out" })
+    )
 
     expect(authService.logout).toHaveBeenCalledTimes(1)
     expect(dispatchLogoutIntent).not.toHaveBeenCalledWith("logoutIntent")
@@ -99,7 +101,9 @@ describe("SelfDisplay auth-service delegation", () => {
       }),
     })
 
-    expect(document.querySelector("section.skeleton.self-display")).toBeVisible()
+    expect(
+      document.querySelector("section.skeleton.self-display")
+    ).toBeVisible()
   })
 
   test("does not import legacy logout relay stores", () => {
