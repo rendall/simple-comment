@@ -74,7 +74,7 @@ This slice removes auth/session store publication from `Login.svelte` without re
     - "`Login.svelte` may still publish selected-tab UI state because that is local UI state, not shared auth/session state" (`docs/plans/Priority5AuthServiceSlice8Plan.md`, Intent)
     - "`Login.svelte` still publishes selected-tab UI state for current unreworked consumers." (`docs/plans/Priority5AuthServiceSlice8Plan.md`, Acceptance Criteria)
 
-- [ ] C03 `[frontend]` Remove auth/session legacy-store publication from `src/components/Login.svelte` while preserving selected-tab publication and all form-local UI behavior.
+- [x] C03 `[frontend]` Remove auth/session legacy-store publication from `src/components/Login.svelte` while preserving selected-tab publication and all form-local UI behavior.
   - Depends on: T02.
   - Validated by: T02 and `yarn typecheck`.
   - Trace:
