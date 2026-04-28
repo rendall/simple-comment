@@ -37,7 +37,7 @@ This slice removes auth/session store publication from `Login.svelte` without re
 
 ## Atomic Checklist Items
 
-- [ ] T01 `[tests]` Add fail-first frontend unit tests for a temporary auth store bridge in `src/tests/frontend/auth-store-bridge.test.ts`.
+- [x] T01 `[tests]` Add fail-first frontend unit tests for a temporary auth store bridge in `src/tests/frontend/auth-store-bridge.test.ts`.
   - Depends on: none.
   - Required coverage:
     - `authService.currentUser` publishes to `currentUserStore`.
