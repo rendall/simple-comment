@@ -90,7 +90,7 @@ This slice removes the temporary migration scaffolding left after slices 8-10. A
     - "remove `src/tests/frontend/svelte-stores.test.ts`" (`docs/plans/Priority5AuthServiceSlice11Plan.md`, Detailed File Impact)
     - "remove legacy store resets from component test setup once no component tests import those stores." (`docs/plans/Priority5AuthServiceSlice11Plan.md`, Detailed File Impact)
 
-- [ ] C03 `[cleanup]` Delete obsolete bridge/store modules and prove no runtime or test imports remain.
+- [x] C03 `[cleanup]` Delete obsolete bridge/store modules and prove no runtime or test imports remain.
   - Depends on: T02.
   - Validated by: repository import search, `yarn typecheck`, and `yarn run ci:local`.
   - Required cleanup:
