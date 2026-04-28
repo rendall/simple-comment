@@ -36,7 +36,7 @@ This slice removes the logout relay from `SelfDisplay.svelte`. After the slice, 
 
 ## Atomic Checklist Items
 
-- [ ] T01 `[tests]` Add fail-first `SelfDisplay.svelte` component tests for auth-service-driven logout behavior in `src/tests/frontend/components/SelfDisplay.auth-service.test.ts`.
+- [x] T01 `[tests]` Add fail-first `SelfDisplay.svelte` component tests for auth-service-driven logout behavior in `src/tests/frontend/components/SelfDisplay.auth-service.test.ts`.
   - Depends on: none.
   - Required coverage:
     - when `authService.authRuntimeSnapshot.nextEvents` includes `LOGOUT`, the logout button is visible for a current user.
