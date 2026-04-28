@@ -35,6 +35,11 @@ import {
   verifySelf,
   verifyUser,
 } from "../apiClient"
+import {
+  authPersistence,
+  type AuthPersistence,
+  type StoredGuestIdentity,
+} from "./auth-persistence"
 import { loginMachine } from "./login.xstate"
 import type {
   Email,
@@ -103,12 +108,7 @@ export type SignupPayload = {
   email: Email
 }
 
-export type StoredGuestIdentity = {
-  id?: UserId
-  challenge?: string
-  name?: string
-  email?: Email
-}
+export type { StoredGuestIdentity } from "./auth-persistence"
 
 export type GuestLoginPayload = {
   displayName: string
@@ -123,6 +123,7 @@ export type ReportLocalValidationErrorInput = {
 
 export type CreateAuthServiceOptions = {
   initialUser?: User
+  persistence?: AuthPersistence
 }
 
 export type AuthService = {
@@ -151,7 +152,7 @@ const matchesRequestId = (
 export const createAuthService = (
   options: CreateAuthServiceOptions = {}
 ): AuthService => {
-  const { initialUser } = options
+  const { initialUser, persistence = authPersistence } = options
 
   let requestSequence = 0
   const authRuntime = interpret(loginMachine)
@@ -271,6 +272,7 @@ export const createAuthService = (
     init: async () => {
       if (initialUser !== undefined) {
         currentUserStore.set(initialUser)
+        persistence.saveStoredUser(initialUser)
         authRuntime.send("SUCCESS")
         return
       }
@@ -281,13 +283,17 @@ export const createAuthService = (
         const verifiedUser = await verifySelf()
 
         currentUserStore.set(verifiedUser)
+        persistence.saveStoredUser(verifiedUser)
         authRuntime.send("SUCCESS")
       } catch (error) {
         currentUserStore.set(undefined)
 
         const { status } = (error ?? {}) as { status?: number }
 
-        if (status === 401) authRuntime.send("FIRST_VISIT")
+        if (status === 401) {
+          persistence.clearStoredUser()
+          authRuntime.send("FIRST_VISIT")
+        }
         else
           authRuntime.send({
             type: "ERROR",
@@ -316,6 +322,7 @@ export const createAuthService = (
         const verifiedUser = await verifySelf()
 
         currentUserStore.set(verifiedUser)
+        persistence.saveStoredUser(verifiedUser)
         authRuntime.send("SUCCESS")
       } catch (error) {
         currentUserStore.set(undefined)
@@ -349,6 +356,7 @@ export const createAuthService = (
         const verifiedUser = await verifySelf()
 
         currentUserStore.set(verifiedUser)
+        persistence.saveStoredUser(verifiedUser)
         authRuntime.send("SUCCESS")
       } catch (error) {
         currentUserStore.set(undefined)
@@ -361,6 +369,7 @@ export const createAuthService = (
     loginGuest: async ({ displayName, email, storedGuest }) => {
       currentUserStore.set(undefined)
       authRuntime.send({ type: "GUEST", guest: { name: displayName, email } })
+      const guestIdentity = storedGuest ?? persistence.loadStoredGuestIdentity()
 
       const createNewGuest = async (): Promise<void> => {
         const guestTokenResponse = await getGuestToken()
@@ -381,7 +390,7 @@ export const createAuthService = (
       }
 
       const reuseStoredGuest = async (): Promise<boolean> => {
-        const { id, challenge } = storedGuest ?? {}
+        const { id, challenge } = guestIdentity ?? {}
 
         if (!id || !challenge) return false
 
@@ -405,7 +414,7 @@ export const createAuthService = (
 
         if (!reusedStoredGuest) await createNewGuest()
 
-        const { id, name: storedName, email: storedEmail } = storedGuest ?? {}
+        const { id, name: storedName, email: storedEmail } = guestIdentity ?? {}
 
         const shouldUpdateStoredGuest =
           reusedStoredGuest &&
@@ -427,6 +436,7 @@ export const createAuthService = (
         const verifiedUser = await verifySelf()
 
         currentUserStore.set(verifiedUser)
+        persistence.saveStoredUser(verifiedUser)
         authRuntime.send("SUCCESS")
       } catch (error) {
         currentUserStore.set(undefined)
@@ -448,6 +458,7 @@ export const createAuthService = (
         }
 
         currentUserStore.set(undefined)
+        persistence.clearStoredUser()
         authRuntime.send("SUCCESS")
       } catch (error) {
         authRuntime.send({
