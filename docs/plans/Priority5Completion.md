@@ -80,7 +80,15 @@
   - Kept item 8 and the relay-removal work out of scope: `CommentInput.svelte` and `SelfDisplay.svelte` still rely on `loginStateStore` / `dispatchableStore`, so slice 7 preserves those contracts rather than removing them prematurely.
   - The existing slice-7 checklist should now be treated as pre-plan draft input and reconciled to the approved slice-7 plan before it is used for implementation.
 
-- 8. [ ] Draft a slice for moving `Login.svelte` auth/session shared-store publication to a temporary widget-scoped `auth-service` bridge.
+- 8. [x] Draft a slice for moving `Login.svelte` auth/session shared-store publication to a temporary widget-scoped `auth-service` bridge.
+
+  Findings:
+
+  - Created `docs/plans/Priority5AuthServiceSlice8Plan.md` and `docs/plans/Priority5AuthServiceSlice8Checklist.md` for the temporary bridge slice.
+  - Confirmed the slice keeps the bridge widget-scoped at the current composition root and avoids making `auth-service.ts` import legacy global stores directly.
+  - Confirmed all slice-8 checklist items are complete: fail-first bridge tests, bridge implementation, composition-root installation, `Login.svelte` tests, and removal of `Login.svelte` auth/session store publication.
+  - Confirmed `Login.svelte` still owns selected-tab UI publication only, preserving the current unreworked relay consumers for later slices.
+  - Validation evidence: `yarn run ci:local` passed after slice-8 implementation.
 
 - 9. [ ] Draft a slice for removing `dispatchableStore` / `loginStateStore` login relay behavior from `CommentInput.svelte`.
 
