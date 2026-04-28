@@ -36,7 +36,7 @@ This slice removes the login-before-comment relay from `CommentInput.svelte`. Af
 
 ## Atomic Checklist Items
 
-- [ ] T01 `[tests]` Add fail-first frontend unit tests proving pending auth requests produce request-scoped success and remote-error outcomes from `auth-service` auth commands.
+- [x] T01 `[tests]` Add fail-first frontend unit tests proving pending auth requests produce request-scoped success and remote-error outcomes from `auth-service` auth commands.
   - Depends on: none.
   - Required coverage:
     - a pending `requestAuth(...)` followed by successful `login(...)` publishes an `authOutcome` success with the matching request id and authenticated user.
