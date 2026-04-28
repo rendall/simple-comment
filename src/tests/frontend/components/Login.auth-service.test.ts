@@ -226,7 +226,7 @@ describe("Login auth-service delegation", () => {
     expect(mockCreateGuestUser).not.toHaveBeenCalled()
   })
 
-  test("passes stored guest identity through guest submissions", async () => {
+  test("omits stored guest identity from guest submissions", async () => {
     const storedGuest = {
       id: "guest-ab123-abc12",
       challenge: "stored-challenge",
@@ -248,7 +248,6 @@ describe("Login auth-service delegation", () => {
       expect(authService.loginGuest).toHaveBeenCalledWith({
         displayName: "Updated Guest",
         email: "updated@example.com",
-        storedGuest,
       })
     })
     expect(mockGetGuestToken).not.toHaveBeenCalled()
