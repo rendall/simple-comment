@@ -103,7 +103,7 @@ After Slice 7, `Login.svelte` already delegates auth commands to `auth-service`.
     - "Preserve `Login.svelte` form hydration from stored user data without letting the component own session saving, clearing, or guest reuse." (`docs/plans/Priority5AuthServiceSlice6Plan.md`, In Scope)
     - "Fail: `auth-service` requires browser `localStorage` or guest reuse still depends on `Login.svelte`." (`docs/plans/Priority5AuthServiceSlice6Plan.md`, Validation Strategy)
 
-- [ ] C03 `[frontend]` Remove `src/components/Login.svelte` direct `simple_comment_user` `localStorage` access by using the shared auth persistence boundary only for stored-user form hydration, leaving session save/clear and stored-guest command reuse owned by `auth-service`.
+- [x] C03 `[frontend]` Remove `src/components/Login.svelte` direct `simple_comment_user` `localStorage` access by using the shared auth persistence boundary only for stored-user form hydration, leaving session save/clear and stored-guest command reuse owned by `auth-service`.
   - Depends on: T03.
   - Validated by: `yarn typecheck` and existing `src/tests/frontend/components/Login.auth-service.test.ts`.
   - Trace:

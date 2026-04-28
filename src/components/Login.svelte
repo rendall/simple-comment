@@ -32,11 +32,8 @@
   import PasswordInput from "./low-level/PasswordInput.svelte"
   import PasswordTwinInput from "./low-level/PasswordTwinInput.svelte"
   import Avatar from "./low-level/Avatar.svelte"
-  import type {
-    AuthRuntimeSnapshot,
-    AuthService,
-    StoredGuestIdentity,
-  } from "../lib/auth-service"
+  import type { AuthRuntimeSnapshot, AuthService } from "../lib/auth-service"
+  import { loadStoredUser } from "../lib/auth-persistence"
 
   const DISPLAY_NAME_HELPER_TEXT = "This is the name that others will see"
   const USER_EMAIL_HELPER_TEXT =
@@ -146,26 +143,6 @@
     })
   }
 
-  const readStoredGuestIdentity = (): StoredGuestIdentity | undefined => {
-    const storedItem: string | null = localStorage.getItem(
-      "simple_comment_user"
-    )
-
-    if (!storedItem) return undefined
-
-    const storedUser = JSON.parse(storedItem) as StoredGuestIdentity
-    const { id, challenge, name, email } = storedUser
-
-    if (!id && !challenge && !name && !email) return undefined
-
-    return {
-      id,
-      challenge,
-      name,
-      email,
-    }
-  }
-
   const submitGuestLogin = async () => {
     updateStatusDisplay()
 
@@ -179,16 +156,9 @@
       return
     }
 
-    const storedGuest = readStoredGuestIdentity()
-
     await authService.loginGuest({
       displayName,
       email: userEmail,
-      ...(storedGuest
-        ? {
-            storedGuest,
-          }
-        : {}),
     })
   }
 
@@ -227,32 +197,21 @@
 
   const handleAuthCurrentUser = (user: User | undefined) => {
     self = user
-
-    if (user) {
-      localStorage.setItem("simple_comment_user", JSON.stringify(user))
-    }
   }
 
   let unsubscribeAuthRuntimeSnapshot = () => undefined
   let unsubscribeAuthCurrentUser = () => undefined
 
   const hydrateStoredUserFields = () => {
-    const storedItem: string | null = localStorage.getItem(
-      "simple_comment_user"
-    )
-    if (storedItem) {
-      const storedUser = JSON.parse(storedItem) as {
-        id?: string
-        name?: string
-        email?: string
-      }
+    const storedUser = loadStoredUser()
 
-      const { id, name, email } = storedUser
+    if (!storedUser) return
 
-      if (id && !isGuestId(id)) userId = id
-      if (name) displayName = name
-      if (email) userEmail = email
-    }
+    const { id, name, email } = storedUser
+
+    if (id && !isGuestId(id)) userId = id
+    if (name) displayName = name
+    if (email) userEmail = email
   }
 
   const errorStateHandler = (error?: ServerResponse | string) => {
