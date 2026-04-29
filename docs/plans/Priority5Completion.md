@@ -146,6 +146,14 @@
   - Use `currentUser` props for identity display where no auth command/runtime behavior is needed.
   - Keep a thin service-backed store as a deferred option only if a future slice demonstrates concrete prop-threading or shared-derived-state pressure.
 
-- 14. [ ] Add validation expectations per slice: fail-first tests in one pass, production implementation in a later pass, no test edits during implementation unless the implementation session stops and explains why the test is wrong.
+- 14. [x] Add validation expectations per slice: fail-first tests in one pass, production implementation in a later pass, no test edits during implementation unless the implementation session stops and explains why the test is wrong.
+
+  Findings:
+
+  - Resolved as a Priority 5 governance expectation rather than a new behavior slice.
+  - `docs/norms/implementation.md` already requires atomic checklist-item commits, item checkoff in the same commit, baseline validation, production-code-first fixes, broad regression checks, and stop conditions when scope or tests are wrong.
+  - Priority 5 additionally adopts the explicit test/code separation guard used during the auth-service slices: fail-first tests are written in their own pass, production implementation happens in a later pass, and tests must move from failing to passing through production code changes only.
+  - If a test cannot be made green without editing the test during an implementation pass, implementation must stop and explain why the test is bad before any test change is made.
+  - Documentation-only slices may satisfy validation by checking references, commands, and cited evidence consistency; they must not be used as approval for downstream behavior changes.
 
 - 15. [ ] Keep explicitly out of scope: splitting `Login.svelte` into form components, adding `auth-controller.ts`, adding `AuthRuntime.svelte`, creating broad auth workflow modules, or redesigning frontend state architecture.
