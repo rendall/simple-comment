@@ -1,5 +1,7 @@
 # Priority 5 Completion Items
 
+Status: archived, completed
+
 - 1. [x] Confirm completed baseline: `auth-service` owns login-machine runtime, initial verification, `login()`, and `logout()` behavior.
 
   Findings:
