@@ -156,4 +156,12 @@
   - If a test cannot be made green without editing the test during an implementation pass, implementation must stop and explain why the test is bad before any test change is made.
   - Documentation-only slices may satisfy validation by checking references, commands, and cited evidence consistency; they must not be used as approval for downstream behavior changes.
 
-- 15. [ ] Keep explicitly out of scope: splitting `Login.svelte` into form components, adding `auth-controller.ts`, adding `AuthRuntime.svelte`, creating broad auth workflow modules, or redesigning frontend state architecture.
+- 15. [x] Keep explicitly out of scope: splitting `Login.svelte` into form components, adding `auth-controller.ts`, adding `AuthRuntime.svelte`, creating broad auth workflow modules, or redesigning frontend state architecture.
+
+  Findings:
+
+  - Resolved as a Priority 5 scope boundary rather than an implementation slice.
+  - Priority 5 intentionally ends with the narrow auth-service ownership model, widget-scoped `authService`, and explicit component props recorded in items 12 and 13.
+  - Splitting `Login.svelte` into form components remains out of scope; it may be worthwhile later, but it is not required to complete the auth-service extraction.
+  - Adding `auth-controller.ts`, `AuthRuntime.svelte`, broad auth workflow modules, a singleton auth service, or a replacement auth event bus remains out of scope because those options would reintroduce the architecture churn Priority 5 was trying to escape.
+  - Any future frontend state architecture redesign should be opened as a separate priority with its own plan, checklist, validation strategy, and explicit approval.
