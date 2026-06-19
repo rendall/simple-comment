@@ -54,7 +54,7 @@
     "knip": "knip"
   },
   "dependencies": {
-    "@babel/core": "^7.29.0",
+    "@babel/core": "^7.29.6",
     "@babel/preset-env": "^7.29.0",
     "@sendgrid/mail": "^8.1.6",
     "@tsconfig/svelte": "^5.0.8",
