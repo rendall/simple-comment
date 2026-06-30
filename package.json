@@ -17,7 +17,7 @@
     "cross-env": "^7.0.3",
     "globals": "^17.4.0",
     "knip": "^6.0.3",
-    "vite": "^6.4.2",
+    "vite": "^6.4.3",
     "vitest": "^3.2.4"
   },
   "optionalDependencies": {
@@ -101,7 +101,7 @@
     "@cypress/request": "^3.0.0",
     "async": ">2.6.4 || ^2.6.4",
     "glob-parent": ">6.0.2 || ^6.0.2",
-    "vite": "6.4.2"
+    "vite": "6.4.3"
   },
   "documentation": {
     "resolutions": {
