@@ -1,10 +1,11 @@
 import { assign, createMachine } from "xstate"
 import type { ServerResponse } from "./simple-comment-types"
 
-type LoginMachineState =
+export type LoginMachineState =
   | "idle"
   | "verifying"
   | "loggingIn"
+  | "guestLoggingIn"
   | "signingUp"
   | "signedUp"
   | "loggedIn"
@@ -17,7 +18,7 @@ type LoginTypestate = {
   context: LoginMachineContext
 }
 
-type LoginMachineContext = {
+export type LoginMachineContext = {
   error?: ServerResponse | string
   guest?: { name: string; email: string }
 }
