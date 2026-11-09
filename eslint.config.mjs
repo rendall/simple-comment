@@ -11,7 +11,7 @@ export default defineConfig([
     ignores: [
       "*.js",
       ".netlify/**",
-      "functions/**/*.js",
+      "functions/**",
       "dist/**/*.js",
       "src/policy.ts",
     ],

@@ -44,7 +44,7 @@ describe("Login smoke", () => {
     expect(screen.getByRole("button", { name: "Guest" })).toBeInTheDocument()
 
     await waitFor(() => {
-      expect(authService.init).toHaveBeenCalledTimes(1)
+      expect(authService.init).not.toHaveBeenCalled()
       expect(
         document.querySelector("section.simple-comment-login")
       ).not.toHaveClass("is-loading")

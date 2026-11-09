@@ -550,7 +550,6 @@
     )
     unsubscribeAuthRequest =
       authService.authRequest.subscribe(handleAuthRequest)
-    authService.init()
   })
 
   onDestroy(() => {

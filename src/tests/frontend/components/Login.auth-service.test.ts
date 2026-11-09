@@ -137,12 +137,26 @@ describe("Login auth-service delegation", () => {
     mockVerifyUser.mockResolvedValue({ ok: true } as never)
   })
 
-  test("delegates mount initialization through authService.init", async () => {
-    const { authService } = renderLogin()
+  test("mounting and remounting Login does not initialize authentication", async () => {
+    const authService = createAuthServiceStub()
+    const { unmount } = render(Login as never, { authService } as never)
 
     await waitFor(() => {
-      expect(authService.init).toHaveBeenCalledTimes(1)
+      expect(
+        document.querySelector("section.simple-comment-login")
+      ).not.toHaveClass("is-loading")
     })
+    expect(authService.init).not.toHaveBeenCalled()
+
+    await unmount()
+    renderLogin({ authService })
+
+    await waitFor(() => {
+      expect(
+        document.querySelector("section.simple-comment-login")
+      ).not.toHaveClass("is-loading")
+    })
+    expect(authService.init).not.toHaveBeenCalled()
     expect(mockVerifySelf).not.toHaveBeenCalled()
   })
 
