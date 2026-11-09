@@ -45,7 +45,7 @@
 
   type PendingAuthRequest = Extract<AuthRequestState, { status: "pending" }>
 
-  let self: User = currentUser
+  let self: User | undefined = currentUser
   let isError = false
   let isLoaded = false // Hide the component until isLoaded is true
 
@@ -58,11 +58,11 @@
   let userEmail = ""
   let userEmailHelperText = USER_EMAIL_HELPER_TEXT
 
-  let userEmailStatus = ""
+  let userEmailStatus: "error" | "success" | undefined = undefined
 
   let userId = ""
-  let userIdHelperText = undefined
-  let userIdStatus = undefined
+  let userIdHelperText: string | undefined = undefined
+  let userIdStatus: "error" | "success" | undefined = undefined
   let userIdManuallyChanged = false
 
   let loginUserIdHelperText = " "
@@ -71,16 +71,18 @@
   let userPasswordConfirm = ""
   let isPasswordView = true
 
-  let userPasswordMessage = undefined
-  let userPasswordStatus = undefined
+  let userPasswordMessage: string | undefined = undefined
+  let userPasswordStatus: "error" | "success" | undefined = undefined
 
   let selectedIndex: LoginTab = isNaN(
-    parseInt(localStorage.getItem("simple_comment_login_tab"))
+    parseInt(localStorage.getItem("simple_comment_login_tab") ?? "")
   )
     ? LoginTab.guest
-    : (parseInt(localStorage.getItem("simple_comment_login_tab")) as LoginTab)
+    : (parseInt(
+        localStorage.getItem("simple_comment_login_tab") ?? ""
+      ) as LoginTab)
 
-  let lastIdChecked
+  let lastIdChecked: UserId | undefined = undefined
   let pendingAuthRequestId: string | undefined = undefined
   let handledAuthRequestId: string | undefined = undefined
 
@@ -175,10 +177,7 @@
     })
   }
 
-  const handleAuthRuntimeSnapshot = ({
-    state,
-    error,
-  }: AuthRuntimeSnapshot) => {
+  const handleAuthRuntimeSnapshot = ({ state, error }: AuthRuntimeSnapshot) => {
     isLoaded =
       isLoaded ||
       (["loggedIn", "loggedOut", "error"] as string[]).includes(state)
@@ -349,7 +348,7 @@
 
   const checkUserIdExists_debounced = debounceFunc(checkUserIdExists, 400)
 
-  const onSubmitCheckUserIdValid = userId => {
+  const onSubmitCheckUserIdValid = (userId: UserId) => {
     const validation = validateUserId(userId)
 
     if (isValidationTrue(validation)) {
@@ -546,9 +545,11 @@
     unsubscribeAuthRuntimeSnapshot = authService.authRuntimeSnapshot.subscribe(
       handleAuthRuntimeSnapshot
     )
-    unsubscribeAuthCurrentUser =
-      authService.currentUser.subscribe(handleAuthCurrentUser)
-    unsubscribeAuthRequest = authService.authRequest.subscribe(handleAuthRequest)
+    unsubscribeAuthCurrentUser = authService.currentUser.subscribe(
+      handleAuthCurrentUser
+    )
+    unsubscribeAuthRequest =
+      authService.authRequest.subscribe(handleAuthRequest)
     authService.init()
   })
 
