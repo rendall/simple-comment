@@ -189,6 +189,35 @@ describe("CommentInput auth-service delegation", () => {
     })
   })
 
+  test("leaves processing state when local validation fails before requestAuth returns", async () => {
+    const authService = createAuthServiceStub()
+    const requestId = "request-1"
+
+    vi.mocked(authService.requestAuth).mockImplementation(() => {
+      // Login can publish a validation error before the caller receives the ID.
+      authService.authOutcomeStore.set({
+        status: "localValidationError",
+        message: "Email is invalid.",
+        requestId,
+      })
+      return { requestId }
+    })
+
+    renderCommentInput({ authService })
+    await submitComment()
+
+    expect(authService.requestAuth).toHaveBeenCalledTimes(1)
+    expect(authService.requestAuth).toHaveBeenCalledWith("comment-submit")
+    expect(mockPostComment).not.toHaveBeenCalled()
+
+    await waitFor(() => {
+      expect(document.querySelector("form.comment-form")).not.toHaveClass(
+        "is-hidden"
+      )
+    })
+    expect(authService.clearAuthOutcome).toHaveBeenCalledWith(requestId)
+  })
+
   test("preserves selected-tab dependent button copy", async () => {
     renderCommentInput()
 

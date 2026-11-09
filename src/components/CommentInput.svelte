@@ -10,6 +10,7 @@
   import type { StateValue } from "xstate"
   import { commentPostMachine } from "../lib/commentPost.xstate"
   import { createEventDispatcher, onDestroy, onMount } from "svelte"
+  import { get } from "svelte/store"
   import { isResponseOk } from "../frontend-utilities"
   import { postComment } from "../apiClient"
   import { useMachine } from "@xstate/svelte"
@@ -62,6 +63,7 @@
     const { requestId } = authService.requestAuth("comment-submit")
 
     pendingAuthRequestId = requestId
+    handleAuthOutcome(get(authService.authOutcome))
   }
 
   const handleAuthOutcome = (authOutcome: AuthOutcomeState) => {
@@ -97,9 +99,8 @@
     }
   }
 
-  const unsubscribeAuthOutcome = authService.authOutcome.subscribe(
-    handleAuthOutcome
-  )
+  const unsubscribeAuthOutcome =
+    authService.authOutcome.subscribe(handleAuthOutcome)
 
   const postingStateHandler = async () => {
     try {
@@ -202,7 +203,7 @@
   $: buttonCopy = getButtonCopy(
     loginTabSelect,
     commentText,
-    currentUser ?? authOutcomeUser ? "loggedIn" : undefined
+    (currentUser ?? authOutcomeUser) ? "loggedIn" : undefined
   )
 </script>
 
