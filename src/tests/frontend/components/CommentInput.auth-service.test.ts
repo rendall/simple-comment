@@ -102,7 +102,7 @@ const renderCommentInput = ({
   authService?: AuthServiceStub
   currentUser?: User
 } = {}) => {
-  render(
+  const { rerender } = render(
     CommentInput as never,
     {
       authService,
@@ -111,7 +111,7 @@ const renderCommentInput = ({
     } as never
   )
 
-  return { authService }
+  return { authService, rerender }
 }
 
 const submitComment = async (text = "Hello from the tests") => {
@@ -166,6 +166,35 @@ describe("CommentInput auth-service delegation", () => {
         "Hello from the tests"
       )
     })
+  })
+
+  test("requests authentication again after a successful submission followed by logout", async () => {
+    const { authService, rerender } = renderCommentInput()
+    vi.mocked(authService.clearAuthOutcome).mockImplementation(() => {
+      authService.authOutcomeStore.set({ status: "none" })
+    })
+
+    await submitComment()
+    authService.authOutcomeStore.set({
+      status: "success",
+      user: defaultUser,
+      requestId: "request-1",
+    })
+
+    await waitFor(() => {
+      expect(mockPostComment).toHaveBeenCalledTimes(1)
+      expect(screen.getByPlaceholderText("Your comment")).toHaveValue("")
+    })
+
+    // The authenticated user reaches this component, then logout clears it.
+    await rerender({ currentUser: defaultUser })
+    await rerender({ currentUser: undefined })
+    await submitComment("Another comment after logout")
+
+    await waitFor(() => {
+      expect(authService.requestAuth).toHaveBeenCalledTimes(2)
+    })
+    expect(mockPostComment).toHaveBeenCalledTimes(1)
   })
 
   test("leaves processing state after matching auth failure outcome", async () => {

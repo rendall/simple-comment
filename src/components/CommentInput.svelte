@@ -181,6 +181,9 @@
     unsubscribeAuthOutcome()
   })
 
+  // The outcome user only bridges the update of the authoritative user prop.
+  $: if (currentUser !== undefined) authOutcomeUser = undefined
+
   $: {
     const stateHandlers: [string, () => void][] = [
       ["validating", validatingStateHandler],
