@@ -18,7 +18,7 @@
     "globals": "^17.4.0",
     "knip": "^6.0.3",
     "vite": "^6.4.5",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.6"
   },
   "optionalDependencies": {
     "netlify-cli": "^24.0.1"
