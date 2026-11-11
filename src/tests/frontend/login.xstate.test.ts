@@ -1,3 +1,5 @@
+import { describe, expect, test } from "@jest/globals"
+
 import { loginMachine } from "../../lib/login.xstate"
 
 const initialState = loginMachine.initialState
@@ -36,6 +38,33 @@ describe("Login flow state machine", () => {
     const nextState = loginMachine.transition("signingUp", "ERROR")
     expect(nextState.value).toBe("error")
   })
+
+  test.each([
+    { event: { type: "LOGIN" }, expectedState: "loggingIn" },
+    { event: { type: "SIGNUP" }, expectedState: "signingUp" },
+    {
+      event: {
+        type: "GUEST",
+        guest: { name: "Retry Guest", email: "retry@example.com" },
+      },
+      expectedState: "guestLoggingIn",
+    },
+  ] as const)(
+    "$event.type retries from error into $expectedState",
+    ({ event, expectedState }) => {
+      const failedState = loginMachine.transition("loggingIn", {
+        type: "ERROR",
+        error: "First attempt failed",
+      })
+
+      const nextState = loginMachine.transition(failedState, event)
+
+      expect(nextState.value).toBe(expectedState)
+      if (event.type === "GUEST") {
+        expect(nextState.context.guest).toEqual(event.guest)
+      }
+    }
+  )
 
   test("loggedIn with LOGOUT should transition to state `loggingOut`", () => {
     const nextState = loginMachine.transition("loggedIn", "LOGOUT")
