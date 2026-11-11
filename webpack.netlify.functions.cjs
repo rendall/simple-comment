@@ -37,7 +37,7 @@ const config = {
   target: "node",
   output: {
     path: path.resolve(__dirname, "functions"),
-    filename: "[name].js",
+    filename: "[name].cjs",
     libraryTarget: "commonjs",
   },
   optimization: {
