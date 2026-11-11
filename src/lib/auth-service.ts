@@ -380,14 +380,25 @@ export const createAuthService = (
           return
         }
 
+        // TODO: SUCCESS means different things here; consider clearer event names.
+        // Account creation succeeded; advance from signingUp to loggingIn.
         authRuntime.send("SUCCESS")
-        await postAuth(userId, password)
+        const authResponse = await postAuth(userId, password)
+
+        if (!authResponse.ok) {
+          authRuntime.send({ type: "ERROR", error: authResponse })
+          completePendingAuthRemoteError(authResponse)
+          return
+        }
+
+        // Authentication succeeded; advance from loggingIn to verifying.
         authRuntime.send("SUCCESS")
 
         const verifiedUser = await verifySelf()
 
         currentUserStore.set(verifiedUser)
         persistence.saveStoredUser(verifiedUser)
+        // User verification succeeded; advance from verifying to loggedIn.
         authRuntime.send("SUCCESS")
         completePendingAuthSuccess(verifiedUser)
       } catch (error) {
