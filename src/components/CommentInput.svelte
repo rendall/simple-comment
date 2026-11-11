@@ -25,7 +25,7 @@
 
   let commentText = ""
   let buttonCopy: string
-  let textareaRef
+  let textareaRef: Element
   let textAreaWidth = "100%"
   let textAreaHeight = "7rem"
   let loginTabSelect: LoginTab = LoginTab.guest
@@ -179,6 +179,10 @@
 
   onDestroy(() => {
     unsubscribeAuthOutcome()
+
+    if (pendingAuthRequestId) {
+      authService.cancelAuthRequest(pendingAuthRequestId)
+    }
   })
 
   // The outcome user only bridges the update of the authoritative user prop.
@@ -224,8 +228,7 @@
     required={loginTabSelect === LoginTab.guest}
     {autofocus}
     {placeholder}
-    dir="auto"
-  ></textarea>
+    dir="auto"></textarea>
   <Login {authService} {currentUser} bind:selectedTab={loginTabSelect} />
   {#if !currentUser || (commentText && commentText.length)}
     <div class="button-row">

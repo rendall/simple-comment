@@ -2,10 +2,11 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/svelte"
 import { readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import type { Writable } from "svelte/store"
-import { readable, writable } from "svelte/store"
+import { get, readable, writable } from "svelte/store"
 import { beforeEach, describe, expect, test, vi } from "vitest"
-import { getOneUser, postComment } from "../../../apiClient"
+import { getOneUser, postComment, verifySelf } from "../../../apiClient"
 import CommentInput from "../../../components/CommentInput.svelte"
+import { createAuthService } from "../../../lib/auth-service"
 import type {
   AuthOutcomeState,
   AuthRequestState,
@@ -20,8 +21,16 @@ import type {
 } from "../../../lib/simple-comment-types"
 
 vi.mock("../../../apiClient", () => ({
+  createGuestUser: vi.fn(),
+  createUser: vi.fn(),
+  deleteAuth: vi.fn(),
+  getGuestToken: vi.fn(),
   getOneUser: vi.fn(),
+  postAuth: vi.fn(),
   postComment: vi.fn(),
+  updateUser: vi.fn(),
+  verifySelf: vi.fn(),
+  verifyUser: vi.fn(),
 }))
 
 vi.mock("../../../frontend-utilities", async importOriginal => {
@@ -144,6 +153,76 @@ describe("CommentInput auth-service delegation", () => {
     await waitFor(() => {
       expect(authService.requestAuth).toHaveBeenCalledWith("comment-submit")
     })
+  })
+
+  test("does not process an abandoned auth request when switching reply forms", async () => {
+    const authService = createAuthService()
+    vi.mocked(verifySelf).mockRejectedValueOnce({ status: 401 })
+    await authService.init()
+
+    let finishGuestLogin!: () => void
+    const guestLogin = new Promise<void>(resolve => {
+      finishGuestLogin = resolve
+    })
+    const loginGuest = vi
+      .spyOn(authService, "loginGuest")
+      .mockReturnValue(guestLogin)
+    const requestAuth = vi.spyOn(authService, "requestAuth")
+    const reportLocalValidationError = vi.spyOn(
+      authService,
+      "reportLocalValidationError"
+    )
+
+    try {
+      const { unmount } = render(
+        CommentInput as never,
+        {
+          authService,
+          commentId: "comment-a",
+          currentUser: undefined,
+        } as never
+      )
+      await fireEvent.input(await screen.findByLabelText("Display Name"), {
+        target: { value: "Guest Example" },
+      })
+      await fireEvent.input(screen.getByLabelText("Email"), {
+        target: { value: "guest@example.com" },
+      })
+      await submitComment()
+
+      expect(loginGuest).toHaveBeenCalledTimes(1)
+      const { requestId } = requestAuth.mock.results[0].value
+      expect(get(authService.authRequest)).toEqual({
+        status: "pending",
+        reason: "comment-submit",
+        requestId,
+      })
+      expect(reportLocalValidationError).not.toHaveBeenCalled()
+
+      // Opening another reply replaces the input but keeps the same auth service.
+      await unmount()
+      render(
+        CommentInput as never,
+        {
+          authService,
+          commentId: "comment-b",
+          currentUser: undefined,
+        } as never
+      )
+      await screen.findByLabelText("Display Name")
+
+      expect(reportLocalValidationError).not.toHaveBeenCalled()
+      expect(loginGuest).toHaveBeenCalledTimes(1)
+      expect(mockPostComment).not.toHaveBeenCalled()
+      expect(get(authService.authRequest)).toEqual({ status: "idle" })
+      expect(get(authService.authOutcome)).toEqual({
+        status: "cancelled",
+        requestId,
+      })
+    } finally {
+      finishGuestLogin()
+      authService.destroy()
+    }
   })
 
   test("continues posting after matching auth success outcome", async () => {
