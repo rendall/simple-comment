@@ -1,6 +1,54 @@
 # Priority 5 Frontend Architecture Decoupling Checklist
 
-Status: planning
+Status: archived, superseded
+
+## Supersession Note
+
+This checklist is archived and superseded. Do not use it as an implementation
+guide for Priority 5.
+
+This document was useful as an early exploration of the frontend auth/login
+coupling problem, but it is now considered unsafe for execution because it
+over-specifies a large architecture for a comparatively straightforward
+extraction task:
+
+- extract auth/login side effects out of `Login.svelte` into shared
+  TypeScript;
+- keep auth transport calls delegated to `src/apiClient.ts`;
+- lift login/auth coordination out of `CommentInput.svelte` and related relay
+  store coupling.
+
+The checklist violates the repo's current planning and checklist standards in
+practice because it turns a small, reversible extraction into a broad
+architecture program. It prescribes multiple new modules and abstractions
+(`auth-storage.ts`, `auth-workflows.ts`, `auth-controller.ts`,
+`auth-stores.ts`, `AuthRuntime.svelte`, and split form components) before the
+current `auth-service` seam is complete or proven insufficient. That creates
+too much harness for the task, weakens atomicity, and increases the chance of
+behavioral drift.
+
+The checklist also conflicts with the backlog constraint to prefer small
+planning slices over broad modernization efforts. It mixes mechanical
+extraction, runtime ownership, storage policy, component decomposition, shared
+store migration, consumer rewiring, and validation into one dependency chain.
+That shape contributed to previous Priority 5 churn and should not be
+reintroduced.
+
+The safer superseding direction is the incremental `auth-service` path already
+started by the slice checklists:
+
+- finish `auth-service.login()` and `auth-service.logout()` using
+  `src/apiClient.ts`;
+- keep `Login.svelte` responsible for form-local UI state for now;
+- remove auth side effects from `Login.svelte` only after service behavior is
+  covered by focused tests;
+- then decouple `CommentInput.svelte` and `SelfDisplay.svelte` from
+  `dispatchableStore` / `loginStateStore` relay behavior in small, reviewable
+  slices.
+
+Future Priority 5 plans should cite this document only as superseded context
+and should not revive its module graph, controller/runtime split, or form
+component split without a fresh approved plan that justifies those choices.
 
 Classification: proposed implementation checklist draft (not approved)
 

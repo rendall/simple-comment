@@ -1,42 +1,21 @@
 <script lang="ts">
   import { fly } from "svelte/transition"
   import type {
-    AdminSafeUser,
     ServerResponse,
-    ServerResponseSuccess,
-    TokenClaim,
     User,
     UserId,
     ValidationResult,
   } from "../lib/simple-comment-types"
   import { LoginTab } from "../lib/simple-comment-types"
-  import { useMachine } from "@xstate/svelte"
-  import { loginMachine } from "../lib/login.xstate"
-  import {
-    createGuestUser,
-    createUser,
-    deleteAuth,
-    getGuestToken,
-    getOneUser,
-    postAuth,
-    updateUser,
-    verifySelf,
-    verifyUser,
-  } from "../apiClient"
+  import { getOneUser } from "../apiClient"
   import {
     debounceFunc,
     isValidationTrue,
-    isResponseOk,
     validatePassword,
     validateUserId,
     formatUserId,
   } from "../frontend-utilities"
   import InputField from "./low-level/InputField.svelte"
-  import {
-    currentUserStore,
-    dispatchableStore,
-    loginStateStore,
-  } from "../lib/svelte-stores"
   import {
     isGuestId,
     isValidResult,
@@ -48,7 +27,12 @@
   import PasswordInput from "./low-level/PasswordInput.svelte"
   import PasswordTwinInput from "./low-level/PasswordTwinInput.svelte"
   import Avatar from "./low-level/Avatar.svelte"
-  import type { StateValue } from "xstate"
+  import type {
+    AuthRequestState,
+    AuthRuntimeSnapshot,
+    AuthService,
+  } from "../lib/auth-service"
+  import { loadStoredUser } from "../lib/auth-persistence"
 
   const DISPLAY_NAME_HELPER_TEXT = "This is the name that others will see"
   const USER_EMAIL_HELPER_TEXT =
@@ -56,12 +40,15 @@
   const USER_ID_HELPER_TEXT = "This is the user id that uniquely identifies you"
 
   export let currentUser: User | undefined
+  export let authService: AuthService
+  export let selectedTab: LoginTab = LoginTab.guest
 
-  let self: User = currentUser
+  type PendingAuthRequest = Extract<AuthRequestState, { status: "pending" }>
+
+  let self: User | undefined = currentUser
   let isError = false
   let isLoaded = false // Hide the component until isLoaded is true
 
-  let nextEvents = []
   let statusMessage = ""
 
   let displayName = ""
@@ -71,11 +58,11 @@
   let userEmail = ""
   let userEmailHelperText = USER_EMAIL_HELPER_TEXT
 
-  let userEmailStatus = ""
+  let userEmailStatus: "error" | "success" | undefined = undefined
 
   let userId = ""
-  let userIdHelperText = undefined
-  let userIdStatus = undefined
+  let userIdHelperText: string | undefined = undefined
+  let userIdStatus: "error" | "success" | undefined = undefined
   let userIdManuallyChanged = false
 
   let loginUserIdHelperText = " "
@@ -84,116 +71,70 @@
   let userPasswordConfirm = ""
   let isPasswordView = true
 
-  let userPasswordMessage = undefined
-  let userPasswordStatus = undefined
+  let userPasswordMessage: string | undefined = undefined
+  let userPasswordStatus: "error" | "success" | undefined = undefined
 
-  let selectedIndex = isNaN(
-    parseInt(localStorage.getItem("simple_comment_login_tab"))
+  let selectedIndex: LoginTab = isNaN(
+    parseInt(localStorage.getItem("simple_comment_login_tab") ?? "")
   )
     ? LoginTab.guest
-    : parseInt(localStorage.getItem("simple_comment_login_tab"))
+    : (parseInt(
+        localStorage.getItem("simple_comment_login_tab") ?? ""
+      ) as LoginTab)
 
-  let lastIdChecked
+  let lastIdChecked: UserId | undefined = undefined
+  let pendingAuthRequestId: string | undefined = undefined
+  let handledAuthRequestId: string | undefined = undefined
 
-  const { state, send } = useMachine(loginMachine)
   const updateStatusDisplay = (message = "", error = false) => {
     statusMessage = message
     isError = error
   }
 
-  //TODO: Move the log in *functionality* away from the Login.svelte *component*. Currently the Login component must be on the page for login functionality to occur.
+  const reportLocalError = (message: string) =>
+    updateStatusDisplay(message, true)
 
-  /** Note that usually these onClick events will not be used. Rather, "loginIntent" will be sent.*/
+  const reportPendingAuthValidationError = (message: string) => {
+    if (!pendingAuthRequestId) return
+
+    authService.reportLocalValidationError({
+      message,
+      requestId: pendingAuthRequestId,
+    })
+  }
+
   const onGuestClick = async (e: Event) => {
     e.preventDefault()
-    updateStatusDisplay()
-
-    const validations = [
-      () => validateDisplayName(displayName),
-      () => validateEmail(userEmail),
-    ].map(validation => validation())
-    const result = joinValidations(validations)
-
-    if (isValidResult(result))
-      send({ type: "GUEST", guest: { name: displayName, email: userEmail } })
-    else send({ type: "ERROR", error: result.reason })
+    await submitGuestLogin()
   }
 
   const onLoginClick = async (e: Event) => {
     e.preventDefault()
-    updateStatusDisplay()
-
-    const result = checkLoginValid()
-
-    if (isValidResult(result)) send({ type: "LOGIN" })
-    else
-      send({
-        type: "ERROR",
-        error: result.reason,
-      })
+    await submitLogin()
   }
 
   const onSignupClick = async (e: Event) => {
     e.preventDefault()
-    updateStatusDisplay()
-
-    const result = joinValidations([
-      checkDisplayNameValid(),
-      checkUserIdValid(),
-      checkUserEmailValid(),
-      checkPasswordValid(),
-      checkPasswordsMatch(),
-    ])
-
-    if (isValidResult(result)) send({ type: "SIGNUP" })
-    else
-      send({
-        type: "ERROR",
-        error: result.reason,
-      })
+    await submitSignup()
   }
 
-  /** Handler for XState "verifying" state */
-  const verifyingStateHandler = () => {
+  const submitLogin = async () => {
     updateStatusDisplay()
 
-    if (self || currentUser) send({ type: "SUCCESS" })
-    else
-      verifySelf()
-        .then((user: AdminSafeUser) => {
-          self = user
-          localStorage.setItem("simple_comment_user", JSON.stringify(user))
-          send({ type: "SUCCESS" })
-        })
-        .catch(error => {
-          const { status } = error
-          if (status === 401) send({ type: "FIRST_VISIT" })
-          else send({ type: "ERROR", error })
-        })
-  }
-
-  const loggingInStateHandler = () => {
-    updateStatusDisplay()
     const result = checkLoginValid()
+
     if (!isValidResult(result)) {
-      send({ type: "ERROR", error: result.reason })
+      reportLocalError(result.reason)
+      reportPendingAuthValidationError(result.reason)
       return
     }
-    postAuth(userId, userPassword)
-      .then(response => {
-        if (isResponseOk(response)) {
-          send("SUCCESS")
-        } else {
-          send({ type: "ERROR", error: response })
-        }
-      })
-      .catch(error => {
-        send({ type: "ERROR", error })
-      })
+
+    await authService.login({ userId, password: userPassword })
   }
 
-  const signingUpStateHandler = () => {
+  const submitSignup = async () => {
     updateStatusDisplay()
+
     const result = joinValidations([
       checkDisplayNameValid(),
       checkUserIdValid(),
@@ -201,42 +142,132 @@
       checkPasswordValid(),
       checkPasswordsMatch(),
     ])
+
     if (!isValidResult(result)) {
-      send({ type: "ERROR", error: result.reason })
+      reportLocalError(result.reason)
+      reportPendingAuthValidationError(result.reason)
       return
     }
 
-    const userInfo = {
-      id: userId,
-      name: displayName,
-      email: userEmail,
+    await authService.signup({
+      userId,
       password: userPassword,
+      displayName,
+      email: userEmail,
+    })
+  }
+
+  const submitGuestLogin = async () => {
+    updateStatusDisplay()
+
+    const guestValidationResult = joinValidations([
+      checkDisplayNameValid(),
+      checkUserEmailValid(),
+    ])
+
+    if (!isValidResult(guestValidationResult)) {
+      reportLocalError(guestValidationResult.reason)
+      reportPendingAuthValidationError(guestValidationResult.reason)
+      return
     }
-    createUser(userInfo)
-      .then(() => send("SUCCESS"))
-      .catch(error => send({ type: "ERROR", error }))
+
+    await authService.loginGuest({
+      displayName,
+      email: userEmail,
+    })
   }
 
-  const loggedInStateHandler = () => {
-    updateStatusDisplay()
+  const handleAuthRuntimeSnapshot = ({ state, error }: AuthRuntimeSnapshot) => {
+    isLoaded =
+      isLoaded ||
+      (["loggedIn", "loggedOut", "error"] as string[]).includes(state)
+
+    switch (state) {
+      case "loggedIn":
+        updateStatusDisplay()
+        break
+
+      case "loggedOut":
+        updateStatusDisplay()
+        self = undefined
+        break
+
+      case "error":
+        errorStateHandler(error)
+        break
+
+      default:
+        updateStatusDisplay()
+        break
+    }
   }
 
-  const loggingOutStateHandler = () => {
-    updateStatusDisplay()
-    deleteAuth()
-      .then(() => send("SUCCESS"))
-      .catch(error => send({ type: "ERROR", error }))
+  const handleAuthCurrentUser = (user: User | undefined) => {
+    self = user
   }
 
-  const loggedOutStateHandler = () => {
-    updateStatusDisplay()
-    self = undefined
+  const submitSelectedAuthRequest = async ({
+    requestId,
+  }: PendingAuthRequest) => {
+    if (handledAuthRequestId === requestId) return
+
+    handledAuthRequestId = requestId
+    pendingAuthRequestId = requestId
+
+    try {
+      switch (selectedIndex) {
+        case LoginTab.guest:
+          await submitGuestLogin()
+          break
+
+        case LoginTab.signup:
+          await submitSignup()
+          break
+
+        case LoginTab.login:
+          await submitLogin()
+          break
+
+        default:
+          reportLocalError(`Unknown selectedTabIndex ${selectedIndex}`)
+          reportPendingAuthValidationError(
+            `Unknown selectedTabIndex ${selectedIndex}`
+          )
+          break
+      }
+    } finally {
+      pendingAuthRequestId = undefined
+    }
   }
 
-  const errorStateHandler = () => {
+  const handleAuthRequest = (authRequest: AuthRequestState) => {
+    if (authRequest.status === "idle") {
+      handledAuthRequestId = undefined
+      return
+    }
+
+    submitSelectedAuthRequest(authRequest)
+  }
+
+  let unsubscribeAuthRuntimeSnapshot = () => undefined
+  let unsubscribeAuthCurrentUser = () => undefined
+  let unsubscribeAuthRequest = () => undefined
+
+  const hydrateStoredUserFields = () => {
+    const storedUser = loadStoredUser()
+
+    if (!storedUser) return
+
+    const { id, name, email } = storedUser
+
+    if (id && !isGuestId(id)) userId = id
+    if (name) displayName = name
+    if (email) userEmail = email
+  }
+
+  const errorStateHandler = (error?: ServerResponse | string) => {
     updateStatusDisplay()
 
-    const error = $state.context.error
     if (!error) {
       updateStatusDisplay(
         "Apologies. An unknown error occurred. Please reload the page and try again. If the error persists, contact the site administrator",
@@ -317,7 +348,7 @@
 
   const checkUserIdExists_debounced = debounceFunc(checkUserIdExists, 400)
 
-  const onSubmitCheckUserIdValid = userId => {
+  const onSubmitCheckUserIdValid = (userId: UserId) => {
     const validation = validateUserId(userId)
 
     if (isValidationTrue(validation)) {
@@ -456,120 +487,6 @@
     checkUserIdExists_debounced(userId)
   }
 
-  const guestLoggingInStateHandler = () => {
-    const guestValidationResult = joinValidations([
-      checkDisplayNameValid(),
-      checkUserEmailValid(),
-    ])
-
-    if (!isValidResult(guestValidationResult)) {
-      send({ type: "ERROR", error: guestValidationResult.reason })
-      return
-    }
-
-    const storedItem: string | null = localStorage.getItem(
-      "simple_comment_user"
-    )
-
-    const storedUser = storedItem
-      ? (JSON.parse(storedItem) as {
-          id?: string
-          name?: string
-          email?: string
-          challenge?: string
-        })
-      : { id: undefined, challenge: undefined }
-
-    const {
-      id: storedId,
-      challenge: storedChallenge,
-      name: storedName,
-      email: storedEmail,
-    } = storedUser
-
-    const postAuthFlow = () =>
-      postAuth(storedId, storedChallenge)
-        .then(() => verifyUser())
-        .then((response: ServerResponseSuccess<TokenClaim>) => response)
-        .then(response => {
-          if (isResponseOk(response)) {
-            send("SUCCESS")
-          } else getTokenFlow()
-        })
-        .catch(getTokenFlow)
-
-    const getTokenFlow = () =>
-      getGuestToken()
-        .then(() => verifyUser())
-        .then(
-          (response: ServerResponseSuccess<TokenClaim>) => response.body.user
-        )
-        .then(id =>
-          createGuestUser({ id, name: displayName, email: userEmail })
-        )
-        .then(response => {
-          if (isResponseOk(response)) send("SUCCESS")
-          else send({ type: "ERROR", error: response })
-        })
-        .catch(error => {
-          console.error(error)
-          send({ type: "ERROR", error })
-        })
-
-    const updateIfChanged = () => {
-      if (displayName !== storedName || userEmail !== storedEmail) {
-        updateUser({ id: storedId, name: displayName, email: userEmail }).catch(
-          error => send({ type: "ERROR", error })
-        )
-      }
-    }
-
-    if (storedId && storedChallenge) postAuthFlow().then(updateIfChanged)
-    else getTokenFlow()
-  }
-
-  const unsubscribeDispatchableStore = dispatchableStore.subscribe(event => {
-    switch (event.name) {
-      case "logoutIntent": {
-        const canLogout = nextEvents?.includes("LOGOUT")
-        if (canLogout) send("LOGOUT")
-        else console.warn("Received logoutIntent at state", $state.value)
-        break
-      }
-
-      case "loginIntent": {
-        const canLogin = nextEvents?.some(event =>
-          ["LOGIN", "GUEST", "SIGNUP"].includes(event)
-        )
-        if (canLogin) {
-          switch (selectedIndex) {
-            case LoginTab.guest:
-              send("GUEST")
-              break
-            case LoginTab.signup:
-              send("SIGNUP")
-              break
-            case LoginTab.login:
-              send("LOGIN")
-              break
-            default:
-              send({
-                type: "ERROR",
-                error: `Unknown selectedTabIndex ${selectedIndex}`,
-              })
-              break
-          }
-        } else if ($state.value === "error") send("RESET")
-        else console.warn("Received loginIntent at state", $state.value)
-        break
-      }
-
-      default:
-        // Intentionally left blank.  Do not respond to other events.
-        break
-    }
-  })
-
   const checkPasswordValid = () => {
     const result = validatePassword(userPassword)
 
@@ -624,57 +541,24 @@
 
   onMount(() => {
     self = currentUser
-    const storedItem: string | null = localStorage.getItem(
-      "simple_comment_user"
+    hydrateStoredUserFields()
+    unsubscribeAuthRuntimeSnapshot = authService.authRuntimeSnapshot.subscribe(
+      handleAuthRuntimeSnapshot
     )
-    if (storedItem) {
-      const storedUser = JSON.parse(storedItem) as {
-        id?: string
-        name?: string
-        email?: string
-      }
-
-      const { id, name, email } = storedUser
-
-      if (id && !isGuestId(id)) userId = id
-      if (name) displayName = name
-      if (email) userEmail = email
-    }
+    unsubscribeAuthCurrentUser = authService.currentUser.subscribe(
+      handleAuthCurrentUser
+    )
+    unsubscribeAuthRequest =
+      authService.authRequest.subscribe(handleAuthRequest)
   })
 
   onDestroy(() => {
-    currentUserStore.set(self)
-    unsubscribeDispatchableStore()
+    unsubscribeAuthRuntimeSnapshot()
+    unsubscribeAuthCurrentUser()
+    unsubscribeAuthRequest()
   })
 
-  $: {
-    const stateHandlers: [string, () => void][] = [
-      ["verifying", verifyingStateHandler],
-      ["guestLoggingIn", guestLoggingInStateHandler],
-      ["loggingIn", loggingInStateHandler],
-      ["signingUp", signingUpStateHandler],
-      ["loggedIn", loggedInStateHandler],
-      ["loggingOut", loggingOutStateHandler],
-      ["loggedOut", loggedOutStateHandler],
-      ["error", errorStateHandler],
-    ]
-
-    isLoaded =
-      isLoaded ||
-      (["loggedIn", "loggedOut", "error"] as StateValue[]).includes(
-        $state.value
-      )
-
-    nextEvents = $state.nextEvents ?? []
-    loginStateStore.set({ state: $state.value, nextEvents })
-    stateHandlers.forEach(([stateValue, stateHandler]) => {
-      if ($state.value === stateValue) setTimeout(stateHandler, 1)
-    })
-  }
-
-  $: currentUserStore.set(self)
-
-  $: loginStateStore.set({ select: selectedIndex })
+  $: selectedTab = selectedIndex
 
   $: {
     if (userId.length < 3 && !userIdStatus)
