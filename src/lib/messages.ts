@@ -82,6 +82,18 @@ export const error502NotificationFailed: Error = {
   statusCode: 502,
   body: "Notification failed",
 }
+export const error502NotificationAuthenticationFailed: Error = {
+  statusCode: 502,
+  body: "Notification provider authentication failed",
+}
+export const error502NotificationSendingRefused: Error = {
+  statusCode: 502,
+  body: "Notification provider refused sending",
+}
+export const error502NotificationAllowanceExceeded: Error = {
+  statusCode: 502,
+  body: "Notification provider sending allowance exhausted",
+}
 export const error503NotificationUnavailable: Error = {
   statusCode: 503,
   body: "Notification service unavailable",
