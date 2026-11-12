@@ -1,5 +1,14 @@
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from "@jest/globals"
 import { SendGridNotificationService } from "../../lib/SendGridNotificationService"
-import { ClientResponse, MailService } from "@sendgrid/mail"
+import type { ClientResponse, MailService } from "@sendgrid/mail"
+import type { Error, Success } from "../../lib/simple-comment-types"
 
 jest.mock("dotenv", () => ({
   config: jest.fn(() => {
@@ -198,5 +207,242 @@ describe("SendGridNotificationService", () => {
     expect(result.statusCode).toEqual(202)
   })
 
-  // Add more test cases as needed
+  describe("recipient completion regression (#233)", () => {
+    type SendResponse = [ClientResponse, object]
+    type SendOutcome = "accepted" | "bad-request" | "server-error" | "rejected"
+
+    const outcomes: SendOutcome[] = [
+      "accepted",
+      "bad-request",
+      "server-error",
+      "rejected",
+    ]
+
+    const deferredSend = () => {
+      let resolve!: (response: SendResponse) => void
+      let reject!: (error: globalThis.Error) => void
+      const promise = new Promise<SendResponse>((res, rej) => {
+        resolve = res
+        reject = rej
+      })
+      return { promise, resolve, reject }
+    }
+
+    const settleSend = (
+      send: ReturnType<typeof deferredSend>,
+      outcome: SendOutcome
+    ) => {
+      if (outcome === "rejected") {
+        send.reject(new globalThis.Error("SendGrid request failed"))
+      } else {
+        send.resolve([
+          {
+            statusCode:
+              outcome === "accepted"
+                ? 202
+                : outcome === "bad-request"
+                  ? 400
+                  : 500,
+            body: outcome === "accepted" ? {} : { error: outcome },
+            headers: undefined,
+          },
+          {},
+        ])
+      }
+    }
+
+    const observeCompletion = (operation: Promise<Success | Error>) => {
+      let settled = false
+      // Observe rejection immediately, including an incorrectly early rejection.
+      const completion = operation.then(
+        result => {
+          settled = true
+          return { kind: "fulfilled" as const, result }
+        },
+        (error: unknown) => {
+          settled = true
+          return { kind: "rejected" as const, error }
+        }
+      )
+      return { completion, isSettled: () => settled }
+    }
+
+    const expectResult = (
+      outcome: Awaited<ReturnType<typeof observeCompletion>["completion"]>,
+      allAccepted: boolean
+    ) => {
+      expect(outcome.kind).toBe("fulfilled")
+      if (outcome.kind === "fulfilled") {
+        if (allAccepted) {
+          expect(outcome.result.statusCode).toBe(202)
+        } else {
+          // Use the existing Error contract; aggregate wording is still undecided.
+          expect(outcome.result.statusCode).toBeGreaterThanOrEqual(400)
+          expect(outcome.result.statusCode).toBeLessThan(600)
+          expect(outcome.result.body).toEqual(expect.any(String))
+          expect(outcome.result.body.trim()).not.toBe("")
+        }
+      }
+    }
+
+    // Drain promise continuations without depending on an arbitrary sleep duration.
+    const nextTurn = () => new Promise<void>(resolve => setImmediate(resolve))
+
+    const scenarios = outcomes.flatMap(first =>
+      outcomes.map(second => ({ first, second }))
+    )
+
+    describe.each([0, 1])("recipient %i settles first", firstRecipient => {
+      it.each(scenarios)(
+        "waits for every send and combines $first / $second",
+        async ({ first, second }) => {
+          const sends = [deferredSend(), deferredSend()]
+          mailServiceMock.send
+            .mockReturnValueOnce(sends[0].promise)
+            .mockReturnValueOnce(sends[1].promise)
+
+          const observed = observeCompletion(
+            sendGridNotificationService.notifyModerators("Test message")
+          )
+          const startedBeforeFirstCompletion =
+            mailServiceMock.send.mock.calls.length
+
+          settleSend(sends[firstRecipient], first)
+          await nextTurn()
+          const settledBeforeLastRecipient = observed.isSettled()
+
+          // Settle every send before assertions so failures leave no pending work.
+          settleSend(sends[1 - firstRecipient], second)
+          const outcome = await observed.completion
+
+          expect(startedBeforeFirstCompletion).toBe(2)
+          expect(mailServiceMock.send).toHaveBeenCalledTimes(2)
+          moderatorContactEmails.forEach(email => {
+            expect(mailServiceMock.send).toHaveBeenCalledWith({
+              to: email,
+              from: "email@example.com",
+              subject: "Simple Comment Notification",
+              text: "Test message",
+            })
+          })
+          expectResult(outcome, first === "accepted" && second === "accepted")
+          expect(settledBeforeLastRecipient).toBe(false)
+        }
+      )
+    })
+
+    it.each(outcomes)(
+      "handles one recipient with outcome %s",
+      async outcome => {
+        const send = deferredSend()
+        mailServiceMock.send.mockReturnValueOnce(send.promise)
+        const service = new SendGridNotificationService(
+          mailServiceMock,
+          sendGridTestApiKey,
+          [moderatorContactEmails[0]]
+        )
+        const observed = observeCompletion(
+          service.notifyModerators("Test message")
+        )
+        await nextTurn()
+        const settledBeforeSend = observed.isSettled()
+
+        settleSend(send, outcome)
+        const result = await observed.completion
+
+        expect(mailServiceMock.send).toHaveBeenCalledTimes(1)
+        expect(settledBeforeSend).toBe(false)
+        expectResult(result, outcome === "accepted")
+      }
+    )
+
+    it.each(outcomes)(
+      "waits for a third recipient whose outcome is %s",
+      async lastOutcome => {
+        const sends = [deferredSend(), deferredSend(), deferredSend()]
+        sends.forEach(send =>
+          mailServiceMock.send.mockReturnValueOnce(send.promise)
+        )
+        const service = new SendGridNotificationService(
+          mailServiceMock,
+          sendGridTestApiKey,
+          [...moderatorContactEmails, "third@example.com"]
+        )
+        const observed = observeCompletion(
+          service.notifyModerators("Test message")
+        )
+
+        settleSend(sends[1], "accepted")
+        await nextTurn()
+        const settledAfterFirst = observed.isSettled()
+        settleSend(sends[0], "accepted")
+        await nextTurn()
+        const settledAfterSecond = observed.isSettled()
+        settleSend(sends[2], lastOutcome)
+        const result = await observed.completion
+
+        expect(mailServiceMock.send).toHaveBeenCalledTimes(3)
+        expectResult(result, lastOutcome === "accepted")
+        expect(settledAfterFirst).toBe(false)
+        expect(settledAfterSecond).toBe(false)
+      }
+    )
+
+    it.each([0, 1])(
+      "still attempts and awaits other recipients when send %i throws synchronously",
+      async throwingRecipient => {
+        const pendingSend = deferredSend()
+        const throwOnSend = () => {
+          throw new globalThis.Error("SendGrid send threw synchronously")
+        }
+        if (throwingRecipient === 0) {
+          mailServiceMock.send
+            .mockImplementationOnce(throwOnSend)
+            .mockReturnValueOnce(pendingSend.promise)
+        } else {
+          mailServiceMock.send
+            .mockReturnValueOnce(pendingSend.promise)
+            .mockImplementationOnce(throwOnSend)
+        }
+        const observed = observeCompletion(
+          sendGridNotificationService.notifyModerators("Test message")
+        )
+        await nextTurn()
+        const settledBeforeOtherRecipient = observed.isSettled()
+        settleSend(pendingSend, "accepted")
+        const result = await observed.completion
+
+        expect(mailServiceMock.send).toHaveBeenCalledTimes(2)
+        expectResult(result, false)
+        expect(settledBeforeOtherRecipient).toBe(false)
+      }
+    )
+
+    it("reports the same failures independently of completion order", async () => {
+      const runWithOrder = async (firstRecipient: number) => {
+        const sends = [deferredSend(), deferredSend()]
+        mailServiceMock.send
+          .mockReturnValueOnce(sends[0].promise)
+          .mockReturnValueOnce(sends[1].promise)
+        const observed = observeCompletion(
+          sendGridNotificationService.notifyModerators("Test message")
+        )
+        const recipientOutcomes: SendOutcome[] = ["bad-request", "server-error"]
+        settleSend(sends[firstRecipient], recipientOutcomes[firstRecipient])
+        await nextTurn()
+        settleSend(
+          sends[1 - firstRecipient],
+          recipientOutcomes[1 - firstRecipient]
+        )
+        return observed.completion
+      }
+
+      const firstOrder = await runWithOrder(0)
+      const reverseOrder = await runWithOrder(1)
+
+      expectResult(firstOrder, false)
+      expectResult(reverseOrder, false)
+      expect(reverseOrder).toEqual(firstOrder)
+    })
+  })
 })
