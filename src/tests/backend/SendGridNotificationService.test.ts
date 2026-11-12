@@ -77,7 +77,7 @@ describe("SendGridNotificationService", () => {
     })
     expect(result).toEqual({
       statusCode: 502,
-      body: "Notification failed: 0 accepted, 2 failed.",
+      body: "Notification failed: 0 accepted, 2 failed. Provider details: send failed",
     })
   })
 
@@ -529,7 +529,7 @@ describe("SendGridNotificationService", () => {
                   kind: "fulfilled",
                   result: {
                     statusCode: failure.statusCode,
-                    body: `${failure.message}: ${accepted} accepted, ${failedRecipients} failed.`,
+                    body: `${failure.message}: ${accepted} accepted, ${failedRecipients} failed. Provider details: Synthetic provider detail`,
                   },
                 })
               }
@@ -550,7 +550,7 @@ describe("SendGridNotificationService", () => {
             kind: "fulfilled",
             result: {
               statusCode: 504,
-              body: "Notification timed out: 0 accepted, 2 failed.",
+              body: "Notification timed out: 0 accepted, 2 failed. Provider details: Synthetic provider detail",
             },
           })
         }
@@ -568,7 +568,7 @@ describe("SendGridNotificationService", () => {
           kind: "fulfilled",
           result: {
             statusCode: 502,
-            body: "Notification failed: 0 accepted, 2 failed.",
+            body: "Notification failed: 0 accepted, 2 failed. Provider details: Synthetic provider detail",
           },
         })
       })
@@ -585,7 +585,7 @@ describe("SendGridNotificationService", () => {
           kind: "fulfilled",
           result: {
             statusCode: 500,
-            body: "Internal notification error: 0 accepted, 2 failed.",
+            body: "Internal notification error: 0 accepted, 2 failed. Provider details: Synthetic internal implementation detail",
           },
         })
         expect(mailServiceMock.send).toHaveBeenCalledTimes(2)
@@ -623,7 +623,7 @@ describe("SendGridNotificationService", () => {
                 kind: "fulfilled",
                 result: {
                   statusCode: 502,
-                  body: `Notification failed: 0 accepted, 2 failed (${breakdown}).`,
+                  body: `Notification failed: 0 accepted, 2 failed (${breakdown}). Provider details: Synthetic provider detail`,
                 },
               })
               expect(settledBeforeLast).toBe(false)
@@ -713,7 +713,7 @@ describe("SendGridNotificationService", () => {
           kind: "fulfilled",
           result: {
             statusCode: 502,
-            body: "Notification failed: 0 accepted, 2 failed (1 unavailable, 1 timed out).",
+            body: "Notification failed: 0 accepted, 2 failed (1 unavailable, 1 timed out). Provider details: Synthetic provider detail",
           },
         })
       })

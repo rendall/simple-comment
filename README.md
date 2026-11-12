@@ -8,7 +8,7 @@ See the demo: <https://simple-comment.netlify.app>
 
 ## Status
 
-_NB:_ Moderation tools are not yet adequate. There is no notification when a user has posted a comment, nor any way to hold it in moderation before approval. If you like this project and would like to see it developed further on a specific timeline, contact me. Otherwise, this project is still on the road, but on the slow road.
+_NB:_ Moderation tools are not yet adequate. There is not yet a way to hold comments in moderation before approval. If you like this project and would like to see it developed further on a specific timeline, contact me. Otherwise, this project is still on the road, but on the slow road.
 
 [![Netlify Status](https://api.netlify.com/api/v1/badges/fb816766-6f5b-4dff-9c27-3f5948ac9705/deploy-status)](https://app.netlify.com/sites/simple-comment/deploys)
 [![Open API 3.0 Validator](https://img.shields.io/swagger/valid/3.0?label=Open%20API%203.0%20spec&specUrl=https%3A%2F%2Fraw.githubusercontent.com%2Frendall%2Fsimple-comment%2Fmaster%2Fsrc%2Fschema%2Fsimple-comment-openapi3.json)](https://app.swaggerhub.com/apis/rendall-dev/simple-comment_api/1.0.0)
@@ -41,6 +41,7 @@ The minimum functionality is [up and running](https://simple-comment.netlify.app
 - Designed a beautiful badge!
   - [![Powered by Simple Comment](docs/simple-comment-badge.svg)](https://simple-comment.netlify.app)
 - Visitors can read and reply to comments
+- Optional administrator email notifications through SendGrid
 
 ### Top priority after MVP
 
@@ -48,7 +49,6 @@ The minimum functionality is [up and running](https://simple-comment.netlify.app
 - Moderator holds posts for approval
 - Spam prevention measures
 - Integration with 3rd party authentication
-- Email notification & integration
 - Framework-friendly frontends
 - Extensive helpful comments!
 - E2E tests
@@ -113,10 +113,10 @@ Follow these instructions. If anything is unclear, please [create a new issue](h
    - `ALLOW_ORIGIN`
    - `SIMPLE_COMMENT_MODERATOR_ID`
    - `SIMPLE_COMMENT_MODERATOR_PASSWORD`
-   - `SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL`
+   - `SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL` (one administrator contact address, or a comma-separated list of notification recipients)
    - Optional:
    - `IS_CROSS_SITE` (`true` only when API/client are on different sites; otherwise `false`)
-   - `NOTIFICATION_SERVICE_API_KEY` and `SENDGRID_VERIFIED_SENDER` must be set together when SendGrid notifications are enabled
+   - `NOTIFICATION_SERVICE_API_KEY` and `SENDGRID_VERIFIED_SENDER` must be set together for [SendGrid notifications](#email-notifications-sendgrid)
 1. sign up for a free MongoDB Atlas account
    1. [Follow these instructions](docs/MONGODB_ATLAS.md)
    1. In `.env` add the proper `DB_CONNECTION_STRING`
@@ -147,6 +147,8 @@ Required variables:
 - `SIMPLE_COMMENT_MODERATOR_PASSWORD`
 - `SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL`
 
+`SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL` remains required when notifications are disabled. For notification delivery, the service splits comma-separated addresses, trims surrounding whitespace, and ignores empty entries. At least one recipient must remain when notifications are enabled. Recipients come from this configuration; they are not discovered from users with administrator privileges.
+
 Optional variables:
 
 - `IS_CROSS_SITE` (parsed as `true` only when the value is exactly `"true"`; all other values are treated as `false`)
@@ -156,6 +158,36 @@ Optional variables:
 Notification pair rule:
 
 - `NOTIFICATION_SERVICE_API_KEY` and `SENDGRID_VERIFIED_SENDER` are a pair. If one is set, the other must also be set.
+
+### Email notifications (SendGrid)
+
+Email notifications are optional and disabled by default. To notify administrators when a new comment is saved, configure SendGrid in the backend runtime:
+
+1. Create a SendGrid account and an [API key](https://www.twilio.com/docs/sendgrid/ui/account-and-settings/api-keys) with permission to use Mail Send. Store that key in `NOTIFICATION_SERVICE_API_KEY`.
+1. Configure a [verified sender identity](https://www.twilio.com/docs/sendgrid/for-developers/sending-email/sender-identity) in SendGrid. Set `SENDGRID_VERIFIED_SENDER` to the email address to use as the sender. SendGrid supports single-sender verification for testing and recommends domain authentication for production.
+1. Set `SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL` to the administrator address that should receive notifications. For multiple recipients, use a comma-separated list, such as `moderator@example.com,second-moderator@example.com`.
+1. Set these variables in the backend runtime: use `.env` for local development and the Netlify environment settings for deployed Functions. Keep the API key out of frontend scripts and source control. Redeploy the Functions after changing deployed configuration, or restart the local backend after editing `.env`.
+
+The two optional SendGrid settings control notification activation:
+
+| `NOTIFICATION_SERVICE_API_KEY` | `SENDGRID_VERIFIED_SENDER` | Behavior                                                                                       |
+| ------------------------------ | -------------------------- | ---------------------------------------------------------------------------------------------- |
+| Unset                          | Unset                      | Email notifications are disabled; commenting still works.                                      |
+| Set                            | Set                        | Email notifications are enabled for the configured recipients.                                 |
+| Set                            | Unset                      | The comment function fails initialization with an error naming `SENDGRID_VERIFIED_SENDER`.     |
+| Unset                          | Set                        | The comment function fails initialization with an error naming `NOTIFICATION_SERVICE_API_KEY`. |
+
+To disable notifications, remove both optional settings rather than leaving empty values. The moderator contact address alone does not enable SendGrid. Invalid credentials or an unverified sender can still cause sends to fail even when both settings are present.
+
+When enabled, each successfully saved new comment, including a reply, triggers a separate email to each configured recipient. Rejected comments and failed database insertions do not send email. Reading, editing, and deleting comments do not trigger notifications. The message has the subject `Simple Comment Notification` and identifies the comment author by name and email address; it does not include the comment text or a direct link to it.
+
+Recipient sends run concurrently. The comment request waits for every send to settle or reach its five-second deadline. Notification failures preserve the saved comment and its `201` creation response. Server-side diagnostics include the comment ID and the notification error status when available, without raw provider errors or response bodies.
+
+The notification service returns success only when SendGrid accepts every recipient's send. It reports accepted and failed counts for errors, using `502` for general upstream failures, `503` for explicit unavailability, `504` for timeouts, and `500` for recognized internal errors. Mixed failure categories produce `502` with a breakdown. These are notification results, not replacement HTTP responses for a saved comment.
+
+There is no retry queue. A timeout ends the wait without canceling an in-flight provider request, so an email may still be accepted afterward. SendGrid acceptance does not establish inbox receipt.
+
+After deployment, submit a new comment through the deployed endpoint, confirm that it is saved, and verify receipt of the notification at each configured administrator address. If an email does not arrive, check the Function logs, sender verification, API key permissions, and SendGrid email activity. Check spam folders as well. A successful comment response or SendGrid acceptance alone is not sufficient to verify receipt.
 
 ### Troubleshooting
 
