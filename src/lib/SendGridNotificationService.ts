@@ -24,6 +24,10 @@ type NotificationFailure = {
   plural: string
   action?: string
 }
+type NotificationFailureOutcome = {
+  failure: NotificationFailure
+  providerMessages: string[]
+}
 
 const internalFailure: NotificationFailure = {
   message: error500NotificationError,
@@ -88,6 +92,7 @@ const accountErrorSignals = [
   {
     statusCode: 403,
     message: "The from address does not match a verified Sender Identity",
+    allowExplanationSuffix: true,
     failure: sendingRefused,
   },
   {
@@ -99,6 +104,25 @@ const accountErrorSignals = [
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value)
+
+const getFullMessages = (body: unknown): string[] => {
+  if (typeof body === "string") return body.trim() ? [body] : []
+  if (!isRecord(body)) return []
+  if (Array.isArray(body.errors)) {
+    const messages = body.errors.flatMap((entry: unknown) =>
+      isRecord(entry) &&
+      typeof entry.message === "string" &&
+      entry.message.trim()
+        ? [entry.message]
+        : []
+    )
+    if (messages.length > 0) return messages
+  }
+  const message = [body.message, body.error, body.errors].find(
+    value => typeof value === "string" && value.trim()
+  )
+  return typeof message === "string" ? [message] : []
+}
 
 const recognizeAccountFailure = (
   statusCode: unknown,
@@ -112,7 +136,12 @@ const recognizeAccountFailure = (
     if (!isRecord(entry) || typeof entry.message !== "string") return undefined
     const message = entry.message.trim().replace(/\.$/, "")
     return accountErrorSignals.find(
-      signal => signal.statusCode === statusCode && signal.message === message
+      signal =>
+        signal.statusCode === statusCode &&
+        (signal.message === message ||
+          (signal.allowExplanationSuffix === true &&
+            message.startsWith(signal.message) &&
+            /^\.\s/.test(message.slice(signal.message.length))))
     )?.failure
   })
   const first = failures[0]
@@ -124,24 +153,49 @@ const recognizeAccountFailure = (
 const classifyResponse = (
   statusCode?: number,
   body?: unknown
-): NotificationFailure | undefined => {
+): NotificationFailureOutcome | undefined => {
   if (statusCode === 202) return undefined
-  if (statusCode === 503) return unavailableFailure
-  if (statusCode === 504) return timeoutFailure
-  return recognizeAccountFailure(statusCode, body) ?? upstreamFailure
+  const failure =
+    recognizeAvailabilityFailure(statusCode) ??
+    recognizeAccountFailure(statusCode, body) ??
+    upstreamFailure
+  return { failure, providerMessages: getFullMessages(body) }
 }
 
-const classifyError = (error: unknown): NotificationFailure => {
-  const code = isRecord(error) ? error.code : undefined
+const recognizeAvailabilityFailure = (
+  code: unknown
+): NotificationFailure | undefined => {
+  if (code === 503) return unavailableFailure
   if (code === 504 || code === "ECONNABORTED" || code === "ETIMEDOUT")
     return timeoutFailure
-  if (code === 503) return unavailableFailure
-  if (error instanceof TypeError) return internalFailure
+  return undefined
+}
+
+const classifyError = (error: unknown): NotificationFailureOutcome => {
+  const code = isRecord(error) ? error.code : undefined
   const body =
     isRecord(error) && isRecord(error.response)
       ? error.response.body
       : undefined
-  return recognizeAccountFailure(code, body) ?? upstreamFailure
+  const failure =
+    recognizeAvailabilityFailure(code) ??
+    (error instanceof TypeError
+      ? internalFailure
+      : (recognizeAccountFailure(code, body) ?? upstreamFailure))
+  const providerMessages = getFullMessages(body)
+  const fallbackMessage =
+    typeof error === "string"
+      ? error
+      : isRecord(error)
+        ? error.message
+        : undefined
+  return {
+    failure,
+    providerMessages:
+      providerMessages.length > 0
+        ? providerMessages
+        : getFullMessages(fallbackMessage),
+  }
 }
 
 export class SendGridNotificationService extends AbstractNotificationService {
@@ -203,7 +257,7 @@ export class SendGridNotificationService extends AbstractNotificationService {
 
   private sendNotification = async (
     message: MailDataRequired
-  ): Promise<NotificationFailure | undefined> => {
+  ): Promise<NotificationFailureOutcome | undefined> => {
     let timeout: ReturnType<typeof setTimeout> | undefined
     try {
       // Each recipient has its own deadline, so one failure cannot end other sends.
@@ -213,9 +267,9 @@ export class SendGridNotificationService extends AbstractNotificationService {
           const [response] = await this._mailService.send(message)
           return classifyResponse(response?.statusCode, response?.body)
         })(),
-        new Promise<NotificationFailure>(resolve => {
+        new Promise<NotificationFailureOutcome>(resolve => {
           timeout = setTimeout(
-            () => resolve(timeoutFailure),
+            () => resolve({ failure: timeoutFailure, providerMessages: [] }),
             notificationTimeoutMs
           )
         }),
@@ -247,7 +301,7 @@ export class SendGridNotificationService extends AbstractNotificationService {
     const failures = failureCategories
       .map(category => ({
         ...category,
-        count: outcomes.filter(outcome => outcome === category).length,
+        count: outcomes.filter(outcome => outcome?.failure === category).length,
       }))
       .filter(category => category.count > 0)
     const message =
@@ -260,15 +314,26 @@ export class SendGridNotificationService extends AbstractNotificationService {
     const actions = failures
       .flatMap(({ action }) => (action ? [action] : []))
       .join(" ")
-    const result: Error = {
+    const summary: Error = {
       ...message,
       body: `${message.body}: ${accepted} accepted, ${failed} failed${breakdown}.${actions ? ` ${actions}` : ""}`,
     }
 
     if (actions) {
       // This body contains only fixed messages and counts, never provider payloads.
-      console.error("Notification provider account error", result)
+      console.error("Notification provider account error", summary)
     }
-    return result
+
+    // Preserve messages independently of recognition. Only message text is returned,
+    // not SDK headers, configuration, or other provider response fields.
+    const providerMessages = [
+      ...new Set(outcomes.flatMap(outcome => outcome?.providerMessages ?? [])),
+    ].sort()
+    return providerMessages.length > 0
+      ? {
+          ...summary,
+          body: `${summary.body} Provider details: ${providerMessages.join(" | ")}`,
+        }
+      : summary
   }
 }

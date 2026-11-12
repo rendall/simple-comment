@@ -56,6 +56,18 @@ const allowanceFailure = {
   explanation: "Notification provider sending allowance exhausted",
   action: "Check usage limits and billing.",
 }
+// Full provider response, including the explanatory suffix and documentation URL:
+// https://help.twilio.com/articles/47453602998171
+const fullUnverifiedSenderFailure = {
+  ...permissionFailure,
+  name: "unverified sender identity with the full provider message",
+  message: [
+    "The from address does not match a verified Sender Identity.",
+    "Mail cannot be sent until this error is resolved.",
+    "Visit https://sendgrid.com/docs/for-developers/sending-email/sender-identity/",
+    "to see the Sender Identity requirements",
+  ].join(" "),
+}
 
 // Representative Web API messages documented by the provider:
 // https://help.twilio.com/articles/47452217511195
@@ -74,6 +86,7 @@ const accountFailures = [
     name: "unverified sender identity",
     message: "The from address does not match a verified Sender Identity",
   },
+  fullUnverifiedSenderFailure,
   allowanceFailure,
 ]
 type AccountFailure = (typeof accountFailures)[number]
@@ -173,7 +186,7 @@ describe("notification provider account errors", () => {
 
             expect(result).toEqual({
               statusCode: 502,
-              body: `${failure.explanation}: ${acceptedCount} accepted, ${2 - acceptedCount} failed. ${failure.action}`,
+              body: `${failure.explanation}: ${acceptedCount} accepted, ${2 - acceptedCount} failed. ${failure.action} Provider details: ${failure.message}`,
             })
             expect(send).toHaveBeenCalledTimes(2)
             expectNoPrivateDetails(result)
@@ -187,17 +200,20 @@ describe("notification provider account errors", () => {
           name: "unknown authorization response",
           statusCode: 401,
           body: responseBody("Unrecognized authorization rejection"),
+          fullMessage: "Unrecognized authorization rejection",
         },
         {
           name: "unrecognized payment response",
           statusCode: 402,
           body: responseBody("Payment Required"),
+          fullMessage: "Payment Required",
         },
         { name: "missing error body", statusCode: 401, body: undefined },
         {
           name: "malformed errors list",
           statusCode: 401,
           body: { errors: allowanceFailure.message },
+          fullMessage: allowanceFailure.message,
         },
         {
           name: "non-string provider message",
@@ -208,10 +224,40 @@ describe("notification provider account errors", () => {
           name: "allowance wording with an unrelated status",
           statusCode: 400,
           body: responseBody(allowanceFailure.message),
+          fullMessage: allowanceFailure.message,
+        },
+        {
+          name: "sender-verification wording with an unrelated status",
+          statusCode: 401,
+          body: responseBody(fullUnverifiedSenderFailure.message),
+          fullMessage: fullUnverifiedSenderFailure.message,
+        },
+        {
+          name: "similar sender-verification wording without a sentence boundary",
+          statusCode: 403,
+          body: responseBody(
+            "The from address does not match a verified Sender IdentityMismatch. Another error."
+          ),
+          fullMessage:
+            "The from address does not match a verified Sender IdentityMismatch. Another error.",
+        },
+        {
+          name: "unrelated text before sender-verification wording",
+          statusCode: 403,
+          body: responseBody(
+            `Unrelated error. ${fullUnverifiedSenderFailure.message}`
+          ),
+          fullMessage: `Unrelated error. ${fullUnverifiedSenderFailure.message}`,
+        },
+        {
+          name: "unrecognized plain-text response",
+          statusCode: 400,
+          body: "A full provider error outside the JSON error schema",
+          fullMessage: "A full provider error outside the JSON error schema",
         },
       ])(
-        "keeps $name generic without guessing an account diagnosis",
-        async ({ statusCode, body }) => {
+        "keeps $name generic while preserving the available full message",
+        async ({ statusCode, body, fullMessage }) => {
           if (delivery === "response")
             send.mockResolvedValue(responseFor(statusCode, body))
           else send.mockRejectedValue(rejectionFor(statusCode, body))
@@ -220,9 +266,12 @@ describe("notification provider account errors", () => {
             "Synthetic comment notification"
           )
 
+          const detail =
+            fullMessage ??
+            (delivery === "rejection" ? "Provider request failed" : undefined)
           expect(result).toEqual({
             statusCode: 502,
-            body: "Notification failed: 0 accepted, 2 failed.",
+            body: `Notification failed: 0 accepted, 2 failed.${detail ? ` Provider details: ${detail}` : ""}`,
           })
           expectNoPrivateDetails(result)
           expectNoPrivateDetails(errorLog.mock.calls)
@@ -248,6 +297,28 @@ describe("notification provider account errors", () => {
     expect(credentialResult.body).toContain(authFailure.action)
     expect(allowanceResult.body).toContain(allowanceFailure.action)
     expect(allowanceResult.body).not.toBe(credentialResult.body)
+  })
+
+  it("returns a general error with all full messages when provider diagnoses conflict", async () => {
+    send.mockRejectedValue(
+      rejectionFor(401, {
+        errors: [
+          { message: authFailure.message },
+          { message: allowanceFailure.message },
+        ],
+      })
+    )
+
+    const result = await service.notifyModerators(
+      "Synthetic comment notification"
+    )
+
+    expect(result).toEqual({
+      statusCode: 502,
+      body: `Notification failed: 0 accepted, 2 failed. Provider details: ${allowanceFailure.message} | ${authFailure.message}`,
+    })
+    expectNoPrivateDetails(result)
+    expect(errorLog).not.toHaveBeenCalled()
   })
 
   it("waits for mixed account failures and reports both explanations independently of completion order", async () => {
@@ -336,7 +407,12 @@ describe("notification provider account errors", () => {
       }
     })
 
-    it.each([authFailure, permissionFailure, allowanceFailure])(
+    it.each([
+      authFailure,
+      permissionFailure,
+      allowanceFailure,
+      fullUnverifiedSenderFailure,
+    ])(
       "logs safe operator guidance for $name while preserving the saved comment and 201",
       async (failure: AccountFailure) => {
         send.mockRejectedValue(
