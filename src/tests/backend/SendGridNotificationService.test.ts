@@ -76,8 +76,8 @@ describe("SendGridNotificationService", () => {
       text: body,
     })
     expect(result).toEqual({
-      statusCode: mockErrorResponse.statusCode,
-      body: JSON.stringify(mockErrorResponse.body),
+      statusCode: 502,
+      body: "Notification failed: 0 accepted, 2 failed.",
     })
   })
 
@@ -276,7 +276,7 @@ describe("SendGridNotificationService", () => {
         if (allAccepted) {
           expect(outcome.result.statusCode).toBe(202)
         } else {
-          // Use the existing Error contract; aggregate wording is still undecided.
+          // Check the shared contract; classified-failure tests check exact results.
           expect(outcome.result.statusCode).toBeGreaterThanOrEqual(400)
           expect(outcome.result.statusCode).toBeLessThan(600)
           expect(outcome.result.body).toEqual(expect.any(String))
@@ -443,6 +443,297 @@ describe("SendGridNotificationService", () => {
       expectResult(firstOrder, false)
       expectResult(reverseOrder, false)
       expect(reverseOrder).toEqual(firstOrder)
+    })
+
+    describe("classified failures and five-second timeout", () => {
+      const acceptedResponse: SendResponse = [
+        { statusCode: 202, body: {}, headers: undefined },
+        {},
+      ]
+      const providerError = (code: number | string) =>
+        Object.assign(new globalThis.Error("Synthetic provider detail"), {
+          code,
+          response: {
+            headers: { "x-provider-detail": "Synthetic private header" },
+            body: { errors: [{ message: "Synthetic provider detail" }] },
+          },
+        })
+
+      const failures = [
+        {
+          name: "bad request",
+          code: 400,
+          statusCode: 502,
+          message: "Notification failed",
+        },
+        {
+          name: "upstream server error",
+          code: 500,
+          statusCode: 502,
+          message: "Notification failed",
+        },
+        {
+          name: "service unavailable",
+          code: 503,
+          statusCode: 503,
+          message: "Notification service unavailable",
+        },
+        {
+          name: "upstream gateway timeout",
+          code: 504,
+          statusCode: 504,
+          message: "Notification timed out",
+        },
+      ]
+
+      beforeEach(() => {
+        jest.useFakeTimers()
+      })
+
+      afterEach(() => {
+        jest.clearAllTimers()
+        jest.useRealTimers()
+      })
+
+      describe.each(["response", "rejection"] as const)(
+        "provider failure reported through %s",
+        delivery => {
+          describe.each([0, 1])("with %i accepted sends", accepted => {
+            it.each(failures)(
+              "normalizes $name and includes counts",
+              async failure => {
+                const failedRecipients = 2 - accepted
+                const sendFailure = () => {
+                  if (delivery === "rejection")
+                    return Promise.reject(providerError(failure.code))
+                  return Promise.resolve<SendResponse>([
+                    {
+                      statusCode: failure.code,
+                      body: { error: "Synthetic provider detail" },
+                      headers: undefined,
+                    },
+                    {},
+                  ])
+                }
+                if (accepted === 1)
+                  mailServiceMock.send.mockResolvedValueOnce(acceptedResponse)
+                mailServiceMock.send.mockImplementation(sendFailure)
+
+                const observed = observeCompletion(
+                  sendGridNotificationService.notifyModerators("Test message")
+                )
+                const outcome = await observed.completion
+
+                expect(mailServiceMock.send).toHaveBeenCalledTimes(2)
+                expect(outcome).toEqual({
+                  kind: "fulfilled",
+                  result: {
+                    statusCode: failure.statusCode,
+                    body: `${failure.message}: ${accepted} accepted, ${failedRecipients} failed.`,
+                  },
+                })
+              }
+            )
+          })
+        }
+      )
+
+      it.each(["ECONNABORTED", "ETIMEDOUT"])(
+        "normalizes the SDK timeout code %s to 504",
+        async code => {
+          mailServiceMock.send.mockRejectedValue(providerError(code))
+          const observed = observeCompletion(
+            sendGridNotificationService.notifyModerators("Test message")
+          )
+
+          expect(await observed.completion).toEqual({
+            kind: "fulfilled",
+            result: {
+              statusCode: 504,
+              body: "Notification timed out: 0 accepted, 2 failed.",
+            },
+          })
+        }
+      )
+
+      it("normalizes an unclassified SDK rejection to 502", async () => {
+        mailServiceMock.send.mockRejectedValue(
+          new globalThis.Error("Synthetic provider detail")
+        )
+        const observed = observeCompletion(
+          sendGridNotificationService.notifyModerators("Test message")
+        )
+
+        expect(await observed.completion).toEqual({
+          kind: "fulfilled",
+          result: {
+            statusCode: 502,
+            body: "Notification failed: 0 accepted, 2 failed.",
+          },
+        })
+      })
+
+      it("normalizes a local TypeError to 500 while attempting every recipient", async () => {
+        mailServiceMock.send.mockImplementation(() => {
+          throw new TypeError("Synthetic internal implementation detail")
+        })
+        const observed = observeCompletion(
+          sendGridNotificationService.notifyModerators("Test message")
+        )
+
+        expect(await observed.completion).toEqual({
+          kind: "fulfilled",
+          result: {
+            statusCode: 500,
+            body: "Internal notification error: 0 accepted, 2 failed.",
+          },
+        })
+        expect(mailServiceMock.send).toHaveBeenCalledTimes(2)
+      })
+
+      describe.each([0, 1])(
+        "mixed failures, recipient %i finishes first",
+        firstRecipient => {
+          it.each([
+            {
+              codes: [400, 503],
+              breakdown: "1 upstream failure, 1 unavailable",
+            },
+            { codes: [503, 504], breakdown: "1 unavailable, 1 timed out" },
+          ])(
+            "summarizes $codes deterministically as 502",
+            async ({ codes, breakdown }) => {
+              const sends = [deferredSend(), deferredSend()]
+              sends.forEach(send =>
+                mailServiceMock.send.mockReturnValueOnce(send.promise)
+              )
+              const observed = observeCompletion(
+                sendGridNotificationService.notifyModerators("Test message")
+              )
+
+              sends[firstRecipient].reject(providerError(codes[firstRecipient]))
+              await jest.advanceTimersByTimeAsync(0)
+              const settledBeforeLast = observed.isSettled()
+              sends[1 - firstRecipient].reject(
+                providerError(codes[1 - firstRecipient])
+              )
+              const outcome = await observed.completion
+
+              expect(outcome).toEqual({
+                kind: "fulfilled",
+                result: {
+                  statusCode: 502,
+                  body: `Notification failed: 0 accepted, 2 failed (${breakdown}).`,
+                },
+              })
+              expect(settledBeforeLast).toBe(false)
+            }
+          )
+        }
+      )
+
+      it.each(["accepted", "rejected"] as const)(
+        "returns 504 at five seconds even if outstanding sends are later %s",
+        async lateOutcome => {
+          const sends = [deferredSend(), deferredSend()]
+          sends.forEach(send =>
+            mailServiceMock.send.mockReturnValueOnce(send.promise)
+          )
+          const observed = observeCompletion(
+            sendGridNotificationService.notifyModerators("Test message")
+          )
+
+          await jest.advanceTimersByTimeAsync(4999)
+          const settledBeforeDeadline = observed.isSettled()
+          await jest.advanceTimersByTimeAsync(1)
+          const settledAtDeadline = observed.isSettled()
+
+          // Settle late work even against the current implementation with no timeout.
+          sends.forEach(send => settleSend(send, lateOutcome))
+          const outcome = await observed.completion
+
+          expect(settledBeforeDeadline).toBe(false)
+          expect(settledAtDeadline).toBe(true)
+          expect(outcome).toEqual({
+            kind: "fulfilled",
+            result: {
+              statusCode: 504,
+              body: "Notification timed out: 0 accepted, 2 failed.",
+            },
+          })
+        }
+      )
+
+      it("counts accepted recipients while timing out the remaining send", async () => {
+        const send = deferredSend()
+        mailServiceMock.send
+          .mockResolvedValueOnce(acceptedResponse)
+          .mockReturnValueOnce(send.promise)
+        const observed = observeCompletion(
+          sendGridNotificationService.notifyModerators("Test message")
+        )
+
+        await jest.advanceTimersByTimeAsync(4999)
+        const settledBeforeDeadline = observed.isSettled()
+        await jest.advanceTimersByTimeAsync(1)
+        const settledAtDeadline = observed.isSettled()
+        settleSend(send, "accepted")
+        const outcome = await observed.completion
+
+        expect(settledBeforeDeadline).toBe(false)
+        expect(settledAtDeadline).toBe(true)
+        expect(outcome).toEqual({
+          kind: "fulfilled",
+          result: {
+            statusCode: 504,
+            body: "Notification timed out: 1 accepted, 1 failed.",
+          },
+        })
+      })
+
+      it("combines unavailability with a five-second timeout as a mixed 502", async () => {
+        const send = deferredSend()
+        mailServiceMock.send
+          .mockRejectedValueOnce(providerError(503))
+          .mockReturnValueOnce(send.promise)
+        const observed = observeCompletion(
+          sendGridNotificationService.notifyModerators("Test message")
+        )
+
+        await jest.advanceTimersByTimeAsync(4999)
+        const settledBeforeDeadline = observed.isSettled()
+        await jest.advanceTimersByTimeAsync(1)
+        const settledAtDeadline = observed.isSettled()
+        settleSend(send, "accepted")
+        const outcome = await observed.completion
+
+        expect(settledBeforeDeadline).toBe(false)
+        expect(settledAtDeadline).toBe(true)
+        expect(outcome).toEqual({
+          kind: "fulfilled",
+          result: {
+            statusCode: 502,
+            body: "Notification failed: 0 accepted, 2 failed (1 unavailable, 1 timed out).",
+          },
+        })
+      })
+
+      it("accepts sends that complete before five seconds and clears their deadlines", async () => {
+        const sends = [deferredSend(), deferredSend()]
+        sends.forEach(send =>
+          mailServiceMock.send.mockReturnValueOnce(send.promise)
+        )
+        const observed = observeCompletion(
+          sendGridNotificationService.notifyModerators("Test message")
+        )
+
+        await jest.advanceTimersByTimeAsync(4999)
+        sends.forEach(send => settleSend(send, "accepted"))
+        const outcome = await observed.completion
+
+        expectResult(outcome, true)
+        expect(jest.getTimerCount()).toBe(0)
+      })
     })
   })
 })
