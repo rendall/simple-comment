@@ -136,6 +136,8 @@ const notificationProviders = [
   },
 ] as const
 
+const legacySendGridApiKeyName = "NOTIFICATION_SERVICE_API_KEY"
+
 const getRequiredNotificationSetting = (
   source: NodeJS.ProcessEnv,
   key: string
@@ -198,9 +200,19 @@ const getNotificationRecipients = (source: NodeJS.ProcessEnv): string[] => {
 export const getNotificationConfiguration = (
   source: NodeJS.ProcessEnv
 ): NotificationConfigurationResult => {
+  const hasLegacySendGridKey = source[legacySendGridApiKeyName] !== undefined
+  if (hasLegacySendGridKey && source.SENDGRID_API_KEY !== undefined) {
+    throw new EnvContractError(
+      legacySendGridApiKeyName,
+      "Both SENDGRID_API_KEY and NOTIFICATION_SERVICE_API_KEY are defined. Remove NOTIFICATION_SERVICE_API_KEY and keep SENDGRID_API_KEY."
+    )
+  }
+
   const configuredProviders = notificationProviders.filter(
-    ({ apiKeyName, senderName }) =>
-      source[apiKeyName] !== undefined || source[senderName] !== undefined
+    ({ provider, apiKeyName, senderName }) =>
+      source[apiKeyName] !== undefined ||
+      source[senderName] !== undefined ||
+      (provider === "sendgrid" && hasLegacySendGridKey)
   )
 
   if (configuredProviders.length > 1) {
@@ -215,10 +227,15 @@ export const getNotificationConfiguration = (
     return { configuration: undefined, warnings: [] }
   }
 
+  const apiKeyName =
+    selected.provider === "sendgrid" && hasLegacySendGridKey
+      ? legacySendGridApiKeyName
+      : selected.apiKeyName
+
   return {
     configuration: {
       provider: selected.provider,
-      apiKey: getRequiredNotificationSetting(source, selected.apiKeyName),
+      apiKey: getRequiredNotificationSetting(source, apiKeyName),
       from: getNotificationSender(
         source,
         selected.senderName,
@@ -226,6 +243,10 @@ export const getNotificationConfiguration = (
       ),
       moderatorContactEmails: getNotificationRecipients(source),
     },
-    warnings: [],
+    warnings: hasLegacySendGridKey
+      ? [
+          "NOTIFICATION_SERVICE_API_KEY is deprecated. Use SENDGRID_API_KEY instead.",
+        ]
+      : [],
   }
 }

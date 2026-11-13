@@ -391,17 +391,34 @@ describe("notification configuration", () => {
       )
     })
 
-    it.each(["same", "different", "empty"])(
-      "rejects both key names with %s values and says to remove the old name",
-      values => {
-        const newKey =
-          values === "same"
-            ? legacy.NOTIFICATION_SERVICE_API_KEY
-            : values === "empty"
-              ? ""
-              : sendgrid.SENDGRID_API_KEY
+    it.each([
+      {
+        name: "same",
+        oldKey: legacy.NOTIFICATION_SERVICE_API_KEY,
+        newKey: legacy.NOTIFICATION_SERVICE_API_KEY,
+      },
+      {
+        name: "different",
+        oldKey: legacy.NOTIFICATION_SERVICE_API_KEY,
+        newKey: sendgrid.SENDGRID_API_KEY,
+      },
+      {
+        name: "empty new key",
+        oldKey: legacy.NOTIFICATION_SERVICE_API_KEY,
+        newKey: "",
+      },
+      { name: "empty old key", oldKey: "", newKey: sendgrid.SENDGRID_API_KEY },
+      { name: "both empty", oldKey: "", newKey: "" },
+    ])(
+      "rejects both key names with $name values and says to remove the old name",
+      ({ oldKey, newKey }) => {
         const failure = expectConfigurationError(
-          { ...contact, ...legacy, SENDGRID_API_KEY: newKey },
+          {
+            ...contact,
+            ...legacy,
+            NOTIFICATION_SERVICE_API_KEY: oldKey,
+            SENDGRID_API_KEY: newKey,
+          },
           ["NOTIFICATION_SERVICE_API_KEY", "SENDGRID_API_KEY"]
         )
         expect(failure.message).toMatch(
@@ -410,8 +427,31 @@ describe("notification configuration", () => {
       }
     )
 
-    it("rejects Resend alongside a complete legacy SendGrid setup", () => {
-      expectConfigurationError({ ...contact, ...resend, ...legacy })
+    it.each([
+      { name: "complete legacy settings", settings: legacy },
+      {
+        name: "only a legacy key",
+        settings: {
+          NOTIFICATION_SERVICE_API_KEY: legacy.NOTIFICATION_SERVICE_API_KEY,
+        },
+      },
+      {
+        name: "an empty legacy key",
+        settings: { NOTIFICATION_SERVICE_API_KEY: "" },
+      },
+    ])("rejects Resend alongside $name", ({ settings }) => {
+      expectConfigurationError({ ...contact, ...resend, ...settings })
+    })
+
+    it("does not rewrite or mutate legacy settings", () => {
+      const source = Object.freeze({ ...contact, ...legacy })
+      const snapshot = { ...source }
+      expect(getNotificationConfiguration(source).configuration).toEqual({
+        ...providerCases[1].expected,
+        apiKey: legacy.NOTIFICATION_SERVICE_API_KEY,
+      })
+      expect(source).toEqual(snapshot)
+      expect(source).not.toHaveProperty("SENDGRID_API_KEY")
     })
 
     it("does not use an old SendGrid key as a Resend credential", () => {
