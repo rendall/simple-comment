@@ -263,6 +263,7 @@ describe("notification configuration", () => {
         "missing-at-sign",
         "@example.com",
         "sender@",
+        "sender@example.com\n",
         "sender@example.com\r\nBcc: hidden@example.com",
       ])("rejects a malformed sender (%s)", from => {
         expectConfigurationError(
@@ -314,6 +315,7 @@ describe("notification configuration", () => {
         "Alice <alice@example.com>",
         "<alice@example.com>",
         "alice@example.com,Bob <bob@example.com>",
+        "alice@example.com\n",
         "alice@example.com\r\nBcc: hidden@example.com",
       ])("rejects an invalid moderator list (%s)", value => {
         expectConfigurationError(
@@ -325,8 +327,10 @@ describe("notification configuration", () => {
   )
 
   describe("Resend display names", () => {
-    it("accepts a single sender with a display name", () => {
-      const from = "Simple Comment <notifications@example.com>"
+    it.each([
+      "Simple Comment <notifications@example.com>",
+      '"Doe, Jane" <notifications@example.com>',
+    ])("accepts a single sender with a display name (%s)", from => {
       expect(
         getNotificationConfiguration({
           ...contact,
@@ -343,9 +347,11 @@ describe("notification configuration", () => {
       "alice@example.com,bob@example.com",
       "Alice <alice@example.com>,Bob <bob@example.com>",
       "Alice <alice@example.com>,bob@example.com",
+      "alice@example.com,Bob <bob@example.com>",
       "Simple Comment <notifications@example.com",
       "Simple Comment notifications@example.com>",
       "Simple Comment <>",
+      " <notifications@example.com>",
     ])("rejects multiple or malformed senders (%s)", from => {
       expectConfigurationError({ ...contact, ...resend, RESEND_FROM: from }, [
         "RESEND_FROM",

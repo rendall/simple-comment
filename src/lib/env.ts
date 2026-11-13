@@ -1,4 +1,5 @@
 import { config as dotenvConfig } from "dotenv"
+import { validateEmail } from "./shared-utilities"
 
 if (process.env.NODE_ENV !== "production") {
   dotenvConfig()
@@ -149,6 +150,51 @@ const getRequiredNotificationSetting = (
   return value
 }
 
+const getNotificationSender = (
+  source: NodeJS.ProcessEnv,
+  key: string,
+  allowDisplayName: boolean
+): string => {
+  const sender = getRequiredNotificationSetting(source, key)
+  const displayAddress = allowDisplayName
+    ? sender.match(/^("[^"<>\r\n]+"|[^"<>,;\r\n]+)\s*<([^<>\s]+)>$/)
+    : null
+  // Use only the validity flag; validateEmail's failure reason includes the value.
+  const validAddress =
+    validateEmail(sender).isValid ||
+    Boolean(
+      displayAddress &&
+      displayAddress[1].trim() &&
+      validateEmail(displayAddress[2]).isValid
+    )
+
+  if (/[\r\n]/.test(sender) || !validAddress) {
+    throw new EnvContractError(
+      key,
+      `${key} must contain one email address${allowDisplayName ? ", optionally with a display name in the form Name <address>" : ""}. Lists and line breaks are not allowed.`
+    )
+  }
+  return sender
+}
+
+const getNotificationRecipients = (source: NodeJS.ProcessEnv): string[] => {
+  const key = "SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL"
+  const rawRecipients = getRequiredNotificationSetting(source, key)
+  const recipients = getOptionalModeratorContactEmails(source) ?? []
+
+  if (
+    /[\r\n]/.test(rawRecipients) ||
+    recipients.length === 0 ||
+    recipients.some(email => !validateEmail(email).isValid)
+  ) {
+    throw new EnvContractError(
+      key,
+      `${key} must contain at least one valid plain email address. Separate addresses with commas; display names, angle brackets, and line breaks are not allowed.`
+    )
+  }
+  return recipients
+}
+
 export const getNotificationConfiguration = (
   source: NodeJS.ProcessEnv
 ): NotificationConfigurationResult => {
@@ -173,8 +219,12 @@ export const getNotificationConfiguration = (
     configuration: {
       provider: selected.provider,
       apiKey: getRequiredNotificationSetting(source, selected.apiKeyName),
-      from: getRequiredNotificationSetting(source, selected.senderName),
-      moderatorContactEmails: getOptionalModeratorContactEmails(source) ?? [],
+      from: getNotificationSender(
+        source,
+        selected.senderName,
+        selected.provider === "resend"
+      ),
+      moderatorContactEmails: getNotificationRecipients(source),
     },
     warnings: [],
   }
