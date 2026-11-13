@@ -109,3 +109,73 @@ export const getOptionalModeratorContactEmails = (
     .map(email => email.trim())
     .filter(email => email.length > 0)
 }
+
+export type NotificationConfiguration = {
+  provider: "resend" | "sendgrid"
+  apiKey: string
+  from: string
+  moderatorContactEmails: string[]
+}
+
+export type NotificationConfigurationResult = {
+  configuration: NotificationConfiguration | undefined
+  warnings: string[]
+}
+
+const notificationProviders = [
+  {
+    provider: "resend",
+    apiKeyName: "RESEND_API_KEY",
+    senderName: "RESEND_FROM",
+  },
+  {
+    provider: "sendgrid",
+    apiKeyName: "SENDGRID_API_KEY",
+    senderName: "SENDGRID_VERIFIED_SENDER",
+  },
+] as const
+
+const getRequiredNotificationSetting = (
+  source: NodeJS.ProcessEnv,
+  key: string
+): string => {
+  const value = source[key]
+  if (value === undefined || value.trim().length === 0) {
+    throw new EnvContractError(
+      key,
+      `${key} is required and must not be empty when configuring notifications`
+    )
+  }
+  return value
+}
+
+export const getNotificationConfiguration = (
+  source: NodeJS.ProcessEnv
+): NotificationConfigurationResult => {
+  const configuredProviders = notificationProviders.filter(
+    ({ apiKeyName, senderName }) =>
+      source[apiKeyName] !== undefined || source[senderName] !== undefined
+  )
+
+  if (configuredProviders.length > 1) {
+    throw new EnvContractError(
+      "NOTIFICATION_PROVIDERS",
+      "Multiple notification providers are configured: Resend and SendGrid. Configure only one provider."
+    )
+  }
+
+  const selected = configuredProviders[0]
+  if (selected === undefined) {
+    return { configuration: undefined, warnings: [] }
+  }
+
+  return {
+    configuration: {
+      provider: selected.provider,
+      apiKey: getRequiredNotificationSetting(source, selected.apiKeyName),
+      from: getRequiredNotificationSetting(source, selected.senderName),
+      moderatorContactEmails: getOptionalModeratorContactEmails(source) ?? [],
+    },
+    warnings: [],
+  }
+}
