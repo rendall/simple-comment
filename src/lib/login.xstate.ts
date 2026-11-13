@@ -116,7 +116,10 @@ export const loginMachine = createMachine<
       error: {
         on: {
           "*": "idle",
+          GUEST: { target: "guestLoggingIn", actions: "assignGuest" },
+          LOGIN: "loggingIn",
           LOGOUT: "loggingOut",
+          SIGNUP: "signingUp",
         },
       },
     },

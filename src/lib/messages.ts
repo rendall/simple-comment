@@ -74,6 +74,34 @@ export const error500UpdateError: Error = {
   statusCode: 500,
   body: "Update error",
 }
+export const error500NotificationError: Error = {
+  statusCode: 500,
+  body: "Internal notification error",
+}
+export const error502NotificationFailed: Error = {
+  statusCode: 502,
+  body: "Notification failed",
+}
+export const error502NotificationAuthenticationFailed: Error = {
+  statusCode: 502,
+  body: "Notification provider authentication failed",
+}
+export const error502NotificationSendingRefused: Error = {
+  statusCode: 502,
+  body: "Notification provider refused sending",
+}
+export const error502NotificationAllowanceExceeded: Error = {
+  statusCode: 502,
+  body: "Notification provider sending allowance exhausted",
+}
+export const error503NotificationUnavailable: Error = {
+  statusCode: 503,
+  body: "Notification service unavailable",
+}
+export const error504NotificationTimeout: Error = {
+  statusCode: 504,
+  body: "Notification timed out",
+}
 export const success200OK: Success = { statusCode: 200, body: "OK" }
 
 export const success201CommentCreated: Success = {

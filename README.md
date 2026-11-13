@@ -8,7 +8,7 @@ See the demo: <https://simple-comment.netlify.app>
 
 ## Status
 
-_NB:_ Moderation tools are not yet adequate. There is no notification when a user has posted a comment, nor any way to hold it in moderation before approval. If you like this project and would like to see it developed further on a specific timeline, contact me. Otherwise, this project is still on the road, but on the slow road.
+_NB:_ Moderation tools are not yet adequate. There is not yet a way to hold comments in moderation before approval. If you like this project and would like to see it developed further on a specific timeline, contact me. Otherwise, this project is still on the road, but on the slow road.
 
 [![Netlify Status](https://api.netlify.com/api/v1/badges/fb816766-6f5b-4dff-9c27-3f5948ac9705/deploy-status)](https://app.netlify.com/sites/simple-comment/deploys)
 [![Open API 3.0 Validator](https://img.shields.io/swagger/valid/3.0?label=Open%20API%203.0%20spec&specUrl=https%3A%2F%2Fraw.githubusercontent.com%2Frendall%2Fsimple-comment%2Fmaster%2Fsrc%2Fschema%2Fsimple-comment-openapi3.json)](https://app.swaggerhub.com/apis/rendall-dev/simple-comment_api/1.0.0)
@@ -41,6 +41,7 @@ The minimum functionality is [up and running](https://simple-comment.netlify.app
 - Designed a beautiful badge!
   - [![Powered by Simple Comment](docs/simple-comment-badge.svg)](https://simple-comment.netlify.app)
 - Visitors can read and reply to comments
+- Optional administrator email notifications through SendGrid
 
 ### Top priority after MVP
 
@@ -48,7 +49,6 @@ The minimum functionality is [up and running](https://simple-comment.netlify.app
 - Moderator holds posts for approval
 - Spam prevention measures
 - Integration with 3rd party authentication
-- Email notification & integration
 - Framework-friendly frontends
 - Extensive helpful comments!
 - E2E tests
@@ -113,10 +113,9 @@ Follow these instructions. If anything is unclear, please [create a new issue](h
    - `ALLOW_ORIGIN`
    - `SIMPLE_COMMENT_MODERATOR_ID`
    - `SIMPLE_COMMENT_MODERATOR_PASSWORD`
-   - `SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL`
+   - `SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL` (one administrator contact address, or a comma-separated list of notification recipients)
    - Optional:
    - `IS_CROSS_SITE` (`true` only when API/client are on different sites; otherwise `false`)
-   - `NOTIFICATION_SERVICE_API_KEY` and `SENDGRID_VERIFIED_SENDER` must be set together when SendGrid notifications are enabled
 1. sign up for a free MongoDB Atlas account
    1. [Follow these instructions](docs/MONGODB_ATLAS.md)
    1. In `.env` add the proper `DB_CONNECTION_STRING`
@@ -134,6 +133,7 @@ Follow these instructions. If anything is unclear, please [create a new issue](h
       1. `<div id="simple-comment"></div>`
    1. Upload the `simple-comment.js` file to your website's script folder
 1. It should now be possible to leave and read comments on your website
+1. Optionally set up email notifications to the configured [moderator emails](#email-notifications). Follow the [notification guide](docs/NOTIFICATIONS.md) to configure Resend or SendGrid.
 
 ### Environment Contract (Backend/Functions Runtime)
 
@@ -147,15 +147,23 @@ Required variables:
 - `SIMPLE_COMMENT_MODERATOR_PASSWORD`
 - `SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL`
 
+`SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL` remains required when notifications are disabled. For notification delivery, the service splits comma-separated addresses, trims surrounding whitespace, and ignores empty entries. At least one recipient must remain when notifications are enabled. Recipients come from this configuration; they are not discovered from users with administrator privileges.
+
 Optional variables:
 
 - `IS_CROSS_SITE` (parsed as `true` only when the value is exactly `"true"`; all other values are treated as `false`)
-- `NOTIFICATION_SERVICE_API_KEY`
-- `SENDGRID_VERIFIED_SENDER`
+- `RESEND_API_KEY` and `RESEND_FROM` for Resend notifications
+- `SENDGRID_API_KEY` and `SENDGRID_VERIFIED_SENDER` for SendGrid notifications
 
-Notification pair rule:
+Configure only one email provider. Leave all provider settings unset to keep notifications off. An incomplete configuration, empty values, or settings for both providers produce an error. See the [notification guide](docs/NOTIFICATIONS.md) for examples and configuration rules.
 
-- `NOTIFICATION_SERVICE_API_KEY` and `SENDGRID_VERIFIED_SENDER` are a pair. If one is set, the other must also be set.
+### Email notifications
+
+Simple Comment can email your moderators when someone posts or edits a comment. Notifications are **off until you configure an email provider**.
+
+We recommend Resend for getting started, and SendGrid is also supported. Existing SendGrid installations can keep their current settings.
+
+See the [notification guide](docs/NOTIFICATIONS.md) for setup instructions, switching providers, turning notifications off, and troubleshooting.
 
 ### Troubleshooting
 

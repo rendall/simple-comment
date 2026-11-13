@@ -35,6 +35,7 @@ import {
   isDeleted,
   isDeletedComment,
   isEmail,
+  isError,
   isTokenClaim,
   isUser,
   normalizeAllowedOrigin,
@@ -622,22 +623,34 @@ export class MongodbService extends AbstractDbService {
           body: "Database insertion error",
         }
       }
-
-      if (this._notificationService) {
-        this._notificationService.notifyModerators(
-          `New comment posted by ${authUser.name} (${authUser.email})`
-        )
-      }
-
-      return {
-        ...success201CommentCreated,
-        body: { ...insertComment, user: adminSafeUser },
-      }
     } catch (e) {
       console.error(e)
       return authUser.isAdmin
         ? { ...error500UpdateError, body: toErrorBody(e) }
         : error500UpdateError
+    }
+
+    // Persistence succeeded; notification failure must not change the 201 response.
+    if (this._notificationService) {
+      try {
+        const notification = await this._notificationService.notifyModerators(
+          `New comment posted by ${authUser.name} (${authUser.email})`
+        )
+        if (notification && isError(notification)) {
+          console.error("Comment notification failed", {
+            commentId: id,
+            statusCode: notification.statusCode,
+          })
+        }
+      } catch {
+        // Raw provider errors can contain credentials, headers, and message bodies.
+        console.error("Comment notification failed", { commentId: id })
+      }
+    }
+
+    return {
+      ...success201CommentCreated,
+      body: { ...insertComment, user: adminSafeUser },
     }
   }
 

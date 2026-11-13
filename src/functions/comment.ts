@@ -6,6 +6,7 @@ import type {
   Comment,
 } from "../lib/simple-comment-types"
 import { MongodbService } from "../lib/MongodbService"
+import { SendGridNotificationService as NotificationService } from "../lib/SendGridNotificationService"
 import {
   error400BadRequest,
   error500InternalServerError,
@@ -29,7 +30,8 @@ const { dbConnectionString, databaseName } = getBackendEnv()
 
 const service: MongodbService = new MongodbService(
   dbConnectionString,
-  databaseName
+  databaseName,
+  NotificationService.createNotificationService()
 )
 
 const getAllowHeaders = (event: APIGatewayEvent) => {
