@@ -116,7 +116,6 @@ Follow these instructions. If anything is unclear, please [create a new issue](h
    - `SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL` (one administrator contact address, or a comma-separated list of notification recipients)
    - Optional:
    - `IS_CROSS_SITE` (`true` only when API/client are on different sites; otherwise `false`)
-   - `NOTIFICATION_SERVICE_API_KEY` and `SENDGRID_VERIFIED_SENDER` must be set together for [SendGrid notifications](#email-notifications-sendgrid)
 1. sign up for a free MongoDB Atlas account
    1. [Follow these instructions](docs/MONGODB_ATLAS.md)
    1. In `.env` add the proper `DB_CONNECTION_STRING`
@@ -134,6 +133,7 @@ Follow these instructions. If anything is unclear, please [create a new issue](h
       1. `<div id="simple-comment"></div>`
    1. Upload the `simple-comment.js` file to your website's script folder
 1. It should now be possible to leave and read comments on your website
+1. Optionally set up email notifications to the configured [moderator emails](#email-notifications). Follow the [notification guide](docs/NOTIFICATIONS.md) to configure Resend or SendGrid.
 
 ### Environment Contract (Backend/Functions Runtime)
 
@@ -152,42 +152,18 @@ Required variables:
 Optional variables:
 
 - `IS_CROSS_SITE` (parsed as `true` only when the value is exactly `"true"`; all other values are treated as `false`)
-- `NOTIFICATION_SERVICE_API_KEY`
-- `SENDGRID_VERIFIED_SENDER`
+- `RESEND_API_KEY` and `RESEND_FROM` for Resend notifications
+- `SENDGRID_API_KEY` and `SENDGRID_VERIFIED_SENDER` for SendGrid notifications
 
-Notification pair rule:
+Configure only one email provider. Leave all provider settings unset to keep notifications off. An incomplete configuration, empty values, or settings for both providers produce an error. See the [notification guide](docs/NOTIFICATIONS.md) for examples and configuration rules.
 
-- `NOTIFICATION_SERVICE_API_KEY` and `SENDGRID_VERIFIED_SENDER` are a pair. If one is set, the other must also be set.
+### Email notifications
 
-### Email notifications (SendGrid)
+Simple Comment can email your moderators when someone posts or edits a comment. Notifications are **off until you configure an email provider**.
 
-Email notifications are optional and disabled by default. To notify administrators when a new comment is saved, configure SendGrid in the backend runtime:
+We recommend Resend for getting started, and SendGrid is also supported. Existing SendGrid installations can keep their current settings.
 
-1. Create a SendGrid account and an [API key](https://www.twilio.com/docs/sendgrid/ui/account-and-settings/api-keys) with permission to use Mail Send. Store that key in `NOTIFICATION_SERVICE_API_KEY`.
-1. Configure a [verified sender identity](https://www.twilio.com/docs/sendgrid/for-developers/sending-email/sender-identity) in SendGrid. Set `SENDGRID_VERIFIED_SENDER` to the email address to use as the sender. SendGrid supports single-sender verification for testing and recommends domain authentication for production.
-1. Set `SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL` to the administrator address that should receive notifications. For multiple recipients, use a comma-separated list, such as `moderator@example.com,second-moderator@example.com`.
-1. Set these variables in the backend runtime: use `.env` for local development and the Netlify environment settings for deployed Functions. Keep the API key out of frontend scripts and source control. Redeploy the Functions after changing deployed configuration, or restart the local backend after editing `.env`.
-
-The two optional SendGrid settings control notification activation:
-
-| `NOTIFICATION_SERVICE_API_KEY` | `SENDGRID_VERIFIED_SENDER` | Behavior                                                                                       |
-| ------------------------------ | -------------------------- | ---------------------------------------------------------------------------------------------- |
-| Unset                          | Unset                      | Email notifications are disabled; commenting still works.                                      |
-| Set                            | Set                        | Email notifications are enabled for the configured recipients.                                 |
-| Set                            | Unset                      | The comment function fails initialization with an error naming `SENDGRID_VERIFIED_SENDER`.     |
-| Unset                          | Set                        | The comment function fails initialization with an error naming `NOTIFICATION_SERVICE_API_KEY`. |
-
-To disable notifications, remove both optional settings rather than leaving empty values. The moderator contact address alone does not enable SendGrid. Invalid credentials or an unverified sender can still cause sends to fail even when both settings are present.
-
-When enabled, each successfully saved new comment, including a reply, triggers a separate email to each configured recipient. Rejected comments and failed database insertions do not send email. Reading, editing, and deleting comments do not trigger notifications. The message has the subject `Simple Comment Notification` and identifies the comment author by name and email address; it does not include the comment text or a direct link to it.
-
-Recipient sends run concurrently. The comment request waits for every send to settle or reach its five-second deadline. Notification failures preserve the saved comment and its `201` creation response. Server-side diagnostics include the comment ID and the notification error status when available, without raw provider errors or response bodies.
-
-The notification service returns success only when SendGrid accepts every recipient's send. It reports accepted and failed counts for errors, using `502` for general upstream failures, `503` for explicit unavailability, `504` for timeouts, and `500` for recognized internal errors. Mixed failure categories produce `502` with a breakdown. These are notification results, not replacement HTTP responses for a saved comment.
-
-There is no retry queue. A timeout ends the wait without canceling an in-flight provider request, so an email may still be accepted afterward. SendGrid acceptance does not establish inbox receipt.
-
-After deployment, submit a new comment through the deployed endpoint, confirm that it is saved, and verify receipt of the notification at each configured administrator address. If an email does not arrive, check the Function logs, sender verification, API key permissions, and SendGrid email activity. Check spam folders as well. A successful comment response or SendGrid acceptance alone is not sufficient to verify receipt.
+See the [notification guide](docs/NOTIFICATIONS.md) for setup instructions, switching providers, turning notifications off, and troubleshooting.
 
 ### Troubleshooting
 
