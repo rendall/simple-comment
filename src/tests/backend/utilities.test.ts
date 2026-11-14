@@ -12,6 +12,8 @@ import {
 import type { Email } from "../../../src/lib/simple-comment-types"
 import { isGuestId, validateEmail } from "../../lib/shared-utilities"
 
+import { describe, it, expect, test } from "@jest/globals"
+
 describe("test the `getAllowOriginHeaders` function", () => {
   it("should return {headers} if there is a header match", () => {
     const headers = {
@@ -109,6 +111,45 @@ describe("Test validations", () => {
   test("good email should pass", () => {
     expect(goodEmailValidation).toMatchObject({ isValid: true })
   })
+
+  test.each([
+    ".alice@example.com",
+    "alice.@example.com",
+    "ali..ce@example.com",
+    "alice@example..com",
+    "alice@-example.com",
+    "alice@example-.com",
+  ])("rejects malformed mailbox structure: %s", email => {
+    expect(validateEmail(email)).toEqual({
+      isValid: false,
+      reason: `'${email}' is not a valid email address.`,
+    })
+  })
+
+  test.each([
+    "alice@example.com",
+    "first.last+moderation@sub.example.com",
+    "alice@my-example.com",
+  ])("accepts a valid mailbox: %s", email => {
+    expect(validateEmail(email)).toEqual({ isValid: true })
+  })
+
+  test("preserves the required-email message", () => {
+    expect(validateEmail("")).toEqual({
+      isValid: false,
+      reason: "Email is required.",
+    })
+  })
+
+  test.each(["Display Name <alice@example.com>", "álîce@example.com"])(
+    "preserves the plain-address and ASCII-local-part restrictions: %s",
+    email => {
+      expect(validateEmail(email)).toEqual({
+        isValid: false,
+        reason: `'${email}' is not a valid email address.`,
+      })
+    }
+  )
 })
 
 describe("isAllowedReferer", () => {
