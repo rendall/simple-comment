@@ -41,7 +41,7 @@ The minimum functionality is [up and running](https://simple-comment.netlify.app
 - Designed a beautiful badge!
   - [![Powered by Simple Comment](docs/simple-comment-badge.svg)](https://simple-comment.netlify.app)
 - Visitors can read and reply to comments
-- Optional administrator email notifications through SendGrid
+- Optional administrator email notifications through Resend or SendGrid
 
 ### Top priority after MVP
 
