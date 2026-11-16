@@ -14,6 +14,7 @@ import type { Db } from "mongodb"
 import { inspect } from "node:util"
 import { SendGridNotificationService } from "../../lib/SendGridNotificationService"
 import { MongodbService } from "../../lib/MongodbService"
+import type { NotificationConfiguration } from "../../lib/env"
 import type {
   Comment,
   Discussion,
@@ -25,11 +26,16 @@ import type {
 declare const global: { __MONGO_URI__: string; __MONGO_DB_NAME__: string }
 
 type SendResponse = [ClientResponse, object]
-const originalEnv = process.env
 const recipients = [
   "first-moderator@example.com",
   "second-moderator@example.com",
 ]
+const configuration: NotificationConfiguration = {
+  provider: "sendgrid",
+  apiKey: "SG.synthetic-key",
+  from: "sender@example.com",
+  moderatorContactEmails: recipients,
+}
 const privateDetails = [
   "synthetic-private-api-key",
   "synthetic-private-provider-data",
@@ -135,26 +141,17 @@ describe("notification provider account errors", () => {
   let errorLog: jest.SpiedFunction<typeof console.error>
 
   beforeEach(() => {
-    process.env = {
-      ...originalEnv,
-      SENDGRID_VERIFIED_SENDER: "sender@example.com",
-    }
     send = jest.fn<MailService["send"]>().mockResolvedValue(accepted)
     mail = {
       send,
       setApiKey: jest.fn<MailService["setApiKey"]>(),
     } as unknown as MailService
-    service = new SendGridNotificationService(
-      mail,
-      "SG.synthetic-key",
-      recipients
-    )
+    service = new SendGridNotificationService(configuration, mail)
     errorLog = jest.spyOn(console, "error").mockImplementation(() => {})
   })
 
   afterEach(() => {
     jest.restoreAllMocks()
-    process.env = originalEnv
   })
 
   const expectNoPrivateDetails = (value: unknown) => {
@@ -329,9 +326,14 @@ describe("notification provider account errors", () => {
         .mockReturnValueOnce(sends[1].promise)
         .mockResolvedValueOnce(accepted)
       const multiRecipientService = new SendGridNotificationService(
-        mail,
-        "SG.synthetic-key",
-        [...recipients, "third-moderator@example.com"]
+        {
+          ...configuration,
+          moderatorContactEmails: [
+            ...recipients,
+            "third-moderator@example.com",
+          ],
+        },
+        mail
       )
       let finished = false
       const completion = multiRecipientService

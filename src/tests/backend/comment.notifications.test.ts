@@ -268,15 +268,24 @@ describe("comment endpoint notification wiring", () => {
     expect(errorLog).not.toHaveBeenCalled()
   })
 
-  it.each(["NOTIFICATION_SERVICE_API_KEY", "SENDGRID_VERIFIED_SENDER"])(
-    "fails initialization with an actionable error when %s is missing",
-    async missing => {
+  it.each([
+    {
+      missing: "NOTIFICATION_SERVICE_API_KEY",
+      expectedKey: "SENDGRID_API_KEY",
+    },
+    {
+      missing: "SENDGRID_VERIFIED_SENDER",
+      expectedKey: "SENDGRID_VERIFIED_SENDER",
+    },
+  ])(
+    "fails initialization with an actionable error when $missing is missing",
+    async ({ missing, expectedKey }) => {
       delete process.env[missing]
 
       await expect(loadHandler()).rejects.toMatchObject({
         name: "EnvContractError",
-        key: missing,
-        message: expect.stringContaining(missing),
+        key: expectedKey,
+        message: expect.stringContaining(expectedKey),
       })
       expect(setApiKey).not.toHaveBeenCalled()
       expect(send).not.toHaveBeenCalled()
