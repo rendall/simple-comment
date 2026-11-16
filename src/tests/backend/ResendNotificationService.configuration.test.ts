@@ -8,41 +8,20 @@ import {
 } from "@jest/globals"
 import { AbstractNotificationService } from "../../lib/AbstractNotificationService"
 import type { NotificationConfiguration } from "../../lib/env"
+import { ResendNotificationService } from "../../lib/ResendNotificationService"
+import type { CreateEmailResponse } from "resend"
 
 jest.mock("dotenv", () => ({ config: jest.fn() }))
-// The SDK dependency will be installed with the implementation. Its documented
-// client shape is mocked here so these tests cannot send real emails.
-jest.mock("resend", () => ({ Resend: jest.fn() }), { virtual: true })
+jest.mock("resend", () => ({ Resend: jest.fn() }))
 
-type SendEmail = (message: {
-  from: string
-  to: string
-  subject: string
-  text: string
-}) => Promise<unknown>
-type ResendMailService = { emails: { send: SendEmail } }
+type ResendMailService = NonNullable<
+  ConstructorParameters<typeof ResendNotificationService>[1]
+>
+type SendEmail = ResendMailService["emails"]["send"]
 
 const sdk = jest.requireMock<{
   Resend: jest.Mock<(apiKey: string) => ResendMailService>
 }>("resend")
-
-// Load at runtime so the test cases can report the missing implementation,
-// without adding a production stub or failing TypeScript's module resolution.
-// Replace this helper with a direct import when the service exists.
-const createService = (
-  ...args: [
-    configuration: NotificationConfiguration,
-    mailService?: ResendMailService,
-  ]
-) => {
-  const { ResendNotificationService } = jest.requireActual<{
-    ResendNotificationService: new (
-      configuration: NotificationConfiguration,
-      mailService?: ResendMailService
-    ) => AbstractNotificationService
-  }>("../../lib/ResendNotificationService")
-  return new ResendNotificationService(...args)
-}
 
 const configuration: NotificationConfiguration = {
   provider: "resend",
@@ -55,7 +34,8 @@ const configuration: NotificationConfiguration = {
 const accepted = {
   data: { id: "49a3999c-0ce1-4ea6-ab68-afcd6dc2e794" },
   error: null,
-}
+  headers: null,
+} satisfies CreateEmailResponse
 const success = { statusCode: 202, body: "Emails sent successfully" }
 const message = "New comment posted by Example Author (author@example.com)"
 const notificationEnvironmentKeys = [
@@ -94,13 +74,13 @@ describe("Resend construction and successful sending", () => {
   })
 
   it("implements AbstractNotificationService", () => {
-    expect(createService(configuration, injectedMailService)).toBeInstanceOf(
-      AbstractNotificationService
-    )
+    expect(
+      new ResendNotificationService(configuration, injectedMailService)
+    ).toBeInstanceOf(AbstractNotificationService)
   })
 
   it("initializes the default SDK client with the supplied key without sending email", () => {
-    createService(configuration)
+    new ResendNotificationService(configuration)
 
     expect(sdk.Resend).toHaveBeenCalledTimes(1)
     expect(sdk.Resend).toHaveBeenCalledWith(configuration.apiKey)
@@ -109,7 +89,7 @@ describe("Resend construction and successful sending", () => {
   })
 
   it("uses the default SDK client when the optional mail service is explicitly undefined", async () => {
-    const service = createService(configuration, undefined)
+    const service = new ResendNotificationService(configuration, undefined)
 
     await expect(service.notifyModerators(message)).resolves.toEqual(success)
     expect(sdk.Resend).toHaveBeenCalledWith(configuration.apiKey)
@@ -118,7 +98,7 @@ describe("Resend construction and successful sending", () => {
   })
 
   it("uses an injected mail service without constructing a default client or sending during construction", () => {
-    createService(configuration, injectedMailService)
+    new ResendNotificationService(configuration, injectedMailService)
 
     expect(sdk.Resend).not.toHaveBeenCalled()
     expect(injectedSend).not.toHaveBeenCalled()
@@ -131,8 +111,8 @@ describe("Resend construction and successful sending", () => {
     async client => {
       const service =
         client === "default"
-          ? createService(configuration)
-          : createService(configuration, injectedMailService)
+          ? new ResendNotificationService(configuration)
+          : new ResendNotificationService(configuration, injectedMailService)
       const send = client === "default" ? defaultSend : injectedSend
 
       await expect(service.notifyModerators(message)).resolves.toEqual(success)
@@ -179,8 +159,8 @@ describe("Resend construction and successful sending", () => {
         Object.assign(process.env, settings)
         const service =
           client === "default"
-            ? createService(configuration)
-            : createService(configuration, injectedMailService)
+            ? new ResendNotificationService(configuration)
+            : new ResendNotificationService(configuration, injectedMailService)
         const send = client === "default" ? defaultSend : injectedSend
 
         await expect(service.notifyModerators(message)).resolves.toEqual(
@@ -210,7 +190,7 @@ describe("Resend construction and successful sending", () => {
     "Simple Comment <notifications@example.com>",
     '"Doe, Jane" <notifications@example.com>',
   ])("preserves the validated sender exactly (%s)", async from => {
-    const service = createService(
+    const service = new ResendNotificationService(
       { ...configuration, from },
       injectedMailService
     )
@@ -232,7 +212,10 @@ describe("Resend construction and successful sending", () => {
     'A comment containing <tags>, an ampersand &, and "quotes"',
     "A comment with Unicode: café, 日本語, and 🙂",
   ])("sends the supplied message as unchanged plain text (%s)", async text => {
-    const service = createService(configuration, injectedMailService)
+    const service = new ResendNotificationService(
+      configuration,
+      injectedMailService
+    )
 
     await expect(service.notifyModerators(text)).resolves.toEqual(success)
 
@@ -246,7 +229,7 @@ describe("Resend construction and successful sending", () => {
   })
 
   it("returns the notification success result rather than the SDK response or credentials", async () => {
-    const service = createService(configuration)
+    const service = new ResendNotificationService(configuration)
 
     const result = await service.notifyModerators(message)
 
@@ -256,7 +239,10 @@ describe("Resend construction and successful sending", () => {
   })
 
   it("waits for the single recipient's acceptance before reporting success", async () => {
-    const service = createService(configuration, injectedMailService)
+    const service = new ResendNotificationService(
+      configuration,
+      injectedMailService
+    )
     let resolveSend!: (value: typeof accepted) => void
     const pendingSend = new Promise<typeof accepted>(resolve => {
       resolveSend = resolve
@@ -282,7 +268,7 @@ describe("Resend construction and successful sending", () => {
   })
 
   it("reuses its default client for successive notification calls", async () => {
-    const service = createService(configuration)
+    const service = new ResendNotificationService(configuration)
 
     await expect(
       service.notifyModerators("First notification")
@@ -317,8 +303,8 @@ describe("Resend construction and successful sending", () => {
     sdk.Resend.mockReturnValueOnce(defaultMailService).mockReturnValueOnce(
       injectedMailService
     )
-    const firstService = createService(configuration)
-    const secondService = createService(secondConfiguration)
+    const firstService = new ResendNotificationService(configuration)
+    const secondService = new ResendNotificationService(secondConfiguration)
 
     await expect(
       firstService.notifyModerators("First account")
