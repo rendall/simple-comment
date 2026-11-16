@@ -261,6 +261,9 @@ describe("notification configuration", () => {
 
       it.each([
         "missing-at-sign",
+        ".alice@example.com",
+        "alice@example..com",
+        "alice@-example.com",
         "@example.com",
         "sender@",
         "sender@example.com\n",
@@ -309,6 +312,12 @@ describe("notification configuration", () => {
 
       it.each([
         "missing-at-sign",
+        ".alice@example.com",
+        "alice@example..com",
+        "alice@-example.com",
+        "valid@example.com,.alice@example.com",
+        "valid@example.com,alice@example..com",
+        "valid@example.com,alice@-example.com",
         "@example.com",
         "moderator@",
         "alice@example.com,private-invalid-recipient",
@@ -346,6 +355,9 @@ describe("notification configuration", () => {
     it.each([
       "alice@example.com,bob@example.com",
       "Alice <alice@example.com>,Bob <bob@example.com>",
+      "Moderator <.alice@example.com>",
+      "Moderator <alice@example..com>",
+      "Moderator <alice@-example.com>",
       "Alice <alice@example.com>,bob@example.com",
       "alice@example.com,Bob <bob@example.com>",
       "Simple Comment <notifications@example.com",

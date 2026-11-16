@@ -1,3 +1,4 @@
+import isEmail from "validator/lib/isEmail"
 import type {
   InvalidResult,
   UserId,
@@ -72,7 +73,7 @@ export const validateUserId = (userId: string): ValidationResult => {
 export const validateEmail = (email: string): ValidationResult => {
   if (!email || email.length === 0)
     return { isValid: false, reason: "Email is required." }
-  const isValid = email.match(/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i)
+  const isValid = isEmail(email, { allow_utf8_local_part: false })
   if (isValid) return { isValid: true }
   else
     return {

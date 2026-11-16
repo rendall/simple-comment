@@ -240,10 +240,10 @@ Assumes a unix-like environment, like Ubuntu.
 ### Frontend build/dev workflow
 
 - Current frontend stack:
-  - `svelte@^4.2.20`
-  - `@sveltejs/vite-plugin-svelte@^3.1.2`
-  - `vite@^5`
-  - `svelte-preprocess@^5`
+  - `svelte@^5.55.0`
+  - `@sveltejs/vite-plugin-svelte@^4.0.0`
+  - `vite@^6.4.2`
+  - `svelte-preprocess@^6.0.3`
 - `yarn run build:frontend` uses Vite (`vite.config.ts`) and emits frontend artifacts to `dist`.
 - `yarn run start:backend` builds the backend functions once and then serves them at `http://localhost:9999/.netlify/functions/`.
 - `yarn run start:frontend` rebuilds the frontend and serves the built `dist` artifacts at `http://localhost:5000/` via `vite preview`.
