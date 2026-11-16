@@ -17,14 +17,6 @@ jest.mock("@sendgrid/mail", () => ({
   send: jest.fn(),
 }))
 
-// Exercise the agreed constructor at runtime before its signature exists.
-// Remove this assertion when the production constructor accepts configuration.
-const ConfiguredSendGridNotificationService =
-  SendGridNotificationService as unknown as new (
-    configuration: NotificationConfiguration,
-    mailService?: MailService
-  ) => SendGridNotificationService
-
 const configuration: NotificationConfiguration = {
   provider: "sendgrid",
   apiKey: "SG.synthetic-explicit-key",
@@ -77,7 +69,7 @@ describe("SendGrid explicit constructor configuration", () => {
   })
 
   it("initializes the injected mail service with the supplied API key", () => {
-    new ConfiguredSendGridNotificationService(configuration, mailService)
+    new SendGridNotificationService(configuration, mailService)
 
     expect(setApiKey).toHaveBeenCalledTimes(1)
     expect(setApiKey).toHaveBeenCalledWith(configuration.apiKey)
@@ -85,7 +77,7 @@ describe("SendGrid explicit constructor configuration", () => {
   })
 
   it("defaults to the SendGrid client when the mail service is omitted", async () => {
-    const service = new ConfiguredSendGridNotificationService(configuration)
+    const service = new SendGridNotificationService(configuration)
 
     expect(sendGridMail.setApiKey).toHaveBeenCalledTimes(1)
     expect(sendGridMail.setApiKey).toHaveBeenCalledWith(configuration.apiKey)
@@ -111,10 +103,7 @@ describe("SendGrid explicit constructor configuration", () => {
   })
 
   it("sends from the supplied sender to every supplied moderator", async () => {
-    const service = new ConfiguredSendGridNotificationService(
-      configuration,
-      mailService
-    )
+    const service = new SendGridNotificationService(configuration, mailService)
     const message = "A notification supplied by the caller"
 
     const result = await service.notifyModerators(message)
@@ -138,8 +127,7 @@ describe("SendGrid explicit constructor configuration", () => {
     notificationEnvironmentKeys.forEach(key => delete process.env[key])
 
     expect(
-      () =>
-        new ConfiguredSendGridNotificationService(configuration, mailService)
+      () => new SendGridNotificationService(configuration, mailService)
     ).not.toThrow()
     expect(setApiKey).toHaveBeenCalledWith(configuration.apiKey)
   })
@@ -171,10 +159,7 @@ describe("SendGrid explicit constructor configuration", () => {
   ])("uses supplied configuration despite $name", async ({ settings }) => {
     Object.assign(process.env, settings)
 
-    const service = new ConfiguredSendGridNotificationService(
-      configuration,
-      mailService
-    )
+    const service = new SendGridNotificationService(configuration, mailService)
     const message = "Explicit settings take precedence over the environment"
     await service.notifyModerators(message)
 
@@ -194,7 +179,7 @@ describe("SendGrid explicit constructor configuration", () => {
   })
 
   it("initializes the client without sending email during construction", () => {
-    new ConfiguredSendGridNotificationService(configuration, mailService)
+    new SendGridNotificationService(configuration, mailService)
 
     expect(setApiKey).toHaveBeenCalledTimes(1)
     expect(setApiKey).toHaveBeenCalledWith(configuration.apiKey)
