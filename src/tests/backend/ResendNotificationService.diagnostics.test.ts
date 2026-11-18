@@ -128,6 +128,7 @@ const recognizedCases = [
   { name: "service_unavailable", status: 503, expected: unavailable },
   { name: "dns_lookup_failed", status: 503, expected: unavailable },
   { name: "application_error", status: 500, expected: unavailable },
+  { name: "internal_server_error", status: 500, expected: unavailable },
   // The SDK wraps a failed fetch or non-JSON error response this way.
   { name: "application_error", status: null, expected: unavailable },
   { name: "application_error", status: 503, expected: unavailable },

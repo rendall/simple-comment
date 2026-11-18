@@ -108,6 +108,8 @@ const errorSignals: {
   { name: "service_unavailable", statusCode: 503, outcome: "unavailable" },
   { name: "dns_lookup_failed", statusCode: 503, outcome: "unavailable" },
   { name: "application_error", statusCode: 500, outcome: "unavailable" },
+  // https://github.com/resend/resend-node/blob/v6.0.0/src/interfaces.ts#L15-L17
+  { name: "internal_server_error", statusCode: 500, outcome: "unavailable" },
   // The SDK also uses application_error for non-JSON failures and failed fetches.
   { name: "application_error", statusCode: 503, outcome: "unavailable" },
   { name: "application_error", statusCode: null, outcome: "unavailable" },
