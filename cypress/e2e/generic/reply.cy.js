@@ -151,6 +151,8 @@ describe("Reply baseline", () => {
 
     cy.get(`#${parentCommentId}`)
       .find("ul.comment-replies")
+      .find(`#${parentCommentId}-reply-1`)
       .contains("article.comment-body p", replyText)
+      .should("be.visible")
   })
 })
