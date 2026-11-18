@@ -6,6 +6,11 @@ const guestUserId = "guest-cd456-c1m6p"
 const guestName = "Reply Baseline Guest"
 const guestEmail = "reply-baseline@example.com"
 const replyText = "Deterministic baseline reply"
+const guestToken = "guest-auth-token"
+const guestSessionCookie = `simple_comment_token=${guestToken}`
+
+const hasGuestSession = request =>
+  (request.headers.cookie ?? "").split(/;\s*/).includes(guestSessionCookie)
 
 const buildDiscussion = () => ({
   _id: discussionId,
@@ -44,8 +49,6 @@ const buildPostedReply = () => ({
 
 describe("Reply baseline", () => {
   it("submits a deterministic reply to the parent comment id", () => {
-    let guestTokenIssued = false
-
     cy.intercept("GET", `/.netlify/functions/topic/${discussionId}`, req => {
       expect(req.method).to.equal("GET")
       req.reply({
@@ -56,7 +59,7 @@ describe("Reply baseline", () => {
 
     cy.intercept("GET", "/.netlify/functions/verify", req => {
       req.reply(
-        guestTokenIssued
+        hasGuestSession(req)
           ? {
               statusCode: 200,
               body: { user: guestUserId, exp: 1721980130, iat: 1690444137 },
@@ -83,15 +86,18 @@ describe("Reply baseline", () => {
 
     cy.intercept("GET", "/.netlify/functions/gauth", req => {
       expect(req.method).to.equal("GET")
-      guestTokenIssued = true
       req.reply({
         statusCode: 200,
-        body: "guest-auth-token",
+        headers: {
+          "set-cookie": `${guestSessionCookie}; Path=/; SameSite=Strict; HttpOnly`,
+        },
+        body: guestToken,
       })
     }).as("getGuestToken")
 
     cy.intercept("POST", "/.netlify/functions/user", req => {
       expect(req.method).to.equal("POST")
+      expect(hasGuestSession(req), "guest cookie on user POST").to.equal(true)
       expect(req.body).to.include(`id=${guestUserId}`)
       expect(req.body).to.include(`name=${encodeURIComponent(guestName)}`)
       expect(req.body).to.include(`email=${encodeURIComponent(guestEmail)}`)
@@ -111,6 +117,9 @@ describe("Reply baseline", () => {
       `/.netlify/functions/comment/${parentCommentId}`,
       req => {
         expect(req.method).to.equal("POST")
+        expect(hasGuestSession(req), "guest cookie on reply POST").to.equal(
+          true
+        )
         expect(req.url).to.include(
           `/.netlify/functions/comment/${parentCommentId}`
         )
