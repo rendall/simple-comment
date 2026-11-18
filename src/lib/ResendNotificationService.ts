@@ -1,5 +1,6 @@
 import { Resend } from "resend"
 import { AbstractNotificationService } from "./AbstractNotificationService"
+import { EnvContractError } from "./env"
 import type { NotificationConfiguration } from "./env"
 import type { Error, Success } from "./simple-comment-types"
 import {
@@ -172,13 +173,21 @@ export class ResendNotificationService extends AbstractNotificationService {
 
   constructor(
     configuration: NotificationConfiguration,
-    // Keep credentials and comment data on Resend's API regardless of SDK env defaults.
-    mailService: ResendMailService = new Resend(configuration.apiKey, {
-      baseUrl: "https://api.resend.com",
-    })
+    mailService?: ResendMailService
   ) {
     super()
-    this._mailService = mailService
+    try {
+      // Keep credentials and comment data on Resend's API regardless of SDK env defaults.
+      this._mailService =
+        mailService ??
+        new Resend(configuration.apiKey, { baseUrl: "https://api.resend.com" })
+    } catch {
+      // SDK initialization errors can contain the key. Do not retain their cause.
+      throw new EnvContractError(
+        "RESEND_API_KEY",
+        "Unable to initialize Resend. Check RESEND_API_KEY."
+      )
+    }
     this._from = configuration.from
     this._moderatorContactEmails = configuration.moderatorContactEmails
   }

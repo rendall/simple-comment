@@ -6,7 +6,9 @@ import {
   it,
   jest,
 } from "@jest/globals"
+import { inspect } from "node:util"
 import { ResendNotificationService } from "../../lib/ResendNotificationService"
+import { EnvContractError, getNotificationConfiguration } from "../../lib/env"
 import type { NotificationConfiguration } from "../../lib/env"
 
 const configuration: NotificationConfiguration = {
@@ -74,6 +76,56 @@ describe("Resend default SDK client", () => {
         text: "Synthetic comment text",
       })
       expect(process.env.RESEND_BASE_URL).toBe(baseUrl)
+    }
+  )
+
+  it.each([
+    { name: "newline", separator: "\n" },
+    { name: "carriage return", separator: "\r" },
+    { name: "unsupported header character", separator: "\u0100" },
+  ])(
+    "reports a safe initialization error for a configured key containing $name",
+    ({ separator }) => {
+      const privatePrefix = "re_synthetic_private_key"
+      const privateSuffix = "synthetic_private_suffix"
+      const apiKey = `${privatePrefix}${separator}${privateSuffix}`
+      const { configuration: configured } = getNotificationConfiguration({
+        RESEND_API_KEY: apiKey,
+        RESEND_FROM: configuration.from,
+        SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL:
+          configuration.moderatorContactEmails.join(","),
+      })
+      expect(configured).toBeDefined()
+      if (configured === undefined) {
+        throw new globalThis.Error("Expected a Resend configuration")
+      }
+      expect(configured.apiKey).toBe(apiKey)
+      const consoleSpies = (
+        ["error", "warn", "info", "log", "debug", "trace"] as const
+      ).map(method => jest.spyOn(console, method).mockImplementation(() => {}))
+      let failure: unknown
+
+      try {
+        new ResendNotificationService(configured)
+      } catch (error) {
+        failure = error
+      }
+
+      expect(failure).toBeInstanceOf(EnvContractError)
+      expect(failure).toMatchObject({
+        key: "RESEND_API_KEY",
+        message: "Unable to initialize Resend. Check RESEND_API_KEY.",
+      })
+      expect(failure).not.toHaveProperty("cause")
+      // Check both pieces because inspection escapes newlines and other characters.
+      const diagnostics = inspect(
+        { failure, logs: consoleSpies.map(spy => spy.mock.calls) },
+        { depth: null }
+      )
+      expect(diagnostics).not.toContain(privatePrefix)
+      expect(diagnostics).not.toContain(privateSuffix)
+      consoleSpies.forEach(spy => expect(spy).not.toHaveBeenCalled())
+      expect(fetchSpy).not.toHaveBeenCalled()
     }
   )
 })
