@@ -4,6 +4,11 @@ import type { NotificationConfiguration } from "./env"
 import type { Error, Success } from "./simple-comment-types"
 import {
   error502NotificationFailed,
+  error502NotificationAuthenticationFailed,
+  error502NotificationSendingRefused,
+  error502NotificationAllowanceExceeded,
+  error503NotificationRateLimited,
+  error503NotificationUnavailable,
   error504NotificationTimeout,
 } from "./messages"
 
@@ -11,8 +16,149 @@ type ResendMailService = {
   emails: Pick<Resend["emails"], "send">
 }
 
-type NotificationOutcome = "accepted" | "failed" | "timedOut"
+type FailureOutcome =
+  | "failed"
+  | "authentication"
+  | "sendingRefused"
+  | "allowance"
+  | "rateLimited"
+  | "unavailable"
+  | "timedOut"
+type NotificationOutcome = "accepted" | FailureOutcome
 const notificationTimeoutMs = 5000
+
+// Fixed order keeps summaries and guidance independent of completion order.
+const failureCategories: {
+  outcome: FailureOutcome
+  message: Error
+  label: string
+  plural: string
+  action?: string
+}[] = [
+  {
+    outcome: "failed",
+    message: error502NotificationFailed,
+    label: "upstream failure",
+    plural: "upstream failures",
+  },
+  {
+    outcome: "authentication",
+    message: error502NotificationAuthenticationFailed,
+    label: "authentication failure",
+    plural: "authentication failures",
+    action: "Check RESEND_API_KEY and your Resend account status.",
+  },
+  {
+    outcome: "sendingRefused",
+    message: error502NotificationSendingRefused,
+    label: "sending restriction",
+    plural: "sending restrictions",
+    action:
+      "Check RESEND_FROM, domain verification, and API key permissions in Resend.",
+  },
+  {
+    outcome: "allowance",
+    message: error502NotificationAllowanceExceeded,
+    label: "allowance restriction",
+    plural: "allowance restrictions",
+    action:
+      "Check Resend usage limits and wait for the quota to reset or adjust your plan.",
+  },
+  {
+    outcome: "rateLimited",
+    message: error503NotificationRateLimited,
+    label: "rate limit",
+    plural: "rate limits",
+    action: "Reduce the sending rate and try again later.",
+  },
+  {
+    outcome: "unavailable",
+    message: error503NotificationUnavailable,
+    label: "unavailable",
+    plural: "unavailable",
+    action:
+      "Check network access and Resend's service status, then try again later.",
+  },
+  {
+    outcome: "timedOut",
+    message: error504NotificationTimeout,
+    label: "timed out",
+    plural: "timed out",
+  },
+]
+
+// Match documented name/status pairs, not HTTP status or message text alone.
+// https://resend.com/docs/api-reference/errors
+const errorSignals: {
+  name: string
+  statusCode: number | null
+  outcome: FailureOutcome
+}[] = [
+  { name: "missing_api_key", statusCode: 401, outcome: "authentication" },
+  { name: "restricted_api_key", statusCode: 403, outcome: "authentication" },
+  { name: "suspended_api_key", statusCode: 403, outcome: "authentication" },
+  { name: "restricted_api_key", statusCode: 401, outcome: "sendingRefused" },
+  { name: "invalid_permission", statusCode: 403, outcome: "sendingRefused" },
+  { name: "daily_quota_exceeded", statusCode: 429, outcome: "allowance" },
+  { name: "monthly_quota_exceeded", statusCode: 429, outcome: "allowance" },
+  { name: "rate_limit_exceeded", statusCode: 429, outcome: "rateLimited" },
+  { name: "service_unavailable", statusCode: 503, outcome: "unavailable" },
+  { name: "dns_lookup_failed", statusCode: 503, outcome: "unavailable" },
+  { name: "application_error", statusCode: 500, outcome: "unavailable" },
+  // The SDK also uses application_error for non-JSON failures and failed fetches.
+  { name: "application_error", statusCode: 503, outcome: "unavailable" },
+  { name: "application_error", statusCode: null, outcome: "unavailable" },
+]
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value)
+
+const classifyProviderError = (error: unknown): FailureOutcome => {
+  if (!isRecord(error) || typeof error.message !== "string") return "failed"
+
+  const recognized = errorSignals.find(
+    signal =>
+      signal.name === error.name && signal.statusCode === error.statusCode
+  )
+  if (recognized) return recognized.outcome
+
+  // validation_error is overloaded. Only known credential/sender details justify
+  // account guidance; other validation failures remain generic.
+  if (error.name === "validation_error") {
+    const detail = error.message.trim()
+    if (
+      (error.statusCode === 400 || error.statusCode === 401) &&
+      detail === "API key is invalid"
+    ) {
+      return "authentication"
+    }
+    if (
+      error.statusCode === 403 &&
+      (/^The \S+ domain is not verified\.(?:\s|$)/.test(detail) ||
+        detail.startsWith(
+          "You can only send testing emails to your own email address ("
+        ))
+    ) {
+      return "sendingRefused"
+    }
+  }
+  return "failed"
+}
+
+const classifyResponse = (response: unknown): NotificationOutcome => {
+  if (!isRecord(response)) return "failed"
+  if (
+    response.error === null &&
+    isRecord(response.data) &&
+    typeof response.data.id === "string" &&
+    response.data.id.trim().length > 0
+  ) {
+    return "accepted"
+  }
+  return response.data === null
+    ? classifyProviderError(response.error)
+    : "failed"
+}
 
 export class ResendNotificationService extends AbstractNotificationService {
   private readonly _mailService: ResendMailService
@@ -45,11 +191,7 @@ export class ResendNotificationService extends AbstractNotificationService {
             subject: "Simple Comment Notification",
             text: message,
           })
-          const accepted =
-            response?.error === null &&
-            typeof response.data?.id === "string" &&
-            response.data.id.trim().length > 0
-          return accepted ? "accepted" : "failed"
+          return classifyResponse(response)
         })(),
         new Promise<NotificationOutcome>(resolve => {
           timeout = setTimeout(() => resolve("timedOut"), notificationTimeoutMs)
@@ -74,19 +216,30 @@ export class ResendNotificationService extends AbstractNotificationService {
       return { statusCode: 202, body: "Emails sent successfully" }
     }
 
-    const timedOut = outcomes.filter(outcome => outcome === "timedOut").length
-    const upstreamFailures = failed - timedOut
+    const failures = failureCategories
+      .map(category => ({
+        ...category,
+        count: outcomes.filter(outcome => outcome === category.outcome).length,
+      }))
+      .filter(category => category.count > 0)
     const failure =
-      timedOut === failed
-        ? error504NotificationTimeout
-        : error502NotificationFailed
+      failures.length === 1 ? failures[0].message : error502NotificationFailed
     const breakdown =
-      timedOut > 0 && upstreamFailures > 0
-        ? ` (${upstreamFailures} upstream ${upstreamFailures === 1 ? "failure" : "failures"}, ${timedOut} timed out)`
+      failures.length > 1
+        ? ` (${failures.map(({ count, label, plural }) => `${count} ${count === 1 ? label : plural}`).join(", ")})`
         : ""
-    return {
+    const actions = failures
+      .map(({ action }) => action)
+      .filter(Boolean)
+      .join(" ")
+    const summary: Error = {
       ...failure,
-      body: `${failure.body}: ${accepted} accepted, ${failed} failed${breakdown}.`,
+      body: `${failure.body}: ${accepted} accepted, ${failed} failed${breakdown}.${actions ? ` ${actions}` : ""}`,
     }
+    if (actions) {
+      // This contains fixed messages and counts, never raw provider diagnostics.
+      console.error("Notification provider error", summary)
+    }
+    return summary
   }
 }
