@@ -9,7 +9,7 @@ import {
 import { AbstractNotificationService } from "../../lib/AbstractNotificationService"
 import type { NotificationConfiguration } from "../../lib/env"
 import { ResendNotificationService } from "../../lib/ResendNotificationService"
-import type { CreateEmailResponse } from "resend"
+import type { CreateEmailResponse, Resend } from "resend"
 
 jest.mock("dotenv", () => ({ config: jest.fn() }))
 jest.mock("resend", () => ({ Resend: jest.fn() }))
@@ -20,7 +20,9 @@ type ResendMailService = NonNullable<
 type SendEmail = ResendMailService["emails"]["send"]
 
 const sdk = jest.requireMock<{
-  Resend: jest.Mock<(apiKey: string) => ResendMailService>
+  Resend: jest.Mock<
+    (...args: ConstructorParameters<typeof Resend>) => ResendMailService
+  >
 }>("resend")
 
 const configuration: NotificationConfiguration = {
@@ -83,7 +85,9 @@ describe("Resend construction and successful sending", () => {
     new ResendNotificationService(configuration)
 
     expect(sdk.Resend).toHaveBeenCalledTimes(1)
-    expect(sdk.Resend).toHaveBeenCalledWith(configuration.apiKey)
+    expect(sdk.Resend).toHaveBeenCalledWith(configuration.apiKey, {
+      baseUrl: "https://api.resend.com",
+    })
     expect(defaultSend).not.toHaveBeenCalled()
     expect(fetchSpy).not.toHaveBeenCalled()
   })
@@ -92,7 +96,9 @@ describe("Resend construction and successful sending", () => {
     const service = new ResendNotificationService(configuration, undefined)
 
     await expect(service.notifyModerators(message)).resolves.toEqual(success)
-    expect(sdk.Resend).toHaveBeenCalledWith(configuration.apiKey)
+    expect(sdk.Resend).toHaveBeenCalledWith(configuration.apiKey, {
+      baseUrl: "https://api.resend.com",
+    })
     expect(defaultSend).toHaveBeenCalledTimes(1)
     expect(injectedSend).not.toHaveBeenCalled()
   })
@@ -169,7 +175,9 @@ describe("Resend construction and successful sending", () => {
 
         if (client === "default") {
           expect(sdk.Resend).toHaveBeenCalledTimes(1)
-          expect(sdk.Resend).toHaveBeenCalledWith(configuration.apiKey)
+          expect(sdk.Resend).toHaveBeenCalledWith(configuration.apiKey, {
+            baseUrl: "https://api.resend.com",
+          })
         } else {
           expect(sdk.Resend).not.toHaveBeenCalled()
         }
@@ -314,8 +322,12 @@ describe("Resend construction and successful sending", () => {
     ).resolves.toEqual(success)
 
     expect(sdk.Resend).toHaveBeenCalledTimes(2)
-    expect(sdk.Resend).toHaveBeenNthCalledWith(1, configuration.apiKey)
-    expect(sdk.Resend).toHaveBeenNthCalledWith(2, secondConfiguration.apiKey)
+    expect(sdk.Resend).toHaveBeenNthCalledWith(1, configuration.apiKey, {
+      baseUrl: "https://api.resend.com",
+    })
+    expect(sdk.Resend).toHaveBeenNthCalledWith(2, secondConfiguration.apiKey, {
+      baseUrl: "https://api.resend.com",
+    })
     expect(defaultSend).toHaveBeenCalledTimes(1)
     expect(defaultSend).toHaveBeenCalledWith({
       from: configuration.from,

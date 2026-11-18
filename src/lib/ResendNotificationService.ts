@@ -172,7 +172,10 @@ export class ResendNotificationService extends AbstractNotificationService {
 
   constructor(
     configuration: NotificationConfiguration,
-    mailService: ResendMailService = new Resend(configuration.apiKey)
+    // Keep credentials and comment data on Resend's API regardless of SDK env defaults.
+    mailService: ResendMailService = new Resend(configuration.apiKey, {
+      baseUrl: "https://api.resend.com",
+    })
   ) {
     super()
     this._mailService = mailService
