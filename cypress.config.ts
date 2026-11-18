@@ -8,7 +8,7 @@ export default defineConfig({
 
   e2e: {
     baseUrl: "http://localhost:5000",
-    supportFile: "cypress/support/e2e.js",
+    supportFile: false,
     // baseUrl: "https://simple-comment.netlify.app",
     excludeSpecPattern: "**/examples/*.spec.js",
     experimentalRunAllSpecs: true,
