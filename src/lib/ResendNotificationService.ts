@@ -95,6 +95,9 @@ const errorSignals: {
   outcome: FailureOutcome
 }[] = [
   { name: "missing_api_key", statusCode: 401, outcome: "authentication" },
+  // Resend's SDK maps this credential error to 403, rather than 401:
+  // https://github.com/resend/resend-python/blob/11cb1ee50a26301182b752f10a88ce029a4e42e8/resend/exceptions.py#L212-L218
+  { name: "invalid_api_key", statusCode: 403, outcome: "authentication" },
   { name: "restricted_api_key", statusCode: 403, outcome: "authentication" },
   { name: "suspended_api_key", statusCode: 403, outcome: "authentication" },
   { name: "restricted_api_key", statusCode: 401, outcome: "sendingRefused" },

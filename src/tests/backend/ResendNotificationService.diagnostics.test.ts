@@ -91,6 +91,7 @@ const unavailable = {
 // https://resend.com/docs/api-reference/errors
 const recognizedCases = [
   { name: "missing_api_key", status: 401, expected: authentication },
+  { name: "invalid_api_key", status: 403, expected: authentication },
   {
     name: "validation_error",
     status: 400,
@@ -194,6 +195,10 @@ describe("Resend safe delivery diagnostics", () => {
   )
 
   it.each([
+    {
+      name: "unverified invalid_api_key / 401 pairing",
+      error: { name: "invalid_api_key", statusCode: 401 },
+    },
     {
       name: "unknown credential error",
       error: { name: "future_error", statusCode: 401 },
