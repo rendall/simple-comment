@@ -231,6 +231,17 @@ describe("comment endpoint notification wiring", () => {
     return resendSend
   }
 
+  const forbidSendGridSdkLoading = () => {
+    // The real SDK constructs a client as soon as its module is evaluated.
+    const loadSdk = jest.fn(() => {
+      throw new globalThis.Error(
+        "SendGrid SDK must not load for this configuration"
+      )
+    })
+    jest.doMock("@sendgrid/mail", loadSdk)
+    return loadSdk
+  }
+
   const expectSavedComment = async (
     response: Awaited<ReturnType<Handler>>,
     text = commentText
@@ -296,33 +307,49 @@ describe("comment endpoint notification wiring", () => {
     }
   )
 
-  it("uses the resolver to send through Resend after the endpoint saves a comment", async () => {
-    configureProvider("resend")
-    let savedAtSend: Comment | null = null
-    resendSend.mockImplementation(async () => {
-      savedAtSend = await db
-        .collection<Comment>("comments")
-        .findOne({ text: commentText })
-      return resendAccepted
+  describe("when Resend is configured", () => {
+    beforeEach(() => {
+      configureProvider("resend")
     })
-    const handler = await loadHandler()
 
-    await expectSavedComment(await handler(eventFor()))
+    it("saves the comment before sending through Resend", async () => {
+      let savedAtSend: Comment | null = null
+      resendSend.mockImplementation(async () => {
+        savedAtSend = await db
+          .collection<Comment>("comments")
+          .findOne({ text: commentText })
+        return resendAccepted
+      })
+      const handler = await loadHandler()
 
-    expect(resolveService).toHaveBeenCalledTimes(1)
-    expect(savedAtSend).toMatchObject({ text: commentText, userId: author.id })
-    expect(resendConstructor).toHaveBeenCalledTimes(1)
-    expect(resendConstructor.mock.calls[0][0]).toBe(resendApiKey)
-    expect(resendSend).toHaveBeenCalledTimes(1)
-    expect(resendSend).toHaveBeenCalledWith({
-      to: recipient,
-      from: resendSender,
-      subject: "Simple Comment Notification",
-      text: `New comment posted by ${author.name} (${author.email})`,
+      await expectSavedComment(await handler(eventFor()))
+
+      expect(resolveService).toHaveBeenCalledTimes(1)
+      expect(savedAtSend).toMatchObject({
+        text: commentText,
+        userId: author.id,
+      })
+      expect(resendConstructor).toHaveBeenCalledTimes(1)
+      expect(resendConstructor.mock.calls[0][0]).toBe(resendApiKey)
+      expect(resendSend).toHaveBeenCalledTimes(1)
+      expect(resendSend).toHaveBeenCalledWith({
+        to: recipient,
+        from: resendSender,
+        subject: "Simple Comment Notification",
+        text: `New comment posted by ${author.name} (${author.email})`,
+      })
+      expect(setApiKey).not.toHaveBeenCalled()
+      expect(send).not.toHaveBeenCalled()
+      expect(errorLog).not.toHaveBeenCalled()
     })
-    expect(setApiKey).not.toHaveBeenCalled()
-    expect(send).not.toHaveBeenCalled()
-    expect(errorLog).not.toHaveBeenCalled()
+
+    it("does not load the SendGrid SDK during initialization", async () => {
+      const loadSendGridSdk = forbidSendGridSdkLoading()
+
+      await loadHandler()
+
+      expect(loadSendGridSdk).not.toHaveBeenCalled()
+    })
   })
 
   it.each(providers)(
@@ -347,37 +374,64 @@ describe("comment endpoint notification wiring", () => {
     }
   )
 
-  it("uses the resolver to keep notifications disabled when no provider is configured", async () => {
-    delete process.env.NOTIFICATION_SERVICE_API_KEY
-    delete process.env.SENDGRID_VERIFIED_SENDER
-    // The required moderator contact address alone must not enable notifications.
-    const handler = await loadHandler()
-
-    await expectSavedComment(await handler(eventFor()))
-
-    expect(resolveService).toHaveBeenCalledTimes(1)
-    expect(setApiKey).not.toHaveBeenCalled()
-    expect(send).not.toHaveBeenCalled()
-    expect(resendConstructor).not.toHaveBeenCalled()
-    expect(resendSend).not.toHaveBeenCalled()
-    expect(errorLog).not.toHaveBeenCalled()
-  })
-
-  it("rejects a partially configured second provider before initializing either client", async () => {
-    // Any setting for a second provider must prevent silent provider selection.
-    process.env.RESEND_FROM = resendSender
-
-    await expect(loadHandler()).rejects.toMatchObject({
-      name: "EnvContractError",
-      key: "NOTIFICATION_PROVIDERS",
-      message: expect.stringContaining("Multiple notification providers"),
+  describe("when no notification provider is configured", () => {
+    beforeEach(() => {
+      delete process.env.NOTIFICATION_SERVICE_API_KEY
+      delete process.env.SENDGRID_VERIFIED_SENDER
     })
 
-    expect(resolveService).toHaveBeenCalledTimes(1)
-    expect(setApiKey).not.toHaveBeenCalled()
-    expect(send).not.toHaveBeenCalled()
-    expect(resendConstructor).not.toHaveBeenCalled()
-    expect(resendSend).not.toHaveBeenCalled()
+    it("saves the comment with notifications disabled", async () => {
+      // The required moderator contact address alone must not enable notifications.
+      const handler = await loadHandler()
+
+      await expectSavedComment(await handler(eventFor()))
+
+      expect(resolveService).toHaveBeenCalledTimes(1)
+      expect(setApiKey).not.toHaveBeenCalled()
+      expect(send).not.toHaveBeenCalled()
+      expect(resendConstructor).not.toHaveBeenCalled()
+      expect(resendSend).not.toHaveBeenCalled()
+      expect(errorLog).not.toHaveBeenCalled()
+    })
+
+    it("does not load the SendGrid SDK during initialization", async () => {
+      const loadSendGridSdk = forbidSendGridSdkLoading()
+
+      await loadHandler()
+
+      expect(loadSendGridSdk).not.toHaveBeenCalled()
+    })
+  })
+
+  describe("when notification provider settings conflict", () => {
+    beforeEach(() => {
+      // Any setting for a second provider must prevent silent provider selection.
+      process.env.RESEND_FROM = resendSender
+    })
+
+    it("rejects initialization with an actionable configuration error", async () => {
+      await expect(loadHandler()).rejects.toMatchObject({
+        name: "EnvContractError",
+        key: "NOTIFICATION_PROVIDERS",
+        message: expect.stringContaining("Multiple notification providers"),
+      })
+
+      expect(resolveService).toHaveBeenCalledTimes(1)
+      expect(setApiKey).not.toHaveBeenCalled()
+      expect(send).not.toHaveBeenCalled()
+      expect(resendConstructor).not.toHaveBeenCalled()
+      expect(resendSend).not.toHaveBeenCalled()
+    })
+
+    it("does not load the SendGrid SDK before rejecting configuration", async () => {
+      const loadSendGridSdk = forbidSendGridSdkLoading()
+
+      await expect(loadHandler()).rejects.toMatchObject({
+        name: "EnvContractError",
+      })
+
+      expect(loadSendGridSdk).not.toHaveBeenCalled()
+    })
   })
 
   it.each([
