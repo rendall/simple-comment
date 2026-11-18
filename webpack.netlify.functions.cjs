@@ -52,6 +52,8 @@ const config = {
     new webpack.IgnorePlugin({
       checkResource(resource, context) {
         const ignores = [
+          // Notifications use plain text; Resend's React renderer is optional.
+          ["@react-email/render", "resend/dist"],
           ["@mongodb-js/zstd", "mongodb/lib"],
           ["@aws-sdk/credential-providers", "mongodb/lib"],
           ["aws-crt", "@aws-sdk/util-user-agent-node/dist-es"],

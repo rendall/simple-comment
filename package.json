@@ -87,6 +87,7 @@
     "prando": "^6.0.1",
     "prettier": "3.8.1",
     "prettier-plugin-svelte": "^3.5.1",
+    "resend": "^6.38.1",
     "rimraf": "^3.0.2",
     "sass": "^1.63.6",
     "svelte": "^5.55.7",

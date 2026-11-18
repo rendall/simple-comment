@@ -98,6 +98,10 @@ export const error503NotificationUnavailable: Error = {
   statusCode: 503,
   body: "Notification service unavailable",
 }
+export const error503NotificationRateLimited: Error = {
+  statusCode: 503,
+  body: "Notification provider rate limit exceeded",
+}
 export const error504NotificationTimeout: Error = {
   statusCode: 504,
   body: "Notification timed out",
