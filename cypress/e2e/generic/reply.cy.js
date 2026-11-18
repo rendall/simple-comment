@@ -44,7 +44,7 @@ const buildPostedReply = () => ({
 
 describe("Reply baseline", () => {
   it("submits a deterministic reply to the parent comment id", () => {
-    let verifyCount = 0
+    let guestTokenIssued = false
 
     cy.intercept("GET", `/.netlify/functions/topic/${discussionId}`, req => {
       expect(req.method).to.equal("GET")
@@ -55,16 +55,15 @@ describe("Reply baseline", () => {
     }).as("getTopic")
 
     cy.intercept("GET", "/.netlify/functions/verify", req => {
-      verifyCount += 1
       req.reply(
-        verifyCount <= 2
+        guestTokenIssued
           ? {
-              statusCode: 401,
-              body: { message: "Unauthenticated" },
-            }
-          : {
               statusCode: 200,
               body: { user: guestUserId, exp: 1721980130, iat: 1690444137 },
+            }
+          : {
+              statusCode: 401,
+              body: { message: "Unauthenticated" },
             }
       )
     }).as("verifyUser")
@@ -84,6 +83,7 @@ describe("Reply baseline", () => {
 
     cy.intercept("GET", "/.netlify/functions/gauth", req => {
       expect(req.method).to.equal("GET")
+      guestTokenIssued = true
       req.reply({
         statusCode: 200,
         body: "guest-auth-token",
@@ -128,7 +128,6 @@ describe("Reply baseline", () => {
     cy.wait("@getTopic")
 
     cy.get(`#${parentCommentId} button.comment-reply-button`).click()
-    cy.wait("@verifyUser")
     cy.get(`#${parentCommentId} form.comment-form`).should("exist")
     cy.get(`#${parentCommentId} form.comment-form #guest-name`)
       .should("be.visible")
