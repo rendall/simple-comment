@@ -11,6 +11,7 @@ import {
 import type { APIGatewayEvent } from "aws-lambda"
 import type { ClientResponse, MailService } from "@sendgrid/mail"
 import type { Resend } from "resend"
+import { inspect } from "node:util"
 import { Collection, MongoClient, ObjectId } from "mongodb"
 import type { Db } from "mongodb"
 import * as jwt from "jsonwebtoken"
@@ -25,6 +26,8 @@ type GetNotificationService =
 type ResendSend = Resend["emails"]["send"]
 type ResendMail = { emails: Pick<Resend["emails"], "send"> }
 type SendResponse = [ClientResponse, object]
+const providers = ["sendgrid", "resend"] as const
+type Provider = (typeof providers)[number]
 const originalEnv = process.env
 const actualMongo = jest.requireActual<typeof import("mongodb")>("mongodb")
 const connect = MongoClient.connect.bind(MongoClient)
@@ -219,6 +222,15 @@ describe("comment endpoint notification wiring", () => {
     return handler
   }
 
+  const configureProvider = (provider: Provider) => {
+    if (provider === "sendgrid") return send
+    delete process.env.NOTIFICATION_SERVICE_API_KEY
+    delete process.env.SENDGRID_VERIFIED_SENDER
+    process.env.RESEND_API_KEY = resendApiKey
+    process.env.RESEND_FROM = resendSender
+    return resendSend
+  }
+
   const expectSavedComment = async (
     response: Awaited<ReturnType<Handler>>,
     text = commentText
@@ -285,10 +297,7 @@ describe("comment endpoint notification wiring", () => {
   )
 
   it("uses the resolver to send through Resend after the endpoint saves a comment", async () => {
-    delete process.env.NOTIFICATION_SERVICE_API_KEY
-    delete process.env.SENDGRID_VERIFIED_SENDER
-    process.env.RESEND_API_KEY = resendApiKey
-    process.env.RESEND_FROM = resendSender
+    configureProvider("resend")
     let savedAtSend: Comment | null = null
     resendSend.mockImplementation(async () => {
       savedAtSend = await db
@@ -316,20 +325,27 @@ describe("comment endpoint notification wiring", () => {
     expect(errorLog).not.toHaveBeenCalled()
   })
 
-  it("supports comma-separated moderator addresses from environment configuration", async () => {
-    const recipients = [recipient, "second@example.com", "third@example.com"]
-    process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL = ` ${recipient}, second@example.com, , third@example.com `
-    const handler = await loadHandler()
+  it.each(providers)(
+    "sends through %s to every configured moderator",
+    async provider => {
+      const providerSend = configureProvider(provider)
+      const recipients = [recipient, "second@example.com", "third@example.com"]
+      process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL = ` ${recipient}, second@example.com, , third@example.com `
+      const handler = await loadHandler()
 
-    await expectSavedComment(await handler(eventFor()))
+      await expectSavedComment(await handler(eventFor()))
 
-    expect(send).toHaveBeenCalledTimes(3)
-    recipients.forEach(to => {
-      expect(send).toHaveBeenCalledWith(
-        expect.objectContaining({ to, from: verifiedSender })
-      )
-    })
-  })
+      expect(providerSend).toHaveBeenCalledTimes(3)
+      recipients.forEach(to => {
+        expect(providerSend).toHaveBeenCalledWith(
+          expect.objectContaining({
+            to,
+            from: provider === "resend" ? resendSender : verifiedSender,
+          })
+        )
+      })
+    }
+  )
 
   it("uses the resolver to keep notifications disabled when no provider is configured", async () => {
     delete process.env.NOTIFICATION_SERVICE_API_KEY
@@ -348,7 +364,7 @@ describe("comment endpoint notification wiring", () => {
   })
 
   it("rejects a partially configured second provider before initializing either client", async () => {
-    // The temporary SendGrid factory currently hides this Resend setting.
+    // Any setting for a second provider must prevent silent provider selection.
     process.env.RESEND_FROM = resendSender
 
     await expect(loadHandler()).rejects.toMatchObject({
@@ -388,23 +404,30 @@ describe("comment endpoint notification wiring", () => {
     }
   )
 
-  it("reuses the configured handler for successive successful submissions", async () => {
-    const handler = await loadHandler()
-    await expectSavedComment(await handler(eventFor()))
-    const secondText = "Another comment through the same warm handler"
+  it.each(providers)(
+    "reuses the %s client for successive submissions",
+    async provider => {
+      const providerSend = configureProvider(provider)
+      const handler = await loadHandler()
+      await expectSavedComment(await handler(eventFor()))
+      const secondText = "Another comment through the same warm handler"
 
-    await expectSavedComment(
-      await handler(eventFor({ body: secondText })),
-      secondText
-    )
+      await expectSavedComment(
+        await handler(eventFor({ body: secondText })),
+        secondText
+      )
 
-    expect(resolveService).toHaveBeenCalledTimes(1)
-    expect(setApiKey).toHaveBeenCalledTimes(1)
-    expect(send).toHaveBeenCalledTimes(2)
-    expect(
-      await db.collection("comments").countDocuments({ userId: author.id })
-    ).toBe(2)
-  })
+      expect(resolveService).toHaveBeenCalledTimes(1)
+      expect(setApiKey).toHaveBeenCalledTimes(provider === "sendgrid" ? 1 : 0)
+      expect(resendConstructor).toHaveBeenCalledTimes(
+        provider === "resend" ? 1 : 0
+      )
+      expect(providerSend).toHaveBeenCalledTimes(2)
+      expect(
+        await db.collection("comments").countDocuments({ userId: author.id })
+      ).toBe(2)
+    }
+  )
 
   it("awaits delivery through the real adapter before completing the endpoint request", async () => {
     const entered = deferred<void>()
@@ -467,6 +490,149 @@ describe("comment endpoint notification wiring", () => {
     }
   )
 
+  it.each(["provider error", "rejected promise", "synchronous throw"])(
+    "preserves the saved comment and safe diagnostics after a Resend %s",
+    async outcome => {
+      configureProvider("resend")
+      const privateValues = [
+        resendApiKey,
+        resendSender,
+        recipient,
+        "private-provider-trace",
+        "private-provider-header",
+      ]
+      const detail = privateValues.join(" | ")
+      const otherLogs = (
+        ["warn", "info", "log", "debug", "trace"] as const
+      ).map(method => jest.spyOn(console, method).mockImplementation(() => {}))
+      if (outcome === "provider error") {
+        resendSend.mockResolvedValue({
+          data: null,
+          error: {
+            name: "application_error",
+            statusCode: 503,
+            message: detail,
+          },
+          headers: { authorization: detail },
+        })
+      } else if (outcome === "rejected promise") {
+        resendSend.mockRejectedValue(new globalThis.Error(detail))
+      } else {
+        resendSend.mockImplementation(() => {
+          throw new TypeError(detail)
+        })
+      }
+      const handler = await loadHandler()
+
+      const response = await handler(eventFor())
+
+      await expectSavedComment(response)
+      expect(resendSend).toHaveBeenCalledTimes(1)
+      expect(send).not.toHaveBeenCalled()
+      expect(setApiKey).not.toHaveBeenCalled()
+      expect(errorLog).toHaveBeenCalledWith("Comment notification failed", {
+        commentId: (JSON.parse(response.body as string) as Comment).id,
+        statusCode: outcome === "provider error" ? 503 : 502,
+      })
+      if (outcome === "provider error") {
+        expect(errorLog).toHaveBeenCalledWith(
+          "Notification provider error",
+          expect.objectContaining({
+            statusCode: 503,
+            body: expect.stringContaining("Check network access"),
+          })
+        )
+      }
+      const diagnostics = inspect(
+        [errorLog.mock.calls, ...otherLogs.map(spy => spy.mock.calls)],
+        { depth: null }
+      )
+      privateValues.forEach(value => {
+        expect(inspect(response)).not.toContain(value)
+        expect(diagnostics).not.toContain(value)
+      })
+      expect(diagnostics).not.toContain(commentText)
+    }
+  )
+
+  it("completes the saved submission when Resend delivery times out", async () => {
+    configureProvider("resend")
+    const entered = deferred<void>()
+    const delivery = deferred<Awaited<ReturnType<ResendSend>>>()
+    resendSend.mockImplementation(() => {
+      // Persistence uses real timers; fake only the notification wait that follows.
+      jest.useFakeTimers({ doNotFake: ["nextTick", "setImmediate"] })
+      entered.resolve()
+      return delivery.promise
+    })
+    const handler = await loadHandler()
+    let completed: Awaited<ReturnType<Handler>> | undefined
+    const request = handler(eventFor()).then(response => {
+      completed = response
+      return response
+    })
+
+    try {
+      await Promise.race([entered.promise, request.then(() => {})])
+      const completedBeforeDeadline = completed
+      // Exercise timeout handling without sleeping or asserting its duration.
+      await jest.runOnlyPendingTimersAsync()
+      const completedAtDeadline = completed
+      // Also release the SDK promise if a regression removes the deadline.
+      delivery.resolve(resendAccepted)
+      const response = await request
+
+      expect(resendSend).toHaveBeenCalledTimes(1)
+      expect(completedBeforeDeadline).toBeUndefined()
+      expect(completedAtDeadline).toBe(response)
+    } finally {
+      delivery.resolve(resendAccepted)
+      jest.useRealTimers()
+    }
+
+    const response = await request
+    await expectSavedComment(response)
+    expect(errorLog).toHaveBeenCalledTimes(1)
+    expect(errorLog).toHaveBeenCalledWith("Comment notification failed", {
+      commentId: (JSON.parse(response.body as string) as Comment).id,
+      statusCode: 504,
+    })
+    expect(send).not.toHaveBeenCalled()
+  })
+
+  it("does not notify Resend when authentication rejects a submission", async () => {
+    configureProvider("resend")
+    const handler = await loadHandler()
+
+    const response = await handler(eventFor({ headers: { Origin: origin } }))
+
+    expect(response.statusCode).toBe(401)
+    expect(resendSend).not.toHaveBeenCalled()
+    expect(send).not.toHaveBeenCalled()
+    expect(
+      await db.collection("comments").countDocuments({ userId: author.id })
+    ).toBe(0)
+  })
+
+  it("does not notify Resend when comment insertion fails", async () => {
+    configureProvider("resend")
+    const handler = await loadHandler()
+    jest
+      .spyOn(Collection.prototype, "insertOne")
+      .mockRejectedValueOnce(
+        new globalThis.Error("Synthetic insertion failure")
+      )
+
+    const response = await handler(eventFor())
+
+    expect(response.statusCode).toBe(500)
+    expect(resendSend).not.toHaveBeenCalled()
+    expect(send).not.toHaveBeenCalled()
+    expect(
+      await db.collection("comments").countDocuments({ userId: author.id })
+    ).toBe(0)
+  })
+
   it.each([
     {
       name: "missing authentication",
@@ -506,19 +672,23 @@ describe("comment endpoint notification wiring", () => {
     ).toBe(0)
   })
 
-  it("does not send another email for a rejected duplicate submission", async () => {
-    const handler = await loadHandler()
-    await expectSavedComment(await handler(eventFor()))
-    send.mockClear()
+  it.each(providers)(
+    "does not notify %s again for a rejected duplicate",
+    async provider => {
+      const providerSend = configureProvider(provider)
+      const handler = await loadHandler()
+      await expectSavedComment(await handler(eventFor()))
+      providerSend.mockClear()
 
-    const response = await handler(eventFor())
+      const response = await handler(eventFor())
 
-    expect(response.statusCode).toBe(409)
-    expect(send).not.toHaveBeenCalled()
-    expect(
-      await db.collection("comments").countDocuments({ text: commentText })
-    ).toBe(1)
-  })
+      expect(response.statusCode).toBe(409)
+      expect(providerSend).not.toHaveBeenCalled()
+      expect(
+        await db.collection("comments").countDocuments({ text: commentText })
+      ).toBe(1)
+    }
+  )
 
   it.each(["unacknowledged", "thrown"])(
     "does not send email when insertion is %s",
@@ -545,31 +715,36 @@ describe("comment endpoint notification wiring", () => {
     }
   )
 
-  it.each([
-    { method: "GET", statusCode: 200 },
-    { method: "PUT", statusCode: 204 },
-    { method: "DELETE", statusCode: 202 },
-    { method: "OPTIONS", statusCode: 200 },
-    { method: "PATCH", statusCode: 405 },
-  ])(
-    "does not send email for $method requests",
-    async ({ method, statusCode }) => {
-      await db.collection<Comment>("comments").insertOne({ ...existingComment })
-      const handler = await loadHandler()
+  describe.each(providers)("%s request methods", provider => {
+    it.each([
+      { method: "GET", statusCode: 200 },
+      { method: "PUT", statusCode: 204 },
+      { method: "DELETE", statusCode: 202 },
+      { method: "OPTIONS", statusCode: 200 },
+      { method: "PATCH", statusCode: 405 },
+    ])(
+      "does not send email for $method requests",
+      async ({ method, statusCode }) => {
+        const providerSend = configureProvider(provider)
+        await db
+          .collection<Comment>("comments")
+          .insertOne({ ...existingComment })
+        const handler = await loadHandler()
 
-      const response = await handler(
-        eventFor({
-          httpMethod: method,
-          path: `/.netlify/functions/comment/${existingComment.id}`,
-          body: "Updated existing comment",
-        })
-      )
+        const response = await handler(
+          eventFor({
+            httpMethod: method,
+            path: `/.netlify/functions/comment/${existingComment.id}`,
+            body: "Updated existing comment",
+          })
+        )
 
-      expect(response.statusCode).toBe(statusCode)
-      expect(send).not.toHaveBeenCalled()
-      expect(
-        await db.collection("comments").countDocuments({ text: commentText })
-      ).toBe(0)
-    }
-  )
+        expect(response.statusCode).toBe(statusCode)
+        expect(providerSend).not.toHaveBeenCalled()
+        expect(
+          await db.collection("comments").countDocuments({ text: commentText })
+        ).toBe(0)
+      }
+    )
+  })
 })
