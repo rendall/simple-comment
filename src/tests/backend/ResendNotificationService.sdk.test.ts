@@ -128,4 +128,63 @@ describe("Resend default SDK client", () => {
       expect(fetchSpy).not.toHaveBeenCalled()
     }
   )
+
+  it.each([
+    {
+      gatewayStatus: 502,
+      expected: {
+        statusCode: 503,
+        body: "Notification service unavailable: 0 accepted, 1 failed. Check network access and Resend's service status, then try again later.",
+      },
+      logsGuidance: true,
+    },
+    {
+      gatewayStatus: 504,
+      expected: {
+        statusCode: 504,
+        body: "Notification timed out: 0 accepted, 1 failed.",
+      },
+      logsGuidance: false,
+    },
+  ])(
+    "classifies a non-JSON HTTP $gatewayStatus response through the real SDK",
+    async ({ gatewayStatus, expected, logsGuidance }) => {
+      const message = "Synthetic private comment body"
+      const privateValues = [
+        configuration.apiKey,
+        configuration.from,
+        ...configuration.moderatorContactEmails,
+        message,
+        "synthetic-private-gateway-detail",
+        "synthetic-private-provider-header",
+      ]
+      fetchSpy.mockImplementationOnce(
+        async () =>
+          new Response(`<html>${privateValues.join(" | ")}</html>`, {
+            status: gatewayStatus,
+            headers: {
+              "Content-Type": "text/html",
+              "X-Provider-Detail": "synthetic-private-provider-header",
+            },
+          })
+      )
+      const consoleSpies = (
+        ["error", "warn", "info", "log", "debug", "trace"] as const
+      ).map(method => jest.spyOn(console, method).mockImplementation(() => {}))
+      const service = new ResendNotificationService(configuration)
+
+      const result = await service.notifyModerators(message)
+
+      expect(result).toEqual(expected)
+      expect(fetchSpy).toHaveBeenCalledTimes(1)
+      expect(consoleSpies.flatMap(spy => spy.mock.calls)).toEqual(
+        logsGuidance ? [["Notification provider error", expected]] : []
+      )
+      const diagnostics = inspect(
+        { result, logs: consoleSpies.map(spy => spy.mock.calls) },
+        { depth: null }
+      )
+      privateValues.forEach(value => expect(diagnostics).not.toContain(value))
+    }
+  )
 })
