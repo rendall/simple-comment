@@ -238,4 +238,8 @@ These checks validate the settings locally. They do not make provider requests t
 
 Configuration errors name providers and relevant variable names and explain how to fix the problem. They never print the values or the environment object.
 
-Delivery diagnostics can include the comment ID, notification status, and safe guidance about an account or sending problem. Credentials and raw provider errors stay out of logs and responses. Internal provider messages must not be assumed safe to log.
+Simple Comment's normal delivery diagnostics can include the comment ID, notification status, and fixed guidance about an account or sending problem. Credentials and raw provider errors stay out of these logs and comment HTTP responses.
+
+For deliberate troubleshooting, you can enable the Resend SDK's own logging with `RESEND_DEBUG=true`. It is off by default. When enabled, the SDK may write raw provider errors, including account details or email addresses, to runtime logs. This is an accepted exception to the normal logging behavior; comment HTTP responses remain filtered.
+
+On Netlify, delivery-time debug output goes to access-controlled [function logs](https://docs.netlify.com/build/functions/logs/), separate from [deploy logs](https://docs.netlify.com/build/configure-builds/overview/), which can be public. We intentionally leave this SDK troubleshooting option available. Turn it off again when you have finished troubleshooting.
