@@ -10,6 +10,7 @@ import {
 } from "@jest/globals"
 import type { APIGatewayEvent } from "aws-lambda"
 import type { ClientResponse, MailService } from "@sendgrid/mail"
+import type { Resend } from "resend"
 import { Collection, MongoClient, ObjectId } from "mongodb"
 import type { Db } from "mongodb"
 import * as jwt from "jsonwebtoken"
@@ -19,6 +20,10 @@ import policy from "../../policy.json"
 declare const global: { __MONGO_URI__: string; __MONGO_DB_NAME__: string }
 
 type Handler = (typeof import("../../functions/comment"))["handler"]
+type GetNotificationService =
+  (typeof import("../../lib/getNotificationService"))["getNotificationService"]
+type ResendSend = Resend["emails"]["send"]
+type ResendMail = { emails: Pick<Resend["emails"], "send"> }
 type SendResponse = [ClientResponse, object]
 const originalEnv = process.env
 const actualMongo = jest.requireActual<typeof import("mongodb")>("mongodb")
@@ -27,6 +32,8 @@ const databaseName = `${global.__MONGO_DB_NAME__}-comment-wiring`
 const origin = "https://notifications.example.com"
 const apiKey = "SG.synthetic-notification-test-key"
 const verifiedSender = "sender@example.com"
+const resendApiKey = "re_synthetic_endpoint_key"
+const resendSender = "Simple Comment <resend-sender@example.com>"
 const recipient = "moderator@example.com"
 const jwtSecret = "synthetic-comment-endpoint-jwt-secret"
 const author: User = {
@@ -46,6 +53,11 @@ const accepted: SendResponse = [
   { statusCode: 202, body: {}, headers: undefined },
   {},
 ]
+const resendAccepted = {
+  data: { id: "synthetic-resend-email-id" },
+  error: null,
+  headers: null,
+} satisfies Awaited<ReturnType<ResendSend>>
 const tokenFor = (userId: string) =>
   jwt.sign({ user: userId }, jwtSecret, { expiresIn: "1h" })
 
@@ -110,6 +122,11 @@ describe("comment endpoint notification wiring", () => {
   let endpointClients: MongoClient[]
   let send: jest.MockedFunction<MailService["send"]>
   let setApiKey: jest.MockedFunction<MailService["setApiKey"]>
+  let resendSend: jest.MockedFunction<ResendSend>
+  let resendConstructor: jest.Mock<
+    (...args: ConstructorParameters<typeof Resend>) => ResendMail
+  >
+  let resolveService: jest.SpiedFunction<GetNotificationService>
   let errorLog: jest.SpiedFunction<typeof console.error>
 
   beforeAll(async () => {
@@ -136,16 +153,28 @@ describe("comment endpoint notification wiring", () => {
       NOTIFICATION_SERVICE_API_KEY: apiKey,
       SENDGRID_VERIFIED_SENDER: verifiedSender,
     }
+    // Isolate provider selection from any developer or CI notification settings.
+    ;["SENDGRID_API_KEY", "RESEND_API_KEY", "RESEND_FROM"].forEach(
+      key => delete process.env[key]
+    )
     send = jest.fn<MailService["send"]>().mockResolvedValue(accepted)
     setApiKey = jest.fn<MailService["setApiKey"]>()
     const mail = { send, setApiKey }
+    resendSend = jest.fn<ResendSend>().mockResolvedValue(resendAccepted)
+    resendConstructor = jest
+      .fn<(...args: ConstructorParameters<typeof Resend>) => ResendMail>()
+      .mockReturnValue({ emails: { send: resendSend } })
     jest.resetModules()
-    // Only the SendGrid SDK boundary is stubbed. The handler, DB service,
-    // notification adapter, environment validation, and JWT verification are real.
+    // Only provider SDK boundaries are stubbed. The handler, resolver, DB service,
+    // adapters, environment validation, and JWT verification are real.
     jest.doMock("@sendgrid/mail", () => ({
       ...mail,
       MailService: jest.fn(() => mail),
     }))
+    jest.doMock("resend", () => ({ Resend: resendConstructor }))
+    jest.spyOn(globalThis, "fetch").mockImplementation(() => {
+      throw new globalThis.Error("Endpoint tests must not make HTTP requests")
+    })
     // Keep one real MongoDB module identity while isolating application modules.
     jest.doMock("mongodb", () => actualMongo)
     jest
@@ -164,6 +193,7 @@ describe("comment endpoint notification wiring", () => {
     } finally {
       jest.restoreAllMocks()
       jest.dontMock("@sendgrid/mail")
+      jest.dontMock("resend")
       jest.dontMock("mongodb")
       jest.resetModules()
       process.env = originalEnv
@@ -181,6 +211,9 @@ describe("comment endpoint notification wiring", () => {
   const loadHandler = async (): Promise<Handler> => {
     let handler!: Handler
     await jest.isolateModulesAsync(async () => {
+      const resolver = await import("../../lib/getNotificationService")
+      // Observe the real resolver without replacing its behavior.
+      resolveService = jest.spyOn(resolver, "getNotificationService")
       handler = (await import("../../functions/comment")).handler
     })
     return handler
@@ -216,27 +249,70 @@ describe("comment endpoint notification wiring", () => {
     dateCreated: new Date("2026-01-02T00:00:00Z"),
   }
 
-  it("sends an email through the configured adapter after the endpoint saves a comment", async () => {
+  it.each(["SENDGRID_API_KEY", "NOTIFICATION_SERVICE_API_KEY"])(
+    "uses the resolver to send through SendGrid configured with %s after saving",
+    async keyName => {
+      delete process.env.NOTIFICATION_SERVICE_API_KEY
+      process.env[keyName] = apiKey
+      let savedAtSend: Comment | null = null
+      send.mockImplementation(async () => {
+        savedAtSend = await db
+          .collection<Comment>("comments")
+          .findOne({ text: commentText })
+        return accepted
+      })
+      const handler = await loadHandler()
+
+      await expectSavedComment(await handler(eventFor()))
+
+      expect(resolveService).toHaveBeenCalledTimes(1)
+      expect(savedAtSend).toMatchObject({
+        text: commentText,
+        userId: author.id,
+      })
+      expect(setApiKey).toHaveBeenCalledWith(apiKey)
+      expect(resendConstructor).not.toHaveBeenCalled()
+      expect(resendSend).not.toHaveBeenCalled()
+      expect(send).toHaveBeenCalledTimes(1)
+      expect(send).toHaveBeenCalledWith({
+        to: recipient,
+        from: verifiedSender,
+        subject: "Simple Comment Notification",
+        text: `New comment posted by ${author.name} (${author.email})`,
+      })
+      expect(errorLog).not.toHaveBeenCalled()
+    }
+  )
+
+  it("uses the resolver to send through Resend after the endpoint saves a comment", async () => {
+    delete process.env.NOTIFICATION_SERVICE_API_KEY
+    delete process.env.SENDGRID_VERIFIED_SENDER
+    process.env.RESEND_API_KEY = resendApiKey
+    process.env.RESEND_FROM = resendSender
     let savedAtSend: Comment | null = null
-    send.mockImplementation(async () => {
+    resendSend.mockImplementation(async () => {
       savedAtSend = await db
         .collection<Comment>("comments")
         .findOne({ text: commentText })
-      return accepted
+      return resendAccepted
     })
     const handler = await loadHandler()
 
     await expectSavedComment(await handler(eventFor()))
 
+    expect(resolveService).toHaveBeenCalledTimes(1)
     expect(savedAtSend).toMatchObject({ text: commentText, userId: author.id })
-    expect(setApiKey).toHaveBeenCalledWith(apiKey)
-    expect(send).toHaveBeenCalledTimes(1)
-    expect(send).toHaveBeenCalledWith({
+    expect(resendConstructor).toHaveBeenCalledTimes(1)
+    expect(resendConstructor.mock.calls[0][0]).toBe(resendApiKey)
+    expect(resendSend).toHaveBeenCalledTimes(1)
+    expect(resendSend).toHaveBeenCalledWith({
       to: recipient,
-      from: verifiedSender,
+      from: resendSender,
       subject: "Simple Comment Notification",
       text: `New comment posted by ${author.name} (${author.email})`,
     })
+    expect(setApiKey).not.toHaveBeenCalled()
+    expect(send).not.toHaveBeenCalled()
     expect(errorLog).not.toHaveBeenCalled()
   })
 
@@ -255,17 +331,37 @@ describe("comment endpoint notification wiring", () => {
     })
   })
 
-  it("keeps notifications disabled when both SendGrid settings are absent", async () => {
+  it("uses the resolver to keep notifications disabled when no provider is configured", async () => {
     delete process.env.NOTIFICATION_SERVICE_API_KEY
     delete process.env.SENDGRID_VERIFIED_SENDER
-    // The required moderator contact address alone must not enable SendGrid.
+    // The required moderator contact address alone must not enable notifications.
     const handler = await loadHandler()
 
     await expectSavedComment(await handler(eventFor()))
 
+    expect(resolveService).toHaveBeenCalledTimes(1)
     expect(setApiKey).not.toHaveBeenCalled()
     expect(send).not.toHaveBeenCalled()
+    expect(resendConstructor).not.toHaveBeenCalled()
+    expect(resendSend).not.toHaveBeenCalled()
     expect(errorLog).not.toHaveBeenCalled()
+  })
+
+  it("rejects a partially configured second provider before initializing either client", async () => {
+    // The temporary SendGrid factory currently hides this Resend setting.
+    process.env.RESEND_FROM = resendSender
+
+    await expect(loadHandler()).rejects.toMatchObject({
+      name: "EnvContractError",
+      key: "NOTIFICATION_PROVIDERS",
+      message: expect.stringContaining("Multiple notification providers"),
+    })
+
+    expect(resolveService).toHaveBeenCalledTimes(1)
+    expect(setApiKey).not.toHaveBeenCalled()
+    expect(send).not.toHaveBeenCalled()
+    expect(resendConstructor).not.toHaveBeenCalled()
+    expect(resendSend).not.toHaveBeenCalled()
   })
 
   it.each([
@@ -302,6 +398,8 @@ describe("comment endpoint notification wiring", () => {
       secondText
     )
 
+    expect(resolveService).toHaveBeenCalledTimes(1)
+    expect(setApiKey).toHaveBeenCalledTimes(1)
     expect(send).toHaveBeenCalledTimes(2)
     expect(
       await db.collection("comments").countDocuments({ userId: author.id })
