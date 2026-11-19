@@ -142,7 +142,38 @@
           {
             "BearerAuth": []
           }
-        ]
+        ],
+        "requestBody": {
+          "description": "Topic fields. Supply a lowercase slug as the topic ID. Send ampersand-separated key=value pairs and percent-encode values. Encode spaces as %20.",
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": ["id"],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9-]+$"
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "isLocked": {
+                    "type": "string",
+                    "description": "Lock value supplied as text."
+                  }
+                }
+              }
+            },
+            "text/plain": {
+              "schema": {
+                "type": "string"
+              },
+              "example": "id=example-topic&title=Example%20Topic&isLocked=false"
+            }
+          }
+        }
       }
     },
     "/topic/{topicId}": {
@@ -271,7 +302,33 @@
           {
             "BearerAuth": []
           }
-        ]
+        ],
+        "requestBody": {
+          "description": "Topic title and lock value to set. Send ampersand-separated key=value pairs and percent-encode values. Encode spaces as %20.",
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "isLocked": {
+                    "type": "string",
+                    "description": "Lock value supplied as text."
+                  }
+                }
+              }
+            },
+            "text/plain": {
+              "schema": {
+                "type": "string"
+              },
+              "example": "title=Updated%20Topic&isLocked=false"
+            }
+          }
+        }
       },
       "delete": {
         "summary": "Delete a discussion",
@@ -657,41 +714,49 @@
         "summary": "Create a user",
         "description": "Creates an authenticated user who can log in over mutliple devices. If the authId is a temporary user, link the temporary user to the authenticated user",
         "requestBody": {
+          "description": "Account registration fields. Supply a password for a regular account. Guest registration uses the guest ID and may omit the password. Send ampersand-separated key=value pairs and percent-encode values. Encode spaces as %20.",
+          "required": true,
           "content": {
-            "application/json": {
+            "application/x-www-form-urlencoded": {
               "schema": {
                 "type": "object",
+                "required": ["id", "name", "email"],
                 "properties": {
                   "id": {
                     "type": "string",
-                    "description": "Unique identifier for the user. If not provided, the API will assign one."
+                    "minLength": 5,
+                    "maxLength": 36,
+                    "pattern": "^[a-z0-9_-]+$"
                   },
                   "name": {
-                    "type": "string",
-                    "description": "Name of the user"
+                    "type": "string"
                   },
                   "email": {
                     "type": "string",
-                    "description": "Email address of the user"
+                    "format": "email"
+                  },
+                  "isAdmin": {
+                    "type": "string",
+                    "description": "Admin-only field, subject to account restrictions."
+                  },
+                  "isVerified": {
+                    "type": "string",
+                    "description": "Admin-only field, subject to account restrictions."
                   },
                   "password": {
                     "type": "string",
-                    "description": "Password for the user"
-                  },
-                  "isAdmin": {
-                    "type": "boolean",
-                    "description": "Whether the user is an admin"
-                  },
-                  "isVerified": {
-                    "type": "boolean",
-                    "description": "Whether the user is verified"
+                    "format": "password"
                   }
-                },
-                "required": ["name", "email", "password"]
+                }
               }
+            },
+            "text/plain": {
+              "schema": {
+                "type": "string"
+              },
+              "example": "id=sample-user&name=Sample%20User&email=sample%40example.com&password=sample-password"
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "201": {
@@ -878,7 +943,41 @@
           {
             "BearerAuth": []
           }
-        ]
+        ],
+        "requestBody": {
+          "description": "User fields to update. Send ampersand-separated key=value pairs and percent-encode values. Encode spaces as %20.",
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "isAdmin": {
+                    "type": "string",
+                    "description": "Admin-only field, subject to account restrictions."
+                  },
+                  "isVerified": {
+                    "type": "string",
+                    "description": "Admin-only field, subject to account restrictions."
+                  }
+                }
+              }
+            },
+            "text/plain": {
+              "schema": {
+                "type": "string"
+              },
+              "example": "name=Updated%20Name"
+            }
+          }
+        }
       },
       "delete": {
         "summary": "Delete a user",
@@ -1373,14 +1472,15 @@
     },
     "requestBodies": {
       "text": {
-        "description": "This is the body copy of the reply to a topic or comment",
+        "description": "Raw comment text.",
         "content": {
           "text/plain": {
             "schema": {
               "type": "string"
             }
           }
-        }
+        },
+        "required": true
       }
     },
     "securitySchemes": {
