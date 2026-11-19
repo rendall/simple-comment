@@ -31,7 +31,7 @@
     "/topic": {
       "get": {
         "summary": "Discussion discovery",
-        "description": "Receive a listing of all discussions",
+        "description": "Lists topics. Authentication is required when public discussion reads are disabled.",
         "responses": {
           "200": {
             "description": "List available discussions",
@@ -56,8 +56,18 @@
               }
             }
           },
-          "403": {
-            "description": "User is not authorized to view topics",
+          "404": {
+            "description": "Authenticating user is unknown and public discussion reads are disabled",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
             "content": {
               "text/plain": {
                 "schema": {
@@ -69,6 +79,9 @@
         },
         "security": [
           {},
+          {
+            "CookieAuth": []
+          },
           {
             "BearerAuth": []
           }
@@ -117,6 +130,16 @@
               }
             }
           },
+          "404": {
+            "description": "Authenticating user is unknown when first-visit creation is disabled",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
           "409": {
             "description": "Duplicate topic",
             "content": {
@@ -127,8 +150,8 @@
               }
             }
           },
-          "429": {
-            "description": "Too much discussion",
+          "500": {
+            "description": "Internal server error",
             "content": {
               "text/plain": {
                 "schema": {
@@ -139,6 +162,10 @@
           }
         },
         "security": [
+          {},
+          {
+            "CookieAuth": []
+          },
           {
             "BearerAuth": []
           }
@@ -173,7 +200,18 @@
               "example": "id=example-topic&title=Example%20Topic&isLocked=false"
             }
           }
-        }
+        },
+        "description": "When the first-visit creation policy is enabled, anonymous visitors and non-admin callers can create topics with an allowed Referer. When disabled, topic creation requires an authenticated administrator.",
+        "parameters": [
+          {
+            "name": "Referer",
+            "in": "header",
+            "description": "Required for callers without an authenticated administrator account when first-visit creation is enabled.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
       }
     },
     "/topic/{topicId}": {
@@ -212,8 +250,8 @@
               }
             }
           },
-          "403": {
-            "description": "User is not authorized to view discussion {topicId}",
+          "404": {
+            "description": "{topicId} is not found",
             "content": {
               "text/plain": {
                 "schema": {
@@ -222,8 +260,8 @@
               }
             }
           },
-          "404": {
-            "description": "{topicId} is not found",
+          "500": {
+            "description": "Internal server error",
             "content": {
               "text/plain": {
                 "schema": {
@@ -236,9 +274,13 @@
         "security": [
           {},
           {
+            "CookieAuth": []
+          },
+          {
             "BearerAuth": []
           }
-        ]
+        ],
+        "description": "Returns the topic and its replies. Authentication is required when public discussion reads are disabled."
       },
       "put": {
         "summary": "Edit a topic",
@@ -258,6 +300,16 @@
           "204": {
             "description": "Topic {topicId} updated"
           },
+          "400": {
+            "description": "Missing request body",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
           "401": {
             "description": "User is not authenticated",
             "content": {
@@ -269,7 +321,7 @@
             }
           },
           "403": {
-            "description": "User is not authorized to update this comment",
+            "description": "Administrator access is required to edit the topic",
             "content": {
               "text/plain": {
                 "schema": {
@@ -287,9 +339,27 @@
                 }
               }
             }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           }
         },
         "security": [
+          {
+            "CookieAuth": []
+          },
           {
             "BearerAuth": []
           }
@@ -357,7 +427,27 @@
             }
           },
           "403": {
-            "description": "User is not authorized to delete this comment",
+            "description": "Administrator access is required to delete the topic",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Topic or authenticating user was not found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
             "content": {
               "text/plain": {
                 "schema": {
@@ -368,6 +458,9 @@
           }
         },
         "security": [
+          {
+            "CookieAuth": []
+          },
           {
             "BearerAuth": []
           }
@@ -433,6 +526,26 @@
               }
             }
           },
+          "404": {
+            "description": "Parent topic, parent comment, or authenticating user was not found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The same text was already posted by this user in their most recent comment on this parent",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
           "413": {
             "description": "Comment is too long",
             "content": {
@@ -443,18 +556,8 @@
               }
             }
           },
-          "425": {
-            "description": "Possible duplicate comment",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Too many comments",
+          "500": {
+            "description": "Internal server error",
             "content": {
               "text/plain": {
                 "schema": {
@@ -465,6 +568,9 @@
           }
         },
         "security": [
+          {
+            "CookieAuth": []
+          },
           {
             "BearerAuth": []
           }
@@ -505,8 +611,8 @@
               }
             }
           },
-          "403": {
-            "description": "User is not authorized to view discussion {commentId}",
+          "404": {
+            "description": "{commentId} is not found",
             "content": {
               "text/plain": {
                 "schema": {
@@ -515,8 +621,8 @@
               }
             }
           },
-          "404": {
-            "description": "{commentId} is not found",
+          "500": {
+            "description": "Internal server error",
             "content": {
               "text/plain": {
                 "schema": {
@@ -529,9 +635,13 @@
         "security": [
           {},
           {
+            "CookieAuth": []
+          },
+          {
             "BearerAuth": []
           }
-        ]
+        ],
+        "description": "Returns the comment and its replies. Read access depends on the discussion read policy."
       },
       "put": {
         "summary": "Edit a comment",
@@ -553,6 +663,16 @@
         "responses": {
           "204": {
             "description": "Comment {commentId} updated"
+          },
+          "400": {
+            "description": "Missing request body or unchanged comment text",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
           },
           "401": {
             "description": "User is not authenticated",
@@ -583,9 +703,22 @@
                 }
               }
             }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
           }
         },
         "security": [
+          {
+            "CookieAuth": []
+          },
           {
             "BearerAuth": []
           }
@@ -635,9 +768,32 @@
                 }
               }
             }
+          },
+          "404": {
+            "description": "Comment or authenticating user was not found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
           }
         },
         "security": [
+          {
+            "CookieAuth": []
+          },
           {
             "BearerAuth": []
           }
@@ -661,18 +817,8 @@
               }
             }
           },
-          "401": {
-            "description": "User is not authenticated",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "User is not authorized to view users",
+          "500": {
+            "description": "Internal server error",
             "content": {
               "text/plain": {
                 "schema": {
@@ -685,13 +831,17 @@
         "security": [
           {},
           {
+            "CookieAuth": []
+          },
+          {
             "BearerAuth": []
           }
-        ]
+        ],
+        "description": "Lists public profile fields. An authenticated administrator receives additional fields."
       },
       "post": {
         "summary": "Create a user",
-        "description": "Creates an authenticated user who can log in over mutliple devices. If the authId is a temporary user, link the temporary user to the authenticated user",
+        "description": "Anonymous registration is available when public user creation is enabled. Guest registration is subject to the guest creation policy.",
         "requestBody": {
           "description": "Account registration fields. Supply a password for a regular account. Guest registration uses the guest ID and may omit the password. Send ampersand-separated key=value pairs and percent-encode values. Encode spaces as %20.",
           "required": true,
@@ -778,8 +928,28 @@
               }
             }
           },
+          "404": {
+            "description": "Authenticating user is unknown",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
           "409": {
             "description": "UserId exists",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
             "content": {
               "text/plain": {
                 "schema": {
@@ -790,6 +960,10 @@
           }
         },
         "security": [
+          {},
+          {
+            "CookieAuth": []
+          },
           {
             "BearerAuth": []
           }
@@ -851,14 +1025,28 @@
                 }
               }
             }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
           }
         },
         "security": [
           {},
           {
+            "CookieAuth": []
+          },
+          {
             "BearerAuth": []
           }
-        ]
+        ],
+        "description": "Anonymous and guest access depend on the user profile read policy. The profile owner and administrators receive additional fields."
       },
       "put": {
         "summary": "Edit a user",
@@ -877,6 +1065,16 @@
         "responses": {
           "204": {
             "description": "User {userId} updated"
+          },
+          "400": {
+            "description": "Missing request body or invalid user details",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
           },
           "401": {
             "description": "User is not authenticated",
@@ -907,9 +1105,22 @@
                 }
               }
             }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
           }
         },
         "security": [
+          {
+            "CookieAuth": []
+          },
           {
             "BearerAuth": []
           }
@@ -1003,13 +1214,27 @@
                 }
               }
             }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
           }
         },
         "security": [
           {
+            "CookieAuth": []
+          },
+          {
             "BearerAuth": []
           }
-        ]
+        ],
+        "description": "Administrators can delete users. A signed-in non-guest user can delete their own account when self-deletion is enabled. The built-in moderator account is protected."
       }
     },
     "/auth": {
@@ -1154,12 +1379,12 @@
               }
             }
           },
-          "429": {
-            "description": "Too many hits on this endpoint in a short amount of time",
-            "headers": {
-              "Retry-After": {
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "text/plain": {
                 "schema": {
-                  "type": "integer"
+                  "type": "string"
                 }
               }
             }
