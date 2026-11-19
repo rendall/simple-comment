@@ -159,7 +159,7 @@ Configure only one email provider. Leave all provider settings unset to keep not
 
 ### Email notifications
 
-Simple Comment can email your moderators when someone posts or edits a comment. Notifications are **off until you configure an email provider**.
+Simple Comment can email your moderators when someone posts a new comment or reply. Notifications are **off until you configure an email provider**.
 
 We recommend Resend for getting started, and SendGrid is also supported. Existing SendGrid installations can keep their current settings.
 

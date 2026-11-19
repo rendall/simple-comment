@@ -1,12 +1,12 @@
 # Email notifications
 
-Simple Comment can email your moderators when someone posts a new comment or reply, or edits an existing comment. This helps you keep up with conversations without checking every page of your website.
+Simple Comment can email your moderators when someone posts a new comment or reply. This helps you keep up with conversations without checking every page of your website.
 
-The notification email body includes the comment text and identifies its author. Edit notifications are clearly marked so moderators know an existing comment has changed. A failed or unchanged edit does not send a notification. Reading or deleting a comment does not send one either.
+The notification email identifies the comment's author by name and email address. Including the comment text is planned in [#247](https://github.com/rendall/simple-comment/issues/247), and notifications for edits are planned in [#248](https://github.com/rendall/simple-comment/issues/248). Reading, editing, or deleting a comment does not currently send a notification.
 
 Notifications are optional. They stay off until you configure an email provider. We recommend Resend for new installations, and you can also use SendGrid.
 
-_If you do configure notifications, we assume receiving them matters to you._ Therefore, deployment will halt if notification configuration is incomplete or misconfigured. Checks run before deployment (in CI) and when Netlify Functions start, with error messages explaining what to fix.
+_If you do configure notifications, we assume receiving them matters to you._ Simple Comment checks notification settings when the comment function starts. Incomplete or conflicting settings stop that function from starting, with an error explaining what to fix. Automated checks that block deployment are still planned in [#242](https://github.com/rendall/simple-comment/issues/242), so check your settings carefully and verify delivery after deploying.
 
 ## Get started with Resend
 
@@ -80,21 +80,21 @@ Post a new comment on your site, then check that:
 
 1. The comment appears successfully.
 2. Each configured moderator receives an email.
-3. The notification contains the comment text and author information.
+3. The notification identifies the comment's author.
 
-Edit the comment and check that another notification arrives, clearly marked as an edit.
+Post a reply and check that it also sends a notification.
 
 Check spam folders too. A successfully saved comment, or a provider accepting an email, does not by itself confirm that the email arrived.
 
 ### A note about the free plan
 
-Resend currently allows 100 emails per day and 3,000 per month on its free transactional plan. Each recipient counts separately: a notification sent to three moderators uses three emails. Edit notifications also use your allowance.
+Resend currently allows 100 emails per day and 3,000 per month on its free transactional plan. Each recipient counts separately: a notification sent to three moderators uses three emails.
 
 Other applications using the same account may consume its allowance too. Check [Resend's current limits](https://resend.com/docs/knowledge-base/account-quotas-and-limits) when planning for your site.
 
 ## Use SendGrid instead
 
-> Note that only one notification provider can be enabled at a time. A CI build error results if more than one provider is enabled. Choose _either_ Resend _or_ SendGrid, but not both.
+> Only one notification provider can be enabled at a time. Configuring more than one prevents the comment function from starting. Choose _either_ Resend _or_ SendGrid, but not both.
 
 You can use SendGrid by configuring its API key and verified sender:
 
@@ -153,7 +153,7 @@ To switch back, remove the new provider's settings and restore the previous conf
 
 ### Simple Comment reports a configuration error
 
-> Either _no_ notification provider, or only _one properly configured_ provider, must be configured at a time. Deployment will break if more than one provider is configured or if any provider is configured improperly.
+> Either _no_ notification provider, or only _one properly configured_ provider, must be configured at a time. The comment function cannot start if more than one provider is configured or if any provider is configured improperly.
 
 Check that:
 
@@ -173,7 +173,7 @@ Check the recipient addresses and spam folders first. Then check your provider's
 
 Common causes include an invalid API key, an unverified sender or domain, account restrictions, and sending limits. A setting can have the right format even when the provider will not accept it.
 
-Simple Comment saves the comment or edit before attempting notification delivery. An email failure does not remove the comment or turn a successful save into an error.
+Simple Comment saves the new comment or reply before attempting notification delivery. An email failure does not remove the comment or turn a successful save into an error.
 
 There is no automatic retry queue, so a missed notification is not automatically sent again.
 
@@ -222,17 +222,17 @@ Providers implement the existing `AbstractNotificationService` interface. `Mongo
 
 ### Saving comments and sending emails
 
-The comment service saves a new comment or an edit before calling `notifyModerators`. Rejected submissions, failed saves, and edits that leave the text unchanged do not send notifications.
+The comment service saves a new comment or reply before calling `notifyModerators`. Rejected submissions, failed saves, and edits do not send notifications.
 
 Recipient sends run concurrently. The request waits for every recipient's send to finish or reach its five-second deadline. One recipient's failure does not stop attempts to the others. The provider reports success only when every send is accepted, and partial failures include accepted and failed counts.
 
-Delivery failures leave the successful comment response intact. A new comment keeps its `201` response, and an edit keeps its successful update response. A timeout ends the wait; it does not guarantee that the provider has stopped processing the email. An email may still arrive afterward.
+Delivery failures leave the successful comment response intact. A new comment keeps its `201` response. A timeout ends the wait; it does not guarantee that the provider has stopped processing the email. An email may still arrive afterward.
 
 Notification results distinguish general provider failures, account or sender restrictions, exhausted allowances, unavailability, timeouts, and internal errors. Providers interpret their own response formats. Mixed failure summaries are consistent regardless of which recipient's send finishes first. Notification error statuses are internal results; they do not replace the response for a successfully saved comment.
 
 ### Checking configuration and keeping logs safe
 
-The same configuration validator runs in CI and when Netlify Functions initialize. CI checks its own environment; Netlify checks the settings actually deployed. Tests cover valid and invalid combinations with synthetic settings, without needing real email credentials.
+The configuration validator checks the deployed settings when the comment function initializes. CI runs tests of valid and invalid combinations with synthetic settings, without needing real email credentials. It does not yet check the intended deployment's notification settings; that deployment gate is tracked in [#242](https://github.com/rendall/simple-comment/issues/242).
 
 These checks validate the settings locally. They do not make provider requests to verify that an API key works or a sender is authorized. Those problems are handled as delivery failures.
 
