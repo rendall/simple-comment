@@ -15,7 +15,7 @@
   },
   "servers": [
     {
-      "url": "/comment-api/v1"
+      "url": "/.netlify/functions"
     }
   ],
   "security": [
