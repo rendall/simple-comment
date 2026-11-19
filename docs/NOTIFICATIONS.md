@@ -60,6 +60,10 @@ Keep your API key out of frontend scripts, public files, and Git commits. Restar
 
 Your local `.env` file does not configure your deployed Netlify Functions.
 
+Use Node.js 22 for deployment, matching this project's `.nvmrc` and CI. The Resend SDK requires Node.js 20 or newer. If you previously set `NODE_VERSION` in Netlify, update it to match `.nvmrc` (`22.22.0`).
+
+Netlify normally selects the Functions runtime from the build's Node.js version. If your site has an old `AWS_LAMBDA_JS_RUNTIME` override, remove it or set it to `nodejs22.x` through Netlify's environment-variable settings before redeploying. That runtime override belongs in Netlify's UI, CLI, or API, not in `netlify.toml`. See [Netlify's runtime configuration guide](https://docs.netlify.com/build/functions/configuration/#node-js-version-for-runtime).
+
 In your Netlify project's environment-variable settings, add the same variable names and their values. Make sure they are available to Functions and apply to the deployment you want to configure.
 
 Enter each name and value separately. For a display name, the value of `RESEND_FROM` would be:

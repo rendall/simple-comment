@@ -198,6 +198,8 @@ Assumes a unix-like environment, like Ubuntu.
 
 ### Installation
 
+Use Node.js 22, as selected by `.nvmrc` and CI. The Resend SDK requires Node.js 20 or newer.
+
 1. Install [nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 1. `nvm install`
 1. `npm install -g yarn`
