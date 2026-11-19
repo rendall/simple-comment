@@ -32,7 +32,7 @@ Provider transports, the implementation of CI/deployment checks, notification me
 | `RESEND_API_KEY`                         | Resend API key                                            |
 | `RESEND_FROM`                            | One Resend sender address, optionally with a display name |
 | `SENDGRID_API_KEY`                       | SendGrid API key                                          |
-| `SENDGRID_VERIFIED_SENDER`               | One plain SendGrid verified-sender address                |
+| `SENDGRID_VERIFIED_SENDER`               | One SendGrid verified-sender address, optionally with a display name |
 | `SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL` | One or more comma-separated plain moderator addresses     |
 
 Use each provider's terminology for its settings. Keep the moderator-recipient setting shared. A future provider can use a different credential name if its service calls the credential something other than an API key.
@@ -69,7 +69,7 @@ To disable notifications, remove all provider-specific settings. Locally, commen
 
 Use the shared `validateEmail()` helper for mailbox validation. The agreed implementation delegates to `validator/lib/isEmail`, with `allow_utf8_local_part: false`, while preserving the helper's result shape and messages. Do not introduce a separate notification-only email validator.
 
-Keep Resend display-name parsing separate from mailbox validation. Accept one plain sender, or one nonempty display name followed by a mailbox in matching angle brackets:
+Keep display-name parsing separate from mailbox validation. For either provider, accept one plain sender, or one nonempty display name followed by a mailbox in matching angle brackets:
 
 ```dotenv
 RESEND_FROM=notifications@example.com
@@ -77,11 +77,13 @@ RESEND_FROM=notifications@example.com
 RESEND_FROM="Simple Comment <notifications@example.com>"
 ```
 
-A quoted display name containing a comma, such as `"Doe, Jane" <notifications@example.com>`, is also accepted. The display-name wrapper must be well formed, and the enclosed mailbox must pass the shared helper. Reject multiple senders, missing brackets, empty names or mailboxes, and line breaks. `SENDGRID_VERIFIED_SENDER` accepts one plain mailbox, without a display-name wrapper.
+A quoted display name containing a comma, such as `"Doe, Jane" <notifications@example.com>`, is also accepted. The display-name wrapper must be well formed, and the enclosed mailbox must pass the shared helper. Reject multiple senders, missing brackets, empty names or mailboxes, and line breaks. These single-sender formats apply to both `RESEND_FROM` and `SENDGRID_VERIFIED_SENDER`; pass the original setting through unchanged.
+
+Maintainer clarification (2026-11-19): existing SendGrid display-name senders must continue to work with both the current and legacy API-key names. Requiring users to remove their display names would be a compatibility bug. This supersedes the earlier plain-only SendGrid restriction.
 
 For moderator recipients, split on commas, trim surrounding whitespace, and ignore empty entries. At least one valid address must remain when notifications are enabled. Reject the entire list if any remaining entry is malformed; do not silently discard an invalid address. Reject display names, angle brackets, and line breaks in the recipient list. These notification-specific recipient checks do not add a new address-format requirement when notifications are off.
 
-Examples such as `.alice@example.com`, `alice@example..com`, and `alice@-example.com` must fail for plain senders, mailboxes inside Resend display names, and moderator recipients, including mixed valid/invalid lists. Valid examples include `first.last+moderation@sub.example.com`.
+Examples such as `.alice@example.com`, `alice@example..com`, and `alice@-example.com` must fail for plain senders, mailboxes inside display names, and moderator recipients, including mixed valid/invalid lists. Valid examples include `first.last+moderation@sub.example.com`.
 
 API keys are opaque, nonblank strings. Do not guess whether a key works from its prefix. Local validation does not contact providers, check DNS, prove that a mailbox exists, or verify sender authorization. Those checks cannot guarantee delivery.
 

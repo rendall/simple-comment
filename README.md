@@ -161,7 +161,7 @@ Configure only one email provider. Leave all provider settings unset to keep not
 
 Simple Comment can email your moderators when someone posts a new comment or reply. Notifications are **off until you configure an email provider**.
 
-We recommend Resend for getting started, and SendGrid is also supported. Existing SendGrid installations can keep their provider and API key, but should follow the [pre-upgrade check](docs/NOTIFICATIONS.md#before-upgrading-an-existing-sendgrid-installation) before deploying this release.
+We recommend Resend for getting started, and SendGrid is also supported. Existing SendGrid installations can keep their provider, API key, and verified sender, including its display name.
 
 See the [notification guide](docs/NOTIFICATIONS.md) for setup instructions, switching providers, turning notifications off, and troubleshooting.
 

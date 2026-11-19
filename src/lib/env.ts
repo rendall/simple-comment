@@ -154,13 +154,12 @@ const getRequiredNotificationSetting = (
 
 const getNotificationSender = (
   source: NodeJS.ProcessEnv,
-  key: string,
-  allowDisplayName: boolean
+  key: string
 ): string => {
   const sender = getRequiredNotificationSetting(source, key)
-  const displayAddress = allowDisplayName
-    ? sender.match(/^("[^"<>\r\n]+"|[^"<>,;\r\n]+)\s*<([^<>\s]+)>$/)
-    : null
+  const displayAddress = sender.match(
+    /^("[^"<>\r\n]+"|[^"<>,;\r\n]+)\s*<([^<>\s]+)>$/
+  )
   // Use only the validity flag; validateEmail's failure reason includes the value.
   const validAddress =
     validateEmail(sender).isValid ||
@@ -173,7 +172,7 @@ const getNotificationSender = (
   if (/[\r\n]/.test(sender) || !validAddress) {
     throw new EnvContractError(
       key,
-      `${key} must contain one email address${allowDisplayName ? ", optionally with a display name in the form Name <address>" : ""}. Lists and line breaks are not allowed.`
+      `${key} must contain one email address, optionally with a display name in the form Name <address>. Lists and line breaks are not allowed.`
     )
   }
   return sender
@@ -236,11 +235,7 @@ export const getNotificationConfiguration = (
     configuration: {
       provider: selected.provider,
       apiKey: getRequiredNotificationSetting(source, apiKeyName),
-      from: getNotificationSender(
-        source,
-        selected.senderName,
-        selected.provider === "resend"
-      ),
+      from: getNotificationSender(source, selected.senderName),
       moderatorContactEmails: getNotificationRecipients(source),
     },
     warnings: hasLegacySendGridKey

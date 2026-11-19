@@ -110,15 +110,19 @@ SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL=moderator@example.com
 
 Create a key with permission to use **Mail Send**, and complete SendGrid's sender verification. Its guides explain [API keys](https://www.twilio.com/docs/sendgrid/ui/account-and-settings/api-keys) and [sender identity](https://www.twilio.com/docs/sendgrid/for-developers/sending-email/sender-identity).
 
+Your verified sender can also include a display name:
+
+```dotenv
+SENDGRID_VERIFIED_SENDER="Ops <notifications@example.com>"
+```
+
+Use one verified sender address, either plain or with a display name. Moderator recipients still use plain addresses only.
+
 Add these settings locally or in Netlify as described above, then restart or redeploy and check that a notification arrives. Leave the Resend settings unset.
 
-### Before upgrading an existing SendGrid installation
+### Existing SendGrid installations
 
-This release checks sender and recipient formats more strictly. Before deploying it, check `SENDGRID_VERIFIED_SENDER` in your local `.env` and Netlify Functions settings. It must contain one plain verified email address, such as `sender@example.com`.
-
-If your existing value includes a display name, such as `Ops <sender@example.com>`, replace it with just `sender@example.com`. Earlier releases passed that format directly to SendGrid, which accepted it; this release rejects it during function initialization. Make this settings change before upgrading so the comment endpoint can start.
-
-You can keep your existing SendGrid API key. Keep moderator recipients as comma-separated plain email addresses, leave Resend settings unset, and check that notifications arrive after deploying.
+You can keep your existing SendGrid API key and verified sender, including a display name such as `Ops <sender@example.com>`. Simple Comment passes the sender through unchanged; you do not need to remove the display name when upgrading. Keep moderator recipients as comma-separated plain email addresses, leave Resend settings unset, and check that notifications arrive after deploying.
 
 ## Turn notifications off
 
@@ -203,7 +207,7 @@ For now, open the relevant page on your website to find the comment. A logged-in
 | `RESEND_API_KEY`                         | Resend API key                                                                              |
 | `RESEND_FROM`                            | One Resend sender address, optionally with a display name                                   |
 | `SENDGRID_API_KEY`                       | SendGrid API key                                                                            |
-| `SENDGRID_VERIFIED_SENDER`               | SendGrid's verified sender address                                                          |
+| `SENDGRID_VERIFIED_SENDER`               | One SendGrid verified sender address, optionally with a display name                         |
 
 Provider settings determine whether notifications are enabled:
 
