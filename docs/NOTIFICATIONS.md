@@ -108,6 +108,14 @@ Create a key with permission to use **Mail Send**, and complete SendGrid's sende
 
 Add these settings locally or in Netlify as described above, then restart or redeploy and check that a notification arrives. Leave the Resend settings unset.
 
+### Before upgrading an existing SendGrid installation
+
+This release checks sender and recipient formats more strictly. Before deploying it, check `SENDGRID_VERIFIED_SENDER` in your local `.env` and Netlify Functions settings. It must contain one plain verified email address, such as `sender@example.com`.
+
+If your existing value includes a display name, such as `Ops <sender@example.com>`, replace it with just `sender@example.com`. Earlier releases passed that format directly to SendGrid, which accepted it; this release rejects it during function initialization. Make this settings change before upgrading so the comment endpoint can start.
+
+You can keep your existing SendGrid API key. Keep moderator recipients as comma-separated plain email addresses, leave Resend settings unset, and check that notifications arrive after deploying.
+
 ## Turn notifications off
 
 Remove all provider-specific settings from the environment where Simple Comment runs.
