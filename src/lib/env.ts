@@ -166,7 +166,7 @@ const getNotificationSender = (
     validateEmail(sender).isValid ||
     Boolean(
       displayAddress &&
-      displayAddress[1].trim() &&
+      displayAddress[1].replace(/^"|"$/g, "").trim() &&
       validateEmail(displayAddress[2]).isValid
     )
 
