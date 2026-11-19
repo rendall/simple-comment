@@ -211,6 +211,8 @@ Use Node.js 22, as selected by `.nvmrc` and CI. The Resend SDK requires Node.js 
 
 ### Test
 
+`yarn run test:environment` checks notification settings directly in `process.env`. For local development, it also loads an optional `.env` file. It does not supply test defaults. The check runs as part of `yarn test` in local and GitHub CI, and Netlify runs it explicitly before building. Leaving every provider unconfigured is valid; notifications stay off. This check does not send email.
+
 1. `yarn run test:backend`
    - Backend tests do not require `.env` on disk. Test env values are injected from `example.env` during Jest setup.
    - Backend tests use the repo-managed Mongo test harness via `@shelf/jest-mongodb` and `jest-mongodb-config.js`; contributors do not need to export the old `MONGOMS_*` workaround variables.

@@ -6,7 +6,7 @@ The notification email identifies the comment's author by name and email address
 
 Notifications are optional. They stay off until you configure an email provider. We recommend Resend for new installations, and you can also use SendGrid.
 
-_If you do configure notifications, we assume receiving them matters to you._ Simple Comment checks notification settings when the comment function starts. Incomplete or conflicting settings stop that function from starting, with an error explaining what to fix. Automated checks that block deployment are still planned in [#242](https://github.com/rendall/simple-comment/issues/242), so check your settings carefully and verify delivery after deploying.
+_If you do configure notifications, we assume receiving them matters to you._ Simple Comment checks notification settings during local and GitHub CI, and before Netlify builds. Incomplete or conflicting settings halt CI or deployment, with an error explaining what to fix. This check does not send email. The comment function also still checks its settings when it starts; removing that repeated check is part of [#242](https://github.com/rendall/simple-comment/issues/242). Verify delivery after deploying.
 
 ## Get started with Resend
 
@@ -64,7 +64,7 @@ Use Node.js 22 for deployment, matching this project's `.nvmrc` and CI. The Rese
 
 Netlify normally selects the Functions runtime from the build's Node.js version. If your site has an old `AWS_LAMBDA_JS_RUNTIME` override, remove it or set it to `nodejs22.x` through Netlify's environment-variable settings before redeploying. That runtime override belongs in Netlify's UI, CLI, or API, not in `netlify.toml`. See [Netlify's runtime configuration guide](https://docs.netlify.com/build/functions/configuration/#node-js-version-for-runtime).
 
-In your Netlify project's environment-variable settings, add the same variable names and their values. Make sure they are available to Functions and apply to the deployment you want to configure.
+In your Netlify project's environment-variable settings, add the same variable names and their values. Make sure all notification settings, including the moderator recipient addresses, are available to both **Builds** and **Functions** and apply to the deployment you want to configure. The build checks those settings before publishing; the function uses them to send notifications. A successful GitHub check only validates the settings available to GitHub, not settings stored separately in Netlify.
 
 Enter each name and value separately. For a display name, the value of `RESEND_FROM` would be:
 
