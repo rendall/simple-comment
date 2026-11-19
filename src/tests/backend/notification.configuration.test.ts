@@ -353,6 +353,16 @@ describe("notification configuration", () => {
     })
 
     it.each([
+      '"" <notifications@example.com>',
+      '"   " <notifications@example.com>',
+      '" \t " <notifications@example.com>',
+    ])("rejects an empty or whitespace-only quoted name (%s)", from => {
+      expectConfigurationError({ ...contact, ...resend, RESEND_FROM: from }, [
+        "RESEND_FROM",
+      ])
+    })
+
+    it.each([
       "alice@example.com,bob@example.com",
       "Alice <alice@example.com>,Bob <bob@example.com>",
       "Moderator <.alice@example.com>",
