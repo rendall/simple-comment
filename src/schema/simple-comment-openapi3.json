@@ -1014,16 +1014,26 @@
         ]
       },
       "delete": {
-        "summary": "Revoke authentication / log out",
-        "description": "Sets the Cookie token to expire in the past or the revokes the Authentication header",
+        "summary": "Log out by expiring the session cookie",
+        "description": "Expires the simple_comment_token cookie in the browser. Previously issued JWTs remain valid until their own expiration.",
+        "security": [],
         "responses": {
           "202": {
-            "description": "Authentication revoked",
-            "content": {
-              "application/json": {
+            "description": "Logout acknowledged",
+            "headers": {
+              "Set-Cookie": {
+                "description": "Sets simple_comment_token to logged-out with an expiration date in the past.",
                 "schema": {
-                  "$ref": "#/components/schemas/Success"
+                  "type": "string"
                 }
+              }
+            },
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "Logged out"
               }
             }
           }
@@ -1032,21 +1042,49 @@
     },
     "/gauth": {
       "get": {
-        "summary": "Receive temporary or non-authenticated credentials",
-        "description": "The authentication token is set via the Authentication header with the Bearer scheme and is expected to be set as a cookie in the user's browser and used until an authenticated user is created. The activity of the temporary user should be linked to the authenticated user if possible.",
+        "summary": "Issue a guest authentication token",
+        "description": "Sets the simple_comment_token cookie on a successful request. The response body is OK by default.",
+        "security": [],
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "description": "Any non-empty value returns the JWT in the response body. If omitted or empty, the response body is OK.",
+            "schema": {
+              "type": "string"
+            },
+            "example": "true"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Temporary or non-authenticated credential received",
-            "content": {
-              "application/json": {
+            "description": "Guest token issued. The body contains OK or the JWT, depending on the token query parameter.",
+            "headers": {
+              "Set-Cookie": {
+                "description": "Sets the HttpOnly simple_comment_token cookie to the JWT. The cookie uses SameSite=Strict or SameSite=None with Secure, depending on the deployment configuration.",
                 "schema": {
-                  "$ref": "#/components/schemas/AuthToken"
+                  "type": "string"
                 }
+              }
+            },
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "OK"
               }
             }
           },
           "403": {
-            "description": "Guest accounts are forbidden according to policy `isGuestAccountAllowed:false`"
+            "description": "Guest accounts are forbidden according to policy `isGuestAccountAllowed:false`",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
           },
           "429": {
             "description": "Too many hits on this endpoint in a short amount of time",
@@ -1239,9 +1277,6 @@
             "type": "boolean"
           }
         }
-      },
-      "AuthToken": {
-        "type": "string"
       },
       "Topic": {
         "type": "object",
