@@ -77,7 +77,7 @@ RESEND_FROM=notifications@example.com
 RESEND_FROM="Simple Comment <notifications@example.com>"
 ```
 
-A quoted display name containing a comma, such as `"Doe, Jane" <notifications@example.com>`, is also accepted. The display-name wrapper must be well formed, and the enclosed mailbox must pass the shared helper. Reject multiple senders, missing brackets, empty names or mailboxes, and line breaks. These single-sender formats apply to both `RESEND_FROM` and `SENDGRID_VERIFIED_SENDER`; pass the original setting through unchanged.
+Display names may contain commas, as in `Doe, Jane <notifications@example.com>` or `"Doe, Jane" <notifications@example.com>`. Trim surrounding whitespace from the name and mailbox for validation, including whitespace after the closing bracket. The display-name wrapper must be well formed, and the enclosed mailbox must pass the shared helper. Reject multiple senders, missing brackets, empty names or mailboxes, and line breaks. These single-sender formats apply to both `RESEND_FROM` and `SENDGRID_VERIFIED_SENDER`; pass the original setting through unchanged.
 
 Maintainer clarification (2026-11-19): existing SendGrid display-name senders must continue to work with both the current and legacy API-key names. Requiring users to remove their display names would be a compatibility bug. This supersedes the earlier plain-only SendGrid restriction.
 

@@ -157,22 +157,55 @@ const getNotificationSender = (
   key: string
 ): string => {
   const sender = getRequiredNotificationSetting(source, key)
-  const displayAddress = sender.match(
-    /^("[^"<>\r\n]+"|[^"<>,;\r\n]+)\s*<([^<>\s]+)>$/
-  )
-  // Use only the validity flag; validateEmail's failure reason includes the value.
-  const validAddress =
-    validateEmail(sender).isValid ||
-    Boolean(
-      displayAddress &&
-      displayAddress[1].replace(/^"|"$/g, "").trim() &&
-      validateEmail(displayAddress[2]).isValid
-    )
+  // Extract candidates first; validate their contents and wrapper separately.
+  const displayAddress = sender.match(/(.*)<(.*)>/)
+  const name = displayAddress?.[1].trim() ?? ""
+  const email = (displayAddress?.[2] ?? sender).trim()
 
-  if (/[\r\n]/.test(sender) || !validAddress) {
+  if (/[\r\n]/.test(sender)) {
+    throw new EnvContractError(key, `${key} must not contain line breaks.`)
+  }
+
+  if (
+    /[<>]/.test(name) ||
+    /[<>]/.test(email) ||
+    (displayAddress && displayAddress[0].trim() !== sender.trim())
+  ) {
     throw new EnvContractError(
       key,
-      `${key} must contain one email address, optionally with a display name in the form Name <address>. Lists and line breaks are not allowed.`
+      `${key} must contain one sender with matching angle brackets in Name <address> format, or a plain email address.`
+    )
+  }
+
+  if (displayAddress) {
+    const quotedName = name.match(/^"([^"]*)"$/)
+    const displayName = (quotedName?.[1] ?? name).trim()
+    if (!displayName || (!quotedName && name.includes('"'))) {
+      throw new EnvContractError(
+        key,
+        `${key} must have a nonempty display name, with matching quotes if quoted.`
+      )
+    }
+
+    // A comma in a name is fine; a preceding email address is another sender.
+    const nameParts = name.split(/[;,]/)
+    if (
+      !quotedName &&
+      nameParts.length > 1 &&
+      nameParts.some(part => validateEmail(part.trim()).isValid)
+    ) {
+      throw new EnvContractError(
+        key,
+        `${key} must contain one sender email address. Sender lists are not allowed.`
+      )
+    }
+  }
+
+  // Use only the validity flag while runtime callers also use this validator.
+  if (!validateEmail(email).isValid) {
+    throw new EnvContractError(
+      key,
+      `${key} must contain a valid email address, either alone or inside the display name's angle brackets.`
     )
   }
   return sender

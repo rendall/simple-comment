@@ -260,6 +260,49 @@ describe("notification configuration", () => {
       })
 
       it.each([
+        " sender@example.com ",
+        "  Doe, Jane  < sender@example.com > \t",
+      ])(
+        "trims sender parts for validation but preserves delivery input (%s)",
+        from => {
+          expect(
+            getNotificationConfiguration({
+              ...contact,
+              ...settings,
+              [senderName]: from,
+            }).configuration
+          ).toEqual({ ...expected, from })
+        }
+      )
+
+      it.each([
+        {
+          name: "display name",
+          from: '"Unclosed <sender@example.com>',
+          explanation: /display name.*matching quotes/i,
+        },
+        {
+          name: "mailbox",
+          from: "Ops <not-an-email>",
+          explanation: /valid email address/i,
+        },
+        {
+          name: "wrapper",
+          from: "Ops <<sender@example.com>>",
+          explanation: /angle brackets/i,
+        },
+      ])(
+        "identifies an invalid $name without exposing settings",
+        ({ from, explanation }) => {
+          const failure = expectConfigurationError(
+            { ...contact, ...settings, [senderName]: from },
+            [senderName]
+          )
+          expect(failure.message).toMatch(explanation)
+        }
+      )
+
+      it.each([
         "missing-at-sign",
         ".alice@example.com",
         "alice@example..com",
@@ -339,6 +382,8 @@ describe("notification configuration", () => {
     it.each([
       "Simple Comment <notifications@example.com>",
       '"Doe, Jane" <notifications@example.com>',
+      "Doe, Jane <notifications@example.com>",
+      "Ops <notifications@example.com> ",
     ])("accepts a single sender with a display name (%s)", from => {
       expect(
         getNotificationConfiguration({
