@@ -1,5 +1,5 @@
 [build]
-  command = "yarn run build"
+  command = "yarn test:environment && yarn build"
   functions = "functions"
   publish = "dist"
 

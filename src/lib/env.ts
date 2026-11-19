@@ -1,4 +1,5 @@
 import { config as dotenvConfig } from "dotenv"
+import { validateEmail } from "./shared-utilities"
 
 if (process.env.NODE_ENV !== "production") {
   dotenvConfig()
@@ -108,4 +109,172 @@ export const getOptionalModeratorContactEmails = (
     .split(",")
     .map(email => email.trim())
     .filter(email => email.length > 0)
+}
+
+export type NotificationConfiguration = {
+  provider: "resend" | "sendgrid"
+  apiKey: string
+  from: string
+  moderatorContactEmails: string[]
+}
+
+export type NotificationConfigurationResult = {
+  configuration: NotificationConfiguration | undefined
+  warnings: string[]
+}
+
+const notificationProviders = [
+  {
+    provider: "resend",
+    apiKeyName: "RESEND_API_KEY",
+    senderName: "RESEND_FROM",
+  },
+  {
+    provider: "sendgrid",
+    apiKeyName: "SENDGRID_API_KEY",
+    senderName: "SENDGRID_VERIFIED_SENDER",
+  },
+] as const
+
+const legacySendGridApiKeyName = "NOTIFICATION_SERVICE_API_KEY"
+
+const getRequiredNotificationSetting = (
+  source: NodeJS.ProcessEnv,
+  key: string
+): string => {
+  const value = source[key]
+  if (value === undefined || value.trim().length === 0) {
+    throw new EnvContractError(
+      key,
+      `${key} is required and must not be empty when configuring notifications`
+    )
+  }
+  return value
+}
+
+const getNotificationSender = (
+  source: NodeJS.ProcessEnv,
+  key: string
+): string => {
+  const sender = getRequiredNotificationSetting(source, key)
+  // Extract candidates first; validate their contents and wrapper separately.
+  const displayAddress = sender.match(/(.*)<(.*)>/)
+  const name = displayAddress?.[1].trim() ?? ""
+  const email = (displayAddress?.[2] ?? sender).trim()
+
+  if (/[\r\n]/.test(sender)) {
+    throw new EnvContractError(key, `${key} must not contain line breaks.`)
+  }
+
+  if (
+    /[<>]/.test(name) ||
+    /[<>]/.test(email) ||
+    (displayAddress && displayAddress[0].trim() !== sender.trim())
+  ) {
+    throw new EnvContractError(
+      key,
+      `${key} must contain one sender with matching angle brackets in Name <address> format, or a plain email address.`
+    )
+  }
+
+  if (displayAddress) {
+    const quotedName = name.match(/^"([^"]*)"$/)
+    const displayName = (quotedName?.[1] ?? name).trim()
+    if (!displayName || (!quotedName && name.includes('"'))) {
+      throw new EnvContractError(
+        key,
+        `${key} must have a nonempty display name, with matching quotes if quoted.`
+      )
+    }
+
+    // A comma in a name is fine; a preceding email address is another sender.
+    const nameParts = name.split(/[;,]/)
+    if (
+      !quotedName &&
+      nameParts.length > 1 &&
+      nameParts.some(part => validateEmail(part.trim()).isValid)
+    ) {
+      throw new EnvContractError(
+        key,
+        `${key} must contain one sender email address. Sender lists are not allowed.`
+      )
+    }
+  }
+
+  // Use only the validity flag while runtime callers also use this validator.
+  if (!validateEmail(email).isValid) {
+    throw new EnvContractError(
+      key,
+      `${key} must contain a valid email address, either alone or inside the display name's angle brackets.`
+    )
+  }
+  return sender
+}
+
+const getNotificationRecipients = (source: NodeJS.ProcessEnv): string[] => {
+  const key = "SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL"
+  const rawRecipients = getRequiredNotificationSetting(source, key)
+  const recipients = getOptionalModeratorContactEmails(source) ?? []
+
+  if (
+    /[\r\n]/.test(rawRecipients) ||
+    recipients.length === 0 ||
+    recipients.some(email => !validateEmail(email).isValid)
+  ) {
+    throw new EnvContractError(
+      key,
+      `${key} must contain at least one valid plain email address. Separate addresses with commas; display names, angle brackets, and line breaks are not allowed.`
+    )
+  }
+  return recipients
+}
+
+export const getNotificationConfiguration = (
+  source: NodeJS.ProcessEnv
+): NotificationConfigurationResult => {
+  const hasLegacySendGridKey = source[legacySendGridApiKeyName] !== undefined
+  if (hasLegacySendGridKey && source.SENDGRID_API_KEY !== undefined) {
+    throw new EnvContractError(
+      legacySendGridApiKeyName,
+      "Both SENDGRID_API_KEY and NOTIFICATION_SERVICE_API_KEY are defined. Remove NOTIFICATION_SERVICE_API_KEY and keep SENDGRID_API_KEY."
+    )
+  }
+
+  const configuredProviders = notificationProviders.filter(
+    ({ provider, apiKeyName, senderName }) =>
+      source[apiKeyName] !== undefined ||
+      source[senderName] !== undefined ||
+      (provider === "sendgrid" && hasLegacySendGridKey)
+  )
+
+  if (configuredProviders.length > 1) {
+    throw new EnvContractError(
+      "NOTIFICATION_PROVIDERS",
+      "Multiple notification providers are configured: Resend and SendGrid. Configure only one provider."
+    )
+  }
+
+  const selected = configuredProviders[0]
+  if (selected === undefined) {
+    return { configuration: undefined, warnings: [] }
+  }
+
+  const apiKeyName =
+    selected.provider === "sendgrid" && hasLegacySendGridKey
+      ? legacySendGridApiKeyName
+      : selected.apiKeyName
+
+  return {
+    configuration: {
+      provider: selected.provider,
+      apiKey: getRequiredNotificationSetting(source, apiKeyName),
+      from: getNotificationSender(source, selected.senderName),
+      moderatorContactEmails: getNotificationRecipients(source),
+    },
+    warnings: hasLegacySendGridKey
+      ? [
+          "NOTIFICATION_SERVICE_API_KEY is deprecated. Use SENDGRID_API_KEY instead.",
+        ]
+      : [],
+  }
 }

@@ -75,12 +75,10 @@ jobs:
           npm install yarn@^1 --no-package-lock -g
           yarn --frozen-lockfile --production=false
 
-      - name: Test Netlify functions and frontend
+      - name: Test environment, Netlify functions, and frontend
         # Browser smoke/e2e coverage is intentionally excluded from the
         # required PR gate for this phase.
-        run: |
-          yarn test:backend
-          yarn test:frontend
+        run: yarn test
 
   test-netlify-functions:
     runs-on: ubuntu-latest

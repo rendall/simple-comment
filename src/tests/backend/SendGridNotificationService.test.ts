@@ -9,22 +9,22 @@ import {
 import { SendGridNotificationService } from "../../lib/SendGridNotificationService"
 import type { ClientResponse, MailService } from "@sendgrid/mail"
 import type { Error, Success } from "../../lib/simple-comment-types"
+import type { NotificationConfiguration } from "../../lib/env"
 
-jest.mock("dotenv", () => ({
-  config: jest.fn(() => {
-    process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL =
-      "email1@example.com,email2@example.com,email3@example.com,email4@example.com,email5@example.com,email6@example.com,email7@example.com,email8@example.com,email9@example.com,email10@example.com"
-    process.env.SENDGRID_VERIFIED_SENDER = "email@example.com"
-    process.env.NOTIFICATION_SERVICE_API_KEY = "SG.from.test.env"
-  }),
-}))
+jest.mock("dotenv", () => ({ config: jest.fn() }))
 
 describe("SendGridNotificationService", () => {
   let sendGridNotificationService: SendGridNotificationService
   let mailServiceMock: jest.Mocked<MailService>
 
-  const moderatorContactEmails = ["a1@example,com", "test2@example.com"]
+  const moderatorContactEmails = ["a1@example.com", "test2@example.com"]
   const sendGridTestApiKey = "SG.test"
+  const configuration: NotificationConfiguration = {
+    provider: "sendgrid",
+    apiKey: sendGridTestApiKey,
+    from: "email@example.com",
+    moderatorContactEmails,
+  }
 
   beforeEach(() => {
     jest.resetModules()
@@ -34,9 +34,8 @@ describe("SendGridNotificationService", () => {
     } as unknown as jest.Mocked<MailService>
 
     sendGridNotificationService = new SendGridNotificationService(
-      mailServiceMock,
-      sendGridTestApiKey,
-      moderatorContactEmails
+      configuration,
+      mailServiceMock
     )
   })
 
@@ -46,11 +45,6 @@ describe("SendGridNotificationService", () => {
 
   it("should set API key", async () => {
     expect(mailServiceMock.setApiKey).toHaveBeenCalledWith(sendGridTestApiKey)
-  })
-
-  it("should use environmental variable for API key", async () => {
-    new SendGridNotificationService(mailServiceMock)
-    expect(mailServiceMock.setApiKey).toHaveBeenCalledWith("SG.from.test.env")
   })
 
   it("should handle email sending failure", async () => {
@@ -79,78 +73,6 @@ describe("SendGridNotificationService", () => {
       statusCode: 502,
       body: "Notification failed: 0 accepted, 2 failed. Provider details: send failed",
     })
-  })
-
-  it("should throw given empty moderator contact emails", async () => {
-    expect(
-      () =>
-        new SendGridNotificationService(mailServiceMock, sendGridTestApiKey, [])
-    ).toThrowError(
-      "SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL is not set in environmental variables"
-    )
-  })
-
-  it("should throw given undefined moderator contact emails", async () => {
-    const previousModeratorEmails =
-      process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL
-    delete process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL
-
-    expect(
-      () =>
-        new SendGridNotificationService(
-          mailServiceMock,
-          sendGridTestApiKey,
-          undefined
-        )
-    ).toThrowError(
-      "SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL is not set in environmental variables"
-    )
-
-    if (previousModeratorEmails === undefined)
-      delete process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL
-    else
-      process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL =
-        previousModeratorEmails
-  })
-
-  it("should allow moderator contact email override when env value is missing", () => {
-    const previousModeratorEmails =
-      process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL
-    delete process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL
-
-    expect(
-      () =>
-        new SendGridNotificationService(
-          mailServiceMock,
-          sendGridTestApiKey,
-          moderatorContactEmails
-        )
-    ).not.toThrow()
-
-    if (previousModeratorEmails === undefined)
-      delete process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL
-    else
-      process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL =
-        previousModeratorEmails
-  })
-
-  it("should allow API key override when env API key is missing", () => {
-    const previousApiKey = process.env.NOTIFICATION_SERVICE_API_KEY
-    delete process.env.NOTIFICATION_SERVICE_API_KEY
-
-    expect(
-      () =>
-        new SendGridNotificationService(
-          mailServiceMock,
-          sendGridTestApiKey,
-          moderatorContactEmails
-        )
-    ).not.toThrow()
-    expect(mailServiceMock.setApiKey).toHaveBeenCalledWith(sendGridTestApiKey)
-
-    if (previousApiKey === undefined)
-      delete process.env.NOTIFICATION_SERVICE_API_KEY
-    else process.env.NOTIFICATION_SERVICE_API_KEY = previousApiKey
   })
 
   it("should send notification to moderators", async () => {
@@ -182,28 +104,6 @@ describe("SendGridNotificationService", () => {
       subject: "Simple Comment Notification",
       text: body,
     })
-    expect(result.statusCode).toEqual(202)
-  })
-
-  it("should send mulitple emails given comma-separated SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL", async () => {
-    const body = "Test message"
-    const clientResponse: ClientResponse = {
-      statusCode: 202,
-      body: {},
-      headers: undefined,
-    }
-    const mockResponse: [ClientResponse, object] = [clientResponse, {}]
-
-    mailServiceMock.send.mockResolvedValue(mockResponse)
-
-    const service = new SendGridNotificationService(
-      mailServiceMock,
-      sendGridTestApiKey
-    )
-    const result = await service.notifyModerators(body)
-
-    expect(mailServiceMock.setApiKey).toHaveBeenCalledWith(sendGridTestApiKey)
-    expect(mailServiceMock.send).toHaveBeenCalledTimes(10)
     expect(result.statusCode).toEqual(202)
   })
 
@@ -337,9 +237,11 @@ describe("SendGridNotificationService", () => {
         const send = deferredSend()
         mailServiceMock.send.mockReturnValueOnce(send.promise)
         const service = new SendGridNotificationService(
-          mailServiceMock,
-          sendGridTestApiKey,
-          [moderatorContactEmails[0]]
+          {
+            ...configuration,
+            moderatorContactEmails: [moderatorContactEmails[0]],
+          },
+          mailServiceMock
         )
         const observed = observeCompletion(
           service.notifyModerators("Test message")
@@ -364,9 +266,14 @@ describe("SendGridNotificationService", () => {
           mailServiceMock.send.mockReturnValueOnce(send.promise)
         )
         const service = new SendGridNotificationService(
-          mailServiceMock,
-          sendGridTestApiKey,
-          [...moderatorContactEmails, "third@example.com"]
+          {
+            ...configuration,
+            moderatorContactEmails: [
+              ...moderatorContactEmails,
+              "third@example.com",
+            ],
+          },
+          mailServiceMock
         )
         const observed = observeCompletion(
           service.notifyModerators("Test message")

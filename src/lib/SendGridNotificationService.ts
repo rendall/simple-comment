@@ -1,7 +1,6 @@
 import { AbstractNotificationService } from "./AbstractNotificationService"
 import type { Error, Success } from "./simple-comment-types"
 import type { MailDataRequired, MailService } from "@sendgrid/mail"
-import sendGridMail from "@sendgrid/mail"
 import {
   error500NotificationError,
   error502NotificationFailed,
@@ -11,11 +10,7 @@ import {
   error503NotificationUnavailable,
   error504NotificationTimeout,
 } from "./messages"
-import {
-  EnvContractError,
-  getOptionalModeratorContactEmails,
-  getOptionalNotificationEnv,
-} from "./env"
+import type { NotificationConfiguration } from "./env"
 
 const notificationTimeoutMs = 5000
 type NotificationFailure = {
@@ -199,58 +194,22 @@ const classifyError = (error: unknown): NotificationFailureOutcome => {
 }
 
 export class SendGridNotificationService extends AbstractNotificationService {
-  static override createNotificationService = ():
-    | SendGridNotificationService
-    | undefined => {
-    const { notificationServiceApiKey } = getOptionalNotificationEnv()
-    if (notificationServiceApiKey === undefined) return undefined
-
-    return new SendGridNotificationService(
-      sendGridMail,
-      notificationServiceApiKey
-    )
-  }
-
   private readonly _mailService: MailService
   private readonly _moderatorContactEmails: string[]
   private readonly _sendGridApiKey: string
   private readonly _sendGridVerifiedSender: string
 
   constructor(
-    mailService: MailService,
-    sendGridApiKey?: string,
-    moderatorContactEmails?: string[]
+    configuration: NotificationConfiguration,
+    // Importing the SDK creates its default client, so load it only when needed.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    mailService: MailService = require("@sendgrid/mail") as MailService
   ) {
     super()
 
-    const { notificationServiceApiKey, sendGridVerifiedSender } =
-      getOptionalNotificationEnv(undefined, sendGridApiKey)
-
-    const apiKey = sendGridApiKey ?? notificationServiceApiKey
-    if (apiKey === undefined)
-      throw new EnvContractError(
-        "NOTIFICATION_SERVICE_API_KEY",
-        "NOTIFICATION_SERVICE_API_KEY is not set in environmental variables"
-      )
-    this._sendGridApiKey = apiKey
-
-    if (sendGridVerifiedSender === undefined)
-      throw new EnvContractError(
-        "SENDGRID_VERIFIED_SENDER",
-        "SENDGRID_VERIFIED_SENDER is not set in environmental variables"
-      )
-    this._sendGridVerifiedSender = sendGridVerifiedSender
-
-    const envModeratorContactEmails = getOptionalModeratorContactEmails()
-    const emails = moderatorContactEmails ?? envModeratorContactEmails
-
-    if (emails === undefined || emails.length === 0)
-      throw new EnvContractError(
-        "SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL",
-        "SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL is not set in environmental variables"
-      )
-
-    this._moderatorContactEmails = emails
+    this._sendGridApiKey = configuration.apiKey
+    this._sendGridVerifiedSender = configuration.from
+    this._moderatorContactEmails = configuration.moderatorContactEmails
     mailService.setApiKey(this._sendGridApiKey)
     this._mailService = mailService
   }

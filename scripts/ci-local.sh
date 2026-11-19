@@ -15,5 +15,4 @@ yarn run prettier --list-different .
 yarn run typecheck
 yarn run build
 
-yarn test:backend
-yarn test:frontend
+yarn test

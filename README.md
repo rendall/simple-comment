@@ -41,7 +41,7 @@ The minimum functionality is [up and running](https://simple-comment.netlify.app
 - Designed a beautiful badge!
   - [![Powered by Simple Comment](docs/simple-comment-badge.svg)](https://simple-comment.netlify.app)
 - Visitors can read and reply to comments
-- Optional administrator email notifications through SendGrid
+- Optional administrator email notifications through Resend or SendGrid
 
 ### Top priority after MVP
 
@@ -159,9 +159,9 @@ Configure only one email provider. Leave all provider settings unset to keep not
 
 ### Email notifications
 
-Simple Comment can email your moderators when someone posts or edits a comment. Notifications are **off until you configure an email provider**.
+Simple Comment can email your moderators when someone posts a new comment or reply. Notifications are **off until you configure an email provider**.
 
-We recommend Resend for getting started, and SendGrid is also supported. Existing SendGrid installations can keep their current settings.
+We recommend Resend for getting started, and SendGrid is also supported. Existing SendGrid installations can keep their provider, API key, and verified sender, including its display name.
 
 See the [notification guide](docs/NOTIFICATIONS.md) for setup instructions, switching providers, turning notifications off, and troubleshooting.
 
@@ -198,6 +198,8 @@ Assumes a unix-like environment, like Ubuntu.
 
 ### Installation
 
+Use Node.js 22, as selected by `.nvmrc` and CI. The Resend SDK requires Node.js 20 or newer.
+
 1. Install [nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 1. `nvm install`
 1. `npm install -g yarn`
@@ -208,6 +210,8 @@ Assumes a unix-like environment, like Ubuntu.
    - Backend Jest tests use the repo's `@shelf/jest-mongodb` + `mongodb-memory-server` bootstrap and do not require a separately running local `mongod`.
 
 ### Test
+
+`yarn run test:environment` checks notification settings directly in `process.env`. For local development, it also loads an optional `.env` file. It does not supply test defaults. The check runs as part of `yarn test` in local and GitHub CI, and Netlify runs it explicitly before building. Leaving every provider unconfigured is valid; notifications stay off. This check does not send email.
 
 1. `yarn run test:backend`
    - Backend tests do not require `.env` on disk. Test env values are injected from `example.env` during Jest setup.

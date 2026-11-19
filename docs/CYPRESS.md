@@ -8,7 +8,6 @@ Simple Comment uses <https://cypress.io> for frontend browser validation.
 ## Current Layout
 
 - Cypress config: [cypress.config.ts](../cypress.config.ts)
-- Support file: [e2e.js](../cypress/support/e2e.js)
 - Generic/embed specs: [generic](../cypress/e2e/generic)
 
 The generic/embed specs are written against the public embed contract and current host-page conventions:
@@ -39,7 +38,7 @@ The Cypress config file for this repository is [cypress.config.ts](../cypress.co
 Current conventions include:
 
 - `baseUrl: "http://localhost:5000"`
-- `supportFile: "cypress/support/e2e.js"`
+- `supportFile: false` (the specs need no shared setup)
 - `excludeSpecPattern: "**/examples/*.spec.js"`
 
 ## Code Completion
