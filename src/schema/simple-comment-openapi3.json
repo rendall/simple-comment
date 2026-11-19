@@ -15,7 +15,7 @@
   },
   "servers": [
     {
-      "url": "/comment-api/v1"
+      "url": "/.netlify/functions"
     }
   ],
   "security": [
@@ -31,7 +31,7 @@
     "/topic": {
       "get": {
         "summary": "Discussion discovery",
-        "description": "Receive a listing of all discussions",
+        "description": "Lists topics. Authentication is required when public discussion reads are disabled.",
         "responses": {
           "200": {
             "description": "List available discussions",
@@ -40,7 +40,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Discussion"
+                    "$ref": "#/components/schemas/Topic"
                   }
                 }
               }
@@ -49,19 +49,29 @@
           "401": {
             "description": "User is not authenticated",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
                 }
               }
             }
           },
-          "403": {
-            "description": "User is not authorized to view topics",
+          "404": {
+            "description": "Authenticating user is unknown and public discussion reads are disabled",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
                 }
               }
             }
@@ -69,6 +79,9 @@
         },
         "security": [
           {},
+          {
+            "CookieAuth": []
+          },
           {
             "BearerAuth": []
           }
@@ -80,9 +93,9 @@
           "201": {
             "description": "Topic created",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Topic"
+                  "type": "string"
                 }
               }
             }
@@ -90,9 +103,9 @@
           "400": {
             "description": "Request format not understood",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
                 }
               }
             }
@@ -100,9 +113,9 @@
           "401": {
             "description": "User is not authenticated",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
                 }
               }
             }
@@ -110,9 +123,19 @@
           "403": {
             "description": "User is not authorized to create topics",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Authenticating user is unknown when first-visit creation is disabled",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
                 }
               }
             }
@@ -120,27 +143,54 @@
           "409": {
             "description": "Duplicate topic",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
                 }
               }
             }
           },
-          "429": {
-            "description": "Too much discussion",
+          "500": {
+            "description": "Internal server error",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
                 }
               }
             }
           }
         },
         "security": [
+          {},
+          {
+            "CookieAuth": []
+          },
           {
             "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "description": "Supply a lowercase topic ID using letters, digits, and hyphens. The other fields are title and isLocked. Send ampersand-separated key=value pairs with percent-encoded values. Encode spaces as %20 and literal plus signs as %2B.",
+          "required": true,
+          "content": {
+            "text/plain": {
+              "schema": {
+                "type": "string"
+              },
+              "example": "id=example-topic&title=Example%20Topic&isLocked=false"
+            }
+          }
+        },
+        "description": "When the first-visit creation policy is enabled, anonymous visitors and non-admin callers can create topics with an allowed Referer. When disabled, topic creation requires an authenticated administrator.",
+        "parameters": [
+          {
+            "name": "Referer",
+            "in": "header",
+            "description": "Required for callers without an authenticated administrator account when first-visit creation is enabled.",
+            "schema": {
+              "type": "string"
+            }
           }
         ]
       }
@@ -156,8 +206,7 @@
             "style": "simple",
             "explode": false,
             "schema": {
-              "type": "string",
-              "format": "byte"
+              "type": "string"
             }
           }
         ],
@@ -175,19 +224,9 @@
           "401": {
             "description": "User is not authenticated",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "User is not authorized to view discussion {topicId}",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
                 }
               }
             }
@@ -195,9 +234,19 @@
           "404": {
             "description": "{topicId} is not found",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
                 }
               }
             }
@@ -206,9 +255,13 @@
         "security": [
           {},
           {
+            "CookieAuth": []
+          },
+          {
             "BearerAuth": []
           }
-        ]
+        ],
+        "description": "Returns the topic and its replies. Authentication is required when public discussion reads are disabled."
       },
       "put": {
         "summary": "Edit a topic",
@@ -220,18 +273,20 @@
             "style": "simple",
             "explode": false,
             "schema": {
-              "type": "string",
-              "format": "byte"
+              "type": "string"
             }
           }
         ],
         "responses": {
           "204": {
-            "description": "Topic {topicId} updated",
+            "description": "Topic {topicId} updated"
+          },
+          "400": {
+            "description": "Missing request body",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Success"
+                  "type": "string"
                 }
               }
             }
@@ -239,19 +294,19 @@
           "401": {
             "description": "User is not authenticated",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
                 }
               }
             }
           },
           "403": {
-            "description": "User is not authorized to update this comment",
+            "description": "Administrator access is required to edit the topic",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
                 }
               }
             }
@@ -259,9 +314,24 @@
           "404": {
             "description": "Topic {topicId} not found",
             "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "object"
                 }
               }
             }
@@ -269,9 +339,24 @@
         },
         "security": [
           {
+            "CookieAuth": []
+          },
+          {
             "BearerAuth": []
           }
-        ]
+        ],
+        "requestBody": {
+          "description": "Send the title and isLocked values to set. Send ampersand-separated key=value pairs with percent-encoded values. Encode spaces as %20 and literal plus signs as %2B.",
+          "required": true,
+          "content": {
+            "text/plain": {
+              "schema": {
+                "type": "string"
+              },
+              "example": "title=Updated%20Topic&isLocked=false"
+            }
+          }
+        }
       },
       "delete": {
         "summary": "Delete a discussion",
@@ -283,8 +368,7 @@
             "style": "simple",
             "explode": false,
             "schema": {
-              "type": "string",
-              "format": "byte"
+              "type": "string"
             }
           }
         ],
@@ -292,9 +376,9 @@
           "202": {
             "description": "Discussion of topic {topicId} deleted",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Success"
+                  "type": "string"
                 }
               }
             }
@@ -302,25 +386,48 @@
           "401": {
             "description": "User is not authenticated",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
                 }
               }
             }
           },
           "403": {
-            "description": "User is not authorized to delete this comment",
+            "description": "Administrator access is required to delete the topic",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Topic or authenticating user was not found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
                 }
               }
             }
           }
         },
         "security": [
+          {
+            "CookieAuth": []
+          },
           {
             "BearerAuth": []
           }
@@ -338,8 +445,7 @@
             "style": "simple",
             "explode": false,
             "schema": {
-              "type": "string",
-              "format": "byte"
+              "type": "string"
             }
           }
         ],
@@ -360,9 +466,9 @@
           "400": {
             "description": "Request format not understood",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
                 }
               }
             }
@@ -370,9 +476,9 @@
           "401": {
             "description": "User is not authenticated",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
                 }
               }
             }
@@ -380,9 +486,29 @@
           "403": {
             "description": "User is not authorized to post this comment",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Parent topic, parent comment, or authenticating user was not found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The same text was already posted by this user in their most recent comment on this parent",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
                 }
               }
             }
@@ -390,35 +516,28 @@
           "413": {
             "description": "Comment is too long",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
                 }
               }
             }
           },
-          "425": {
-            "description": "Possible duplicate comment",
+          "500": {
+            "description": "Internal server error",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Too many comments",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
                 }
               }
             }
           }
         },
         "security": [
+          {
+            "CookieAuth": []
+          },
           {
             "BearerAuth": []
           }
@@ -434,8 +553,7 @@
             "style": "simple",
             "explode": false,
             "schema": {
-              "type": "string",
-              "format": "byte"
+              "type": "string"
             }
           }
         ],
@@ -445,7 +563,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Discussion"
+                  "$ref": "#/components/schemas/Comment"
                 }
               }
             }
@@ -453,19 +571,9 @@
           "401": {
             "description": "User is not authenticated",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "User is not authorized to view discussion {commentId}",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
                 }
               }
             }
@@ -473,9 +581,19 @@
           "404": {
             "description": "{commentId} is not found",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
                 }
               }
             }
@@ -484,9 +602,13 @@
         "security": [
           {},
           {
+            "CookieAuth": []
+          },
+          {
             "BearerAuth": []
           }
-        ]
+        ],
+        "description": "Returns the comment and its replies. Read access depends on the discussion read policy."
       },
       "put": {
         "summary": "Edit a comment",
@@ -498,8 +620,7 @@
             "style": "simple",
             "explode": false,
             "schema": {
-              "type": "string",
-              "format": "byte"
+              "type": "string"
             }
           }
         ],
@@ -508,11 +629,14 @@
         },
         "responses": {
           "204": {
-            "description": "Comment {commentId} updated",
+            "description": "Comment {commentId} updated"
+          },
+          "400": {
+            "description": "Missing request body or unchanged comment text",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Success"
+                  "type": "string"
                 }
               }
             }
@@ -520,9 +644,9 @@
           "401": {
             "description": "User is not authenticated",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
                 }
               }
             }
@@ -530,9 +654,9 @@
           "403": {
             "description": "User is not authorized to update this comment",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
                 }
               }
             }
@@ -540,15 +664,28 @@
           "404": {
             "description": "Comment {commentId} not found",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
                 }
               }
             }
           }
         },
         "security": [
+          {
+            "CookieAuth": []
+          },
           {
             "BearerAuth": []
           }
@@ -564,8 +701,7 @@
             "style": "simple",
             "explode": false,
             "schema": {
-              "type": "string",
-              "format": "byte"
+              "type": "string"
             }
           }
         ],
@@ -573,9 +709,9 @@
           "202": {
             "description": "Comment {commentId} deleted",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Success"
+                  "type": "string"
                 }
               }
             }
@@ -583,9 +719,9 @@
           "401": {
             "description": "User is not authenticated",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
                 }
               }
             }
@@ -593,15 +729,38 @@
           "403": {
             "description": "User is not authorized to delete this comment",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Comment or authenticating user was not found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
                 }
               }
             }
           }
         },
         "security": [
+          {
+            "CookieAuth": []
+          },
           {
             "BearerAuth": []
           }
@@ -625,22 +784,12 @@
               }
             }
           },
-          "401": {
-            "description": "User is not authenticated",
+          "500": {
+            "description": "Internal server error",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "User is not authorized to view users",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
                 }
               }
             }
@@ -649,49 +798,37 @@
         "security": [
           {},
           {
+            "CookieAuth": []
+          },
+          {
             "BearerAuth": []
           }
-        ]
+        ],
+        "description": "Lists public profile fields. An authenticated administrator receives additional fields."
       },
       "post": {
         "summary": "Create a user",
-        "description": "Creates an authenticated user who can log in over mutliple devices. If the authId is a temporary user, link the temporary user to the authenticated user",
+        "description": "Anonymous registration is available when public user creation is enabled. Guest registration is subject to the guest creation policy.",
         "requestBody": {
+          "description": "Supply id, name, and email. Regular accounts require a password of at least seven characters, with no leading or trailing whitespace. Common passwords are rejected. Guest registration uses the guest ID and may omit the password. The isAdmin and isVerified fields are restricted to administrators. Send ampersand-separated key=value pairs with percent-encoded values. Encode spaces as %20 and literal plus signs as %2B.",
+          "required": true,
           "content": {
-            "application/json": {
+            "text/plain": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "string",
-                    "description": "Unique identifier for the user. If not provided, the API will assign one."
-                  },
-                  "name": {
-                    "type": "string",
-                    "description": "Name of the user"
-                  },
-                  "email": {
-                    "type": "string",
-                    "description": "Email address of the user"
-                  },
-                  "password": {
-                    "type": "string",
-                    "description": "Password for the user"
-                  },
-                  "isAdmin": {
-                    "type": "boolean",
-                    "description": "Whether the user is an admin"
-                  },
-                  "isVerified": {
-                    "type": "boolean",
-                    "description": "Whether the user is verified"
-                  }
+                "type": "string"
+              },
+              "examples": {
+                "regular": {
+                  "summary": "Regular account",
+                  "value": "id=sample-user&name=Sample%20User&email=sample%40example.com&password=sample-password"
                 },
-                "required": ["name", "email", "password"]
+                "guest": {
+                  "summary": "Guest account",
+                  "value": "id=17f530fc-a648-45d2-91cc-14aad63b39ed&name=Guest%20User&email=guest%40example.com"
+                }
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "201": {
@@ -707,9 +844,9 @@
           "400": {
             "description": "Request format not understood",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
                 }
               }
             }
@@ -717,9 +854,9 @@
           "401": {
             "description": "Requesting user is not authenticated",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
                 }
               }
             }
@@ -727,9 +864,19 @@
           "403": {
             "description": "Requesting user is not authorized",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Authenticating user is unknown",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
                 }
               }
             }
@@ -737,15 +884,29 @@
           "409": {
             "description": "UserId exists",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
                 }
               }
             }
           }
         },
         "security": [
+          {},
+          {
+            "CookieAuth": []
+          },
           {
             "BearerAuth": []
           }
@@ -763,8 +924,7 @@
             "style": "simple",
             "explode": false,
             "schema": {
-              "type": "string",
-              "format": "byte"
+              "type": "string"
             }
           }
         ],
@@ -782,9 +942,9 @@
           "401": {
             "description": "User is not authenticated",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
                 }
               }
             }
@@ -792,9 +952,9 @@
           "403": {
             "description": "User is not authorized to view this user",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
                 }
               }
             }
@@ -802,9 +962,19 @@
           "404": {
             "description": "User {userId} not found",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
                 }
               }
             }
@@ -813,9 +983,13 @@
         "security": [
           {},
           {
+            "CookieAuth": []
+          },
+          {
             "BearerAuth": []
           }
-        ]
+        ],
+        "description": "Anonymous and guest access depend on the user profile read policy. The profile owner and administrators receive additional fields."
       },
       "put": {
         "summary": "Edit a user",
@@ -827,18 +1001,20 @@
             "style": "simple",
             "explode": false,
             "schema": {
-              "type": "string",
-              "format": "byte"
+              "type": "string"
             }
           }
         ],
         "responses": {
           "204": {
-            "description": "User {userId} updated",
+            "description": "User {userId} updated"
+          },
+          "400": {
+            "description": "Missing request body or invalid user details",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Success"
+                  "type": "string"
                 }
               }
             }
@@ -846,9 +1022,9 @@
           "401": {
             "description": "User is not authenticated",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
                 }
               }
             }
@@ -856,9 +1032,9 @@
           "403": {
             "description": "User is not authorized to update this user",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
                 }
               }
             }
@@ -866,9 +1042,19 @@
           "404": {
             "description": "User {userId} not found",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
                 }
               }
             }
@@ -876,9 +1062,24 @@
         },
         "security": [
           {
+            "CookieAuth": []
+          },
+          {
             "BearerAuth": []
           }
-        ]
+        ],
+        "requestBody": {
+          "description": "Supply the user fields to update: name and email. The isAdmin and isVerified fields are restricted to administrators and cannot be set on guest accounts. Send ampersand-separated key=value pairs with percent-encoded values. Encode spaces as %20 and literal plus signs as %2B.",
+          "required": true,
+          "content": {
+            "text/plain": {
+              "schema": {
+                "type": "string"
+              },
+              "example": "name=Updated%20Name"
+            }
+          }
+        }
       },
       "delete": {
         "summary": "Delete a user",
@@ -890,8 +1091,7 @@
             "style": "simple",
             "explode": false,
             "schema": {
-              "type": "string",
-              "format": "byte"
+              "type": "string"
             }
           }
         ],
@@ -899,9 +1099,9 @@
           "202": {
             "description": "User deleted",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Success"
+                  "type": "string"
                 }
               }
             }
@@ -909,9 +1109,9 @@
           "401": {
             "description": "User is not authenticated",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
                 }
               }
             }
@@ -919,9 +1119,9 @@
           "403": {
             "description": "User is not authorized to delete this user",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
                 }
               }
             }
@@ -929,9 +1129,19 @@
           "404": {
             "description": "User {userId} not found",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
                 }
               }
             }
@@ -939,63 +1149,53 @@
         },
         "security": [
           {
+            "CookieAuth": []
+          },
+          {
             "BearerAuth": []
           }
-        ]
+        ],
+        "description": "Administrators can delete users. A signed-in non-guest user can delete their own account when self-deletion is enabled. The built-in moderator account is protected."
       }
     },
     "/auth": {
       "post": {
-        "summary": "Accept a user name and password, return authentication token",
-        "description": "The authentication token is set via the Set-Cookie header with a 'simple_comment_token' key or as an Authentication header with Bearer scheme, depending on Simple Comment configuration. If the authId is a temporary user, link the temporary user to the authenticated user. Special case: If a user claiming to be the 'Big Moderator' is not found in the database but provides the correct password, they are authenticated and an auth token is returned, but no user object is created in the database.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "identifier": {
-                    "type": "string",
-                    "description": "The user's ID or email"
-                  },
-                  "password": {
-                    "type": "string",
-                    "format": "password"
-                  }
-                },
-                "required": ["identifier", "password"]
-              }
-            }
-          }
-        },
+        "summary": "Log in with HTTP Basic credentials",
+        "description": "Send the user ID or email and password in the HTTP Basic Authorization header. A successful login sets the simple_comment_token cookie.",
         "responses": {
           "200": {
             "description": "User authenticated",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/AuthToken"
-                }
+                  "type": "string"
+                },
+                "example": "OK"
               }
-            }
-          },
-          "400": {
-            "description": "Request format not understood",
-            "content": {
-              "application/json": {
+            },
+            "headers": {
+              "Set-Cookie": {
+                "description": "Sets the HttpOnly simple_comment_token cookie to the JWT. The cookie uses SameSite=Strict or SameSite=None with Secure, depending on the deployment configuration.",
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
                 }
               }
             }
           },
           "401": {
-            "description": "Bad credentials",
+            "description": "HTTP Basic credentials are missing or invalid",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
+                }
+              }
+            },
+            "headers": {
+              "WWW-Authenticate": {
+                "description": "HTTP Basic challenge sent when HTTP Basic authentication is absent.",
+                "schema": {
+                  "type": "string"
                 }
               }
             }
@@ -1003,9 +1203,19 @@
           "404": {
             "description": "Unknown user",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
                 }
               }
             }
@@ -1018,16 +1228,26 @@
         ]
       },
       "delete": {
-        "summary": "Revoke authentication / log out",
-        "description": "Sets the Cookie token to expire in the past or the revokes the Authentication header",
+        "summary": "Log out by expiring the session cookie",
+        "description": "Expires the simple_comment_token cookie in the browser. Previously issued JWTs remain valid until their own expiration.",
+        "security": [],
         "responses": {
           "202": {
-            "description": "Authentication revoked",
-            "content": {
-              "application/json": {
+            "description": "Logout acknowledged",
+            "headers": {
+              "Set-Cookie": {
+                "description": "Sets simple_comment_token to logged-out with an expiration date in the past.",
                 "schema": {
-                  "$ref": "#/components/schemas/Success"
+                  "type": "string"
                 }
+              }
+            },
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "Logged out"
               }
             }
           }
@@ -1036,28 +1256,56 @@
     },
     "/gauth": {
       "get": {
-        "summary": "Receive temporary or non-authenticated credentials",
-        "description": "The authentication token is set via the Authentication header with the Bearer scheme and is expected to be set as a cookie in the user's browser and used until an authenticated user is created. The activity of the temporary user should be linked to the authenticated user if possible.",
+        "summary": "Issue a guest authentication token",
+        "description": "Sets the simple_comment_token cookie on a successful request. The response body is OK by default.",
+        "security": [],
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "description": "Any non-empty value returns the JWT in the response body. If omitted or empty, the response body is OK.",
+            "schema": {
+              "type": "string"
+            },
+            "example": "true"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Temporary or non-authenticated credential received",
-            "content": {
-              "application/json": {
+            "description": "Guest token issued. The body contains OK or the JWT, depending on the token query parameter.",
+            "headers": {
+              "Set-Cookie": {
+                "description": "Sets the HttpOnly simple_comment_token cookie to the JWT. The cookie uses SameSite=Strict or SameSite=None with Secure, depending on the deployment configuration.",
                 "schema": {
-                  "$ref": "#/components/schemas/AuthToken"
+                  "type": "string"
                 }
+              }
+            },
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "OK"
               }
             }
           },
           "403": {
-            "description": "Guest accounts are forbidden according to policy `isGuestAccountAllowed:false`"
-          },
-          "429": {
-            "description": "Too many hits on this endpoint in a short amount of time",
-            "headers": {
-              "Retry-After": {
+            "description": "Guest accounts are forbidden according to policy `isGuestAccountAllowed:false`",
+            "content": {
+              "text/plain": {
                 "schema": {
-                  "type": "integer"
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
                 }
               }
             }
@@ -1067,52 +1315,81 @@
     },
     "/verify": {
       "get": {
-        "summary": "Return a representation of a claim in the Cookie header 'simple-comment-token' value",
-        "parameters": [
-          {
-            "name": "Cookie",
-            "in": "header",
-            "description": "The HTTP cookie containing the 'simple-comment-token' value.",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "example": "simple-comment-token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
-              "pattern": "^simple-comment-token=.*$",
-              "description": "The value of the 'simple-comment-token' cookie in the format 'simple-comment-token=<token-value>'. The token value is a JSON Web Token (JWT) signed with a secret key."
-            }
-          }
-        ],
+        "summary": "Verify a token and return its claims",
+        "description": "Send the JWT in the simple_comment_token cookie or as an HTTP Bearer token. If both are present, the cookie takes precedence.",
         "responses": {
           "200": {
-            "description": "User authenticated",
+            "description": "Verified JWT claims",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "required": ["user", "exp"],
+                  "properties": {
+                    "user": {
+                      "type": "string",
+                      "description": "User ID"
+                    },
+                    "exp": {
+                      "type": "integer",
+                      "description": "Expiration time in seconds since the Unix epoch"
+                    },
+                    "iat": {
+                      "type": "integer",
+                      "description": "Issuance time in seconds since the Unix epoch"
+                    }
+                  }
                 }
               }
             }
           },
           "400": {
-            "description": "Token is corrupted"
+            "description": "Token is malformed or invalid",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
           },
           "401": {
-            "description": "User is not authenticated",
+            "description": "No authentication token was supplied",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "string"
                 }
               }
             }
           },
           "403": {
-            "description": "Token is expired"
+            "description": "Token has expired",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
           }
         },
         "security": [
           {
-            "BasicAuth": []
+            "CookieAuth": []
+          },
+          {
+            "BearerAuth": []
           }
         ]
       }
@@ -1120,57 +1397,27 @@
   },
   "components": {
     "schemas": {
-      "Success": {
-        "required": ["statusCode", "body"],
-        "type": "object",
-        "properties": {
-          "body": {
-            "type": "string"
-          },
-          "statusCode": {
-            "maximum": 299,
-            "minimum": 200,
-            "type": "integer"
-          }
-        },
-        "description": "Success message when no other information is expected"
-      },
-      "Error": {
-        "required": ["statusCode", "body"],
-        "type": "object",
-        "properties": {
-          "body": {
-            "type": "string"
-          },
-          "statusCode": {
-            "maximum": 499,
-            "minimum": 400,
-            "type": "integer"
-          }
-        },
-        "description": "Error message "
-      },
       "Comment": {
-        "required": ["id", "userId", "text", "parentId", "dateCreated"],
+        "required": ["id", "text", "parentId", "dateCreated"],
         "type": "object",
         "properties": {
           "id": {
-            "type": "string",
-            "format": "byte"
+            "type": "string"
           },
           "userId": {
             "type": "string",
-            "format": "byte"
+            "nullable": true,
+            "description": "Author ID when included. Comment reads omit this field."
           },
           "user": {
             "$ref": "#/components/schemas/User"
           },
           "text": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "parentId": {
-            "type": "string",
-            "format": "byte"
+            "type": "string"
           },
           "replies": {
             "type": "array",
@@ -1193,8 +1440,7 @@
         "required": ["id", "name"],
         "properties": {
           "id": {
-            "type": "string",
-            "format": "byte"
+            "type": "string"
           },
           "name": {
             "type": "string"
@@ -1202,9 +1448,6 @@
           "email": {
             "type": "string",
             "format": "email"
-          },
-          "hash": {
-            "type": "string"
           },
           "isAdmin": {
             "type": "boolean",
@@ -1215,22 +1458,27 @@
           }
         }
       },
-      "AuthToken": {
-        "type": "string"
-      },
       "Topic": {
         "type": "object",
-        "required": ["id", "title", "isLocked", "dateCreated"],
+        "required": ["id", "dateCreated"],
         "properties": {
           "id": {
-            "type": "string",
-            "format": "byte"
-          },
-          "title": {
             "type": "string"
           },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
           "isLocked": {
-            "type": "boolean"
+            "oneOf": [
+              {
+                "type": "boolean",
+                "nullable": true
+              },
+              {
+                "type": "string"
+              }
+            ]
           },
           "dateCreated": {
             "type": "string",
@@ -1240,17 +1488,25 @@
       },
       "Discussion": {
         "type": "object",
-        "required": ["id", "title", "isLocked", "dateCreated"],
+        "required": ["id", "dateCreated"],
         "properties": {
           "id": {
-            "type": "string",
-            "format": "byte"
-          },
-          "title": {
             "type": "string"
           },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
           "isLocked": {
-            "type": "boolean"
+            "oneOf": [
+              {
+                "type": "boolean",
+                "nullable": true
+              },
+              {
+                "type": "string"
+              }
+            ]
           },
           "replies": {
             "type": "array",
@@ -1273,8 +1529,7 @@
         "style": "simple",
         "explode": false,
         "schema": {
-          "type": "string",
-          "format": "byte"
+          "type": "string"
         }
       },
       "topicId": {
@@ -1284,8 +1539,7 @@
         "style": "simple",
         "explode": false,
         "schema": {
-          "type": "string",
-          "format": "byte"
+          "type": "string"
         }
       },
       "commentId": {
@@ -1295,8 +1549,7 @@
         "style": "simple",
         "explode": false,
         "schema": {
-          "type": "string",
-          "format": "byte"
+          "type": "string"
         }
       },
       "authToken": {
@@ -1313,27 +1566,34 @@
     },
     "requestBodies": {
       "text": {
-        "description": "This is the body copy of the reply to a topic or comment",
+        "description": "Raw comment text.",
         "content": {
           "text/plain": {
             "schema": {
               "type": "string"
             }
           }
-        }
+        },
+        "required": true
       }
     },
     "securitySchemes": {
       "BasicAuth": {
         "type": "http",
-        "description": "'BasicAuth' returns an 'BearerAuth' bearer token",
+        "description": "HTTP Basic credentials for login",
         "scheme": "basic"
       },
       "BearerAuth": {
         "type": "http",
-        "description": "All API requests that require authentication shall be 'BearerAuth'",
+        "description": "JWT sent in the Authorization header",
         "scheme": "bearer",
         "bearerFormat": "JWT with 'user' field"
+      },
+      "CookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "simple_comment_token",
+        "description": "JWT issued in the login cookie"
       }
     }
   }
