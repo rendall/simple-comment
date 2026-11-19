@@ -1,7 +1,6 @@
 import { AbstractNotificationService } from "./AbstractNotificationService"
 import type { Error, Success } from "./simple-comment-types"
 import type { MailDataRequired, MailService } from "@sendgrid/mail"
-import sendGridMail from "@sendgrid/mail"
 import {
   error500NotificationError,
   error502NotificationFailed,
@@ -11,7 +10,6 @@ import {
   error503NotificationUnavailable,
   error504NotificationTimeout,
 } from "./messages"
-import { getNotificationConfiguration } from "./env"
 import type { NotificationConfiguration } from "./env"
 
 const notificationTimeoutMs = 5000
@@ -196,27 +194,6 @@ const classifyError = (error: unknown): NotificationFailureOutcome => {
 }
 
 export class SendGridNotificationService extends AbstractNotificationService {
-  static override createNotificationService = ():
-    | SendGridNotificationService
-    | undefined => {
-    const {
-      SENDGRID_API_KEY,
-      NOTIFICATION_SERVICE_API_KEY,
-      SENDGRID_VERIFIED_SENDER,
-      SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL,
-    } = process.env
-
-    const { configuration } = getNotificationConfiguration({
-      SENDGRID_API_KEY,
-      NOTIFICATION_SERVICE_API_KEY,
-      SENDGRID_VERIFIED_SENDER,
-      SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL,
-    })
-    if (configuration === undefined) return undefined
-
-    return new SendGridNotificationService(configuration)
-  }
-
   private readonly _mailService: MailService
   private readonly _moderatorContactEmails: string[]
   private readonly _sendGridApiKey: string
@@ -224,7 +201,9 @@ export class SendGridNotificationService extends AbstractNotificationService {
 
   constructor(
     configuration: NotificationConfiguration,
-    mailService: MailService = sendGridMail
+    // Importing the SDK creates its default client, so load it only when needed.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    mailService: MailService = require("@sendgrid/mail") as MailService
   ) {
     super()
 
