@@ -1,7 +1,6 @@
 import { AbstractNotificationService } from "./AbstractNotificationService"
 import type { Error, Success } from "./simple-comment-types"
 import type { MailDataRequired, MailService } from "@sendgrid/mail"
-import sendGridMail from "@sendgrid/mail"
 import {
   error500NotificationError,
   error502NotificationFailed,
@@ -202,7 +201,9 @@ export class SendGridNotificationService extends AbstractNotificationService {
 
   constructor(
     configuration: NotificationConfiguration,
-    mailService: MailService = sendGridMail
+    // Importing the SDK creates its default client, so load it only when needed.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    mailService: MailService = require("@sendgrid/mail") as MailService
   ) {
     super()
 
