@@ -171,28 +171,9 @@
           }
         ],
         "requestBody": {
-          "description": "Topic fields. Supply a lowercase slug as the topic ID. Send ampersand-separated key=value pairs and percent-encode values. Encode spaces as %20.",
+          "description": "Supply a lowercase topic ID using letters, digits, and hyphens. The other fields are title and isLocked. Send ampersand-separated key=value pairs with percent-encoded values. Encode spaces as %20 and literal plus signs as %2B.",
           "required": true,
           "content": {
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "type": "object",
-                "required": ["id"],
-                "properties": {
-                  "id": {
-                    "type": "string",
-                    "pattern": "^[a-z0-9-]+$"
-                  },
-                  "title": {
-                    "type": "string"
-                  },
-                  "isLocked": {
-                    "type": "string",
-                    "description": "Lock value supplied as text."
-                  }
-                }
-              }
-            },
             "text/plain": {
               "schema": {
                 "type": "string"
@@ -365,23 +346,9 @@
           }
         ],
         "requestBody": {
-          "description": "Topic title and lock value to set. Send ampersand-separated key=value pairs and percent-encode values. Encode spaces as %20.",
+          "description": "Send the title and isLocked values to set. Send ampersand-separated key=value pairs with percent-encoded values. Encode spaces as %20 and literal plus signs as %2B.",
           "required": true,
           "content": {
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "title": {
-                    "type": "string"
-                  },
-                  "isLocked": {
-                    "type": "string",
-                    "description": "Lock value supplied as text."
-                  }
-                }
-              }
-            },
             "text/plain": {
               "schema": {
                 "type": "string"
@@ -843,47 +810,23 @@
         "summary": "Create a user",
         "description": "Anonymous registration is available when public user creation is enabled. Guest registration is subject to the guest creation policy.",
         "requestBody": {
-          "description": "Account registration fields. Supply a password for a regular account. Guest registration uses the guest ID and may omit the password. Send ampersand-separated key=value pairs and percent-encode values. Encode spaces as %20.",
+          "description": "Supply id, name, and email. Regular accounts require a password of at least seven characters, with no leading or trailing whitespace. Common passwords are rejected. Guest registration uses the guest ID and may omit the password. The isAdmin and isVerified fields are restricted to administrators. Send ampersand-separated key=value pairs with percent-encoded values. Encode spaces as %20 and literal plus signs as %2B.",
           "required": true,
           "content": {
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "type": "object",
-                "required": ["id", "name", "email"],
-                "properties": {
-                  "id": {
-                    "type": "string",
-                    "minLength": 5,
-                    "maxLength": 36,
-                    "pattern": "^[a-z0-9_-]+$"
-                  },
-                  "name": {
-                    "type": "string"
-                  },
-                  "email": {
-                    "type": "string",
-                    "format": "email"
-                  },
-                  "isAdmin": {
-                    "type": "string",
-                    "description": "Admin-only field, subject to account restrictions."
-                  },
-                  "isVerified": {
-                    "type": "string",
-                    "description": "Admin-only field, subject to account restrictions."
-                  },
-                  "password": {
-                    "type": "string",
-                    "format": "password"
-                  }
-                }
-              }
-            },
             "text/plain": {
               "schema": {
                 "type": "string"
               },
-              "example": "id=sample-user&name=Sample%20User&email=sample%40example.com&password=sample-password"
+              "examples": {
+                "regular": {
+                  "summary": "Regular account",
+                  "value": "id=sample-user&name=Sample%20User&email=sample%40example.com&password=sample-password"
+                },
+                "guest": {
+                  "summary": "Guest account",
+                  "value": "id=17f530fc-a648-45d2-91cc-14aad63b39ed&name=Guest%20User&email=guest%40example.com"
+                }
+              }
             }
           }
         },
@@ -1126,31 +1069,9 @@
           }
         ],
         "requestBody": {
-          "description": "User fields to update. Send ampersand-separated key=value pairs and percent-encode values. Encode spaces as %20.",
+          "description": "Supply the user fields to update: name and email. The isAdmin and isVerified fields are restricted to administrators and cannot be set on guest accounts. Send ampersand-separated key=value pairs with percent-encoded values. Encode spaces as %20 and literal plus signs as %2B.",
           "required": true,
           "content": {
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "type": "string"
-                  },
-                  "email": {
-                    "type": "string",
-                    "format": "email"
-                  },
-                  "isAdmin": {
-                    "type": "string",
-                    "description": "Admin-only field, subject to account restrictions."
-                  },
-                  "isVerified": {
-                    "type": "string",
-                    "description": "Admin-only field, subject to account restrictions."
-                  }
-                }
-              }
-            },
             "text/plain": {
               "schema": {
                 "type": "string"
@@ -1477,7 +1398,7 @@
   "components": {
     "schemas": {
       "Comment": {
-        "required": ["id", "userId", "text", "parentId", "dateCreated"],
+        "required": ["id", "text", "parentId", "dateCreated"],
         "type": "object",
         "properties": {
           "id": {
@@ -1485,7 +1406,8 @@
           },
           "userId": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "description": "Author ID when included. Comment reads omit this field."
           },
           "user": {
             "$ref": "#/components/schemas/User"
