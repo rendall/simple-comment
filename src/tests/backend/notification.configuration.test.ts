@@ -381,6 +381,71 @@ describe("notification configuration", () => {
     })
   })
 
+  describe("SendGrid display names", () => {
+    it.each([
+      {
+        name: "current key",
+        settings: sendgrid,
+        from: "Ops <sender@example.com>",
+      },
+      {
+        name: "legacy key",
+        settings: legacy,
+        from: "Ops <sender@example.com>",
+      },
+      {
+        name: "current key",
+        settings: sendgrid,
+        from: '"Doe, Jane" <sender@example.com>',
+      },
+      {
+        name: "legacy key",
+        settings: legacy,
+        from: "Opérations <sender@example.com>",
+      },
+    ])(
+      "preserves the configured sender with $name ($from)",
+      ({ settings, from }) => {
+        const result = getNotificationConfiguration({
+          ...contact,
+          ...settings,
+          SENDGRID_VERIFIED_SENDER: from,
+        })
+
+        expect(result.configuration).toEqual({
+          ...providerCases[1].expected,
+          apiKey:
+            "SENDGRID_API_KEY" in settings
+              ? settings.SENDGRID_API_KEY
+              : settings.NOTIFICATION_SERVICE_API_KEY,
+          from,
+        })
+      }
+    )
+
+    it.each([
+      "Ops <.sender@example.com>",
+      "Ops <sender@example..com>",
+      "Ops <sender@-example.com>",
+      "Ops <sender@example.com>,Other <other@example.com>",
+      "sender@example.com,Other <other@example.com>",
+      "Ops <sender@example.com",
+      "Ops sender@example.com>",
+      "Ops <>",
+      '"   " <sender@example.com>',
+      "Ops <sender@example.com>\r\nBcc: hidden@example.com",
+    ])("rejects a malformed or multiple sender (%s)", from => {
+      expectConfigurationError(
+        {
+          ...contact,
+          ...sendgrid,
+          SENDGRID_VERIFIED_SENDER: from,
+        },
+        ["SENDGRID_VERIFIED_SENDER"]
+      )
+    })
+  })
+
   describe("legacy SendGrid configuration", () => {
     it("selects SendGrid and returns a safe deprecation warning for CI", () => {
       const source = { ...contact, ...legacy }

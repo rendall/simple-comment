@@ -272,11 +272,20 @@ describe("comment endpoint notification wiring", () => {
     dateCreated: new Date("2026-01-02T00:00:00Z"),
   }
 
-  it.each(["SENDGRID_API_KEY", "NOTIFICATION_SERVICE_API_KEY"])(
-    "uses the resolver to send through SendGrid configured with %s after saving",
-    async keyName => {
+  it.each([
+    { keyName: "SENDGRID_API_KEY", from: verifiedSender },
+    { keyName: "NOTIFICATION_SERVICE_API_KEY", from: verifiedSender },
+    { keyName: "SENDGRID_API_KEY", from: "Ops <sender@example.com>" },
+    {
+      keyName: "NOTIFICATION_SERVICE_API_KEY",
+      from: "Ops <sender@example.com>",
+    },
+  ])(
+    "sends through SendGrid using $keyName and $from after saving",
+    async ({ keyName, from }) => {
       delete process.env.NOTIFICATION_SERVICE_API_KEY
       process.env[keyName] = apiKey
+      process.env.SENDGRID_VERIFIED_SENDER = from
       let savedAtSend: Comment | null = null
       send.mockImplementation(async () => {
         savedAtSend = await db
@@ -299,7 +308,7 @@ describe("comment endpoint notification wiring", () => {
       expect(send).toHaveBeenCalledTimes(1)
       expect(send).toHaveBeenCalledWith({
         to: recipient,
-        from: verifiedSender,
+        from,
         subject: "Simple Comment Notification",
         text: `New comment posted by ${author.name} (${author.email})`,
       })
