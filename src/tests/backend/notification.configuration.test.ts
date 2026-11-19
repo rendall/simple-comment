@@ -403,6 +403,26 @@ describe("notification configuration", () => {
         settings: legacy,
         from: "Opérations <sender@example.com>",
       },
+      {
+        name: "current key, unquoted comma in display name",
+        settings: sendgrid,
+        from: "Doe, Jane <sender@example.com>",
+      },
+      {
+        name: "legacy key, unquoted comma in display name",
+        settings: legacy,
+        from: "Doe, Jane <sender@example.com>",
+      },
+      {
+        name: "current key, trailing space after sender",
+        settings: sendgrid,
+        from: "Ops <sender@example.com> ",
+      },
+      {
+        name: "legacy key, trailing space after sender",
+        settings: legacy,
+        from: "Ops <sender@example.com> ",
+      },
     ])(
       "preserves the configured sender with $name ($from)",
       ({ settings, from }) => {
