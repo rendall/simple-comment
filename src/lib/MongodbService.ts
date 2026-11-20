@@ -923,7 +923,7 @@ export class MongodbService extends AbstractDbService {
     const returnComment = { ...foundComment, text, user }
 
     const modifyResult = await comments.findOneAndUpdate(
-      { id: foundComment.id },
+      { id: foundComment.id, dateDeleted: { $exists: false } },
       { $set: returnComment }
     )
 
