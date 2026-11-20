@@ -428,6 +428,54 @@ describe("comment notification lifecycle", () => {
       ).toMatchObject({ text: editableComment.text })
     })
 
+    it("does not overwrite or notify a comment soft-deleted between the edit read and write", async () => {
+      const comments = db.collection("comments")
+      // A reply makes the real delete path keep a soft-deleted parent record.
+      await comments.insertOne({
+        ...editableComment,
+        id: "reply-to-concurrently-deleted-comment",
+        parentId: editableComment.id,
+      })
+      let deletedAt: Date | undefined
+      const updateSpy = jest
+        .spyOn(Collection.prototype, "findOneAndUpdate")
+        .mockImplementationOnce(async (filter, update) => {
+          // The edit has passed its read and authorization checks by this point.
+          updateSpy.mockRestore()
+          const deletion = await service.commentDELETE(
+            editableComment.id,
+            administrator.id
+          )
+          expect(deletion.statusCode).toBe(202)
+          const deleted = await comments.findOne({ id: editableComment.id })
+          expect(deleted).toMatchObject({
+            text: null,
+            userId: null,
+            dateDeleted: expect.any(Date),
+          })
+          deletedAt = deleted?.dateDeleted
+
+          // Forward the production filter, so MongoDB decides whether it matches.
+          return comments.findOneAndUpdate(filter, update)
+        })
+
+      const response = await service.commentPUT(
+        editableComment.id,
+        updatedText,
+        author.id
+      )
+
+      expect({
+        statusCode: response.statusCode,
+        comment: await comments.findOne({ id: editableComment.id }),
+        notificationCount: notifyModerators.mock.calls.length,
+      }).toMatchObject({
+        statusCode: 500,
+        comment: { text: null, userId: null, dateDeleted: deletedAt },
+        notificationCount: 0,
+      })
+    })
+
     it.each([0, 1] as const)(
       "does not notify when an update returns ok=%i without a matched comment",
       async ok => {
