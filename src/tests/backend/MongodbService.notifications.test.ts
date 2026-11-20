@@ -141,6 +141,67 @@ describe("commentPOST notification lifecycle", () => {
       response: { body: privateDetails[2] },
     })
 
+  describe.each(["new comment", "reply"] as const)(
+    "%s notification content",
+    submission => {
+      it.each([
+        {
+          format: "multiline text including blank lines and surrounding spaces",
+          text: "  First line\n\nSecond line\r\nLast line  ",
+        },
+        {
+          format: "literal markup-like text",
+          text: '<script>alert("example")</script>\n<b>Keep this literal</b> & < > "quoted"',
+        },
+        {
+          format: "the full allowed length of Unicode text",
+          text:
+            "ש".repeat(policy.maxCommentLengthChars - " END".length) + " END",
+        },
+      ])(
+        "includes $format and the posting author's details",
+        async ({ text }) => {
+          const parentAuthor: User = {
+            id: "parent-comment-author",
+            name: "Parent Author",
+            email: "parent-author@example.com",
+            isAdmin: false,
+          }
+          const parentComment: Comment = {
+            id: "notification-parent-comment",
+            parentId: topic.id,
+            userId: parentAuthor.id,
+            text: "Parent text that should not replace the reply",
+            dateCreated: new Date("2026-01-02T00:00:00Z"),
+          }
+          if (submission === "reply") {
+            await db.collection<User>("users").insertOne(parentAuthor)
+            await db.collection<Comment>("comments").insertOne(parentComment)
+          }
+          const parentId = submission === "reply" ? parentComment.id : topic.id
+
+          const response = await service.commentPOST(parentId, text, author.id)
+
+          expect(response.statusCode).toBe(201)
+          const saved = await db.collection<Comment>("comments").findOne({
+            id: (response.body as Comment).id,
+          })
+          expect(saved).toMatchObject({ text, parentId, userId: author.id })
+          expect(notifyModerators).toHaveBeenCalledTimes(1)
+          const [message] = notifyModerators.mock.calls[0]
+          expect(message).toContain(author.name)
+          expect(message).toContain(author.email)
+          expect(message).toContain(text)
+          if (submission === "reply") {
+            expect(message).not.toContain(parentAuthor.name)
+            expect(message).not.toContain(parentAuthor.email)
+            expect(message).not.toContain(parentComment.text)
+          }
+        }
+      )
+    }
+  )
+
   it("does not notify until insertion has been acknowledged", async () => {
     const entered = deferred<Document>()
     const insertion = deferred<InsertOneResult>()

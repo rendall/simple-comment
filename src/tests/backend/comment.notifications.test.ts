@@ -324,8 +324,14 @@ describe("comment endpoint notification wiring", () => {
         to: recipient,
         from,
         subject: "Simple Comment Notification",
-        text: `New comment posted by ${author.name} (${author.email})`,
+        text: expect.stringContaining(
+          `New comment posted by ${author.name} (${author.email})`
+        ),
       })
+      expect(send.mock.calls[0][0]).toHaveProperty(
+        "text",
+        expect.stringContaining(commentText)
+      )
       expect(errorLog).not.toHaveBeenCalled()
     }
   )
@@ -359,8 +365,14 @@ describe("comment endpoint notification wiring", () => {
         to: recipient,
         from: resendSender,
         subject: "Simple Comment Notification",
-        text: `New comment posted by ${author.name} (${author.email})`,
+        text: expect.stringContaining(
+          `New comment posted by ${author.name} (${author.email})`
+        ),
       })
+      expect(resendSend.mock.calls[0][0]).toHaveProperty(
+        "text",
+        expect.stringContaining(commentText)
+      )
       expect(setApiKey).not.toHaveBeenCalled()
       expect(send).not.toHaveBeenCalled()
       expect(errorLog).not.toHaveBeenCalled()
