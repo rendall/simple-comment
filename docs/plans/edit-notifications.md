@@ -37,7 +37,7 @@ Use real MongoDB persistence with an injected notification stub for lifecycle an
 
 Source plan: this document's In Scope and Validation Strategy; source requirement: [#248](https://github.com/rendall/simple-comment/issues/248). The maintainer explicitly authorized tests → commit/push → implementation → commit/push for each slice, then an integration-base PR and completion beep.
 
-- [ ] T01 Add slice 1 regression tests and remove the obsolete successful-PUT no-send expectation; record the expected failures, commit, and push.
+- [x] T01 Add slice 1 regression tests and remove the obsolete successful-PUT no-send expectation; record the expected failures, commit, and push.
   - Trace: “Add edit notices after successful persistence” and “Retire the blanket PUT-does-not-notify assertion.” (In Scope, Slice 1)
 - [ ] C01 Implement saved-edit notices and author attribution; make T01 green, commit, and push.
   - Depends on: T01.
@@ -56,4 +56,7 @@ Source plan: this document's In Scope and Validation Strategy; source requiremen
 
 ## Validation Notes
 
-Evidence will be recorded as each slice completes. The PR targets the existing integration branch and closes #248; merging remains a maintainer action.
+- Baseline: 79 focused lifecycle/endpoint tests passed.
+- T01: 8 expected failures and 86 passes. Failures identify missing edit notices and the unmatched-update success path. Existing POST and unrelated-method checks remain green; the two obsolete successful-PUT no-send cases were removed.
+
+The PR targets the existing integration branch and closes #248; merging remains a maintainer action.

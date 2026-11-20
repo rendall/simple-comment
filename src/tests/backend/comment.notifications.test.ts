@@ -797,7 +797,6 @@ describe("comment endpoint notification wiring", () => {
   describe.each(providers)("%s request methods", provider => {
     it.each([
       { method: "GET", statusCode: 200 },
-      { method: "PUT", statusCode: 204 },
       { method: "DELETE", statusCode: 202 },
       { method: "OPTIONS", statusCode: 200 },
       { method: "PATCH", statusCode: 405 },
