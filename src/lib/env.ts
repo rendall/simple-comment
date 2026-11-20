@@ -239,12 +239,21 @@ const validateNotificationSender = (
     }
   }
 
-  // Use only the validity flag; validateEmail's failure reason includes the value.
-  if (!validateEmail(email).isValid) {
-    throw new EnvContractError(
-      key,
-      `${key} must contain a valid email address, either alone or inside the display name's angle brackets.`
-    )
+  const validation = validateEmail(email)
+  if (!validation.isValid) {
+    // Build errors may show one rejected mailbox, but not API keys or lists.
+    const containsApiKey = [
+      ...notificationProviders.map(({ apiKeyName }) => source[apiKeyName]),
+      source[legacySendGridApiKeyName],
+    ].some(value => {
+      const apiKey = value?.trim()
+      return Boolean(apiKey && email.includes(apiKey))
+    })
+    const explanation =
+      containsApiKey || /[,;]/.test(email)
+        ? "Must contain one valid email address, either alone or inside the display name's angle brackets."
+        : validation.reason
+    throw new EnvContractError(key, `${key}: ${explanation}`)
   }
 }
 
