@@ -508,6 +508,23 @@ describe("notification configuration", () => {
         expect(failure.message).toMatch(/email address/i)
         consoleSpies.forEach(spy => expect(spy).toHaveBeenCalledTimes(0))
       })
+
+      const rotatedKey = "re_synthetic_unconfigured_rotated_key"
+      it.each([
+        { format: "plain sender", from: rotatedKey },
+        { format: "display-name sender", from: `Ops <${rotatedKey}>` },
+      ])(
+        "keeps an unconfigured credential private in a $format",
+        ({ from }) => {
+          const source = { ...contact, ...settings, [senderName]: from }
+
+          const failure = expectConfigurationError(source, [senderName])
+
+          expect(inspect(failure, { depth: null })).not.toContain(rotatedKey)
+          expect(failure.message).toMatch(/valid email address/i)
+          consoleSpies.forEach(spy => expect(spy).toHaveBeenCalledTimes(0))
+        }
+      )
     }
   )
 
@@ -701,6 +718,20 @@ describe("notification configuration", () => {
   })
 
   describe("isolation and diagnostics", () => {
+    it("keeps credentials in a pasted connection URL out of build errors", () => {
+      const secret = "synthetic-unconfigured-database-password"
+      const from = `postgres://reader:${secret}@db.example.com`
+
+      const failure = expectConfigurationError(
+        { ...contact, ...resend, RESEND_FROM: from },
+        ["RESEND_FROM"]
+      )
+
+      expect(inspect(failure, { depth: null })).not.toContain(secret)
+      expect(failure.message).toMatch(/valid email address/i)
+      consoleSpies.forEach(spy => expect(spy).toHaveBeenCalledTimes(0))
+    })
+
     it("does not fill absent explicit settings from process.env", () => {
       expect(getNotificationConfiguration({})).toEqual({
         configuration: undefined,

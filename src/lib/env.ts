@@ -241,7 +241,11 @@ const validateNotificationSender = (
 
   const validation = validateEmail(email)
   if (!validation.isValid) {
-    // Build errors may show one rejected mailbox, but not API keys or lists.
+    // This limits what errors quote; validateEmail still decides validity.
+    // Tokens and connection URLs should not become build-log output.
+    const looksLikeMailbox = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z0-9.-]+$/i.test(
+      email
+    )
     const containsApiKey = [
       ...notificationProviders.map(({ apiKeyName }) => source[apiKeyName]),
       source[legacySendGridApiKeyName],
@@ -250,9 +254,9 @@ const validateNotificationSender = (
       return Boolean(apiKey && email.includes(apiKey))
     })
     const explanation =
-      containsApiKey || /[,;]/.test(email)
-        ? "Must contain one valid email address, either alone or inside the display name's angle brackets."
-        : validation.reason
+      looksLikeMailbox && !containsApiKey
+        ? validation.reason
+        : "Must contain one valid email address, either alone or inside the display name's angle brackets."
     throw new EnvContractError(key, `${key}: ${explanation}`)
   }
 }

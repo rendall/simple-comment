@@ -266,13 +266,13 @@ At runtime, `getNotificationService()` uses `readNotificationConfiguration()` to
 
 These checks validate the settings locally. They do not make provider requests to verify that an API key works or a sender is authorized. Those problems are handled as delivery failures.
 
-Configuration errors name providers and relevant variable names and explain how to fix the problem. A rejected sender mailbox can appear in the build error with the shared email validator's explanation, for example:
+Configuration errors name providers and relevant variable names and explain how to fix the problem. When a rejected sender value resembles an ordinary email address, the build error can show it with the shared email validator's explanation, for example:
 
 ```text
 RESEND_FROM: '.sender@example.com' is not a valid email address.
 ```
 
-API keys, recipient lists, and the full environment or configuration object stay out of these diagnostics. If an API key was pasted into the sender field, the error stays generic. These notification validation errors belong to the configuration check, rather than function initialization or visitor-facing responses. Validation of visitor-supplied email addresses remains part of the usual user flows.
+API keys, recipient lists, and the full environment or configuration object stay out of these diagnostics. Unrecognized sender text, such as a credential or connection URL pasted into the field, gets a generic error even when that credential is not the configured API key. This only controls what the error quotes; the shared validator still decides whether an address is valid. These notification validation errors belong to the configuration check, rather than function initialization or visitor-facing responses. Validation of visitor-supplied email addresses remains part of the usual user flows.
 
 Simple Comment's normal delivery diagnostics can include the comment ID, notification status, and fixed guidance about an account or sending problem. Credentials and raw provider errors stay out of these logs and comment HTTP responses.
 
