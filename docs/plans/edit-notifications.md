@@ -42,7 +42,7 @@ Source plan: this document's In Scope and Validation Strategy; source requiremen
 - [x] C01 Implement saved-edit notices and author attribution; make T01 green, commit, and push.
   - Depends on: T01.
   - Trace: “the full updated plain text and the comment author's details” (In Scope, Slice 1); validated by T01 and existing POST/endpoint suites.
-- [ ] T02 Add failure-isolation, endpoint, disabled-mode, and timeout coverage; record expected failures, commit, and push.
+- [x] T02 Add failure-isolation, endpoint, disabled-mode, and timeout coverage; record expected failures, commit, and push.
   - Depends on: C01.
   - Trace: “Exercise the real endpoint with Resend, SendGrid, and notifications disabled, including provider timeouts and rejected edits.” (In Scope, Slice 2)
 - [ ] C02 Isolate notification failures and update the guide; pass focused tests and local CI, commit, and push.
@@ -59,5 +59,6 @@ Source plan: this document's In Scope and Validation Strategy; source requiremen
 - Baseline: 79 focused lifecycle/endpoint tests passed.
 - T01: 8 expected failures and 86 passes. Failures identify missing edit notices and the unmatched-update success path. Existing POST and unrelated-method checks remain green; the two obsolete successful-PUT no-send cases were removed.
 - C01: All 162 lifecycle, endpoint, and existing MongoDB service tests passed. Edit notices require a matched comment and a text change; unchanged or rejected edits retain their existing responses. Notifications use the original author's user record, with an unavailable-author fallback.
+- T02: 12 expected failures and 116 passes across lifecycle and endpoint tests. Missing behavior is safe handling of rejected/thrown sends and failed author lookups, plus edit-specific diagnostics for returned failures and provider timeouts. Both providers' successful edit paths and rejected-edit gates already pass. A concurrent same-text update is covered and sends no duplicate notice.
 
 The PR targets the existing integration branch and closes #248; merging remains a maintainer action.

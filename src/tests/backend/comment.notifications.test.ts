@@ -794,6 +794,360 @@ describe("comment endpoint notification wiring", () => {
     }
   )
 
+  describe("edit notifications", () => {
+    const administrator: User = {
+      id: "endpoint-editing-administrator",
+      name: "Editing Administrator",
+      email: "editing-admin@example.com",
+      isAdmin: true,
+    }
+    const updatedText = "Edited text\n\n<b>Literal markup</b> & שלום"
+    const editEvent = (overrides: Partial<APIGatewayEvent> = {}) =>
+      eventFor({
+        httpMethod: "PUT",
+        path: `/.netlify/functions/comment/${existingComment.id}`,
+        body: updatedText,
+        ...overrides,
+      })
+    const expectSavedEdit = async (response: Awaited<ReturnType<Handler>>) => {
+      expect(response.statusCode).toBe(204)
+      expect(JSON.parse(response.body as string)).toMatchObject({
+        id: existingComment.id,
+        text: updatedText,
+        userId: author.id,
+      })
+      expect(
+        await db
+          .collection<Comment>("comments")
+          .findOne({ id: existingComment.id })
+      ).toMatchObject({
+        text: updatedText,
+        userId: author.id,
+      })
+    }
+
+    beforeEach(async () => {
+      await db.collection<Comment>("comments").insertOne({ ...existingComment })
+      await db
+        .collection<User>("users")
+        .insertMany([
+          { ...administrator },
+          { ...author, id: "endpoint-other-editor", name: "Another User" },
+        ])
+    })
+
+    describe.each(providers)("%s", provider => {
+      beforeEach(() => {
+        configureProvider(provider)
+      })
+      const providerSend = () => (provider === "resend" ? resendSend : send)
+
+      it.each(["author", "administrator"] as const)(
+        "sends the persisted edit with the original author when edited by the %s",
+        async editor => {
+          let savedAtSend: Comment | null = null
+          const observeSaved = async () => {
+            savedAtSend = await db
+              .collection<Comment>("comments")
+              .findOne({ id: existingComment.id })
+          }
+          if (provider === "resend") {
+            resendSend.mockImplementation(async () => {
+              await observeSaved()
+              return resendAccepted
+            })
+          } else {
+            send.mockImplementation(async () => {
+              await observeSaved()
+              return accepted
+            })
+          }
+          const handler = await loadHandler()
+
+          const response = await handler(
+            editEvent({
+              headers: {
+                Origin: origin,
+                Authorization: `Bearer ${tokenFor(editor === "author" ? author.id : administrator.id)}`,
+              },
+            })
+          )
+
+          await expectSavedEdit(response)
+          expect(savedAtSend).toMatchObject({
+            text: updatedText,
+            userId: author.id,
+          })
+          expect(providerSend()).toHaveBeenCalledTimes(1)
+          const message = providerSend().mock.calls[0][0]
+          expect(message).toEqual({
+            to: recipient,
+            from: provider === "resend" ? resendSender : verifiedSender,
+            subject: "Simple Comment Notification",
+            text: expect.stringContaining(updatedText),
+          })
+          expect(message).toHaveProperty(
+            "text",
+            expect.stringMatching(/comment edited/i)
+          )
+          expect(message).toHaveProperty(
+            "text",
+            expect.stringContaining(author.name)
+          )
+          expect(message).toHaveProperty(
+            "text",
+            expect.stringContaining(author.email)
+          )
+          expect(message).not.toHaveProperty(
+            "text",
+            expect.stringContaining(administrator.email)
+          )
+          expect(
+            provider === "resend" ? send : resendSend
+          ).not.toHaveBeenCalled()
+          expect(errorLog).not.toHaveBeenCalled()
+        }
+      )
+
+      it.each([
+        "provider error",
+        "rejected promise",
+        "synchronous throw",
+      ] as const)(
+        "keeps the saved edit successful and diagnostics private after a %s",
+        async outcome => {
+          const privateValues = [
+            apiKey,
+            resendApiKey,
+            "synthetic-private-edit-provider-detail",
+          ]
+          const detail = privateValues.join(" | ")
+          const otherLogs = (
+            ["warn", "info", "log", "debug", "trace"] as const
+          ).map(method =>
+            jest.spyOn(console, method).mockImplementation(() => {})
+          )
+          if (outcome === "provider error") {
+            if (provider === "resend") {
+              resendSend.mockResolvedValue({
+                data: null,
+                error: {
+                  name: "application_error",
+                  statusCode: 503,
+                  message: detail,
+                },
+                headers: null,
+              })
+            } else {
+              send.mockResolvedValue([
+                {
+                  statusCode: 503,
+                  body: { errors: [{ message: detail }] },
+                  headers: undefined,
+                },
+                {},
+              ])
+            }
+          } else if (outcome === "rejected promise") {
+            if (provider === "resend")
+              resendSend.mockRejectedValue(new globalThis.Error(detail))
+            else send.mockRejectedValue(new globalThis.Error(detail))
+          } else {
+            const fail = () => {
+              throw new globalThis.Error(detail)
+            }
+            if (provider === "resend") resendSend.mockImplementation(fail)
+            else send.mockImplementation(fail)
+          }
+          const handler = await loadHandler()
+
+          const response = await handler(editEvent())
+
+          await expectSavedEdit(response)
+          expect(providerSend()).toHaveBeenCalledTimes(1)
+          expect(errorLog).toHaveBeenCalledWith(
+            "Comment edit notification failed",
+            {
+              commentId: existingComment.id,
+              statusCode: outcome === "provider error" ? 503 : 502,
+            }
+          )
+          const diagnostics = inspect(
+            [errorLog.mock.calls, ...otherLogs.map(log => log.mock.calls)],
+            { depth: null }
+          )
+          privateValues.forEach(value => {
+            expect(inspect(response)).not.toContain(value)
+            expect(diagnostics).not.toContain(value)
+          })
+          expect(diagnostics).not.toContain(updatedText)
+        }
+      )
+
+      it("finishes a saved edit when delivery reaches its deadline", async () => {
+        const entered = deferred<void>()
+        const delivery = deferred<void>()
+        const waitForDelivery = () => {
+          // Use real timers for MongoDB, then advance only the provider wait.
+          jest.useFakeTimers({ doNotFake: ["nextTick", "setImmediate"] })
+          entered.resolve()
+          return delivery.promise
+        }
+        if (provider === "resend")
+          resendSend.mockImplementation(async () => {
+            await waitForDelivery()
+            return resendAccepted
+          })
+        else
+          send.mockImplementation(async () => {
+            await waitForDelivery()
+            return accepted
+          })
+        const handler = await loadHandler()
+        let completed: Awaited<ReturnType<Handler>> | undefined
+        const request = handler(editEvent()).then(response => {
+          completed = response
+          return response
+        })
+
+        try {
+          await Promise.race([entered.promise, request.then(() => {})])
+          const completedBeforeDeadline = completed
+          await jest.runOnlyPendingTimersAsync()
+          const completedAtDeadline = completed
+          delivery.resolve()
+          const response = await request
+
+          expect(providerSend()).toHaveBeenCalledTimes(1)
+          expect(completedBeforeDeadline).toBeUndefined()
+          expect(completedAtDeadline).toBe(response)
+        } finally {
+          delivery.resolve()
+          jest.useRealTimers()
+        }
+
+        await expectSavedEdit(await request)
+        expect(errorLog).toHaveBeenCalledWith(
+          "Comment edit notification failed",
+          {
+            commentId: existingComment.id,
+            statusCode: 504,
+          }
+        )
+      })
+
+      it.each([
+        {
+          name: "missing authentication",
+          editorId: null,
+          text: updatedText,
+          target: "existing",
+          statusCode: 401,
+        },
+        {
+          name: "unauthorized editor",
+          editorId: "endpoint-other-editor",
+          text: updatedText,
+          target: "existing",
+          statusCode: 403,
+        },
+        {
+          name: "unchanged text",
+          editorId: author.id,
+          text: existingComment.text,
+          target: "existing",
+          statusCode: 400,
+        },
+        {
+          name: "missing body",
+          editorId: author.id,
+          text: null,
+          target: "existing",
+          statusCode: 400,
+        },
+        {
+          name: "missing comment",
+          editorId: author.id,
+          text: updatedText,
+          target: "missing",
+          statusCode: 404,
+        },
+        {
+          name: "deleted comment",
+          editorId: author.id,
+          text: updatedText,
+          target: "deleted",
+          statusCode: 404,
+        },
+      ])(
+        "does not send or change text for $name",
+        async ({ editorId, text, target, statusCode }) => {
+          if (target === "deleted")
+            await db
+              .collection("comments")
+              .updateOne(
+                { id: existingComment.id },
+                { $set: { dateDeleted: new Date() } }
+              )
+          const handler = await loadHandler()
+
+          const response = await handler(
+            editEvent({
+              body: text,
+              path: `/.netlify/functions/comment/${target === "missing" ? "missing-comment" : existingComment.id}`,
+              headers: {
+                Origin: origin,
+                ...(editorId
+                  ? { Authorization: `Bearer ${tokenFor(editorId)}` }
+                  : {}),
+              },
+            })
+          )
+
+          expect(response.statusCode).toBe(statusCode)
+          expect(providerSend()).not.toHaveBeenCalled()
+          expect(
+            await db
+              .collection<Comment>("comments")
+              .findOne({ id: existingComment.id })
+          ).toMatchObject({ text: existingComment.text })
+        }
+      )
+
+      it("does not send when the database update fails", async () => {
+        const handler = await loadHandler()
+        jest
+          .spyOn(Collection.prototype, "findOneAndUpdate")
+          .mockRejectedValueOnce(
+            new globalThis.Error("Synthetic edit database failure")
+          )
+
+        const response = await handler(editEvent())
+
+        expect(response.statusCode).toBe(500)
+        expect(providerSend()).not.toHaveBeenCalled()
+        expect(
+          await db
+            .collection<Comment>("comments")
+            .findOne({ id: existingComment.id })
+        ).toMatchObject({ text: existingComment.text })
+      })
+    })
+
+    it("saves edits with notifications disabled without loading a sending client", async () => {
+      delete process.env.NOTIFICATION_SERVICE_API_KEY
+      delete process.env.SENDGRID_VERIFIED_SENDER
+      const handler = await loadHandler()
+
+      await expectSavedEdit(await handler(editEvent()))
+
+      expect(send).not.toHaveBeenCalled()
+      expect(resendSend).not.toHaveBeenCalled()
+      expect(setApiKey).not.toHaveBeenCalled()
+      expect(resendConstructor).not.toHaveBeenCalled()
+    })
+  })
+
   describe.each(providers)("%s request methods", provider => {
     it.each([
       { method: "GET", statusCode: 200 },

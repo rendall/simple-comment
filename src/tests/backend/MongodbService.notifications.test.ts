@@ -463,6 +463,132 @@ describe("comment notification lifecycle", () => {
       expect(notifyModerators).not.toHaveBeenCalled()
     })
 
+    it.each([
+      "returned failure",
+      "rejected promise",
+      "synchronous throw",
+    ] as const)(
+      "preserves a saved edit and safe diagnostics after a notification %s",
+      async outcome => {
+        if (outcome === "returned failure") {
+          notifyModerators.mockReturnValue(
+            Promise.resolve({
+              statusCode: 503,
+              body: privateDetails.join(" | "),
+            })
+          )
+        } else if (outcome === "rejected promise") {
+          notifyModerators.mockImplementation(() =>
+            Promise.reject(sensitiveProviderError())
+          )
+        } else {
+          notifyModerators.mockImplementation(() => {
+            throw sensitiveProviderError()
+          })
+        }
+
+        const response = await service.commentPUT(
+          editableComment.id,
+          updatedText,
+          author.id
+        )
+
+        await expectUpdated(response)
+        expect(notifyModerators).toHaveBeenCalledTimes(1)
+        expectSanitizedDiagnostic([...privateDetails, updatedText])
+        expect(errorLog).toHaveBeenCalledWith(
+          "Comment edit notification failed",
+          {
+            commentId: editableComment.id,
+            ...(outcome === "returned failure" ? { statusCode: 503 } : {}),
+          }
+        )
+        privateDetails.forEach(detail =>
+          expect(inspect(response)).not.toContain(detail)
+        )
+      }
+    )
+
+    it("keeps a saved administrator edit successful when the author lookup fails", async () => {
+      jest
+        .spyOn(Collection.prototype, "findOne")
+        .mockRejectedValueOnce(sensitiveProviderError())
+
+      const response = await service.commentPUT(
+        editableComment.id,
+        updatedText,
+        administrator.id
+      )
+
+      await expectUpdated(response)
+      expect(notifyModerators).not.toHaveBeenCalled()
+      expectSanitizedDiagnostic([...privateDetails, updatedText])
+      privateDetails.forEach(detail =>
+        expect(inspect(response)).not.toContain(detail)
+      )
+    })
+
+    it("does not wait for a notification author lookup when notifications are disabled", async () => {
+      const disabledService = new MongodbService(
+        global.__MONGO_URI__,
+        databaseName
+      )
+      jest.spyOn(disabledService, "getDb").mockResolvedValue(db)
+      // Editing uses find/next; findOne is the additional notification author lookup.
+      const authorLookup = jest
+        .spyOn(Collection.prototype, "findOne")
+        .mockRejectedValueOnce(sensitiveProviderError())
+
+      const response = await disabledService.commentPUT(
+        editableComment.id,
+        updatedText,
+        administrator.id
+      )
+      const lookupsDuringEdit = authorLookup.mock.calls.length
+      authorLookup.mockRestore()
+
+      await expectUpdated(response)
+      expect(lookupsDuringEdit).toBe(0)
+      expect(notifyModerators).not.toHaveBeenCalled()
+      expect(errorLog).not.toHaveBeenCalled()
+    })
+
+    it("accepts a notification implementation returning void after an edit", async () => {
+      notifyModerators.mockReturnValue(undefined)
+
+      await expectUpdated(
+        await service.commentPUT(editableComment.id, updatedText, author.id)
+      )
+
+      expect(notifyModerators).toHaveBeenCalledTimes(1)
+      expect(errorLog).not.toHaveBeenCalled()
+    })
+
+    it("does not notify when another edit already saved the requested text before this update", async () => {
+      const comments = db.collection<Comment>("comments")
+      const updateSpy = jest
+        .spyOn(Collection.prototype, "findOneAndUpdate")
+        .mockImplementationOnce(async () => {
+          updateSpy.mockRestore()
+          await comments.updateOne(
+            { id: editableComment.id },
+            { $set: { text: updatedText } }
+          )
+          return db
+            .collection("comments")
+            .findOneAndUpdate(
+              { id: editableComment.id },
+              { $set: { text: updatedText } }
+            )
+        })
+
+      await expectUpdated(
+        await service.commentPUT(editableComment.id, updatedText, author.id)
+      )
+
+      expect(notifyModerators).not.toHaveBeenCalled()
+    })
+
     it("still sends an edit notice when the original author record is unavailable", async () => {
       await db.collection<User>("users").deleteOne({ id: author.id })
 
