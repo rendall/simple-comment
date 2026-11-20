@@ -1,8 +1,8 @@
 # Email notifications
 
-Simple Comment can email your moderators when someone posts a new comment or reply. This helps you keep up with conversations without checking every page of your website.
+Simple Comment can email your moderators when someone posts or edits a comment or reply. This helps you keep up with conversations without checking every page of your website.
 
-The notification email includes the full comment as plain text, along with the author's name and email address. Notifications for edits are planned in [#248](https://github.com/rendall/simple-comment/issues/248). Reading, editing, or deleting a comment does not currently send a notification.
+The notification email includes the full comment as plain text, along with the author's name and email address. Edit notices identify the comment as edited and include the updated text. Saving unchanged text, reading a comment, or deleting one does not send a notification.
 
 Notifications are optional. They stay off until you configure an email provider. We recommend Resend for new installations, and you can also use SendGrid.
 
@@ -248,13 +248,15 @@ Providers extend the existing `AbstractNotificationService` class. `MongodbServi
 
 ### Saving comments and sending emails
 
-The comment service saves a new comment or reply before calling `notifyModerators`. Rejected submissions, failed saves, and edits do not send notifications.
+The comment service saves a new comment, reply, or authorized text edit before calling `notifyModerators`. Rejected submissions, unchanged text, and failed saves do not send notifications.
 
 The service builds the message from the saved comment's full text and the posting author's details, using the same plain-text format for either provider. Line breaks and markup-like text are preserved as written.
 
+Edit notices identify the comment's author, including when an administrator makes the edit. Self-edits reuse the user already loaded for authorization. When an administrator edits someone else's comment, the additional author lookup has a one-second deadline. If the author's user record is no longer available, the email says "Author unavailable." If the lookup fails or times out, the service records a notification failure and returns the saved edit's `204` response without sending a notice. A later lookup result does not trigger an email.
+
 Recipient sends run concurrently. The request waits for every recipient's send to finish or reach its five-second deadline. One recipient's failure does not stop attempts to the others. The provider reports success only when every send is accepted, and partial failures include accepted and failed counts.
 
-Delivery failures leave the successful comment response intact. A new comment keeps its `201` response. A timeout ends the wait; it does not guarantee that the provider has stopped processing the email. An email may still arrive afterward.
+Delivery failures leave the successful comment response intact. A new comment keeps its `201` response, and a saved edit keeps its `204` response. A timeout ends the wait; it does not guarantee that the provider has stopped processing the email. An email may still arrive afterward.
 
 Notification results distinguish general provider failures, account or sender restrictions, exhausted allowances, unavailability, timeouts, and internal errors. Providers interpret their own response formats. Mixed failure summaries are consistent regardless of which recipient's send finishes first. Notification error statuses are internal results; they do not replace the response for a successfully saved comment.
 
