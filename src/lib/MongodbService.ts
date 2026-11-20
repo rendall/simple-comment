@@ -927,7 +927,18 @@ export class MongodbService extends AbstractDbService {
       { $set: returnComment }
     )
 
-    if (modifyResult.ok) {
+    if (modifyResult.ok && modifyResult.value && isComment(modifyResult.value)) {
+      if (this._notificationService && modifyResult.value.text !== text) {
+        const commentAuthor = foundComment.userId
+          ? await users.findOne({ id: foundComment.userId })
+          : null
+        const authorDescription = commentAuthor
+          ? `Author: ${commentAuthor.name} (${commentAuthor.email})`
+          : "Author unavailable"
+        await this._notificationService.notifyModerators(
+          `Comment edited. ${authorDescription}\n\n${returnComment.text}`
+        )
+      }
       return {
         ...success204CommentUpdated,
         body: returnComment,
