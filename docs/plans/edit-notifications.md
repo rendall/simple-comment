@@ -58,7 +58,7 @@ Source plan: this document's In Scope and Validation Strategy; source requiremen
 - [x] C03 Reuse the loaded author, pass T03 and existing attribution tests, then commit and push.
   - Depends on: T03.
   - Trace: “including administrators editing their own comments” (In Scope, Review slice 1); validated by T03 and the existing administrator-edit tests.
-- [ ] T04 Add author-lookup deadline, timer cleanup, and late-result regressions; record expected failures, commit, and push.
+- [x] T04 Add author-lookup deadline, timer cleanup, and late-result regressions; record expected failures, commit, and push.
   - Depends on: C03.
   - Trace: “A late lookup result must not trigger an email” and “clear its timer on completion” (In Scope, Review slice 2).
 - [ ] C04 Bound the lookup, update the guide, pass focused tests and local CI, then commit and push.
@@ -82,5 +82,6 @@ Source plan: this document's In Scope and Validation Strategy; source requiremen
 - Final scope review: authorization, unchanged-text rejection, and existing successful response shapes are preserved. An update with no matched comment now takes the existing update-error path instead of reporting success; this is necessary to distinguish saved edits from failed writes before notification. Notification author lookup and delivery are guarded after persistence, including for administrator edits. Comment links, revision history, new validation limits, and provider/framework changes are excluded.
 - T03: Two expected failures and 57 passes in the lifecycle suite. Both ordinary and administrator self-edits perform one unnecessary author lookup; message attribution remains covered by the existing matrix.
 - C03: All 131 lifecycle/endpoint tests pass, including self-edit query avoidance and administrator edits retaining the original author. The previous soft-delete race regression remains green.
+- T04: Two expected stalled-lookup failures and 62 passes in the lifecycle suite. A stalled read currently holds the saved edit response until its late resolution or rejection. Added cleanup checks for successful, missing, and rejected author reads; fake timers start only at the post-save query, with deferred work released even on failure.
 
 The PR targets the existing integration branch and closes #248; merging remains a maintainer action.
