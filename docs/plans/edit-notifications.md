@@ -61,7 +61,7 @@ Source plan: this document's In Scope and Validation Strategy; source requiremen
 - [x] T04 Add author-lookup deadline, timer cleanup, and late-result regressions; record expected failures, commit, and push.
   - Depends on: C03.
   - Trace: “A late lookup result must not trigger an email” and “clear its timer on completion” (In Scope, Review slice 2).
-- [ ] C04 Bound the lookup, update the guide, pass focused tests and local CI, then commit and push.
+- [x] C04 Bound the lookup, update the guide, pass focused tests and local CI, then commit and push.
   - Depends on: T04.
   - Trace: “Bound the remaining notification author lookup to one second” (In Scope, Review slice 2); validated by T04 and Validation Strategy.
 
@@ -83,5 +83,6 @@ Source plan: this document's In Scope and Validation Strategy; source requiremen
 - T03: Two expected failures and 57 passes in the lifecycle suite. Both ordinary and administrator self-edits perform one unnecessary author lookup; message attribution remains covered by the existing matrix.
 - C03: All 131 lifecycle/endpoint tests pass, including self-edit query avoidance and administrator edits retaining the original author. The previous soft-delete race regression remains green.
 - T04: Two expected stalled-lookup failures and 62 passes in the lifecycle suite. A stalled read currently holds the saved edit response until its late resolution or rejection. Added cleanup checks for successful, missing, and rejected author reads; fake timers start only at the post-save query, with deferred work released even on failure.
+- C04: All 204 focused lifecycle, endpoint, and existing MongoDB tests pass. Full `yarn ci:local` passed lint, formatting, type checks, both builds, and all 971 tests (1 environment, 749 backend, 193 frontend unit, 28 component). No worker-exit warning occurred in this run. Markdown formatting and diff checks passed. The one-second deadline bounds waiting for the remaining author query; it does not cancel the database operation. Late results are ignored and cannot send an email. No live email was sent.
 
 The PR targets the existing integration branch and closes #248; merging remains a maintainer action.

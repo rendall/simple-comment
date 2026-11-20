@@ -252,7 +252,7 @@ The comment service saves a new comment, reply, or authorized text edit before c
 
 The service builds the message from the saved comment's full text and the posting author's details, using the same plain-text format for either provider. Line breaks and markup-like text are preserved as written.
 
-Edit notices identify the comment's author, including when an administrator makes the edit. If the author's user record is no longer available, the email says "Author unavailable." A failure to look up the author is handled as a notification failure and leaves the saved edit successful.
+Edit notices identify the comment's author, including when an administrator makes the edit. Self-edits reuse the user already loaded for authorization. When an administrator edits someone else's comment, the additional author lookup has a one-second deadline. If the author's user record is no longer available, the email says "Author unavailable." If the lookup fails or times out, the service records a notification failure and returns the saved edit's `204` response without sending a notice. A later lookup result does not trigger an email.
 
 Recipient sends run concurrently. The request waits for every recipient's send to finish or reach its five-second deadline. One recipient's failure does not stop attempts to the others. The provider reports success only when every send is accepted, and partial failures include accepted and failed counts.
 

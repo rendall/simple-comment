@@ -91,6 +91,31 @@ const {
   moderatorPassword: simpleCommentModeratorPassword,
 } = getBackendEnv()
 
+const notificationAuthorLookupTimeoutMs = 1000
+
+const findNotificationAuthor = async (
+  users: Collection<User>,
+  userId: UserId
+) => {
+  let timeout: ReturnType<typeof setTimeout> | undefined
+  try {
+    return await Promise.race([
+      users.findOne({ id: userId }),
+      new Promise<never>((_resolve, reject) => {
+        timeout = setTimeout(
+          () =>
+            reject(
+              new globalThis.Error("Notification author lookup timed out")
+            ),
+          notificationAuthorLookupTimeoutMs
+        )
+      }),
+    ])
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
 export class MongodbService extends AbstractDbService {
   private isCrossSite = isCrossSite
   private _client?: MongoClient
@@ -939,7 +964,7 @@ export class MongodbService extends AbstractDbService {
             foundComment.userId === authUser.id
               ? authUser
               : foundComment.userId
-                ? await users.findOne({ id: foundComment.userId })
+                ? await findNotificationAuthor(users, foundComment.userId)
                 : null
           const authorDescription = commentAuthor
             ? `Author: ${commentAuthor.name} (${commentAuthor.email})`
