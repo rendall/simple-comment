@@ -6,13 +6,13 @@ import {
   it,
   jest,
 } from "@jest/globals"
-import { getNotificationConfiguration } from "../../lib/env"
+import * as notificationEnv from "../../lib/env"
+import * as sharedUtilities from "../../lib/shared-utilities"
 import type { NotificationConfiguration } from "../../lib/env"
 import type { AbstractNotificationService } from "../../lib/AbstractNotificationService"
+import { getNotificationService } from "../../lib/getNotificationService"
 
-jest.mock("../../lib/env", () => ({
-  getNotificationConfiguration: jest.fn(),
-}))
+jest.mock("dotenv", () => ({ config: jest.fn() }))
 jest.mock("../../lib/ResendNotificationService", () => ({
   ResendNotificationService: jest.fn(),
 }))
@@ -23,32 +23,19 @@ jest.mock("../../lib/SendGridNotificationService", () => ({
 type ServiceConstructor = (
   configuration: NotificationConfiguration
 ) => AbstractNotificationService
-type Resolver = (
-  source?: NodeJS.ProcessEnv
-) => AbstractNotificationService | undefined
-
 const resendConstructor = jest.requireMock<{
   ResendNotificationService: jest.Mock<ServiceConstructor>
 }>("../../lib/ResendNotificationService").ResendNotificationService
 const sendGridConstructor = jest.requireMock<{
   SendGridNotificationService: jest.Mock<ServiceConstructor>
 }>("../../lib/SendGridNotificationService").SendGridNotificationService
-const readConfiguration = jest.mocked(getNotificationConfiguration)
+const originalEnv = process.env
 const resendService: AbstractNotificationService = {
   notifyModerators: jest.fn<AbstractNotificationService["notifyModerators"]>(),
 }
 const sendGridService: AbstractNotificationService = {
   notifyModerators: jest.fn<AbstractNotificationService["notifyModerators"]>(),
 }
-
-// Load the new entry point at runtime so tests type-check and report individual
-// failures while its implementation is absent. There is no fallback resolver.
-const getNotificationService: Resolver = source =>
-  jest
-    .requireActual<{
-      getNotificationService: Resolver
-    }>("../../lib/getNotificationService")
-    .getNotificationService(source)
 
 const resendConfiguration: NotificationConfiguration = {
   provider: "resend",
@@ -67,9 +54,8 @@ const contact = {
     "first@example.com,second@example.com",
 }
 
-// Configuration parsing, address validation, and ambiguous settings are already
-// covered in notification.configuration.test.ts. These cases test construction
-// from the reader's validated result, not a second configuration decision table.
+// Use real environment reading and stub only the provider constructors.
+// notification.configuration.test.ts already covers the build validation rules.
 const selections = [
   {
     name: "Resend",
@@ -79,7 +65,6 @@ const selections = [
       RESEND_FROM: resendConfiguration.from,
     },
     configuration: resendConfiguration,
-    warnings: [],
     selectedConstructor: resendConstructor,
     otherConstructor: sendGridConstructor,
     expectedService: resendService,
@@ -92,22 +77,18 @@ const selections = [
       SENDGRID_VERIFIED_SENDER: sendGridConfiguration.from,
     },
     configuration: sendGridConfiguration,
-    warnings: [],
     selectedConstructor: sendGridConstructor,
     otherConstructor: resendConstructor,
     expectedService: sendGridService,
   },
   {
-    name: "legacy SendGrid with a CI-only warning",
+    name: "legacy SendGrid",
     source: {
       ...contact,
       NOTIFICATION_SERVICE_API_KEY: sendGridConfiguration.apiKey,
       SENDGRID_VERIFIED_SENDER: sendGridConfiguration.from,
     },
     configuration: sendGridConfiguration,
-    warnings: [
-      "NOTIFICATION_SERVICE_API_KEY is deprecated. Use SENDGRID_API_KEY instead.",
-    ],
     selectedConstructor: sendGridConstructor,
     otherConstructor: resendConstructor,
     expectedService: sendGridService,
@@ -116,12 +97,24 @@ const selections = [
 
 describe("notification service construction resolver", () => {
   let consoleSpies: jest.SpiedFunction<typeof console.error>[]
+  let validateConfiguration: jest.SpiedFunction<
+    typeof notificationEnv.getNotificationConfiguration
+  >
+  let validateEmail: jest.SpiedFunction<typeof sharedUtilities.validateEmail>
 
   beforeEach(() => {
-    readConfiguration.mockReturnValue({
-      configuration: undefined,
-      warnings: [],
-    })
+    // Explicit sources must win over a different, otherwise valid environment.
+    process.env = {
+      NODE_ENV: "production",
+      RESEND_API_KEY: "re_synthetic_ambient_key",
+      RESEND_FROM: "ambient-sender@example.com",
+      SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL: "ambient-moderator@example.com",
+    }
+    validateConfiguration = jest.spyOn(
+      notificationEnv,
+      "getNotificationConfiguration"
+    )
+    validateEmail = jest.spyOn(sharedUtilities, "validateEmail")
     resendConstructor.mockReturnValue(resendService)
     sendGridConstructor.mockReturnValue(sendGridService)
     consoleSpies = (
@@ -140,71 +133,68 @@ describe("notification service construction resolver", () => {
       consoleSpies.forEach(spy => expect(spy).not.toHaveBeenCalled())
     } finally {
       jest.restoreAllMocks()
+      process.env = originalEnv
     }
   })
 
-  it("returns undefined without constructing either provider when the reader reports disabled", () => {
+  it("returns undefined without constructing either provider when notifications are unconfigured", () => {
     expect(getNotificationService(contact)).toBeUndefined()
 
-    expect(readConfiguration).toHaveBeenCalledTimes(1)
-    expect(readConfiguration).toHaveBeenCalledWith(contact)
     expect(resendConstructor).not.toHaveBeenCalled()
     expect(sendGridConstructor).not.toHaveBeenCalled()
   })
 
   it.each(selections)(
-    "constructs only $name and forwards the validated configuration unchanged",
+    "constructs only $name from the supplied environment settings",
     ({
       source,
       configuration,
-      warnings,
       selectedConstructor,
       otherConstructor,
       expectedService,
     }) => {
-      readConfiguration.mockReturnValue({ configuration, warnings })
-
       expect(getNotificationService(source)).toBe(expectedService)
 
-      expect(readConfiguration).toHaveBeenCalledTimes(1)
-      expect(readConfiguration).toHaveBeenCalledWith(source)
       expect(selectedConstructor).toHaveBeenCalledTimes(1)
       expect(selectedConstructor).toHaveBeenCalledWith(configuration)
       expect(otherConstructor).not.toHaveBeenCalled()
     }
   )
 
-  it("passes process.env to the shared reader when no source is supplied", () => {
-    expect(getNotificationService()).toBeUndefined()
+  it("uses process.env when no explicit source is supplied", () => {
+    process.env = { NODE_ENV: "production", ...selections[0].source }
 
-    expect(readConfiguration).toHaveBeenCalledTimes(1)
-    expect(readConfiguration).toHaveBeenCalledWith(process.env)
-    expect(resendConstructor).not.toHaveBeenCalled()
+    expect(getNotificationService()).toBe(resendService)
+
+    expect(resendConstructor).toHaveBeenCalledTimes(1)
+    expect(resendConstructor).toHaveBeenCalledWith(resendConfiguration)
     expect(sendGridConstructor).not.toHaveBeenCalled()
   })
 
-  it("propagates shared validation failures before constructing any provider", () => {
-    const failure = new globalThis.Error("Synthetic shared validation failure")
-    readConfiguration.mockImplementationOnce(() => {
-      throw failure
+  describe.each([
+    { name: "disabled notifications", source: contact },
+    ...selections.map(({ name, source }) => ({ name, source })),
+  ])("with $name", ({ source }) => {
+    it("does not run build-time configuration validation", () => {
+      getNotificationService(source)
+
+      expect(validateConfiguration).toHaveBeenCalledTimes(0)
     })
 
-    expect(() => getNotificationService(contact)).toThrow(failure)
+    it("does not validate sender or recipient email addresses", () => {
+      getNotificationService(source)
 
-    expect(readConfiguration).toHaveBeenCalledTimes(1)
-    expect(readConfiguration).toHaveBeenCalledWith(contact)
-    expect(resendConstructor).not.toHaveBeenCalled()
-    expect(sendGridConstructor).not.toHaveBeenCalled()
+      expect(validateEmail).toHaveBeenCalledTimes(0)
+    })
   })
 
   // Initialization failure is independent of the alias; cover each provider once.
   it.each(selections.slice(0, 2))(
     "propagates $name initialization failures without falling back or disabling notifications",
-    ({ source, configuration, selectedConstructor, otherConstructor }) => {
+    ({ source, selectedConstructor, otherConstructor }) => {
       const failure = new globalThis.Error(
         "Synthetic provider initialization failure"
       )
-      readConfiguration.mockReturnValue({ configuration, warnings: [] })
       selectedConstructor.mockImplementationOnce(() => {
         throw failure
       })
