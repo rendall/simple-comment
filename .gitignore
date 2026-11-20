@@ -24,3 +24,4 @@ debug.log
 !/cypress/**/*.js
 deno.lock
 .codex
+scripts/beep.*
