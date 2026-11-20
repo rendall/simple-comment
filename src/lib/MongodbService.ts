@@ -927,7 +927,11 @@ export class MongodbService extends AbstractDbService {
       { $set: returnComment }
     )
 
-    if (modifyResult.ok && modifyResult.value && isComment(modifyResult.value)) {
+    if (
+      modifyResult.ok &&
+      modifyResult.value &&
+      isComment(modifyResult.value)
+    ) {
       if (this._notificationService && modifyResult.value.text !== text) {
         const commentAuthor = foundComment.userId
           ? await users.findOne({ id: foundComment.userId })
