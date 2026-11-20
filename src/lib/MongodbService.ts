@@ -634,7 +634,7 @@ export class MongodbService extends AbstractDbService {
     if (this._notificationService) {
       try {
         const notification = await this._notificationService.notifyModerators(
-          `New comment posted by ${authUser.name} (${authUser.email})`
+          `New comment posted by ${authUser.name} (${authUser.email})\n\n${insertComment.text}`
         )
         if (notification && isError(notification)) {
           console.error("Comment notification failed", {
