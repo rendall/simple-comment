@@ -94,9 +94,13 @@ Post a new comment on your site, then check that:
 
 1. The comment appears successfully.
 2. Each configured moderator receives an email.
-3. The notification identifies the comment's author.
+3. The notification identifies the comment's author and includes the full comment text.
 
-Post a reply and check that it also sends a notification.
+Post a reply and check that it also sends a notification with the reply text.
+
+As the comment's author, edit its text and save it. Check that the change appears on the site and that each moderator receives another email, labeled as an edit and containing the updated text and the author's details. Use a recent comment while its edit control is available.
+
+Repeat these checks on your deployed site after releasing notification changes. A local success confirms your local setup; the deployed site has its own settings and needs its own delivery check.
 
 Check spam folders too. A successfully saved comment, or a provider accepting an email, does not by itself confirm that the email arrived.
 
