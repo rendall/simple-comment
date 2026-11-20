@@ -23,6 +23,10 @@ declare const global: { __MONGO_URI__: string; __MONGO_DB_NAME__: string }
 type Handler = (typeof import("../../functions/comment"))["handler"]
 type GetNotificationService =
   (typeof import("../../lib/getNotificationService"))["getNotificationService"]
+type ConfigurationValidator =
+  (typeof import("../../lib/env"))["getNotificationConfiguration"]
+type EmailValidator =
+  (typeof import("../../lib/shared-utilities"))["validateEmail"]
 type ResendSend = Resend["emails"]["send"]
 type ResendMail = { emails: Pick<Resend["emails"], "send"> }
 type SendResponse = [ClientResponse, object]
@@ -130,6 +134,8 @@ describe("comment endpoint notification wiring", () => {
     (...args: ConstructorParameters<typeof Resend>) => ResendMail
   >
   let resolveService: jest.SpiedFunction<GetNotificationService>
+  let validateConfiguration: jest.SpiedFunction<ConfigurationValidator>
+  let validateEmail: jest.SpiedFunction<EmailValidator>
   let errorLog: jest.SpiedFunction<typeof console.error>
 
   beforeAll(async () => {
@@ -214,6 +220,14 @@ describe("comment endpoint notification wiring", () => {
   const loadHandler = async (): Promise<Handler> => {
     let handler!: Handler
     await jest.isolateModulesAsync(async () => {
+      const environment = await import("../../lib/env")
+      const utilities = await import("../../lib/shared-utilities")
+      // Observe real validation calls without changing their behavior.
+      validateConfiguration = jest.spyOn(
+        environment,
+        "getNotificationConfiguration"
+      )
+      validateEmail = jest.spyOn(utilities, "validateEmail")
       const resolver = await import("../../lib/getNotificationService")
       // Observe the real resolver without replacing its behavior.
       resolveService = jest.spyOn(resolver, "getNotificationService")
@@ -412,60 +426,50 @@ describe("comment endpoint notification wiring", () => {
     })
   })
 
-  describe("when notification provider settings conflict", () => {
-    beforeEach(() => {
-      // Any setting for a second provider must prevent silent provider selection.
-      process.env.RESEND_FROM = resendSender
-    })
+  // Invalid and conflicting settings belong to the build validation suite.
+  describe("notification settings already checked by the build", () => {
+    it.each(["resend", "sendgrid", "legacy SendGrid", "disabled"])(
+      "does not validate notification settings during %s initialization",
+      async configuration => {
+        if (configuration === "resend") configureProvider("resend")
+        if (configuration === "sendgrid") {
+          delete process.env.NOTIFICATION_SERVICE_API_KEY
+          process.env.SENDGRID_API_KEY = apiKey
+        }
+        if (configuration === "disabled") {
+          delete process.env.NOTIFICATION_SERVICE_API_KEY
+          delete process.env.SENDGRID_VERIFIED_SENDER
+        }
 
-    it("rejects initialization with an actionable configuration error", async () => {
-      await expect(loadHandler()).rejects.toMatchObject({
-        name: "EnvContractError",
-        key: "NOTIFICATION_PROVIDERS",
-        message: expect.stringContaining("Multiple notification providers"),
-      })
+        await loadHandler()
 
-      expect(resolveService).toHaveBeenCalledTimes(1)
-      expect(setApiKey).not.toHaveBeenCalled()
-      expect(send).not.toHaveBeenCalled()
-      expect(resendConstructor).not.toHaveBeenCalled()
-      expect(resendSend).not.toHaveBeenCalled()
-    })
+        // Count assertions avoid dumping process.env in fail-first diagnostics.
+        expect(validateConfiguration).toHaveBeenCalledTimes(0)
+        expect(validateEmail).toHaveBeenCalledTimes(0)
+      }
+    )
 
-    it("does not load the SendGrid SDK before rejecting configuration", async () => {
-      const loadSendGridSdk = forbidSendGridSdkLoading()
+    it.each(providers)(
+      "does not revalidate %s settings during successive warm requests",
+      async provider => {
+        configureProvider(provider)
+        const handler = await loadHandler()
+        // Measure warm requests separately from initialization, covered above.
+        validateConfiguration.mockClear()
+        validateEmail.mockClear()
 
-      await expect(loadHandler()).rejects.toMatchObject({
-        name: "EnvContractError",
-      })
+        await expectSavedComment(await handler(eventFor()))
+        const secondText = "Another comment without configuration validation"
+        await expectSavedComment(
+          await handler(eventFor({ body: secondText })),
+          secondText
+        )
 
-      expect(loadSendGridSdk).not.toHaveBeenCalled()
-    })
+        expect(validateConfiguration).toHaveBeenCalledTimes(0)
+        expect(validateEmail).toHaveBeenCalledTimes(0)
+      }
+    )
   })
-
-  it.each([
-    {
-      missing: "NOTIFICATION_SERVICE_API_KEY",
-      expectedKey: "SENDGRID_API_KEY",
-    },
-    {
-      missing: "SENDGRID_VERIFIED_SENDER",
-      expectedKey: "SENDGRID_VERIFIED_SENDER",
-    },
-  ])(
-    "fails initialization with an actionable error when $missing is missing",
-    async ({ missing, expectedKey }) => {
-      delete process.env[missing]
-
-      await expect(loadHandler()).rejects.toMatchObject({
-        name: "EnvContractError",
-        key: expectedKey,
-        message: expect.stringContaining(expectedKey),
-      })
-      expect(setApiKey).not.toHaveBeenCalled()
-      expect(send).not.toHaveBeenCalled()
-    }
-  )
 
   it.each(providers)(
     "reuses the %s client for successive submissions",
