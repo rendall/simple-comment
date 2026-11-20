@@ -557,6 +557,32 @@ describe("comment notification lifecycle", () => {
       }
     )
 
+    it.each([false, true])(
+      "reuses the loaded author for a self-edit with isAdmin=%s",
+      async isAdmin => {
+        await db
+          .collection<User>("users")
+          .updateOne({ id: author.id }, { $set: { isAdmin } })
+        const authorLookup = jest.spyOn(Collection.prototype, "findOne")
+
+        const response = await service.commentPUT(
+          editableComment.id,
+          updatedText,
+          author.id
+        )
+        const additionalLookups = authorLookup.mock.calls.length
+        authorLookup.mockRestore()
+
+        await expectUpdated(response)
+        expect(additionalLookups).toBe(0)
+        expect(notifyModerators).toHaveBeenCalledTimes(1)
+        const [message] = notifyModerators.mock.calls[0]
+        expect(message).toContain(author.name)
+        expect(message).toContain(author.email)
+        expect(message).toContain(updatedText)
+      }
+    )
+
     it("keeps a saved administrator edit successful when the author lookup fails", async () => {
       jest
         .spyOn(Collection.prototype, "findOne")
