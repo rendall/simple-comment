@@ -933,15 +933,28 @@ export class MongodbService extends AbstractDbService {
       isComment(modifyResult.value)
     ) {
       if (this._notificationService && modifyResult.value.text !== text) {
-        const commentAuthor = foundComment.userId
-          ? await users.findOne({ id: foundComment.userId })
-          : null
-        const authorDescription = commentAuthor
-          ? `Author: ${commentAuthor.name} (${commentAuthor.email})`
-          : "Author unavailable"
-        await this._notificationService.notifyModerators(
-          `Comment edited. ${authorDescription}\n\n${returnComment.text}`
-        )
+        // The edit is saved; preparing or sending its notice must not fail it.
+        try {
+          const commentAuthor = foundComment.userId
+            ? await users.findOne({ id: foundComment.userId })
+            : null
+          const authorDescription = commentAuthor
+            ? `Author: ${commentAuthor.name} (${commentAuthor.email})`
+            : "Author unavailable"
+          const notification = await this._notificationService.notifyModerators(
+            `Comment edited. ${authorDescription}\n\n${returnComment.text}`
+          )
+          if (notification && isError(notification)) {
+            console.error("Comment edit notification failed", {
+              commentId: targetId,
+              statusCode: notification.statusCode,
+            })
+          }
+        } catch {
+          console.error("Comment edit notification failed", {
+            commentId: targetId,
+          })
+        }
       }
       return {
         ...success204CommentUpdated,
