@@ -935,9 +935,12 @@ export class MongodbService extends AbstractDbService {
       if (this._notificationService && modifyResult.value.text !== text) {
         // The edit is saved; preparing or sending its notice must not fail it.
         try {
-          const commentAuthor = foundComment.userId
-            ? await users.findOne({ id: foundComment.userId })
-            : null
+          const commentAuthor =
+            foundComment.userId === authUser.id
+              ? authUser
+              : foundComment.userId
+                ? await users.findOne({ id: foundComment.userId })
+                : null
           const authorDescription = commentAuthor
             ? `Author: ${commentAuthor.name} (${commentAuthor.email})`
             : "Author unavailable"

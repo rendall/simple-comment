@@ -55,7 +55,7 @@ Source plan: this document's In Scope and Validation Strategy; source requiremen
   - Trace: “Isolate notification preparation and delivery failures from successful edits” and “Update the notification guide.” (In Scope, Slice 2); validated by T02 and Validation Strategy.
 - [x] T03 Add fail-first tests for ordinary and administrator self-edits avoiding an extra author query; commit and push.
   - Trace: “Reuse the authenticated user for self-edit notices” (In Scope, Review slice 1).
-- [ ] C03 Reuse the loaded author, pass T03 and existing attribution tests, then commit and push.
+- [x] C03 Reuse the loaded author, pass T03 and existing attribution tests, then commit and push.
   - Depends on: T03.
   - Trace: “including administrators editing their own comments” (In Scope, Review slice 1); validated by T03 and the existing administrator-edit tests.
 - [ ] T04 Add author-lookup deadline, timer cleanup, and late-result regressions; record expected failures, commit, and push.
@@ -81,5 +81,6 @@ Source plan: this document's In Scope and Validation Strategy; source requiremen
 - C02: All 196 lifecycle, endpoint, and existing MongoDB service tests passed. Full `yarn ci:local` passed lint, formatting, type checks, both builds, and 963 tests (1 environment, 741 backend, 193 frontend unit, 28 component). Markdown formatting and diff checks passed. The existing worker-exit warning recurred and remains tracked in #257. Provider SDK boundaries are stubbed; no live email was sent.
 - Final scope review: authorization, unchanged-text rejection, and existing successful response shapes are preserved. An update with no matched comment now takes the existing update-error path instead of reporting success; this is necessary to distinguish saved edits from failed writes before notification. Notification author lookup and delivery are guarded after persistence, including for administrator edits. Comment links, revision history, new validation limits, and provider/framework changes are excluded.
 - T03: Two expected failures and 57 passes in the lifecycle suite. Both ordinary and administrator self-edits perform one unnecessary author lookup; message attribution remains covered by the existing matrix.
+- C03: All 131 lifecycle/endpoint tests pass, including self-edit query avoidance and administrator edits retaining the original author. The previous soft-delete race regression remains green.
 
 The PR targets the existing integration branch and closes #248; merging remains a maintainer action.
