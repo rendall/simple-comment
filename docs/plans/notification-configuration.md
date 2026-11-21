@@ -1,6 +1,6 @@
 # Notification configuration design
 
-Status: draft for review. Records the decisions from [#239](https://github.com/rendall/simple-comment/issues/239). Review and merge this document before closing that design issue. Implementation and deployment verification remain separate tasks.
+Status: approved design from [#239](https://github.com/rendall/simple-comment/issues/239), updated by [#242](https://github.com/rendall/simple-comment/issues/242) to separate build-time validation from runtime reading. Deployment verification remains tracked in [#249](https://github.com/rendall/simple-comment/issues/249).
 
 For setup instructions, see the [notification guide](../NOTIFICATIONS.md). This document explains the choices behind those instructions and gives contributors a reference for implementation.
 
@@ -18,7 +18,7 @@ Notifications stay off until someone configures them. When someone does configur
 - Sender and moderator-recipient formats, including shared email validation.
 - Compatibility with the old SendGrid API-key name.
 - The boundary between configuration validation, provider construction, and delivery.
-- Requirements shared by local CI, deployment checks, and function initialization.
+- Validation in local CI and deployment checks, and reading settings during function initialization.
 - Examples, acceptance criteria, and validation expectations for these decisions.
 
 ## Out of Scope
@@ -27,13 +27,13 @@ Provider transports, the implementation of CI/deployment checks, notification me
 
 ## Settings and defaults
 
-| Setting                                  | Purpose                                                   |
-| ---------------------------------------- | --------------------------------------------------------- |
-| `RESEND_API_KEY`                         | Resend API key                                            |
-| `RESEND_FROM`                            | One Resend sender address, optionally with a display name |
-| `SENDGRID_API_KEY`                       | SendGrid API key                                          |
+| Setting                                  | Purpose                                                              |
+| ---------------------------------------- | -------------------------------------------------------------------- |
+| `RESEND_API_KEY`                         | Resend API key                                                       |
+| `RESEND_FROM`                            | One Resend sender address, optionally with a display name            |
+| `SENDGRID_API_KEY`                       | SendGrid API key                                                     |
 | `SENDGRID_VERIFIED_SENDER`               | One SendGrid verified-sender address, optionally with a display name |
-| `SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL` | One or more comma-separated plain moderator addresses     |
+| `SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL` | One or more comma-separated plain moderator addresses                |
 
 Use each provider's terminology for its settings. Keep the moderator-recipient setting shared. A future provider can use a different credential name if its service calls the credential something other than an API key.
 
@@ -127,23 +127,32 @@ Do not print runtime deprecation notices. No removal date has been agreed for th
 
 Providers live on the server, with supported implementations included in the backend bundle. Select and initialize a provider once when the Netlify Function initializes.
 
-Keep the existing `AbstractNotificationService` and optional injection into `MongodbService`. The shared `getNotificationConfiguration(source)` reader uses only the supplied environment and returns validated settings, or `undefined` for its configuration when notifications are off, together with any warnings. It must not mutate the environment, log, construct providers, or make network requests. Invalid configurations throw an actionable `EnvContractError`.
+Keep the existing `AbstractNotificationService` and optional injection into `MongodbService`. Reading settings and validating them are separate jobs:
 
-A small `getNotificationService()` resolver uses that reader and constructs the selected implementation. It returns `AbstractNotificationService | undefined`; we do not need a no-op provider. The comment endpoint imports this provider-neutral entry point, so choosing a provider does not belong in comment-handling code.
+- `readNotificationConfiguration(source)` reads the selected provider, its credentials and sender, and the parsed moderator recipients. It returns `NotificationConfiguration | undefined`; `undefined` means notifications are off. It assumes the settings have passed the build check and does not run configuration or email validation.
+- `getNotificationConfiguration(source)` is the build-time validator. It uses the same reading code, checks the configuration rules above, and returns validated settings and any warnings. Invalid configurations throw an actionable `EnvContractError`.
 
-Each provider's constructor receives validated credentials, sender, and recipients, replacing its static `createNotificationService()` factory. Keep the transport injectable for tests. A future provider needs an adapter and configuration/resolver support, without changes to comment-handling logic. No plugin framework is needed.
+Both use only the supplied environment. They share provider definitions, legacy-key handling, and recipient parsing. Neither mutates the environment, logs, constructs providers, or makes network requests.
+
+A small `getNotificationService()` resolver calls `readNotificationConfiguration()` and constructs the selected implementation. It returns `AbstractNotificationService | undefined`; we do not need a no-op provider. The comment endpoint imports this provider-neutral entry point, so choosing a provider does not belong in comment-handling code. Function initialization and warm requests do not call the build-time validator or revalidate notification email addresses.
+
+Each provider's constructor receives credentials, sender, and recipients that were checked before deployment, replacing its static `createNotificationService()` factory. Keep the transport injectable for tests. A future provider needs an adapter and configuration/resolver support, without changes to comment-handling logic. No plugin framework is needed.
 
 ## Configuration errors and delivery failures
 
-Run the same validation rules in local CI, GitHub Actions, the Netlify deployment check, and function initialization. Invalid configuration must block publication, as well as prevent a misconfigured function from starting.
+Run notification configuration validation before publication, using the ordinary Jest test behind `yarn test:environment`. Local and GitHub CI include it in `yarn test`; Netlify runs `yarn test:environment && yarn build`. The check runs once in each of those validation paths. It is not a `prebuild` hook, and `yarn build` alone does not run it. Do not repeat notification configuration or sender-format validation during function startup or requests.
 
-CI can inspect only settings supplied to it. A successful check of a developer's local `.env` does not prove that Netlify's deployment settings are correct. Function initialization alone cannot block publication. [#242](https://github.com/rendall/simple-comment/issues/242) owns how the intended deployment settings reach the check and how failures stop deployment.
+The test checks the actual `process.env`, loading an optional local `.env` without overriding existing environment values. Keep it separate from backend fixture setup so `example.env` defaults cannot hide missing settings. It does not need a database, construct a provider, or send email.
 
-Errors and warnings may name providers and variable names and must explain how to fix the problem. Do not include values, addresses, keys, or the environment/configuration object. The shared email helper's failure message includes the rejected address, so configuration errors must use its validity result without copying that message.
+CI can inspect only settings supplied to it. A successful GitHub check or local `.env` check does not prove that Netlify's deployment settings are correct. For each deployment context, supply identical notification settings to both Netlify **Builds** and **Functions**. The runtime reader trusts the build check; it does not check again for differences between those scopes. [#242](https://github.com/rendall/simple-comment/issues/242) tracks this validation boundary and [#249](https://github.com/rendall/simple-comment/issues/249) tracks deployment verification.
+
+Errors and warnings name providers and variable names and explain how to fix the problem. For a recognizable malformed sender mailbox, use the shared `validateEmail()` explanation, including that rejected email address, in the build error. Keep API keys, address lists, and environment/configuration objects out of diagnostics. Unrecognized rejected input, including unconfigured credentials and connection URLs, gets a generic error. Configured API-key values and lists also stay hidden. The recognition check only controls diagnostic disclosure; `validateEmail()` remains the validity check. These notification validation errors must not be generated during function initialization or exposed in visitor response bodies. The shared helper's result and ordinary visitor-email validation remain unchanged.
 
 For example:
 
 > Multiple notification providers are configured: Resend and SendGrid. Configure only one provider.
+
+> RESEND_FROM: '.sender@example.com' is not a valid email address.
 
 Configuration errors are different from delivery failures. Save the comment before attempting notification delivery. Provider rejections, exceptions, and timeouts must preserve the successful save and its HTTP response. Retain the existing concurrent recipient attempts, five-second deadlines, and safe diagnostic boundary; configuration work must not change those behaviors.
 
@@ -160,16 +169,16 @@ The configuration design is complete when:
 1. This document records the agreed settings, decision table, disabling rules, address formats, compatibility policy, and provider-construction boundary without leaving a configuration choice TBD.
 2. The README, template, notification guide, and issue description agree with these decisions. User-facing setup documentation omits the legacy key name.
 3. Every configuration state has a checkable provider, disabled, or error outcome, including partial second providers, blank values, mixed legacy/new keys, and malformed recipients.
-4. Errors and warnings explain corrections using setting names without exposing values; legacy warnings are reserved for CI.
+4. Errors and warnings explain corrections using setting names. Build errors can identify a rejected sender mailbox, while API keys, address lists, and full settings remain private. Legacy warnings are reserved for the configuration check.
 5. Deployment wiring and provider implementation remain assigned to their existing issues, with no implication that documenting the design completes them.
 6. Maintainer review confirms the intent, scope, acceptance criteria, and explicit follow-ups. Once approved and merged into the integration branch, close #239 as design completed.
 
 ## Validation Strategy
 
-- **Configuration unit tests:** Use synthetic environments to cover every decision-table row, missing/blank settings, accepted and rejected address formats, mixed valid/invalid recipients, both SendGrid key names, and legacy warnings. Pass means the expected configuration or safe error is returned without logging, mutation, provider construction, or network requests. The required backend contact remains checked when notifications are off.
+- **Configuration unit tests:** Use synthetic environments to cover every decision-table row, missing/blank settings, accepted and rejected address formats, mixed valid/invalid recipients, both SendGrid key names, and legacy warnings. Recognizable malformed sender mailboxes get the shared explanation, with guards against exposing configured or unconfigured credentials and connection URLs. Pass means the expected configuration or safe error is returned without logging, mutation, provider construction, or network requests. The required backend contact remains checked when notifications are off.
 - **Shared email tests:** Verify ordinary valid addresses and the malformed-address regressions through `validateEmail()`, preserving its result shape and messages. Cover mailbox validation in both plain and Resend display-name contexts. The validator.js follow-up already contains these regression tests.
-- **Provider and endpoint integration:** In the provider/resolver tasks, exercise both providers and disabled operation with stubbed transports. Pass means correct construction, no sending client when disabled, persistence before sending, and unchanged successful comment responses after delivery failures.
-- **CI and deployment:** In #242, demonstrate that invalid settings for the intended deployment stop publication, valid/off configurations pass, and diagnostic output contains no configuration values. The legacy-only case warns; both key names fail with the agreed corrective message.
+- **Provider and endpoint integration:** Exercise both providers and disabled operation with stubbed transports. Pass means correct construction, no calls to notification configuration or email validation during startup or warm requests, no sending client when disabled, persistence before sending, and unchanged successful comment responses after delivery failures.
+- **CI and deployment:** In #242, demonstrate that the actual-environment Jest check rejects invalid settings, valid/off configurations pass, and invalid Netlify settings stop publication. Verify matching Builds and Functions settings for each deployment context. Sender errors can identify the rejected mailbox; keys, address lists, and complete settings stay out of output. The legacy-only case warns; both key names fail with the agreed corrective message.
 - **Documentation review:** Compare every example and outcome with the decision table and tests. This documentation-only change requires link, formatting, and consistency checks; it does not require sending email or rerunning the application test suite.
 - **Deployment smoke:** [#249](https://github.com/rendall/simple-comment/issues/249) owns actual inbox receipt, SendGrid compatibility, disabled behavior, and final documentation consistency. Record non-sensitive evidence for every moderator recipient.
 
@@ -180,8 +189,8 @@ No high-level configuration decision remains open. Precise mailbox validation is
 At drafting time (2026-11-14):
 
 - [#243](https://github.com/rendall/simple-comment/issues/243): shared configuration reader merged into the integration branch through PR #253. The validator.js follow-up is pushed as commit `bc6e199` on `use-email-validator` and still needs its own PR and merge.
-- [#244](https://github.com/rendall/simple-comment/issues/244), [#245](https://github.com/rendall/simple-comment/issues/245), and [#246](https://github.com/rendall/simple-comment/issues/246): explicit SendGrid construction, Resend implementation, and provider-neutral endpoint wiring. Resend transport choice belongs to its adapter task.
-- [#242](https://github.com/rendall/simple-comment/issues/242): access to the intended deployment environment and checks that block publication.
+- [#244](https://github.com/rendall/simple-comment/issues/244), [#245](https://github.com/rendall/simple-comment/issues/245), and [#246](https://github.com/rendall/simple-comment/issues/246): delivered explicit SendGrid construction, the official Resend SDK adapter, and provider-neutral endpoint wiring.
+- [#242](https://github.com/rendall/simple-comment/issues/242): validation of the intended deployment environment, checks that block publication, and the build-time/runtime reading boundary described above.
 - [#249](https://github.com/rendall/simple-comment/issues/249): deployed behavior and inbox verification.
 
 Implementation requires its approved checklist under the [repository conventions](../norms/checklist.md). Approval of this design does not by itself approve those implementation tasks.

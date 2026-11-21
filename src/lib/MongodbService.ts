@@ -91,6 +91,31 @@ const {
   moderatorPassword: simpleCommentModeratorPassword,
 } = getBackendEnv()
 
+const notificationAuthorLookupTimeoutMs = 1000
+
+const findNotificationAuthor = async (
+  users: Collection<User>,
+  userId: UserId
+) => {
+  let timeout: ReturnType<typeof setTimeout> | undefined
+  try {
+    return await Promise.race([
+      users.findOne({ id: userId }),
+      new Promise<never>((_resolve, reject) => {
+        timeout = setTimeout(
+          () =>
+            reject(
+              new globalThis.Error("Notification author lookup timed out")
+            ),
+          notificationAuthorLookupTimeoutMs
+        )
+      }),
+    ])
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
 export class MongodbService extends AbstractDbService {
   private isCrossSite = isCrossSite
   private _client?: MongoClient
@@ -634,7 +659,7 @@ export class MongodbService extends AbstractDbService {
     if (this._notificationService) {
       try {
         const notification = await this._notificationService.notifyModerators(
-          `New comment posted by ${authUser.name} (${authUser.email})`
+          `New comment posted by ${authUser.name} (${authUser.email})\n\n${insertComment.text}`
         )
         if (notification && isError(notification)) {
           console.error("Comment notification failed", {
@@ -923,11 +948,42 @@ export class MongodbService extends AbstractDbService {
     const returnComment = { ...foundComment, text, user }
 
     const modifyResult = await comments.findOneAndUpdate(
-      { id: foundComment.id },
+      { id: foundComment.id, dateDeleted: { $exists: false } },
       { $set: returnComment }
     )
 
-    if (modifyResult.ok) {
+    if (
+      modifyResult.ok &&
+      modifyResult.value &&
+      isComment(modifyResult.value)
+    ) {
+      if (this._notificationService && modifyResult.value.text !== text) {
+        // The edit is saved; preparing or sending its notice must not fail it.
+        try {
+          const commentAuthor =
+            foundComment.userId === authUser.id
+              ? authUser
+              : foundComment.userId
+                ? await findNotificationAuthor(users, foundComment.userId)
+                : null
+          const authorDescription = commentAuthor
+            ? `Author: ${commentAuthor.name} (${commentAuthor.email})`
+            : "Author unavailable"
+          const notification = await this._notificationService.notifyModerators(
+            `Comment edited. ${authorDescription}\n\n${returnComment.text}`
+          )
+          if (notification && isError(notification)) {
+            console.error("Comment edit notification failed", {
+              commentId: targetId,
+              statusCode: notification.statusCode,
+            })
+          }
+        } catch {
+          console.error("Comment edit notification failed", {
+            commentId: targetId,
+          })
+        }
+      }
       return {
         ...success204CommentUpdated,
         body: returnComment,

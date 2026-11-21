@@ -7,6 +7,7 @@ import {
   jest,
 } from "@jest/globals"
 import { inspect } from "node:util"
+import { validateEmail } from "../../lib/shared-utilities"
 import {
   EnvContractError,
   getBackendEnv,
@@ -89,7 +90,8 @@ const expectPrivateValuesAbsent = (
 
 const expectConfigurationError = (
   source: NodeJS.ProcessEnv,
-  keys: string[] = []
+  keys: string[] = [],
+  invalidSenderEmail?: string
 ) => {
   let failure: unknown
   try {
@@ -104,7 +106,16 @@ const expectConfigurationError = (
     )
   }
   keys.forEach(key => expect(failure.message).toContain(key))
-  expectPrivateValuesAbsent(failure, source)
+  const privateSettings = { ...source }
+  if (invalidSenderEmail !== undefined) {
+    // Only a rejected sender mailbox may appear in a build diagnostic.
+    // Keep credential fields private even if they contain that same value.
+    ;["RESEND_FROM", "SENDGRID_VERIFIED_SENDER"].forEach(key => {
+      if (source[key]?.trim() === invalidSenderEmail)
+        delete privateSettings[key]
+    })
+  }
+  expectPrivateValuesAbsent(failure, privateSettings)
   return failure
 }
 
@@ -309,9 +320,18 @@ describe("notification configuration", () => {
         "alice@-example.com",
         "@example.com",
         "sender@",
+      ])("rejects a malformed sender (%s)", from => {
+        expectConfigurationError(
+          { ...contact, ...settings, [senderName]: from },
+          [senderName],
+          from
+        )
+      })
+
+      it.each([
         "sender@example.com\n",
         "sender@example.com\r\nBcc: hidden@example.com",
-      ])("rejects a malformed sender (%s)", from => {
+      ])("rejects sender line breaks without echoing the value (%s)", from => {
         expectConfigurationError(
           { ...contact, ...settings, [senderName]: from },
           [senderName]
@@ -425,6 +445,88 @@ describe("notification configuration", () => {
       ])
     })
   })
+
+  describe.each([
+    ...providerCases,
+    {
+      provider: "legacy SendGrid",
+      settings: legacy,
+      apiKeyName: "NOTIFICATION_SERVICE_API_KEY",
+      senderName: "SENDGRID_VERIFIED_SENDER",
+    },
+  ])(
+    "$provider build-time sender diagnostics",
+    ({ settings, apiKeyName, senderName }) => {
+      const invalidEmail = ".invalid.sender@example.com"
+      const displayName = "Private Sender"
+
+      it.each([
+        { format: "plain sender", from: ` ${invalidEmail} ` },
+        {
+          format: "display-name sender",
+          from: `  ${displayName}  < ${invalidEmail} > \t`,
+        },
+      ])("includes the shared email explanation for a $format", ({ from }) => {
+        const validation = validateEmail(invalidEmail)
+        if (validation.isValid) {
+          throw new Error(
+            "The sender diagnostic fixture must be an invalid email"
+          )
+        }
+        const source = {
+          ...contact,
+          ...settings,
+          [senderName]: from,
+          JWT_SECRET: "synthetic-private-build-jwt",
+          UNRELATED_PRIVATE_VALUE: "synthetic-private-build-detail",
+        }
+
+        const failure = expectConfigurationError(
+          source,
+          [senderName],
+          invalidEmail
+        )
+
+        expect(failure.key).toBe(senderName)
+        expect(failure.message).toContain(validation.reason)
+        expect(failure.message).not.toContain(displayName)
+        expect(failure.message).not.toContain(from)
+        const diagnostic = inspect(failure, { depth: null })
+        recipients.forEach(email => expect(diagnostic).not.toContain(email))
+        consoleSpies.forEach(spy => expect(spy).toHaveBeenCalledTimes(0))
+      })
+
+      it("keeps an API key private if it is accidentally used as the sender", () => {
+        const source: NodeJS.ProcessEnv = { ...contact, ...settings }
+        const apiKey = source[apiKeyName]
+        if (!apiKey)
+          throw new Error("The diagnostic fixture must have an API key")
+        source[senderName] = apiKey
+
+        const failure = expectConfigurationError(source, [senderName])
+
+        expect(failure.message).toMatch(/email address/i)
+        consoleSpies.forEach(spy => expect(spy).toHaveBeenCalledTimes(0))
+      })
+
+      const rotatedKey = "re_synthetic_unconfigured_rotated_key"
+      it.each([
+        { format: "plain sender", from: rotatedKey },
+        { format: "display-name sender", from: `Ops <${rotatedKey}>` },
+      ])(
+        "keeps an unconfigured credential private in a $format",
+        ({ from }) => {
+          const source = { ...contact, ...settings, [senderName]: from }
+
+          const failure = expectConfigurationError(source, [senderName])
+
+          expect(inspect(failure, { depth: null })).not.toContain(rotatedKey)
+          expect(failure.message).toMatch(/valid email address/i)
+          consoleSpies.forEach(spy => expect(spy).toHaveBeenCalledTimes(0))
+        }
+      )
+    }
+  )
 
   describe("SendGrid display names", () => {
     it.each([
@@ -616,6 +718,20 @@ describe("notification configuration", () => {
   })
 
   describe("isolation and diagnostics", () => {
+    it("keeps credentials in a pasted connection URL out of build errors", () => {
+      const secret = "synthetic-unconfigured-database-password"
+      const from = `postgres://reader:${secret}@db.example.com`
+
+      const failure = expectConfigurationError(
+        { ...contact, ...resend, RESEND_FROM: from },
+        ["RESEND_FROM"]
+      )
+
+      expect(inspect(failure, { depth: null })).not.toContain(secret)
+      expect(failure.message).toMatch(/valid email address/i)
+      consoleSpies.forEach(spy => expect(spy).toHaveBeenCalledTimes(0))
+    })
+
     it("does not fill absent explicit settings from process.env", () => {
       expect(getNotificationConfiguration({})).toEqual({
         configuration: undefined,

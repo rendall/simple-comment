@@ -1,12 +1,12 @@
 # Email notifications
 
-Simple Comment can email your moderators when someone posts a new comment or reply. This helps you keep up with conversations without checking every page of your website.
+Simple Comment can email your moderators when someone posts or edits a comment or reply. This helps you keep up with conversations without checking every page of your website.
 
-The notification email identifies the comment's author by name and email address. Including the comment text is planned in [#247](https://github.com/rendall/simple-comment/issues/247), and notifications for edits are planned in [#248](https://github.com/rendall/simple-comment/issues/248). Reading, editing, or deleting a comment does not currently send a notification.
+The notification email includes the full comment as plain text, along with the author's name and email address. Edit notices identify the comment as edited and include the updated text. Saving unchanged text, reading a comment, or deleting one does not send a notification.
 
 Notifications are optional. They stay off until you configure an email provider. We recommend Resend for new installations, and you can also use SendGrid.
 
-_If you do configure notifications, we assume receiving them matters to you._ Simple Comment checks notification settings during local and GitHub CI, and before Netlify builds. Incomplete or conflicting settings halt CI or deployment, with an error explaining what to fix. This check does not send email. The comment function also still checks its settings when it starts; removing that repeated check is part of [#242](https://github.com/rendall/simple-comment/issues/242). Verify delivery after deploying.
+_If you do configure notifications, we assume receiving them matters to you._ Simple Comment checks notification settings during local and GitHub CI, and before Netlify builds. Incomplete or conflicting settings halt CI or deployment, with an error explaining what to fix. This check does not send email. Verify delivery after deploying.
 
 ## Get started with Resend
 
@@ -54,7 +54,15 @@ SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL=alice@example.com,bob@example.com
 
 Use plain addresses for moderators, without display names or angle brackets. Spaces around addresses are fine.
 
-Keep your API key out of frontend scripts, public files, and Git commits. Restart the local backend after changing `.env`.
+Keep your API key out of frontend scripts, public files, and Git commits.
+
+After changing your local settings, check them before starting or restarting the backend:
+
+```sh
+yarn test:environment
+```
+
+Fix any reported errors, then restart the backend to load the new settings. This check does not send email; posting a new comment or reply tests delivery.
 
 ### 4. Configure your deployed site
 
@@ -64,7 +72,9 @@ Use Node.js 22 for deployment, matching this project's `.nvmrc` and CI. The Rese
 
 Netlify normally selects the Functions runtime from the build's Node.js version. If your site has an old `AWS_LAMBDA_JS_RUNTIME` override, remove it or set it to `nodejs22.x` through Netlify's environment-variable settings before redeploying. That runtime override belongs in Netlify's UI, CLI, or API, not in `netlify.toml`. See [Netlify's runtime configuration guide](https://docs.netlify.com/build/functions/configuration/#node-js-version-for-runtime).
 
-In your Netlify project's environment-variable settings, add the same variable names and their values. Make sure all notification settings, including the moderator recipient addresses, are available to both **Builds** and **Functions** and apply to the deployment you want to configure. The build checks those settings before publishing; the function uses them to send notifications. A successful GitHub check only validates the settings available to GitHub, not settings stored separately in Netlify.
+In your Netlify project's environment-variable settings, add the same variable names and their values. Make sure all notification settings, including the moderator recipient addresses, are available to both **Builds** and **Functions** for the deployment you want to configure. Use the same values in both scopes, including when setting up a Deploy Preview.
+
+The build checks those settings before publishing; the function reads them to send notifications. A successful GitHub check only validates the settings available to GitHub, not settings stored separately in Netlify.
 
 Enter each name and value separately. For a display name, the value of `RESEND_FROM` would be:
 
@@ -84,9 +94,13 @@ Post a new comment on your site, then check that:
 
 1. The comment appears successfully.
 2. Each configured moderator receives an email.
-3. The notification identifies the comment's author.
+3. The notification identifies the comment's author and includes the full comment text.
 
-Post a reply and check that it also sends a notification.
+Post a reply and check that it also sends a notification with the reply text.
+
+As the comment's author, edit its text and save it. Check that the change appears on the site and that each moderator receives another email, labeled as an edit and containing the updated text and the author's details. Use a recent comment while its edit control is available.
+
+Repeat these checks on your deployed site after releasing notification changes. A local success confirms your local setup; the deployed site has its own settings and needs its own delivery check.
 
 Check spam folders too. A successfully saved comment, or a provider accepting an email, does not by itself confirm that the email arrived.
 
@@ -98,7 +112,7 @@ Other applications using the same account may consume its allowance too. Check [
 
 ## Use SendGrid instead
 
-> Only one notification provider can be enabled at a time. Configuring more than one prevents the comment function from starting. Choose _either_ Resend _or_ SendGrid, but not both.
+> Only one notification provider can be enabled at a time. Configuring more than one fails the configuration check and blocks deployment. Choose _either_ Resend _or_ SendGrid, but not both.
 
 You can use SendGrid by configuring its API key and verified sender:
 
@@ -149,7 +163,7 @@ In a local `.env` file, you can also disable a line by putting `#` at its beginn
 # RESEND_FROM=notifications@example.com
 ```
 
-In Netlify, delete the settings and redeploy. For local changes, restart the backend.
+In Netlify, delete the settings from both **Builds** and **Functions**, then redeploy. For local changes, run `yarn test:environment` and restart the backend.
 
 **Remove the settings completely; do not leave them with empty values.** Leaving only part of a provider's configuration is treated as a mistake. For example, removing an API key but leaving its sender setting will produce an error.
 
@@ -159,7 +173,7 @@ Keep `SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL`. Simple Comment still requires tha
 
 Prepare your account and sender with the new provider first.
 
-Then remove the old provider's settings and add the new provider's settings before restarting or redeploying. Keep the moderator recipient setting unless you also want to change who receives emails.
+Then remove the old provider's settings and add the new provider's settings. Locally, run `yarn test:environment` before restarting. In Netlify, update both **Builds** and **Functions** and redeploy. Keep the moderator recipient setting unless you also want to change who receives emails.
 
 After the change, post a comment and check every moderator's inbox.
 
@@ -169,7 +183,7 @@ To switch back, remove the new provider's settings and restore the previous conf
 
 ### Simple Comment reports a configuration error
 
-> Either _no_ notification provider, or only _one properly configured_ provider, must be configured at a time. The comment function cannot start if more than one provider is configured or if any provider is configured improperly.
+> Either _no_ notification provider, or only _one properly configured_ provider, must be configured at a time. The configuration check rejects incomplete, malformed, or conflicting settings before deployment.
 
 Check that:
 
@@ -181,7 +195,7 @@ Check that:
 - Sender and recipient addresses use the formats described above.
 - There are no leftover settings from another provider, even if that provider's setup is incomplete.
 
-> Incomplete or conflicting settings stop the comment function from starting. The error names the settings to fix without printing their values.
+The error names the settings to fix. For an invalid sender, it may show the rejected email address and explain why it is invalid. API keys, address lists, and the complete settings object stay out of the error.
 
 ### Comments work, but emails do not arrive
 
@@ -207,7 +221,7 @@ For now, open the relevant page on your website to find the comment. A logged-in
 | `RESEND_API_KEY`                         | Resend API key                                                                              |
 | `RESEND_FROM`                            | One Resend sender address, optionally with a display name                                   |
 | `SENDGRID_API_KEY`                       | SendGrid API key                                                                            |
-| `SENDGRID_VERIFIED_SENDER`               | One SendGrid verified sender address, optionally with a display name                         |
+| `SENDGRID_VERIFIED_SENDER`               | One SendGrid verified sender address, optionally with a display name                        |
 
 Provider settings determine whether notifications are enabled:
 
@@ -232,27 +246,41 @@ This section is for contributors who want to understand the design.
 
 Email delivery happens on the server through Netlify Functions. Provider credentials stay there. The supported provider code is included in the backend bundle; choosing a provider does not require a different build.
 
-A small provider resolver reads and checks the environment settings when the function starts. It constructs the configured provider, or returns `undefined` when notifications are off. Each provider's constructor initializes its own service from the validated configuration. The provider's email transport can be supplied separately for testing.
+A small provider resolver reads the settings and constructs the configured provider when the function starts. It returns `undefined` when notifications are off. Configuration validation has already happened in the deployment check; function startup and later requests do not repeat the provider or email-format checks. Each provider's constructor initializes its own service from the supplied configuration. The provider's email transport can be supplied separately for testing.
 
-Providers implement the existing `AbstractNotificationService` interface. `MongodbService` receives the optional provider instance, so comment-handling code does not need to choose a provider or know its SDK.
+Providers extend the existing `AbstractNotificationService` class. `MongodbService` receives the optional provider instance, so comment-handling code does not need to choose a provider or know its SDK.
 
 ### Saving comments and sending emails
 
-The comment service saves a new comment or reply before calling `notifyModerators`. Rejected submissions, failed saves, and edits do not send notifications.
+The comment service saves a new comment, reply, or authorized text edit before calling `notifyModerators`. Rejected submissions, unchanged text, and failed saves do not send notifications.
+
+The service builds the message from the saved comment's full text and the posting author's details, using the same plain-text format for either provider. Line breaks and markup-like text are preserved as written.
+
+Edit notices identify the comment's author, including when an administrator makes the edit. Self-edits reuse the user already loaded for authorization. When an administrator edits someone else's comment, the additional author lookup has a one-second deadline. If the author's user record is no longer available, the email says "Author unavailable." If the lookup fails or times out, the service records a notification failure and returns the saved edit's `204` response without sending a notice. A later lookup result does not trigger an email.
 
 Recipient sends run concurrently. The request waits for every recipient's send to finish or reach its five-second deadline. One recipient's failure does not stop attempts to the others. The provider reports success only when every send is accepted, and partial failures include accepted and failed counts.
 
-Delivery failures leave the successful comment response intact. A new comment keeps its `201` response. A timeout ends the wait; it does not guarantee that the provider has stopped processing the email. An email may still arrive afterward.
+Delivery failures leave the successful comment response intact. A new comment keeps its `201` response, and a saved edit keeps its `204` response. A timeout ends the wait; it does not guarantee that the provider has stopped processing the email. An email may still arrive afterward.
 
 Notification results distinguish general provider failures, account or sender restrictions, exhausted allowances, unavailability, timeouts, and internal errors. Providers interpret their own response formats. Mixed failure summaries are consistent regardless of which recipient's send finishes first. Notification error statuses are internal results; they do not replace the response for a successfully saved comment.
 
 ### Checking configuration and keeping logs safe
 
-The configuration validator checks the deployed settings when the comment function initializes. CI runs tests of valid and invalid combinations with synthetic settings, without needing real email credentials. It does not yet check the intended deployment's notification settings; that deployment gate is tracked in [#242](https://github.com/rendall/simple-comment/issues/242).
+`yarn test:environment` runs an ordinary Jest test against the actual `process.env`. Locally, an optional `.env` file supplies settings that are not already in the environment. Netlify supplies its environment variables directly; it does not need a `.env` file. This check does not use the backend tests' `example.env` defaults.
+
+Local and GitHub CI run the check through `yarn test`. Netlify runs `yarn test:environment && yarn build`, so a failed check stops publication. Running `yarn build` alone does not run this check. The backend tests separately cover valid and invalid combinations with synthetic settings.
+
+At runtime, `getNotificationService()` uses `readNotificationConfiguration()` to read settings and construct the provider. The reader and build validator share provider selection and recipient parsing. The reader trusts the check, which is why each deployment needs the same notification settings in **Builds** and **Functions**.
 
 These checks validate the settings locally. They do not make provider requests to verify that an API key works or a sender is authorized. Those problems are handled as delivery failures.
 
-Configuration errors name providers and relevant variable names and explain how to fix the problem. They never print the values or the environment object.
+Configuration errors name providers and relevant variable names and explain how to fix the problem. When a rejected sender value resembles an ordinary email address, the build error can show it with the shared email validator's explanation, for example:
+
+```text
+RESEND_FROM: '.sender@example.com' is not a valid email address.
+```
+
+API keys, recipient lists, and the full environment or configuration object stay out of these diagnostics. Unrecognized sender text, such as a credential or connection URL pasted into the field, gets a generic error even when that credential is not the configured API key. This only controls what the error quotes; the shared validator still decides whether an address is valid. These notification validation errors belong to the configuration check, rather than function initialization or visitor-facing responses. Validation of visitor-supplied email addresses remains part of the usual user flows.
 
 Simple Comment's normal delivery diagnostics can include the comment ID, notification status, and fixed guidance about an account or sending problem. Credentials and raw provider errors stay out of these logs and comment HTTP responses.
 
