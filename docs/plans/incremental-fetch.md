@@ -127,7 +127,11 @@ A promising piece of metadata, not yet a settled requirement, is each comment's 
 
 **Soft deletion applies to all comments.** The storage change is tracked separately. [Soft deletion issue #280](https://github.com/rendall/simple-comment/issues/280)
 
-Remove the comment's content and retain a minimal comment record, including its ID, parent ID, and deletion timestamp, so clients can learn that it was deleted. This changes the current behavior for leaf comments, which are physically deleted. The frontend can omit a deleted comment with no surviving replies and show a deleted placeholder when replies still depend on that parent for context. This is a presentation choice, not a reason to remove the record from the database. There is no separate hidden-comment feature to design for this iteration.
+In the first iteration, deleting a comment permanently removes its text and author information, including the link to the author's account, from the stored comment. Keep a minimal record with the comment ID, parent ID, and deletion time. This applies even to a comment with no replies, so a refresh can tell a browser that already displayed it to remove it. The frontend can omit a deleted comment with no surviving replies and show a placeholder when surviving replies need their parent for context.
+
+For the storage change in #280, start with failing tests for deleting a comment with replies and one without. Inspect the stored records directly to verify that the text and author information are gone and the structural record remains.
+
+A later iteration will let administrators choose whether deletion permanently erases the content and author information or retains them in storage while hiding them from readers. That policy will need to account for the privacy and retention rules that apply to each installation.
 
 The client may also need to distinguish **loaded but collapsed**, **not yet loaded**, **loading**, and **no visible replies**. Failed fetches should leave already loaded comments intact. These states should be designed before choosing the exact controls and labels.
 
