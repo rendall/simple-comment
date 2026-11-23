@@ -1,6 +1,6 @@
 # Notification configuration design
 
-Status: approved design from [#239](https://github.com/rendall/simple-comment/issues/239), updated by [#242](https://github.com/rendall/simple-comment/issues/242) to separate build-time validation from runtime reading. Deployment verification remains tracked in [#249](https://github.com/rendall/simple-comment/issues/249).
+**Completed.** [Issue #239](https://github.com/rendall/simple-comment/issues/239) settled the configuration design. [Issue #242](https://github.com/rendall/simple-comment/issues/242) established separate steps for build-time validation and runtime reading.
 
 For setup instructions, see the [notification guide](../NOTIFICATIONS.md). This document explains the choices behind those instructions and gives contributors a reference for implementation.
 
@@ -182,15 +182,8 @@ The configuration design is complete when:
 - **Documentation review:** Compare every example and outcome with the decision table and tests. This documentation-only change requires link, formatting, and consistency checks; it does not require sending email or rerunning the application test suite.
 - **Deployment smoke:** [#249](https://github.com/rendall/simple-comment/issues/249) owns actual inbox receipt, SendGrid compatibility, disabled behavior, and final documentation consistency. Record non-sensitive evidence for every moderator recipient.
 
-## Follow-ups and implementation status
+## Implementation and verification
 
-No high-level configuration decision remains open. Precise mailbox validation is settled by the shared validator.js choice; it is no longer deferred to a future design discussion.
+The shared configuration reader and validator shipped with the shared validator.js email check. The comment endpoint selects Resend or SendGrid from the validated settings, and existing SendGrid installations can still use the legacy key. [Configuration reader](https://github.com/rendall/simple-comment/issues/243) · [SendGrid](https://github.com/rendall/simple-comment/issues/244) · [Resend](https://github.com/rendall/simple-comment/issues/245) · [Endpoint wiring](https://github.com/rendall/simple-comment/issues/246)
 
-At drafting time (2026-11-14):
-
-- [#243](https://github.com/rendall/simple-comment/issues/243): shared configuration reader merged into the integration branch through PR #253. The validator.js follow-up is pushed as commit `bc6e199` on `use-email-validator` and still needs its own PR and merge.
-- [#244](https://github.com/rendall/simple-comment/issues/244), [#245](https://github.com/rendall/simple-comment/issues/245), and [#246](https://github.com/rendall/simple-comment/issues/246): delivered explicit SendGrid construction, the official Resend SDK adapter, and provider-neutral endpoint wiring.
-- [#242](https://github.com/rendall/simple-comment/issues/242): validation of the intended deployment environment, checks that block publication, and the build-time/runtime reading boundary described above.
-- [#249](https://github.com/rendall/simple-comment/issues/249): deployed behavior and inbox verification.
-
-Implementation requires its approved checklist under the [repository conventions](../norms/checklist.md). Approval of this design does not by itself approve those implementation tasks.
+Local CI, GitHub CI, and Netlify builds check configuration before publication. The maintainer confirmed final Netlify verification. Automated tests cover SendGrid compatibility, and the maintainer agreed to defer live SendGrid inbox testing. [Build validation](https://github.com/rendall/simple-comment/issues/242) · [Deployment verification](https://github.com/rendall/simple-comment/issues/249#issuecomment-7054011621)

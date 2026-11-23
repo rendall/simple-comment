@@ -1,6 +1,6 @@
 # Comment edit notifications
 
-Status: approved for execution by the maintainer's request to take #248 from planning through tests, implementation, and a PR. Review happens on the PR; merging is not authorized.
+**Completed.** All four implementation and review slices reached master in [release PR #277](https://github.com/rendall/simple-comment/pull/277).
 
 ## Goal
 
@@ -85,4 +85,4 @@ Source plan: this document's In Scope and Validation Strategy; source requiremen
 - T04: Two expected stalled-lookup failures and 62 passes in the lifecycle suite. A stalled read currently holds the saved edit response until its late resolution or rejection. Added cleanup checks for successful, missing, and rejected author reads; fake timers start only at the post-save query, with deferred work released even on failure.
 - C04: All 204 focused lifecycle, endpoint, and existing MongoDB tests pass. Full `yarn ci:local` passed lint, formatting, type checks, both builds, and all 971 tests (1 environment, 749 backend, 193 frontend unit, 28 component). No worker-exit warning occurred in this run. Markdown formatting and diff checks passed. The one-second deadline bounds waiting for the remaining author query; it does not cancel the database operation. Late results are ignored and cannot send an email. No live email was sent.
 
-The PR targets the existing integration branch and closes #248; merging remains a maintainer action.
+The maintainer closed [issue #248](https://github.com/rendall/simple-comment/issues/248).
