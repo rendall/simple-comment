@@ -46,7 +46,11 @@ Use the target account's ID to protect the owner's record. Reject any attempt to
 
 ### Role management dashboard
 
-Open the dashboard from the comment widget’s administration controls. Everyone with dashboard access can see the site owner, current admins, and current moderators, with each account listed once under its highest role.
+Add an **Administration** tab alongside the existing **Discussion** view in the comment widget. The discussion tree remains the default. The tab opens the dashboard in the widget under a **Site administration** heading so it is clear that the roster and role changes apply across the installation. Other widget views can be designed later.
+
+The owner, admins, and moderators can open the tab and see the site owner, current admins, and current moderators, with each account listed once under its highest role. Moderators can view the roster. The owner and admins also see the role-management actions their permissions allow.
+
+If the widget becomes too cramped for future administration workflows, a dedicated route can be considered with the widget as an entry point. A reserved discussion topic is outside this design.
 
 The owner and admins can search for existing accounts with a searchable combobox that filters as they type and shows usernames alongside display names. Selecting an account fills the selection. An explicit **Appoint** action applies the change immediately. Admins can appoint moderators, and the owner can appoint either admins or moderators.
 
