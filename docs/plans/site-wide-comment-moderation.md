@@ -18,7 +18,7 @@ The full moderation system has three privileged roles. Each role inherits the pe
 
 - **Owner** — The site owner is the account configured through deployment environment variables and has all admin and moderator permissions. The API protects the owner account from deletion and demotion.
 - **Admin** — Admins can edit user account details and have all moderator permissions.
-- **Moderator** — Moderators can review, hide, or delete comments. Only the author can edit a comment’s text. Moderators cannot edit user account details.
+- **Moderator** — Moderators can review, hide, or delete comments. Moderators can edit their own comments as authors. Moderators cannot edit user account details.
 
 Only the owner can appoint admins or demote admins. The owner and admins can appoint and demote moderators. Moderators cannot appoint, create, or demote other moderators.
 
@@ -58,9 +58,17 @@ Show demotion on the roster only where the viewer has authority over the target 
 
 Treat successful admin and moderator appointments and demotions as administration actions. Notify all current moderators, all current admins, the site owner, and the affected person, including someone just demoted. Send one notice per person identifying who made the change, whose access changed, and which access was granted or revoked.
 
+### Administration settings
+
+Add a **Settings** section to the Administration tab. Admins and the owner can manage day-to-day moderation settings, such as which comments are held for review. Only the site owner can change settings that grant or revoke permissions.
+
+By default, only authors can edit their own comments. The owner can enable editing of other users’ comments for admins. The owner inherits that permission when it is enabled. Moderators can hold or delete comments and ask authors to revise them. The server enforces the current editing policy on every update, including direct API requests.
+
+If owners need to delegate control of permission settings later, consider delegation for specific settings or groups of settings.
+
 ### Site-wide comment review
 
-After owner permissions and appointments, design a moderator view with **Held for review** and **All recent comments**. Both views should show comment status and link to the discussion. Moderators can approve or reject held comments and can delete a published comment or withdraw its approval and hold it from public view so the author can revise it. Only the author can edit the text, including when the author is a moderator, admin, or owner. The current comment update API allows admins to edit other users’ comments, so enforce author-only editing in the backend as well as the widget. See #275.
+After owner permissions and appointments, design a moderator view with **Held for review** and **All recent comments**. Both views should show comment status and link to the discussion. Moderators can approve or reject held comments and can delete a published comment or withdraw its approval and hold it from public view so the author can revise it. By default, only the author can edit the text. The current comment update API allows admins to edit other users’ comments. Apply the owner-controlled editing setting in both the backend and the widget. See #275.
 
 Track whether a comment is approved for publication. An `isApproved` flag is one option. A comment can start approved or held according to policy, and an edit that triggers review can cause approval to be withdrawn. Held comments stay private until approved. The default publication policy and the exact handling of edited comments and replies remain open. Use #241 for prior investigation and check whether #63 offers a starting point.
 
@@ -87,7 +95,7 @@ The configured owner retains admin access even when an existing record has `isAd
 
 The owner and admins can appoint and remove moderators. The API rejects attempts by moderators to appoint, create, or remove another moderator. The final permission model will define which actions become available on appointment and which are lost on revocation.
 
-A designated moderator can see held and recent comments across multiple discussions in one place. Approving a held comment makes it public, rejecting it keeps it private, and moderators can hold or delete published comments. Only the author can edit comment text, including through direct API requests. The initial release scope for configurable rules and notifications remains open for discussion.
+A designated moderator can see held and recent comments across multiple discussions in one place. Approving a held comment makes it public, rejecting it keeps it private, and moderators can hold or delete published comments. By default, only authors can edit comment text. When the owner enables admin editing, admins and the owner can edit others’ comments. The API rejects cross-author edits by moderators in either mode and rejects attempts by non-owners to change the editing setting. The initial release scope for configurable rules and notifications remains open for discussion.
 
 ## Validation Strategy
 
