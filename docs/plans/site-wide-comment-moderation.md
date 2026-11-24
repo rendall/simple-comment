@@ -17,7 +17,7 @@ The configured site owner controls the entire Simple Comment installation and al
 The full moderation system has three privileged roles. Each role inherits the permissions of the roles below it. This describes the intended system across releases.
 
 - **Owner** — The site owner is the account configured through deployment environment variables and has all admin and moderator permissions. The API protects the owner account from deletion and demotion.
-- **Admin** — Admins can edit user account details and have all moderator permissions.
+- **Admin** — Admins can administer accounts below their own privilege level and have all moderator permissions. Only the owner can administer another admin's account.
 - **Moderator** — Moderators can review, hide, or delete comments. Moderators can edit their own comments as authors. Moderators cannot edit user account details.
 
 Only the owner can appoint admins or demote admins. The owner and admins can appoint and demote moderators. Moderators cannot appoint, create, or demote other moderators.
@@ -65,6 +65,29 @@ The server may also expose action-specific permission predicates, such as `canMo
 **Promotion and demotion.** A role change explicitly assigns the destination privilege. For example, promoting a moderator (1) to admin (2) and subsequently demoting that admin to moderator (1) requires no remembered flags or previous-role history. Demotion to regular user (0) instead removes both admin and moderator privileges. The intended destination role determines the access retained.
 
 **Privilege versus authority.** Checking whether someone has a role's privileges is a numerical comparison, but authorizing a role change also requires checking the caller, the target's current effective privilege, and the requested destination privilege. Only the owner can grant or revoke admin access. Admins can promote regular users to moderators and demote moderators to regular users, but cannot promote anyone to admin or demote an admin. No application role change can grant or revoke ownership. Validate role assignments on the server and reject invalid stored values, including level 3.
+
+#### Account administration authority
+
+Administrative authority over another user's account requires both admin privileges and a strictly higher effective privilege than the target account. An admin can administer regular user and moderator accounts, but cannot delete, change the password of, or modify any account details of another admin or the owner. Only the owner can administer an admin account.
+
+| Actor | Regular user account | Moderator account | Admin account | Owner account |
+| --- | --- | --- | --- | --- |
+| Regular user | No | No | No | No |
+| Moderator | No | No | No | No |
+| Admin | Yes | Yes | No | No |
+| Owner | Yes | Yes | Yes | No |
+
+This table covers administrative actions on **other users' accounts**, not ordinary self-service profile or password changes. The owner's special account protections and the separate rules for assigning roles still apply. In particular, authority to administer a lower-privilege account does not authorize granting it a privilege equal to or higher than the actor's own.
+
+For cross-account administration, the general authorization condition is:
+
+```typescript
+const canAdministerTarget =
+  actorPrivilege >= Privilege.Admin &&
+  actorPrivilege > targetPrivilege;
+```
+
+Use server-derived effective privileges for both actor and target. Apply the restriction to every administrative account mutation, including deletion, credentials, identity and profile fields, regardless of which API endpoint is used. Reject unauthorized requests with HTTP 403 without modifying the target account. The frontend must reflect the same restrictions. This is an account administration rule, not a restriction on moderation of comments authored by privileged users.
 
 #### Migration
 
@@ -156,11 +179,15 @@ The configured owner has effective privilege 3 and retains admin and moderator a
 
 The owner and admins can appoint and remove moderators. Only the owner can appoint and demote admins; admin demotion explicitly assigns privilege 1 or 0. The API rejects attempts by moderators to appoint, create, or remove another moderator, attempts by admins to grant or revoke admin access, and attempts to assign owner privilege or invalid privilege values. Existing admin accounts migrate to privilege 2 and ordinary accounts to privilege 0. The final permission model will define which actions become available on appointment and which are lost on revocation.
 
+An admin cannot delete another admin's account, change its password, or modify any of its account details. Only the owner can perform administrative account mutations on an admin account. Unauthorized cross-account mutations return HTTP 403 and leave the account unchanged. The same restrictions protect the owner from administrative changes by other users.
+
 A designated moderator can see held and recent comments across multiple discussions in one place. Approving a held comment makes it public, rejecting it keeps it private, and moderators can hold or delete published comments. By default, only authors can edit comment text. When the owner enables admin editing, admins and the owner can edit others’ comments. The API rejects cross-author edits by moderators in either mode and rejects attempts by non-owners to change the editing setting. The initial release scope for configurable rules and notifications remains open for discussion.
 
 ## Validation Strategy
 
 Unit tests should cover every effective privilege level and its derived predicates, including owner records with a lower stored privilege or legacy `isAdmin: false`. Test migration of existing admin and ordinary accounts, migration reruns, rejection of invalid stored privileges, and preservation of owner access without persisting privilege 3. Test promotion from moderator to admin and demotion from admin to either moderator or regular user, including the resulting effective permissions. API integration tests should exercise owner deletion and demotion as both the owner and another admin, confirm HTTP 403, and confirm the record and effective permissions afterward. Test moderator appointment by the owner and an admin, removal by the owner and an admin, owner-only admin appointments and demotions, rejection of role changes attempted by a moderator, and rejection of attempts to grant or revoke admin access by an admin. Verify that direct API requests cannot assign privilege 3 or bypass role checks through legacy flag inputs. Verify that each successful change sends one notice per intended recipient, including a removed moderator, and that rejected requests send none. Verify that a moderator cannot demote or delete the owner through a direct API request. The API contract and dashboard should agree on who can perform each action.
+
+Test cross-account administration against the privilege matrix, including account deletion, password changes, and profile and identity updates. In particular, verify that an admin cannot modify or delete another admin or the owner through direct API requests, that the owner can administer admins, and that admins can administer lower-privilege accounts subject to the separate role-assignment rules. Verify that forbidden requests leave the target unchanged and that ordinary authorized self-service actions remain distinct from cross-account administration.
 
 Exercise the full review flow across multiple discussions. Verify that public comment reads exclude held and rejected comments, approval makes a comment visible, and direct API requests apply the same permissions as the moderator view. Once policy and notification behavior are agreed, verify that rules produce the expected publication state and notifications follow that state.
 
