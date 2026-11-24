@@ -117,9 +117,7 @@ See [account creation](../../src/lib/MongodbService.ts#L349), [user updates](../
 
 The first implementation sub-issue under #284 ([#285](https://github.com/rendall/simple-comment/issues/285)) is to enable the owner and admins to appoint an existing user as a moderator or revoke an existing moderator’s access. The server authorizes and persists both changes. This capability is needed regardless of how the broader moderation dashboard and publication policies are designed, so it can proceed independently of those decisions.
 
-There is one owner for the entire installation. The deployment environment variables specify the owner’s login identifier and password. The server derives effective privilege 3 and `isOwner` from the authenticated account and its configured identity. If login uses an email address, bind ownership to the configured account’s ID so profile edits cannot transfer it. Admin and moderator permissions cannot grant or transfer ownership or change the owner’s configured credentials.
-
-Someone with deployment access can recover the owner account by rotating the password in the environment and rebuilding or redeploying as required by the platform. Recovery must work even when the owner’s database record already exists. Today, the environment password only bootstraps a missing owner record. An existing record uses its stored password hash, so deployment-based rotation requires the fix tracked in [#286](https://github.com/rendall/simple-comment/issues/286).
+There is one owner for the entire installation. Deployment environment variables determine the owner's identity and credentials; the server derives effective privilege 3 and `isOwner` from the authenticated account and its configured identity. Ownership cannot be granted or transferred through the application. See [Owner configuration and ownership changes](#owner-configuration-and-ownership-changes) below for credential recovery, ownership transfers and change detection.
 
 Use the target account's ID to protect the owner's record. Reject any attempt to delete or demote the owner with HTTP 403, regardless of who makes the request. Derive the owner's effective privilege from ownership so neither a lower stored privilege nor a legacy `isAdmin: false` can lock the owner out.
 
@@ -163,6 +161,51 @@ Explore settings that hold all comments from guests or new accounts, publish by 
 
 Define how the existing notifications fit this workflow. Decide when moderators hear about held comments and when public comment notifications should go out. Coordinate with #248 when considering what happens after a comment is edited.
 
+## Owner configuration and ownership changes
+
+This section addresses less common deployment and recovery scenarios. The environment configuration is authoritative for ownership; the database records the last successfully recognized owner for change detection, not as an independent source of authority.
+
+### Owner identity, credentials and profile
+
+| Owner account property | Environment variables | Application |
+| --- | --- | --- |
+| Username | Yes | No |
+| Password | Yes | No |
+| Email address | Yes | No |
+| Effective privilege | Derived from configured identity | No |
+| Display name | No | Yes |
+| Avatar (future) | No | Yes |
+
+The owner may manage non-identity profile information through ordinary self-service features. No application operation, including password resets, email changes or administrative account updates, may override the owner's configured username, email address or password.
+
+Someone with deployment access can recover the owner account by rotating the password in the environment and rebuilding or redeploying as required by the platform. Recovery must work even when the owner's database record already exists. Today, the environment password only bootstraps a missing owner record. An existing record uses its stored password hash, so deployment-based rotation requires the fix tracked in [#286](https://github.com/rendall/simple-comment/issues/286). Changes to configured email and password must be honored for the recognized owner. Invalidate existing authentication sessions on credential rotation or ownership transfer so stale sessions cannot retain ownership access.
+
+### Detecting ownership changes
+
+In the installation-level configuration object, store `lastKnownOwnerUsername` and `lastKnownOwnerAccountId` (the immutable database account ID). Set these automatically when the configured owner is first successfully recognized, and update them automatically after a successful ownership change. Neither field grants ownership or overrides deployment configuration. Effective privilege 3 remains derived, never stored on a user record.
+
+Resolve the configured username to an account and compare it with the last known owner during server initialization (or equivalent serverless initialization before serving requests). Build-time database access is not required.
+
+| Last known owner username | Configured owner username | Configured username exists? | Interpretation |
+| --- | --- | --- | --- |
+| None | Alice | No | First initialization; create owner account and establish baseline |
+| None | Alice | Yes | Existing installation; establish baseline from configured account |
+| Alice | Alice | Yes | Normal startup if the account ID also matches |
+| Alice | Bob | No | Ownership transfer to a new account; create it |
+| Alice | Bob | Yes | Ownership transfer to an existing account; potential identity collision |
+| Alice | Alice | Yes, different account ID | Unexpected account replacement; potential identity collision |
+| Alice | Alice | No | Previously recognized owner account is missing; unexpected recovery condition |
+
+A changed username alone signals a change in ownership configuration, not necessarily a collision. A collision is detected when the new configured identity resolves to an existing account other than the last known owner, or when the username is unchanged but the account ID differs. If configured username and email identify different existing accounts, reject the inconsistent configuration rather than silently merge or overwrite accounts.
+
+The intended straightforward transfer path is to configure a previously unused username, create a new owner account, and recognize that account as owner. The former owner loses effective privilege 3 and reverts to its stored privilege. Whether to accept or reject transfers to existing accounts, and how to handle an unexpected replacement or missing account, remain open decisions. Detect and report these conditions regardless of the eventual policy. A rejected change must not advance the last-known-owner record or silently modify either account.
+
+### Notifications and reconciliation
+
+Treat a successful ownership change as an administration action. Send one notice per recipient to all current moderators, all current admins, and both the previous and new owners, even if the previous owner no longer has a privileged role. Identify the previous and new owner and that the change originated in deployment configuration. Do not disclose credentials. Notify the relevant administration recipients of detected potential collisions as a warning, even if the transfer is not accepted. Ordinary restarts and establishing the initial baseline are not ownership changes.
+
+After a successful reconciliation, persist the new last-known-owner username and account ID so subsequent startups do not treat the same change as new. Make reconciliation concurrency-safe so multiple serverless instances cannot independently process the same transition. The exact persistence and notification delivery/deduplication mechanism remains to be designed.
+
 ## Out of Scope
 
 This draft leaves reader reports, appeals, bulk actions, IP blocking, and shadowbanning as possible follow-ups. Their priority and scope are open.
@@ -172,10 +215,11 @@ This draft leaves reader reports, appeals, bulk actions, IP blocking, and shadow
 
 - What should the installation publish or hold by default, and how should edits and replies be handled?
 - Which policy settings and notifications are essential to completing #284?
+- Should deployment-based ownership transfers to existing accounts be accepted or rejected? How should unexpected replacement or disappearance of the last known owner account be handled? See [Owner configuration and ownership changes](#owner-configuration-and-ownership-changes).
 
 ## Draft Acceptance Criteria
 
-The configured owner has effective privilege 3 and retains admin and moderator access regardless of the stored privilege or legacy `isAdmin` flag. Non-owner accounts store exactly one privilege in the range 0–2; the API derives the role predicates from the effective privilege. Attempts to delete or demote that account return HTTP 403 and leave the record intact. Users cannot gain ownership through profile changes or role changes. Rotating the configured password and redeploying restores owner access for an existing account and invalidates the previous password.
+The configured owner has effective privilege 3 and retains admin and moderator access regardless of the stored privilege or legacy `isAdmin` flag. Non-owner accounts store exactly one privilege in the range 0–2; the API derives the role predicates from the effective privilege. Attempts to delete or demote that account return HTTP 403 and leave the record intact. Users cannot gain ownership through profile changes or role changes. Rotating the configured password and redeploying restores owner access for an existing account and invalidates the previous password. Owner username, email and password cannot be changed through application APIs; the owner can edit non-identity profile details. The last-known-owner record detects ownership changes and potential collisions without granting ownership. Successful transfers to new accounts update that record and generate administration notices. Handling of transfers to existing accounts and unexpected account replacement or disappearance remains open.
 
 The owner and admins can appoint and remove moderators. Only the owner can appoint and demote admins; admin demotion explicitly assigns privilege 1 or 0. The API rejects attempts by moderators to appoint, create, or remove another moderator, attempts by admins to grant or revoke admin access, and attempts to assign owner privilege or invalid privilege values. Existing admin accounts migrate to privilege 2 and ordinary accounts to privilege 0. The final permission model will define which actions become available on appointment and which are lost on revocation.
 
@@ -190,5 +234,7 @@ Unit tests should cover every effective privilege level and its derived predicat
 Test cross-account administration against the privilege matrix, including account deletion, password changes, and profile and identity updates. In particular, verify that an admin cannot modify or delete another admin or the owner through direct API requests, that the owner can administer admins, and that admins can administer lower-privilege accounts subject to the separate role-assignment rules. Verify that forbidden requests leave the target unchanged and that ordinary authorized self-service actions remain distinct from cross-account administration.
 
 Exercise the full review flow across multiple discussions. Verify that public comment reads exclude held and rejected comments, approval makes a comment visible, and direct API requests apply the same permissions as the moderator view. Once policy and notification behavior are agreed, verify that rules produce the expected publication state and notifications follow that state.
+
+Test owner initialization, normal restart, credential rotation, protected owner identity fields, permitted owner profile edits, transfer to a previously unused username, and detection of existing-account collisions, mismatched account IDs, missing owner records and conflicting username/email identities. Verify that the last-known-owner record is not authoritative for permissions, successful reconciliation updates the baseline, the previous owner loses effective owner access, and concurrent initialization does not process the same change twice. Verify notices include the former and new owner on successful transfers and omit secrets. Validate the remaining collision cases once their policy is agreed.
 
 Implementation PRs for sub-issues under #284 use `284-build-a-site-wide-comment-moderation-system` as their base branch.
