@@ -40,7 +40,7 @@ The first implementation sub-issue under #284 ([#285](https://github.com/rendall
 
 There is one owner for the entire installation. The deployment environment variables specify the owner’s login identifier and password. The server derives `isOwner` from the authenticated account and its configured identity. If login uses an email address, bind ownership to the configured account’s ID so profile edits cannot transfer it. Admin and moderator permissions cannot grant or transfer ownership or change the owner’s configured credentials.
 
-Someone with deployment access can recover the owner account by rotating the password in the environment and rebuilding or redeploying as required by the platform. Recovery must work even when the owner’s database record already exists. Today, the environment password only bootstraps a missing owner record. An existing record uses its stored password hash, so deployment-based rotation requires an implementation change.
+Someone with deployment access can recover the owner account by rotating the password in the environment and rebuilding or redeploying as required by the platform. Recovery must work even when the owner’s database record already exists. Today, the environment password only bootstraps a missing owner record. An existing record uses its stored password hash, so deployment-based rotation requires the fix tracked in [#286](https://github.com/rendall/simple-comment/issues/286).
 
 Use the target account's ID to protect the owner's record. Reject any attempt to delete the owner or clear its admin access with HTTP 403, regardless of who makes the request. Derive the owner's effective admin access from ownership so a stored `isAdmin: false` from an earlier update cannot lock the owner out.
 
@@ -84,7 +84,6 @@ This draft leaves reader reports, appeals, bulk actions, IP blocking, and shadow
 
 ## Open Questions
 
-- How should upgrades bind the existing owner account and apply deployment-configured password changes?
 
 - What should the installation publish or hold by default, and how should edits and replies be handled?
 - Which policy settings and notifications are essential to completing #284?
