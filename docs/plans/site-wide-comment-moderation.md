@@ -12,6 +12,16 @@ Build a site-wide moderation system so an installation owner can appoint moderat
 
 The person configured to own the discussion keeps control of it. The owner and existing moderators can appoint users to help moderate. The owner and moderators can also revoke another moderator’s access. Nobody can delete the owner's account or take away its admin access through the API. Moderators can see comments from across the site in one place, review comments before they appear publicly, and act on comments that are already public.
 
+### Intended role hierarchy
+
+The full moderation system has three privileged roles. Each role inherits the permissions of the roles below it. This describes the intended system across releases.
+
+- **Owner** — The configured discussion owner has all admin and moderator permissions. The API protects the owner account from deletion and demotion.
+- **Admin** — Admins can edit user account details and have all moderator permissions.
+- **Moderator** — Moderators can review, hide, or delete comments. Editing another person's comment, if supported, is a comment-level permission whose policy still needs to be settled with #275. Moderators cannot edit user account details.
+
+Appointing and removing moderators is a specific moderation permission shared by all three roles. It does not permit editing account details, changing admin status, or demoting the owner.
+
 ## Current behavior
 
 The environment-configured Simple Comment Moderator account is created with `isAdmin: true`. The user-delete API already blocks deletion when the target is that account. The user-update API checks the caller's ID when applying its special protection, which lets another admin clear the configured account's stored admin flag. Comment actions such as deleting someone else's comment rely on the stored flag.
@@ -48,8 +58,8 @@ This draft leaves reader reports, appeals, bulk actions, IP blocking, and shadow
 
 ## Open Questions
 
-- Should moderator appointments use a distinct permission or build on `isAdmin`? Existing admins have powers beyond comment moderation, including updating other user accounts.
-- How should existing admin access relate to moderator appointment authority? The design needs to account for the existing user-update API as well as the dashboard.
+- How should the distinct moderator role be stored and introduced alongside the existing `isAdmin` flag?
+- How should existing admins inherit moderator permissions during the rollout? The design needs to account for the existing user-update API as well as the dashboard.
 - What is the intended way to change the configured owner, and how should installations recognize the same owner during an upgrade?
 - Should owner identity and appointment authority apply to the entire installation, as assumed here, or can individual discussions have their own owners?
 
@@ -61,7 +71,7 @@ This draft leaves reader reports, appeals, bulk actions, IP blocking, and shadow
 
 The configured owner retains admin access even when an existing record has `isAdmin: false`. Attempts to delete or demote that account return HTTP 403 and leave the record intact. Users cannot gain ownership through profile changes.
 
-The owner and existing moderators can appoint moderators and revoke another moderator’s access. The API rejects appointment and removal requests from users who have neither ownership nor moderator authority. The final permission model will define which actions become available on appointment and which are lost on revocation.
+The owner and existing moderators can appoint moderators and revoke another moderator’s access. The API rejects appointment and removal requests from users without moderator permissions. The final permission model will define which actions become available on appointment and which are lost on revocation.
 
 A designated moderator can see held and recent comments across multiple discussions in one place. Approving a held comment makes it public, rejecting it keeps it private, and moderators can act on published comments. The initial release scope for configurable rules and notifications remains open for discussion.
 
