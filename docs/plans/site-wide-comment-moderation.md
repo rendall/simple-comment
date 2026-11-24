@@ -22,9 +22,65 @@ The full moderation system has three privileged roles. Each role inherits the pe
 
 Only the owner can appoint admins or demote admins. The owner and admins can appoint and demote moderators. Moderators cannot appoint, create, or demote other moderators.
 
-### Stored flags and effective permissions
+### Stored privilege and derived permissions
 
-User records retain `isAdmin` and add `isModerator` to record an explicit moderator appointment. The server derives `isOwner` from deployment configuration. The API response exposes effective permissions separately from the stored flags, for example `canModerateComments` and `canAppointModerators`. Existing accounts with `isAdmin: true` remain admins and inherit moderator permissions. They can appoint and demote moderators. The new `isModerator` flag records those appointments, and existing admin accounts need no backfill or separate moderator appointment. The server enforces the permissions on each request.
+Store a single integer `privilege` on each user record instead of independent `isAdmin` and `isModerator` flags. Roles form a strict, cumulative hierarchy. Each account has one role at a time, and every higher role inherits the privileges of the lower roles.
+
+| Role | Effective privilege | `isModerator` | `isAdmin` | `isOwner` |
+| --- | ---: | --- | --- | --- |
+| Regular user | 0 | false | false | false |
+| Moderator | 1 | true | false | false |
+| Admin | 2 | true | true | false |
+| Owner | 3 | true | true | true |
+
+Use named constants rather than magic numbers throughout the codebase. For example, a TypeScript enum can express the hierarchy:
+
+```typescript
+enum Privilege {
+  User = 0,
+  Moderator = 1,
+  Admin = 2,
+  Owner = 3
+}
+```
+
+**Stored versus effective privilege.** Only values 0–2 are valid stored privileges. Level 3 is derived exclusively on the server from the authenticated account's configured owner identity; it is never persisted or assignable through the API. Resolve the effective privilege for each request using the authenticated account's current role:
+
+```typescript
+const privilege = isConfiguredOwner(user)
+  ? Privilege.Owner
+  : user.privilege;
+```
+
+The API exposes the effective privilege and derived predicates, including `isModerator`, `isAdmin`, and `isOwner`. These remain useful to the frontend and preserve compatibility with consumers of the existing `isAdmin` response field, but they are not independently stored or writable sources of authority.
+
+```typescript
+const isModerator = privilege >= Privilege.Moderator;
+const isAdmin = privilege >= Privilege.Admin;
+const isOwner = privilege === Privilege.Owner;
+```
+
+The server may also expose action-specific permission predicates, such as `canModerateComments` and `canAppointModerators`. It must enforce all permissions on each request; frontend predicates are not authorization.
+
+**Promotion and demotion.** A role change explicitly assigns the destination privilege. For example, promoting a moderator (1) to admin (2) and subsequently demoting that admin to moderator (1) requires no remembered flags or previous-role history. Demotion to regular user (0) instead removes both admin and moderator privileges. The intended destination role determines the access retained.
+
+**Privilege versus authority.** Checking whether someone has a role's privileges is a numerical comparison, but authorizing a role change also requires checking the caller, the target's current effective privilege, and the requested destination privilege. Only the owner can grant or revoke admin access. Admins can promote regular users to moderators and demote moderators to regular users, but cannot promote anyone to admin or demote an admin. No application role change can grant or revoke ownership. Validate role assignments on the server and reject invalid stored values, including level 3.
+
+#### Migration
+
+Migrate existing non-owner accounts with `isAdmin: true` to privilege 2; ordinary accounts default to privilege 0. Preserve any already valid stored privilege when rerunning the migration. The configured owner's effective privilege is always 3, independent of the stored value or legacy admin flag. Retire the legacy persisted flags once existing records and all read/write paths have been migrated; retain the derived API predicates. Ensure existing installations preserve their legitimate admin access throughout the migration and that legacy role-update inputs cannot bypass the new authorization rules.
+
+#### Rationale
+
+- A single source of truth eliminates overlapping flags and ambiguous combinations.
+- Promotion and demotion assign one explicit value rather than manipulating independent flags.
+- Numerical comparisons express the intended inheritance naturally.
+- Derived predicates keep the existing frontend/API vocabulary.
+- Four effective levels simplify reasoning and testing.
+
+Numeric roles can become unsuitable when permissions are independent or orthogonal. That is not the intended role model here: the hierarchy is deliberate. Configurable policies (such as admin editing of other users' comments) remain separate from the role itself.
+
+**Store the role; derive the permissions.**
 
 ## Current behavior
 
@@ -38,11 +94,11 @@ See [account creation](../../src/lib/MongodbService.ts#L349), [user updates](../
 
 The first implementation sub-issue under #284 ([#285](https://github.com/rendall/simple-comment/issues/285)) is to enable the owner and admins to appoint an existing user as a moderator or revoke an existing moderator’s access. The server authorizes and persists both changes. This capability is needed regardless of how the broader moderation dashboard and publication policies are designed, so it can proceed independently of those decisions.
 
-There is one owner for the entire installation. The deployment environment variables specify the owner’s login identifier and password. The server derives `isOwner` from the authenticated account and its configured identity. If login uses an email address, bind ownership to the configured account’s ID so profile edits cannot transfer it. Admin and moderator permissions cannot grant or transfer ownership or change the owner’s configured credentials.
+There is one owner for the entire installation. The deployment environment variables specify the owner’s login identifier and password. The server derives effective privilege 3 and `isOwner` from the authenticated account and its configured identity. If login uses an email address, bind ownership to the configured account’s ID so profile edits cannot transfer it. Admin and moderator permissions cannot grant or transfer ownership or change the owner’s configured credentials.
 
 Someone with deployment access can recover the owner account by rotating the password in the environment and rebuilding or redeploying as required by the platform. Recovery must work even when the owner’s database record already exists. Today, the environment password only bootstraps a missing owner record. An existing record uses its stored password hash, so deployment-based rotation requires the fix tracked in [#286](https://github.com/rendall/simple-comment/issues/286).
 
-Use the target account's ID to protect the owner's record. Reject any attempt to delete the owner or clear its admin access with HTTP 403, regardless of who makes the request. Derive the owner's effective admin access from ownership so a stored `isAdmin: false` from an earlier update cannot lock the owner out.
+Use the target account's ID to protect the owner's record. Reject any attempt to delete or demote the owner with HTTP 403, regardless of who makes the request. Derive the owner's effective privilege from ownership so neither a lower stored privilege nor a legacy `isAdmin: false` can lock the owner out.
 
 ### Role management dashboard
 
@@ -54,7 +110,7 @@ If the widget becomes too cramped for future administration workflows, a dedicat
 
 The owner and admins can search for existing accounts with a searchable combobox that filters as they type and shows usernames alongside display names. Selecting an account fills the selection. An explicit **Appoint** action applies the change immediately. Admins can appoint moderators, and the owner can appoint either admins or moderators.
 
-Show demotion on the roster only where the viewer has authority over the target role. Confirm the action with the person’s name and the access they will lose. Enforce the same permissions for direct API requests.
+Show demotion on the roster only where the viewer has authority over the target role. For admin demotion, the owner can choose moderator or regular user as the destination role. Moderator demotion assigns regular user. Confirm the action with the person’s name and the access they will lose. Enforce the same permissions for direct API requests.
 
 Treat successful admin and moderator appointments and demotions as administration actions. Notify all current moderators, all current admins, the site owner, and the affected person, including someone just demoted. Send one notice per person identifying who made the change, whose access changed, and which access was granted or revoked.
 
@@ -96,15 +152,15 @@ This draft leaves reader reports, appeals, bulk actions, IP blocking, and shadow
 
 ## Draft Acceptance Criteria
 
-The configured owner retains admin access even when an existing record has `isAdmin: false`. Attempts to delete or demote that account return HTTP 403 and leave the record intact. Users cannot gain ownership through profile changes or role changes. Rotating the configured password and redeploying restores owner access for an existing account and invalidates the previous password.
+The configured owner has effective privilege 3 and retains admin and moderator access regardless of the stored privilege or legacy `isAdmin` flag. Non-owner accounts store exactly one privilege in the range 0–2; the API derives the role predicates from the effective privilege. Attempts to delete or demote that account return HTTP 403 and leave the record intact. Users cannot gain ownership through profile changes or role changes. Rotating the configured password and redeploying restores owner access for an existing account and invalidates the previous password.
 
-The owner and admins can appoint and remove moderators. The API rejects attempts by moderators to appoint, create, or remove another moderator. The final permission model will define which actions become available on appointment and which are lost on revocation.
+The owner and admins can appoint and remove moderators. Only the owner can appoint and demote admins; admin demotion explicitly assigns privilege 1 or 0. The API rejects attempts by moderators to appoint, create, or remove another moderator, attempts by admins to grant or revoke admin access, and attempts to assign owner privilege or invalid privilege values. Existing admin accounts migrate to privilege 2 and ordinary accounts to privilege 0. The final permission model will define which actions become available on appointment and which are lost on revocation.
 
 A designated moderator can see held and recent comments across multiple discussions in one place. Approving a held comment makes it public, rejecting it keeps it private, and moderators can hold or delete published comments. By default, only authors can edit comment text. When the owner enables admin editing, admins and the owner can edit others’ comments. The API rejects cross-author edits by moderators in either mode and rejects attempts by non-owners to change the editing setting. The initial release scope for configurable rules and notifications remains open for discussion.
 
 ## Validation Strategy
 
-Unit tests should distinguish owner identity from a stored admin flag and cover an owner record whose flag is false. API integration tests should exercise owner deletion and demotion as both the owner and another admin, confirm HTTP 403, and confirm the record and effective permissions afterward. Test moderator appointment by the owner and an admin, removal by the owner and an admin, and rejection of role changes attempted by a moderator. Verify that each successful change sends one notice per intended recipient, including a removed moderator, and that rejected requests send none. Verify that a moderator cannot demote or delete the owner through a direct API request. The API contract and dashboard should agree on who can perform each action.
+Unit tests should cover every effective privilege level and its derived predicates, including owner records with a lower stored privilege or legacy `isAdmin: false`. Test migration of existing admin and ordinary accounts, migration reruns, rejection of invalid stored privileges, and preservation of owner access without persisting privilege 3. Test promotion from moderator to admin and demotion from admin to either moderator or regular user, including the resulting effective permissions. API integration tests should exercise owner deletion and demotion as both the owner and another admin, confirm HTTP 403, and confirm the record and effective permissions afterward. Test moderator appointment by the owner and an admin, removal by the owner and an admin, owner-only admin appointments and demotions, rejection of role changes attempted by a moderator, and rejection of attempts to grant or revoke admin access by an admin. Verify that direct API requests cannot assign privilege 3 or bypass role checks through legacy flag inputs. Verify that each successful change sends one notice per intended recipient, including a removed moderator, and that rejected requests send none. Verify that a moderator cannot demote or delete the owner through a direct API request. The API contract and dashboard should agree on who can perform each action.
 
 Exercise the full review flow across multiple discussions. Verify that public comment reads exclude held and rejected comments, approval makes a comment visible, and direct API requests apply the same permissions as the moderator view. Once policy and notification behavior are agreed, verify that rules produce the expected publication state and notifications follow that state.
 
