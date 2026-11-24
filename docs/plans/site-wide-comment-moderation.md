@@ -74,6 +74,10 @@ Track whether a comment is approved for publication. An `isApproved` flag is one
 
 ### Publication policy and notifications
 
+Every applicable publication rule answers **Should this comment be published?** A rule returns `true` when it permits immediate publication and `false` when it requires moderation. Publish immediately only if every applicable rule returns `true`. A single `false` holds the comment for review. The developer-provided filter follows the same convention.
+
+An allowlist can exempt an account from a rule where that rule explicitly supports exemptions. An allowlist match cannot override a `false` returned by another applicable rule. Which rules support exemptions remains open.
+
 Explore settings that hold all comments from guests or new accounts, publish by default, or hold comments that match rules such as links or selected words or phrases. Decide whether trusted users and moderators qualify for automatic approval. Coordinate policy settings and enforcement with #275.
 
 Define how the existing notifications fit this workflow. Decide when moderators hear about held comments and when public comment notifications should go out. Coordinate with #248 when considering what happens after a comment is edited.
