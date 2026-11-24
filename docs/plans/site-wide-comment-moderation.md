@@ -10,7 +10,7 @@ Build a site-wide moderation system so an installation owner can appoint moderat
 
 ## Plain-Language Intent
 
-The configured site owner controls the entire Simple Comment installation and all its discussions. The owner can appoint admins and revoke admin or moderator access. The owner and admins can appoint moderators. Nobody can delete the owner's account or take away its admin access through the API. Moderators can see comments from across the site in one place, review comments before they appear publicly, and act on comments that are already public.
+The configured site owner controls the entire Simple Comment installation and all its discussions. The owner can appoint admins and revoke admin or moderator access. The owner and admins can appoint and demote moderators. Nobody can delete the owner's account or take away its admin access through the API. Moderators can see comments from across the site in one place, review comments before they appear publicly, and act on comments that are already public.
 
 ### Intended role hierarchy
 
@@ -20,13 +20,11 @@ The full moderation system has three privileged roles. Each role inherits the pe
 - **Admin** — Admins can edit user account details and have all moderator permissions.
 - **Moderator** — Moderators can review, hide, or delete comments. Editing another person's comment, if supported, is a comment-level permission whose policy still needs to be settled with #275. Moderators cannot edit user account details.
 
-Only the owner can appoint admins or demote admins. The owner and admins can appoint moderators. The owner can demote moderators. Moderators cannot appoint, create, or demote other moderators. Whether admins can demote moderators remains open.
+Only the owner can appoint admins or demote admins. The owner and admins can appoint and demote moderators. Moderators cannot appoint, create, or demote other moderators.
 
-### Stored and effective roles
+### Stored flags and effective permissions
 
-The user record stores a `role` field with one of three values: `user`, `moderator`, or `admin`. On each request, the server checks whether the authenticated account matches the owner identity configured in the deployment environment. If it matches, the effective role is `owner`. For every other account, the effective role is its stored role.
-
-The API can report any of the four effective roles. Only deployment configuration can confer ownership. The server must reject attempts to persist `owner` as a user role.
+User records retain `isAdmin` and add `isModerator` to record an explicit moderator appointment. The server derives `isOwner` from deployment configuration. The API response exposes effective permissions separately from the stored flags, for example `canModerateComments` and `canAppointModerators`. Admins can moderate comments through inheritance even when they have no explicit moderator appointment. The server enforces the permissions on each request.
 
 ## Current behavior
 
@@ -38,7 +36,7 @@ See [account creation](../../src/lib/MongodbService.ts#L349), [user updates](../
 
 ### Owner permissions and moderator appointments
 
-The first implementation sub-issue under #284 ([#285](https://github.com/rendall/simple-comment/issues/285)) is to enable the owner and admins to appoint an existing user as a moderator and the owner to revoke moderator access. The server authorizes and persists both changes. This capability is needed regardless of how the broader moderation dashboard and publication policies are designed, so it can proceed independently of those decisions.
+The first implementation sub-issue under #284 ([#285](https://github.com/rendall/simple-comment/issues/285)) is to enable the owner and admins to appoint an existing user as a moderator or revoke an existing moderator’s access. The server authorizes and persists both changes. This capability is needed regardless of how the broader moderation dashboard and publication policies are designed, so it can proceed independently of those decisions.
 
 There is one owner for the entire installation. The deployment environment variables specify the owner’s login identifier and password. The server derives `isOwner` from the authenticated account and its configured identity. If login uses an email address, bind ownership to the configured account’s ID so profile edits cannot transfer it. Admin and moderator permissions cannot grant or transfer ownership or change the owner’s configured credentials.
 
@@ -46,9 +44,15 @@ Someone with deployment access can recover the owner account by rotating the pas
 
 Use the target account's ID to protect the owner's record. Reject any attempt to delete the owner or clear its admin access with HTTP 403, regardless of who makes the request. Derive the owner's effective admin access from ownership so a stored `isAdmin: false` from an earlier update cannot lock the owner out.
 
-The owner dashboard should let the owner see who currently has moderator access, appoint an existing user, and revoke an appointment. Provide a moderator appointment flow for admins as well. Enforce both permissions on the server, including for direct API requests.
+### Role management dashboard
 
-After each successful grant or revocation, notify all current moderators, the owner, and the person whose access changed. Send one notice per person, including an affected moderator who was just removed. The notice identifies who made the change, whose access changed, and whether access was granted or revoked.
+Open the dashboard from the comment widget’s administration controls. Everyone with dashboard access can see the site owner, current admins, and current moderators, with each account listed once under its highest role.
+
+The owner and admins can search for existing accounts with a searchable combobox that filters as they type and shows usernames alongside display names. Selecting an account fills the selection. An explicit **Appoint** action applies the change immediately. Admins can appoint moderators, and the owner can appoint either admins or moderators.
+
+Show demotion on the roster only where the viewer has authority over the target role. Confirm the action with the person’s name and the access they will lose. Enforce the same permissions for direct API requests.
+
+Treat successful admin and moderator appointments and demotions as administration actions. Notify all current moderators, all current admins, the site owner, and the affected person, including someone just demoted. Send one notice per person identifying who made the change, whose access changed, and which access was granted or revoked.
 
 ### Site-wide comment review
 
@@ -66,7 +70,6 @@ This draft leaves reader reports, appeals, bulk actions, IP blocking, and shadow
 
 ## Open Questions
 
-- How should existing records with the `isAdmin` flag migrate to the stored `role` field?
 - How should existing admins inherit moderator permissions during the rollout? The design needs to account for the existing user-update API as well as the dashboard.
 - How should upgrades bind the existing owner account and apply deployment-configured password changes?
 
@@ -78,13 +81,13 @@ This draft leaves reader reports, appeals, bulk actions, IP blocking, and shadow
 
 The configured owner retains admin access even when an existing record has `isAdmin: false`. Attempts to delete or demote that account return HTTP 403 and leave the record intact. Users cannot gain ownership through profile changes or role changes. Rotating the configured password and redeploying restores owner access for an existing account and invalidates the previous password.
 
-The owner and admins can appoint moderators, and the owner can remove moderators. The API rejects attempts by moderators to appoint, create, or remove another moderator. The final permission model will define which actions become available on appointment and which are lost on revocation.
+The owner and admins can appoint and remove moderators. The API rejects attempts by moderators to appoint, create, or remove another moderator. The final permission model will define which actions become available on appointment and which are lost on revocation.
 
 A designated moderator can see held and recent comments across multiple discussions in one place. Approving a held comment makes it public, rejecting it keeps it private, and moderators can act on published comments. The initial release scope for configurable rules and notifications remains open for discussion.
 
 ## Validation Strategy
 
-Unit tests should distinguish owner identity from a stored admin flag and cover an owner record whose flag is false. API integration tests should exercise owner deletion and demotion as both the owner and another admin, confirm HTTP 403, and confirm the record and effective permissions afterward. Test moderator appointment by the owner and an admin, removal by the owner, and rejection of role changes attempted by a moderator. Verify that each successful change sends one notice per intended recipient, including a removed moderator, and that rejected requests send none. Verify that a moderator cannot demote or delete the owner through a direct API request. The API contract and dashboard should agree on who can perform each action.
+Unit tests should distinguish owner identity from a stored admin flag and cover an owner record whose flag is false. API integration tests should exercise owner deletion and demotion as both the owner and another admin, confirm HTTP 403, and confirm the record and effective permissions afterward. Test moderator appointment by the owner and an admin, removal by the owner and an admin, and rejection of role changes attempted by a moderator. Verify that each successful change sends one notice per intended recipient, including a removed moderator, and that rejected requests send none. Verify that a moderator cannot demote or delete the owner through a direct API request. The API contract and dashboard should agree on who can perform each action.
 
 Exercise the full review flow across multiple discussions. Verify that public comment reads exclude held and rejected comments, approval makes a comment visible, and direct API requests apply the same permissions as the moderator view. Once policy and notification behavior are agreed, verify that rules produce the expected publication state and notifications follow that state.
 
