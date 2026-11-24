@@ -24,7 +24,7 @@ Only the owner can appoint admins or demote admins. The owner and admins can app
 
 ### Stored flags and effective permissions
 
-User records retain `isAdmin` and add `isModerator` to record an explicit moderator appointment. The server derives `isOwner` from deployment configuration. The API response exposes effective permissions separately from the stored flags, for example `canModerateComments` and `canAppointModerators`. Admins can moderate comments through inheritance even when they have no explicit moderator appointment. The server enforces the permissions on each request.
+User records retain `isAdmin` and add `isModerator` to record an explicit moderator appointment. The server derives `isOwner` from deployment configuration. The API response exposes effective permissions separately from the stored flags, for example `canModerateComments` and `canAppointModerators`. Existing accounts with `isAdmin: true` remain admins and inherit moderator permissions. They can appoint and demote moderators. The new `isModerator` flag records those appointments, and existing admin accounts need no backfill or separate moderator appointment. The server enforces the permissions on each request.
 
 ## Current behavior
 
@@ -74,7 +74,6 @@ This draft leaves reader reports, appeals, bulk actions, IP blocking, and shadow
 
 ## Open Questions
 
-- How should existing admins inherit moderator permissions during the rollout? The design needs to account for the existing user-update API as well as the dashboard.
 - How should upgrades bind the existing owner account and apply deployment-configured password changes?
 
 - Which actions on published comments should the first release support?
