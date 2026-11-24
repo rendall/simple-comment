@@ -18,7 +18,7 @@ The full moderation system has three privileged roles. Each role inherits the pe
 
 - **Owner** — The site owner is the account configured through deployment environment variables and has all admin and moderator permissions. The API protects the owner account from deletion and demotion.
 - **Admin** — Admins can edit user account details and have all moderator permissions.
-- **Moderator** — Moderators can review, hide, or delete comments. Editing another person's comment, if supported, is a comment-level permission whose policy still needs to be settled with #275. Moderators cannot edit user account details.
+- **Moderator** — Moderators can review, hide, or delete comments. Only the author can edit a comment’s text. Moderators cannot edit user account details.
 
 Only the owner can appoint admins or demote admins. The owner and admins can appoint and demote moderators. Moderators cannot appoint, create, or demote other moderators.
 
@@ -60,7 +60,9 @@ Treat successful admin and moderator appointments and demotions as administratio
 
 ### Site-wide comment review
 
-After owner permissions and appointments, design a moderator view with **Held for review** and **All recent comments**. Both views should show comment status and link to the discussion. Design how moderators approve or reject held comments and act on published comments. A held comment stays private until approved. Use #241 for prior investigation and check whether #63 offers a starting point.
+After owner permissions and appointments, design a moderator view with **Held for review** and **All recent comments**. Both views should show comment status and link to the discussion. Moderators can approve or reject held comments and can delete a published comment or withdraw its approval and hold it from public view so the author can revise it. Only the author can edit the text, including when the author is a moderator, admin, or owner. The current comment update API allows admins to edit other users’ comments, so enforce author-only editing in the backend as well as the widget. See #275.
+
+Track whether a comment is approved for publication. An `isApproved` flag is one option. A comment can start approved or held according to policy, and an edit that triggers review can cause approval to be withdrawn. Held comments stay private until approved. The default publication policy and the exact handling of edited comments and replies remain open. Use #241 for prior investigation and check whether #63 offers a starting point.
 
 ### Publication policy and notifications
 
@@ -76,7 +78,6 @@ This draft leaves reader reports, appeals, bulk actions, IP blocking, and shadow
 
 - How should upgrades bind the existing owner account and apply deployment-configured password changes?
 
-- Which actions on published comments should the first release support?
 - What should the installation publish or hold by default, and how should edits and replies be handled?
 - Which policy settings and notifications are essential to completing #284?
 
@@ -86,7 +87,7 @@ The configured owner retains admin access even when an existing record has `isAd
 
 The owner and admins can appoint and remove moderators. The API rejects attempts by moderators to appoint, create, or remove another moderator. The final permission model will define which actions become available on appointment and which are lost on revocation.
 
-A designated moderator can see held and recent comments across multiple discussions in one place. Approving a held comment makes it public, rejecting it keeps it private, and moderators can act on published comments. The initial release scope for configurable rules and notifications remains open for discussion.
+A designated moderator can see held and recent comments across multiple discussions in one place. Approving a held comment makes it public, rejecting it keeps it private, and moderators can hold or delete published comments. Only the author can edit comment text, including through direct API requests. The initial release scope for configurable rules and notifications remains open for discussion.
 
 ## Validation Strategy
 
