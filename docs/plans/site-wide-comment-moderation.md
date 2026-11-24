@@ -10,7 +10,7 @@ Build a site-wide moderation system so an installation owner can appoint moderat
 
 ## Plain-Language Intent
 
-The person configured to own the discussion keeps control of it. The owner and existing moderators can appoint users to help moderate. The owner and moderators can also revoke another moderator’s access. Nobody can delete the owner's account or take away its admin access through the API. Moderators can see comments from across the site in one place, review comments before they appear publicly, and act on comments that are already public.
+The person configured to own the discussion keeps control of it. The owner can appoint admins and revoke admin or moderator access. The owner and admins can appoint moderators. Nobody can delete the owner's account or take away its admin access through the API. Moderators can see comments from across the site in one place, review comments before they appear publicly, and act on comments that are already public.
 
 ### Intended role hierarchy
 
@@ -20,7 +20,7 @@ The full moderation system has three privileged roles. Each role inherits the pe
 - **Admin** — Admins can edit user account details and have all moderator permissions.
 - **Moderator** — Moderators can review, hide, or delete comments. Editing another person's comment, if supported, is a comment-level permission whose policy still needs to be settled with #275. Moderators cannot edit user account details.
 
-Appointing and removing moderators is a specific moderation permission shared by all three roles. It does not permit editing account details, changing admin status, or demoting the owner.
+Only the owner can appoint admins or demote admins. The owner and admins can appoint moderators. The owner can demote moderators. Moderators cannot appoint, create, or demote other moderators. Whether admins can demote moderators remains open.
 
 ## Current behavior
 
@@ -32,13 +32,13 @@ See [account creation](../../src/lib/MongodbService.ts#L349), [user updates](../
 
 ### Owner permissions and moderator appointments
 
-The first implementation sub-issue under #284 ([#285](https://github.com/rendall/simple-comment/issues/285)) is to enable the owner and existing moderators to appoint an existing user as a moderator or revoke another moderator’s access. The server authorizes and persists both changes. This capability is needed regardless of how the broader moderation dashboard and publication policies are designed, so it can proceed independently of those decisions.
+The first implementation sub-issue under #284 ([#285](https://github.com/rendall/simple-comment/issues/285)) is to enable the owner and admins to appoint an existing user as a moderator and the owner to revoke moderator access. The server authorizes and persists both changes. This capability is needed regardless of how the broader moderation dashboard and publication policies are designed, so it can proceed independently of those decisions.
 
 Treat the existing environment-configured account as the owner of the installation and its discussions. The server derives `isOwner` from the authenticated account's ID and the configured owner identity. If configuration identifies the owner by email, bind that identity to the account ID so ordinary profile edits cannot transfer ownership.
 
 Use the target account's ID to protect the owner's record. Reject any attempt to delete the owner or clear its admin access with HTTP 403, regardless of who makes the request. Derive the owner's effective admin access from ownership so a stored `isAdmin: false` from an earlier update cannot lock the owner out.
 
-The owner dashboard should let the owner see who currently has moderator access, appoint an existing user, and revoke an appointment. Provide appointment and removal flows for existing moderators as well. Enforce both permissions on the server, including for direct API requests.
+The owner dashboard should let the owner see who currently has moderator access, appoint an existing user, and revoke an appointment. Provide a moderator appointment flow for admins as well. Enforce both permissions on the server, including for direct API requests.
 
 After each successful grant or revocation, notify all current moderators, the owner, and the person whose access changed. Send one notice per person, including an affected moderator who was just removed. The notice identifies who made the change, whose access changed, and whether access was granted or revoked.
 
@@ -71,13 +71,13 @@ This draft leaves reader reports, appeals, bulk actions, IP blocking, and shadow
 
 The configured owner retains admin access even when an existing record has `isAdmin: false`. Attempts to delete or demote that account return HTTP 403 and leave the record intact. Users cannot gain ownership through profile changes.
 
-The owner and existing moderators can appoint moderators and revoke another moderator’s access. The API rejects appointment and removal requests from users without moderator permissions. The final permission model will define which actions become available on appointment and which are lost on revocation.
+The owner and admins can appoint moderators, and the owner can remove moderators. The API rejects attempts by moderators to appoint, create, or remove another moderator. The final permission model will define which actions become available on appointment and which are lost on revocation.
 
 A designated moderator can see held and recent comments across multiple discussions in one place. Approving a held comment makes it public, rejecting it keeps it private, and moderators can act on published comments. The initial release scope for configurable rules and notifications remains open for discussion.
 
 ## Validation Strategy
 
-Unit tests should distinguish owner identity from a stored admin flag and cover an owner record whose flag is false. API integration tests should exercise owner deletion and demotion as both the owner and another admin, confirm HTTP 403, and confirm the record and effective permissions afterward. Test appointment and removal by the owner and a moderator, and rejection for users without either permission. Verify that each successful change sends one notice per intended recipient, including a removed moderator, and that rejected requests send none. Verify that a moderator cannot demote or delete the owner through a direct API request. The API contract and dashboard should agree on who can perform each action.
+Unit tests should distinguish owner identity from a stored admin flag and cover an owner record whose flag is false. API integration tests should exercise owner deletion and demotion as both the owner and another admin, confirm HTTP 403, and confirm the record and effective permissions afterward. Test moderator appointment by the owner and an admin, removal by the owner, and rejection of role changes attempted by a moderator. Verify that each successful change sends one notice per intended recipient, including a removed moderator, and that rejected requests send none. Verify that a moderator cannot demote or delete the owner through a direct API request. The API contract and dashboard should agree on who can perform each action.
 
 Exercise the full review flow across multiple discussions. Verify that public comment reads exclude held and rejected comments, approval makes a comment visible, and direct API requests apply the same permissions as the moderator view. Once policy and notification behavior are agreed, verify that rules produce the expected publication state and notifications follow that state.
 
