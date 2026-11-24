@@ -22,6 +22,12 @@ The full moderation system has three privileged roles. Each role inherits the pe
 
 Only the owner can appoint admins or demote admins. The owner and admins can appoint moderators. The owner can demote moderators. Moderators cannot appoint, create, or demote other moderators. Whether admins can demote moderators remains open.
 
+### Stored and effective roles
+
+The user record stores a `role` field with one of three values: `user`, `moderator`, or `admin`. On each request, the server checks whether the authenticated account matches the owner identity configured in the deployment environment. If it matches, the effective role is `owner`. For every other account, the effective role is its stored role.
+
+The API can report any of the four effective roles. Only deployment configuration can confer ownership. The server must reject attempts to persist `owner` as a user role.
+
 ## Current behavior
 
 The environment-configured Simple Comment Moderator account is created with `isAdmin: true`. The user-delete API already blocks deletion when the target is that account. The user-update API checks the caller's ID when applying its special protection, which lets another admin clear the configured account's stored admin flag. Comment actions such as deleting someone else's comment rely on the stored flag.
@@ -60,7 +66,7 @@ This draft leaves reader reports, appeals, bulk actions, IP blocking, and shadow
 
 ## Open Questions
 
-- How should the distinct moderator role be stored and introduced alongside the existing `isAdmin` flag?
+- How should existing records with the `isAdmin` flag migrate to the stored `role` field?
 - How should existing admins inherit moderator permissions during the rollout? The design needs to account for the existing user-update API as well as the dashboard.
 - How should upgrades bind the existing owner account and apply deployment-configured password changes?
 
