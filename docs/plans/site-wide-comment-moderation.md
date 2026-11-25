@@ -24,19 +24,19 @@ Implement the numerical privilege model in iteration one, without implementing a
 
 The configured owner has effective privilege 3, derived on the server from deployment configuration and never stored as 3. Newly created owner accounts store 2. Newly created ordinary accounts store 0; existing ordinary accounts without a privilege field need not be rewritten.
 
-For a non-owner, an absent privilege field resolves to 0; a present valid stored value is used as-is. Derive `isModerator` from effective privilege >= 1, `isAdmin` from >= 2, and `isOwner` from === 3. Reject invalid stored or requested privilege values; do not interpret arbitrary numbers or legacy flag inputs as authority. Preserve legitimate existing administrator privileges through a targeted migration of legacy admin accounts to 2 (and initialize the existing owner's underlying privilege to 2 if missing), rather than backfilling every ordinary user. Once migrated, the old Boolean flag is not an authorization source.
+For a non-owner, an absent privilege field resolves to 0; a present valid stored value is used as-is. Derive `isModerator` from effective privilege >= 1, `isAdmin` from >= 2, and `isOwner` from === 3. Reject invalid stored or requested privilege values; do not interpret arbitrary numbers or legacy flag inputs as authority. Do not perform a legacy-admin migration in iteration one. A non-owner with only `isAdmin: true` and no stored privilege resolves to 0; the old Boolean flag is never an authorization source under the new model. The optional legacy-admin upgrade script belongs to iteration three. Initialize the existing owner's underlying privilege to 2 if missing when initializing the owner account; effective owner access does not depend on that write. Document the legacy-admin compatibility change prominently in upgrade instructions.
 
-Use the privilege foundation for server-side authorization, but retain the owner-only scope of the new review workflow and alerts in iterations one and two. The predicates are available from the first iteration; delegation of the new review capabilities and role-management actions follows in iteration three. Existing administrator permissions remain intact, subject to the agreed account protection boundaries.
+Use `isModerator` (effective privilege >= 1) as the authorization predicate for comment moderation from iteration one, including review, approval and cross-author deletion; iteration two uses the same predicate for manual holds. Select review notification recipients using the same effective moderator predicate. Initially the configured owner will normally be the only moderator, since there is no appointment workflow. Accounts already assigned a valid stored privilege of 1 or 2 can exercise moderation authority immediately. Do not hard-code an owner-only restriction that would need refactoring in iteration three. Keep author editing permissions separate: moderator status alone does not authorize editing someone else's text. Account administration remains subject to the higher privilege and target-account checks.
 
 ### Initial workflow
 
 1. A user submits a comment or changes existing comment text.
 2. The server checks the text against the link rule and the optional private moderation terms list.
 3. If neither rule requires review, the comment is published immediately. If either rule requires review, the server saves it as held, with an author-facing reason, before any public read can expose the content.
-4. Notify the configured owner by email that a comment requires review, identifying the comment and providing a way to locate it.
-5. The authenticated owner can review the held content and explicitly approve it or delete it (disapprove/reject). A held comment stays unpublished until approved or until an edit legitimately clears an automatic hold. There is no separate rejection state.
+4. Notify users with effective moderator privileges (normally just the configured owner initially) by email that a comment requires review, identifying the comment and providing a way to locate it.
+5. An authenticated moderator can review the held content and explicitly approve it or delete it (disapprove/reject). A held comment stays unpublished until approved or until an edit legitimately clears an automatic hold. There is no separate rejection state.
 
-The owner can review a held comment in its discussion or through a minimal review entry point. Do not require a site-wide moderation dashboard or a new browsing mode for this iteration. Approval and deletion are authenticated application actions, not unauthenticated mutations triggered by visiting an email link. The precise navigation and UI are implementation decisions.
+A moderator can review a held comment in its discussion or through a minimal review entry point. Do not require a site-wide moderation dashboard or a new browsing mode for this iteration. Approval and deletion are authenticated application actions, not unauthenticated mutations triggered by visiting an email link. The precise navigation and UI are implementation decisions.
 
 ### Initial publication policy
 
@@ -48,7 +48,7 @@ The owner can review a held comment in its discussion or through a minimal revie
 
 The link rule is enabled by default. Detect common URL forms, including recognizable links without an explicit scheme; the precise detection algorithm and false-positive trade-offs are implementation details. The term rule is active only when a nonempty moderation list is supplied. Keep the rules independent and use the existing publication decision convention. Preserve applicable existing developer-provided filtering rather than building a general policy engine.
 
-For this minimal iteration, the rules apply to all authors; no role-based automatic publication exemption is required. The configured owner is the only recipient of new review alerts and the only account granted the new explicit approval authority. Preserve existing account and comment permissions, and implement the privilege foundation above, including only the targeted migration needed to preserve legacy administrator access. Do not introduce new role appointments in this slice. Identify the configured owner on the server and retain the existing owner protections. Owner credential rotation (#286) remains an independent security fix.
+For this minimal iteration, the rules apply to all authors; no role-based automatic publication exemption is required. Use the moderator predicate for new review alerts and explicit approval authority. Preserve account and comment authorization boundaries using the privilege foundation above; do not treat legacy admin flags as authority or run an automatic migration. Do not introduce new role appointments in this slice. Identify the configured owner on the server and retain the existing owner protections. Owner credential rotation (#286) remains an independent security fix.
 
 Re-evaluate changed comment text so an author cannot evade review by editing a published comment. A qualifying edit may release an automatic hold. Do not scan or reclassify existing comments merely because a rule or term list is introduced or changed. Manual holding of published comments belongs to iteration two; manual holds must survive edits and automatic exemptions as specified below.
 
@@ -76,23 +76,23 @@ For matching terms, use a generic author-facing hold reason (for example, "Your 
 ### First-iteration completion criteria
 
 - Link or configured term matches are held before public exposure; nonmatching comments publish immediately. Existing comments remain published unless subsequently edited or moderated.
-- The owner receives a best-effort notification when a new comment or changed text requires review. A delivery failure does not publish the comment or undo a successful write. Unchanged, failed and unauthorized writes do not send review alerts.
-- The original author (including a recognized guest) and the owner can see the held content and reason; unrelated readers cannot retrieve them through the UI or API. Apply visibility rules to all implemented comment read paths.
-- The authenticated owner can approve the reviewed text or delete the held comment. Approval is atomic and idempotent; stale reviewed text that remains held returns HTTP 409. A deleted comment cannot be approved. Rejection uses the same deletion mechanism, not a separate publication state.
+- Effective moderators (normally just the owner initially) receive best-effort notifications when a new comment or changed text requires review. A delivery failure does not publish the comment or undo a successful write. Unchanged, failed and unauthorized writes do not send review alerts.
+- The original author (including a recognized guest) and effective moderators can see the held content and reason; unrelated readers cannot retrieve them through the UI or API. Apply visibility rules to all implemented comment read paths.
+- An authenticated user with effective moderator privileges can approve the reviewed text or delete the held comment. Approval is atomic and idempotent; stale reviewed text that remains held returns HTTP 409. A deleted comment cannot be approved. Rejection uses the same deletion mechanism, not a separate publication state.
 - Preserve visible descendants and their thread structure when a parent becomes held or deleted. Do not allow new direct replies to held or deleted comments. Coordinate the necessary soft-deletion behavior with #280.
 - Ordinary author editing remains distinct from moderation; do not expand cross-author editing authority. Enforce authorization on the server.
-- The server derives effective privilege and role predicates correctly, including missing privilege resolving to 0 and configured owner resolving to 3. New owner accounts store 2; existing ordinary records need no backfill. Preserve legacy administrator access through targeted migration. Role assignments remain unavailable in this iteration.
+- The server derives effective privilege and role predicates correctly, including missing privilege resolving to 0 and configured owner resolving to 3. New owner accounts store 2; existing ordinary records need no backfill. A legacy admin flag alone grants no privilege. No automatic migration or appointment interface is implemented in this iteration; the optional upgrade script is deferred to iteration three. Verify moderator authorization and notification selection at levels 0–3.
 
 ### Second iteration — manually holding published comments
 
-Extend the existing review workflow so a moderator can unpublish an already published comment. In this iteration, the configured owner is still the only moderator authorized to perform the new moderation actions. Use the term moderator to describe the person performing these actions; appointed moderator accounts are introduced in iteration three.
+Extend the existing review workflow so a moderator can unpublish an already published comment. In this iteration, authorize the new moderation action using the same effective `isModerator` predicate as in iteration one. The configured owner will normally be the only moderator; appointed moderator accounts are introduced in iteration three.
 
 A moderator can choose to hide a published comment and must supply a non-empty reason. This is a manual hold, not deletion. Preserve the comment's content and original position, set `isApproved` to false, and record `heldBy` and `heldReason` together. Enforce authorization and required reasons on the server.
 
 | Viewer | Comment content | Hidden state | Specific hold reason |
 | --- | --- | --- | --- |
 | Original author | Visible | Visible | Visible |
-| Authorized moderator (owner in this iteration) | Visible | Visible | Visible |
+| Authorized moderator (normally the owner in this iteration) | Visible | Visible | Visible |
 | Other readers | Not visible | Visible as a placeholder | Not visible |
 
 For ordinary readers, replace the previously published comment with a placeholder, including when it has no replies. The provisional label is **Hidden pending moderation**. Do not expose the text or specific reason through the API, placeholder, history, or other read paths. The author and moderator see the held comment in its original position, clearly marked as hidden, together with the reason. This public placeholder requirement is for manually hidden published comments; it does not require exposing the existence of every automatically held new comment.
@@ -110,7 +110,7 @@ Existing replies remain independently visible and eligible for further replies a
 
 ### Third iteration — moderator appointments
 
-Introduce owner-appointed moderators (#285) and the shared role-management infrastructure using the integer privilege model already implemented in iteration one, then delegate the first and second iterations' review and manual-hold capabilities to moderators. Preserve existing administrators' privileges; new admin appointments remain deferred. Include the agreed idempotent role assignments and role-change notifications.
+Introduce owner-appointed moderators (#285) and the shared role-management infrastructure using the integer privilege model already implemented in iteration one, allowing the owner to appoint and demote moderators who immediately gain or lose the first two iterations' moderation capabilities through the existing predicate. Include an optional legacy-admin upgrade script as described under [Migration](#migration). Preserve already assigned valid privileges; new admin appointments remain deferred. Include the agreed idempotent role assignments and role-change notifications.
 
 A dedicated site-wide review interface and user comment history (#288) may also be useful early enhancements, but their inclusion in the third iteration is not yet decided.
 
@@ -203,7 +203,16 @@ Use server-derived effective privileges for both actor and target. Apply the res
 
 #### Migration
 
-In iteration one, target only existing non-owner accounts with `isAdmin: true` and no stored privilege for migration to 2. For the existing configured owner, initialize a missing stored privilege to 2 as the default underlying role. Existing ordinary accounts with no `privilege` field are already logically privilege 0 and do not require a migration write. New ordinary accounts store 0. Preserve any already valid stored privilege when rerunning the migration. The configured owner's effective privilege is always 3, independent of the stored value or legacy admin flag. Retire legacy flags as authorization inputs after the targeted migration and update the read/write paths; retain the derived API predicates. Old flag fields on otherwise unchanged ordinary records may be left unused rather than forcing a collection-wide rewrite. Ensure existing installations preserve their legitimate admin access throughout the migration and that legacy role-update inputs cannot bypass the new authorization rules.
+The privilege model is effective in iteration one without a collection-wide migration. Existing accounts without a stored privilege are logically privilege 0, except that configured ownership derives effective privilege 3. New ordinary accounts store 0; owner accounts created by the server store 2. A legacy `isAdmin: true` flag alone grants no authority. Update authorization and API read/write paths accordingly; obsolete fields on existing records can remain unused. Explain in iteration-one upgrade documentation that legacy non-owner administrators without a stored privilege lose privileged access until explicitly assigned a privilege; a server warning about unmigrated legacy admin records is desirable, without leaking private data.
+
+In iteration three, provide an optional one-time upgrade utility for installation owners who wish to retain or reinterpret legacy administrator appointments. The script should:
+
+- Detect non-owner accounts with `isAdmin: true` and no stored `privilege` field.
+- Offer a dry run showing proposed changes and default to assigning privilege 1 (Moderator), with an explicit option for privilege 2 (Admin) if the owner wants to retain account administration authority.
+- Preserve existing valid stored privileges, leave ordinary accounts untouched, and exclude the configured owner from the legacy conversion.
+- Be idempotent and safe to rerun: do not overwrite a privilege already assigned by the utility or another authorized operation.
+
+The script is an installation upgrade tool, not an application role-appointment feature. It is optional, does not run automatically, and is not required for iteration one or two. No legacy Boolean flag fallback is used while waiting for it.
 
 #### Rationale
 
@@ -229,7 +238,7 @@ The following sections describe the broader intended system. The [focused first 
 
 ### Owner permissions and role appointments
 
-The role-management sub-issue under #284 ([#285](https://github.com/rendall/simple-comment/issues/285)) follows owner-only automatic review and manual holding in the first two iterations. Its third-iteration scope is owner appointment and demotion of moderators using the privilege model introduced in iteration one; the shared admin appointment capability described here is for later releases. The owner can appoint and demote admins and moderators; admins can appoint and demote moderators only. The server authorizes and persists each change using the same privilege model. This capability can proceed independently of the broader comment review and publication workflows.
+The role-management sub-issue under #284 ([#285](https://github.com/rendall/simple-comment/issues/285)) follows automatic review and manual holding in the first two iterations. Its third-iteration scope is owner appointment and demotion of moderators using the privilege model introduced in iteration one; the shared admin appointment capability described here is for later releases. The owner can appoint and demote admins and moderators; admins can appoint and demote moderators only. The server authorizes and persists each change using the same privilege model. This capability can proceed independently of the broader comment review and publication workflows.
 
 Appointment immediately grants the moderation capabilities already implemented for the assigned role, including authorized deletion of other users' comments. As the broader review system is implemented, moderators also gain the ability to approve held comments, withdraw approval (hold or hide comments), and delete held or published comments, subject to applicable policies. Revocation removes the capabilities associated with the lost privilege on subsequent requests. The role-appointment sub-issue need not implement all future comment review workflows.
 
@@ -463,7 +472,7 @@ The focused first iteration implements fixed link filtering and optional file-ba
 
 #### Default comment notifications
 
-The broader notification policy prioritizes events that require moderators' attention rather than notifying them of every comment. In the first iteration, review alerts go only to the configured owner for new or changed comments requiring review. Other notification event types are not prerequisites for the initial owner-only workflow. Simple Comment is intended to operate within free-tier email service limits for low-volume installations; avoid unnecessary email traffic. A future configurable notification system may support different preferences for low- and high-traffic installations, recipients and event types. Its detailed design is outside the scope of this moderation project.
+The broader notification policy prioritizes events that require moderators' attention rather than notifying them of every comment. In the first iteration, review alerts go to effective moderators (normally only the configured owner) for new or changed comments requiring review. Other notification event types are not prerequisites for the initial workflow. Simple Comment is intended to operate within free-tier email service limits for low-volume installations; avoid unnecessary email traffic. A future configurable notification system may support different preferences for low- and high-traffic installations, recipients and event types. Its detailed design is outside the scope of this moderation project.
 
 | Event | Notify moderators by default | Notify ordinary subscribers by default |
 | --- | --- | --- |
@@ -546,7 +555,7 @@ The criteria below describe the broader agreed behavior of the relevant features
 - The owner and admins can appoint and remove moderators.
 - Only the owner can appoint and demote admins; admin demotion explicitly assigns privilege 1 or 0.
 - The API rejects attempts by moderators to appoint, create, or remove another moderator, attempts by admins to grant or revoke admin access, and attempts to assign owner privilege or invalid privilege values.
-- Existing legacy admin accounts without stored privilege migrate to 2; existing ordinary accounts without a stored privilege default to 0 without a backfill. New ordinary accounts store 0.
+- Existing accounts without a stored privilege default to 0 without a backfill, regardless of legacy admin flags. New ordinary accounts store 0. Iteration three provides an optional idempotent upgrade script assigning legacy admin accounts privilege 1 by default or 2 by explicit choice, preserving existing valid privileges.
 - The same role-management interface supports admin and moderator appointments and demotions, subject to actor and target privileges.
 - Appointment grants already implemented moderation capabilities, including authorized cross-author comment deletion, and revocation removes the corresponding privileges on subsequent requests.
 - Approval and holding capabilities are added as the comment review system is implemented.
@@ -625,7 +634,8 @@ Use the corresponding validation group for each implementation slice. Conditiona
 ### Privilege hierarchy and role management
 
 - Unit tests should cover every effective privilege level and its derived predicates, including owner records with a lower stored privilege or legacy `isAdmin: false`.
-- Test targeted migration of legacy admin accounts, missing privilege resolving to 0 without rewriting existing ordinary accounts, new ordinary accounts storing 0, initialization of a missing stored privilege to 2 for the existing configured owner, migration reruns, rejection of invalid stored privileges, and preservation of owner access without persisting privilege 3.
+- Test missing privilege resolving to 0 without rewriting existing accounts, including legacy `isAdmin: true` records; new ordinary accounts storing 0; initialization of a missing stored privilege to 2 for the configured owner; invalid stored values; and owner access without persisting privilege 3.
+- Test the iteration-three optional legacy-admin upgrade utility: detection, dry run, default level 1, explicit level 2, exclusion of owner and ordinary accounts, preservation of valid existing privilege values, and idempotent reruns.
 - Test promotion from moderator to admin and demotion from admin to either moderator or regular user, including the resulting effective permissions.
 - Test moderator appointment by the owner and an admin, removal by the owner and an admin, owner-only admin appointments and demotions, rejection of role changes attempted by a moderator, and rejection of attempts to grant or revoke admin access by an admin.
 - Verify that direct API requests cannot assign privilege 3 or bypass role checks through legacy flag inputs.
@@ -703,12 +713,12 @@ As implementation is planned, categorize and prioritize the features here. The i
 | Designed but deferrable | Behavior has been agreed, but implementation can follow in a later release |
 | Exploratory | Further design discussion is required before implementation can be planned |
 
-The [focused first iteration](#focused-first-iteration--owner-review) establishes the privilege foundation and owner-only automatic holds and review as the first deliverable. Manual holding of published comments follows in iteration two. Moderator appointments using the existing privilege model follow in iteration three. The detailed assignment of tasks to implementation slices and remaining dependencies is still to be planned. Deferring a feature does not discard its design, and must not weaken the authorization, visibility or other invariants applicable to features that are implemented.
+The [focused first iteration](#focused-first-iteration--owner-review) establishes the privilege foundation and automatic holds and moderator-authorized review as the first deliverable. Manual holding of published comments follows in iteration two. Moderator appointments using the existing privilege model and the optional legacy-admin upgrade utility follow in iteration three. The detailed assignment of tasks to implementation slices and remaining dependencies is still to be planned. Deferring a feature does not discard its design, and must not weaken the authorization, visibility or other invariants applicable to features that are implemented.
 
 ### Implementation tracking
 
 - [#284](https://github.com/rendall/simple-comment/issues/284) — Parent issue for site-wide moderation.
-- [#285](https://github.com/rendall/simple-comment/issues/285) — Third iteration: owner-appointed moderators using the iteration-one privilege model; new admin appointments remain deferred.
+- [#285](https://github.com/rendall/simple-comment/issues/285) — Third iteration: owner-appointed moderators using the iteration-one privilege model, plus the optional legacy-admin upgrade utility; new admin appointments remain deferred.
 - [#275](https://github.com/rendall/simple-comment/issues/275) — Administration settings dashboard, deferred with persistent configuration.
 - [#286](https://github.com/rendall/simple-comment/issues/286) — Owner credential rotation, tracked independently of the moderation rollout.
 
