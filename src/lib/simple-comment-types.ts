@@ -137,7 +137,6 @@ export type NewUser = {
   name: string
   email: Email
   password: string
-  isAdmin?: boolean
   isVerified?: boolean
 }
 

@@ -30,6 +30,7 @@ import {
   validateUserId,
 } from "./shared-utilities"
 import { getBackendEnv } from "./env"
+import { error403ForbiddenToModify } from "./messages"
 
 const { allowOrigin, jwtSecret, moderatorId } = getBackendEnv()
 
@@ -101,10 +102,10 @@ export const publicUnsafeUserProperties: (keyof User)[] = [
 /**
  * These are user properties that only admins can modify on users
  */
-export const adminOnlyModifiableUserProperties: (keyof User)[] = [
-  "isVerified",
-  "isAdmin",
-]
+export const adminOnlyModifiableUserProperties: (keyof User)[] = ["isVerified"]
+
+export const hasReadOnlyUserRole = (user: object) =>
+  ["privilege", "isModerator", "isAdmin", "isOwner"].some(key => key in user)
 
 /**
  * Return a user object that is clean and secure
@@ -489,30 +490,28 @@ const narrowType = <T>(obj: GenericObj | User, keys: (keyof T)[]) =>
     {}
   ) as T
 
-const newUserKeys: (keyof NewUser)[] = [
-  "id",
-  "isAdmin",
-  "email",
-  "isVerified",
-  "name",
-  "password",
-]
-export const getNewUserInfo = (body: string): NewUser => {
-  const newUser = narrowType<NewUser>(parseQuery(body), newUserKeys)
-  return newUser
+const parseUserQuery = (body: string) => {
+  const input = parseQuery(body)
+  if (hasReadOnlyUserRole(input)) throw error403ForbiddenToModify
+  return input
 }
-const updatedUserKeys: (keyof UpdateUser)[] = [
-  "isAdmin",
-  "email",
-  "isVerified",
-  "name",
-]
+
+export const getNewUserInfo = (body: string): NewUser =>
+  narrowType<NewUser>(parseUserQuery(body), [
+    "id",
+    "email",
+    "isVerified",
+    "name",
+    "password",
+  ])
+
+const updatedUserKeys: (keyof UpdateUser)[] = ["email", "isVerified", "name"]
 
 export const toUpdatedUser = (obj: GenericObj) =>
   narrowType<UpdateUser>(obj, updatedUserKeys) as UpdateUser
 
 export const getUpdatedUserInfo = (body: string): UpdateUser =>
-  toUpdatedUser(parseQuery(body))
+  toUpdatedUser(parseUserQuery(body))
 
 export const getNewTopicInfo = (body: string): Topic =>
   toTopic(parseQuery(body))

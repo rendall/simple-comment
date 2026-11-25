@@ -105,12 +105,19 @@ export const createUser = (newUserInfo: NewUser) =>
 /** Update a user
  * @async
  * @function
- * @param {NewUser} newUserInfo
+ * @param userInfo - Account ID and writable profile fields
  * @returns {ServerResponse<User>}
  */
-export const updateUser = (userInfo: User) =>
-  fetch(`${getSimpleCommentURL()}/user/${userInfo.id}`, {
-    body: objToQuery(userInfo),
+export const updateUser = ({
+  id,
+  name,
+  email,
+}: Pick<User, "id"> & Partial<Pick<User, "name" | "email">>) =>
+  fetch(`${getSimpleCommentURL()}/user/${id}`, {
+    body: objToQuery({
+      ...(name !== undefined && { name }),
+      ...(email !== undefined && { email }),
+    }),
     method: "PUT",
     credentials: "include",
   }).then(res => resolveBody<AdminSafeUser>(res))

@@ -27,7 +27,7 @@ Source plan: [Site-wide comment moderation, iteration one](site-wide-comment-mod
     - “Newly created owner accounts store 2. Newly created ordinary accounts store 0” (Privilege foundation)
     - “Initialize the existing owner's underlying privilege to 2 if missing” (Privilege foundation)
 
-- [ ] C03 `[account-api]` Make role fields read-only across the account API and its client. In `src/apiClient.ts`, have `updateUser` put the account ID in the route and serialize an explicit projection of writable update fields. At `src/functions/user.ts` and in `MongodbService.userPOST` and `userPUT`, reject writes to `isAdmin` and attempts to assign `privilege`. Update `getNewUserInfo` and `getUpdatedUserInfo` in `src/lib/backend-utilities.ts` so the boundary can detect those inputs before projection. Keep derived role fields on responses.
+- [x] C03 `[account-api]` Make role fields read-only across the account API and its client. In `src/apiClient.ts`, have `updateUser` put the account ID in the route and serialize an explicit projection of writable update fields. At `src/functions/user.ts` and in `MongodbService.userPOST` and `userPUT`, reject writes to `isAdmin` and attempts to assign `privilege`. Update `getNewUserInfo` and `getUpdatedUserInfo` in `src/lib/backend-utilities.ts` so the boundary can detect those inputs before projection. Keep derived role fields on responses.
   - Validated by T01 and T06.
   - Trace:
     - “Reject attempts to write the legacy `isAdmin` field in account creation or update requests” (Privilege foundation)

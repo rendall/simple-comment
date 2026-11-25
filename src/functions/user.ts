@@ -21,7 +21,9 @@ import {
   getTargetId,
   getUpdatedUserInfo,
   getUserId,
+  isApiError,
   isDefined,
+  toApiError,
   toDefinedHeaders,
 } from "../lib/backend-utilities"
 import { getBackendEnv } from "../lib/env"
@@ -94,7 +96,7 @@ export const handler = async (event: APIGatewayEvent) => {
     const response = await handleMethod(event.httpMethod)
     return addHeaders(response, headers)
   } catch (error) {
-    console.error({ error })
-    return addHeaders(error500InternalServerError, headers)
+    if (!isApiError(error)) console.error({ error })
+    return addHeaders(toApiError(error, error500InternalServerError), headers)
   }
 }

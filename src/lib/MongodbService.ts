@@ -30,6 +30,7 @@ import {
   generateGuestId,
   getAllowedOrigins,
   getUserRole,
+  hasReadOnlyUserRole,
   isAllowedReferer,
   isComment,
   isDefined,
@@ -277,6 +278,8 @@ export class MongodbService extends AbstractDbService {
       }
     }
 
+    if (hasReadOnlyUserRole(newUser)) return error403ForbiddenToModify
+
     if (isGuestId(newUser.id) && authUserId !== newUser.id) {
       return {
         ...error403Forbidden,
@@ -335,13 +338,12 @@ export class MongodbService extends AbstractDbService {
     const hash = isGuestId(newUser.id)
       ? ""
       : await hashPassword(newUser.password)
-    const { id, name, email, isAdmin, isVerified } = newUser
+    const { id, name, email, isVerified } = newUser
     const userDetails = {
       id,
       name: name.trim(),
       email,
       privilege: Privilege.User,
-      ...(isAdmin !== undefined && { isAdmin }),
       ...(isVerified !== undefined && { isVerified }),
     }
     const user: User = isGuestId(newUser.id)
@@ -484,6 +486,8 @@ export class MongodbService extends AbstractDbService {
       return error401UserNotAuthenticated
     }
 
+    if (hasReadOnlyUserRole(user)) return error403ForbiddenToModify
+
     if (isGuestId(targetId)) {
       const hasAdminProps = (Object.keys(user) as (keyof User)[]).some(key =>
         adminOnlyModifiableUserProperties.includes(key)
@@ -523,11 +527,7 @@ export class MongodbService extends AbstractDbService {
     }
 
     if (authUserId === simpleCommentModeratorId) {
-      const cannotModify: (keyof UpdateUser)[] = [
-        "password",
-        "isAdmin",
-        "email",
-      ]
+      const cannotModify: (keyof UpdateUser)[] = ["password", "email"]
       const isForbidden = (Object.keys(user) as (keyof UpdateUser)[]).some(
         key => cannotModify.includes(key)
       )

@@ -99,13 +99,12 @@ const testUsers = mockUsersArray(100).map(user =>
   user.isAdmin ? { ...user, privilege: Privilege.Admin } : user
 )
 
-const testNewTopic = mockTopic("new-")
-const testNewUser: CreateUserPayload = {
-  ...mockUser("new-"),
-  isAdmin: false,
-  password: mockPassword(),
-  email: mockEmail(),
+const mockUserInput = (prefix = ""): CreateUserPayload => {
+  const { id, name, email } = mockUser(prefix)
+  return { id, name, email, password: mockPassword() }
 }
+const testNewTopic = mockTopic("new-")
+const testNewUser = mockUserInput("new-")
 
 // This is a topic + comments that will be deleted
 const testDeleteTopic: Topic = mockTopic("delete-")
@@ -310,12 +309,7 @@ describe("Full API service test", () => {
       })
     })
     test("POST to /user with admin-only properties without credentials should error 403", async () => {
-      const newUser = {
-        ...mockUser(),
-        password: mockPassword(),
-        email: mockEmail(),
-        isAdmin: true,
-      }
+      const newUser = { ...mockUserInput(), isVerified: true }
       expect.assertions(1)
       const e = await service.userPOST(newUser)
       expect(e).toEqual({
@@ -324,12 +318,7 @@ describe("Full API service test", () => {
       })
     })
     test("POST to /user with admin-only properties without admin credentials should error 403", async () => {
-      const newUser = {
-        ...mockUser(),
-        password: mockPassword(),
-        email: mockEmail(),
-        isAdmin: true,
-      }
+      const newUser = { ...mockUserInput(), isVerified: true }
       const ordinaryUser = getAuthUser(u => !u.isAdmin)
       expect.assertions(1)
       const e = await service.userPOST(newUser, ordinaryUser.id)
@@ -341,25 +330,13 @@ describe("Full API service test", () => {
   } else {
     // policy is canPublicCreateUser = false
     test("POST to /user without admin credentials should fail", async () => {
-      const newUser = {
-        ...mockUser(),
-        password: mockPassword(),
-        email: mockEmail(),
-        isAdmin: false,
-        isVerified: false,
-      }
+      const newUser = { ...mockUserInput(), isVerified: false }
       expect.assertions(1)
       const e = await service.userPOST(newUser)
       expect(e).toHaveProperty("statusCode", 401)
     })
     test("POST to /user without admin credentials should fail", () => {
-      const newUser = {
-        ...mockUser(),
-        password: mockPassword(),
-        email: mockEmail(),
-        isAdmin: false,
-        isVerified: false,
-      }
+      const newUser = { ...mockUserInput(), isVerified: false }
       const ordinaryUser = getAuthUser(u => !u.isAdmin)
       expect.assertions(1)
       return service
@@ -369,12 +346,8 @@ describe("Full API service test", () => {
   }
   test("POST to /user with a guestUserId as targetId should fail", async () => {
     const newUser = {
-      ...mockUser(),
+      ...mockUserInput(),
       id: generateGuestId(),
-      password: mockPassword(),
-      email: mockEmail(),
-      isAdmin: false,
-      isVerified: false,
     }
 
     const adminUser = getAuthUser(u => u.isAdmin!)
@@ -384,12 +357,7 @@ describe("Full API service test", () => {
   })
   test("POST to /user with existing username should return 409 user exists", async () => {
     const authUser = getAuthUser(u => u.isAdmin!)
-    const duplicateUser: CreateUserPayload = {
-      ...mockUser("duplicate-"),
-      isAdmin: false,
-      password: mockPassword(),
-      email: mockEmail(),
-    }
+    const duplicateUser = mockUserInput("duplicate-")
     expect.assertions(1)
     await service.userPOST(duplicateUser, authUser.id)
     const e = await service.userPOST(duplicateUser, authUser.id)
@@ -526,7 +494,11 @@ describe("Full API service test", () => {
     const targetUser = getTargetUser()
     const ordinaryUser = getAuthUser(u => !u.isAdmin)
     expect.assertions(1)
-    const e = await service.userPUT(targetUser.id, targetUser, ordinaryUser.id)
+    const e = await service.userPUT(
+      targetUser.id,
+      { name: targetUser.name },
+      ordinaryUser.id
+    )
     expect(e.statusCode).toBe(403)
   })
   test("PUT to /user/{userId} with public, own credentials cannot modify isAdmin", async () => {
@@ -542,11 +514,10 @@ describe("Full API service test", () => {
   })
   test("PUT to /user/{userId} with public, own credentials cannot modify isVerified", async () => {
     const ordinaryUser = getTargetUser(u => !u.isAdmin)
-    const updatedUser = { ...ordinaryUser, isVerified: true }
     expect.assertions(1)
     const e = await service.userPUT(
-      updatedUser.id,
-      updatedUser,
+      ordinaryUser.id,
+      { isVerified: true },
       ordinaryUser.id
     )
     expect(e).toBe(error403ForbiddenToModify)
@@ -591,11 +562,9 @@ describe("Full API service test", () => {
     const targetUser = getTargetUser(u => !u.isAdmin && !u.isVerified)
     const adminAuthUser = getAuthUser(u => u.isAdmin!)
     const updatedUser: UpdateUser = {
-      ...targetUser,
       name: " ",
       email: " ",
       password: " ",
-      isAdmin: true,
       isVerified: true,
     }
     expect.assertions(1)
@@ -610,9 +579,9 @@ describe("Full API service test", () => {
     const targetUser = getTargetUser(u => !u.isAdmin && !u.isVerified)
     const adminAuthUser = getAuthUser(u => u.isAdmin!)
     const updatedUser: User = {
-      ...targetUser,
+      id: targetUser.id,
+      email: targetUser.email,
       name: randomString(alphaUserInput, 25),
-      isAdmin: true,
       isVerified: true,
     }
     return service
@@ -677,16 +646,17 @@ describe("Full API service test", () => {
       adminAuthUser.id
     )
 
-    expect(e).toEqual({
-      statusCode: 403,
-      body: "Attempt to modify guest user forbidden property",
-    })
+    expect(e).toBe(error403ForbiddenToModify)
   })
   test("PUT to /user/{userId} where userId does not exist (and admin credentials) should return 404", async () => {
     const targetUser = mockUser()
     const adminAuthUser = getAuthUser(u => u.isAdmin!)
     expect.assertions(1)
-    const e = await service.userPUT(targetUser.id, targetUser, adminAuthUser.id)
+    const e = await service.userPUT(
+      targetUser.id,
+      { name: targetUser.name },
+      adminAuthUser.id
+    )
     expect(e).toBe(error404UserUnknown)
   })
 
