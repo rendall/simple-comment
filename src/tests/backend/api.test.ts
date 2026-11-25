@@ -40,12 +40,62 @@ describe("Ensures API specs match controller service", () => {
 
   // Parse the spec file
   const apiSpecJSON: {
+    components: { schemas: Record<string, unknown> }
     paths: {
       [route: string]: {
         [key in Method]: Record<string, unknown>
       }
     }
   } = JSON.parse(apiSpecText)
+
+  test("documents moderation responses and viewer-dependent fields", () => {
+    const commentResponse = {
+      content: {
+        "application/json": {
+          schema: { $ref: "#/components/schemas/Comment" },
+        },
+      },
+    }
+    const comment = apiSpecJSON.paths["/comment/{commentId}"]
+    expect(comment.post).toMatchObject({ responses: { 201: commentResponse } })
+    expect(comment.put).toMatchObject({ responses: { 200: commentResponse } })
+    expect(comment.delete).toMatchObject({
+      requestBody: {
+        content: { "text/plain": { schema: { type: "string" } } },
+      },
+      responses: { 202: {}, 400: {} },
+    })
+    expect(
+      apiSpecJSON.paths["/comment/{commentId}/approve"].post
+    ).toMatchObject({
+      requestBody: {
+        required: true,
+        content: { "text/plain": { schema: { type: "string" } } },
+      },
+      responses: { 200: {}, 404: {}, 409: {} },
+    })
+    expect(apiSpecJSON.paths["/user/{userId}"].put).toMatchObject({
+      responses: { 403: {} },
+    })
+    expect(apiSpecJSON.components.schemas.Comment).toMatchObject({
+      properties: {
+        text: { nullable: true },
+        isApproved: { type: "boolean" },
+        heldReason: {
+          description: expect.stringContaining("author and moderators"),
+        },
+        deletedReason: {
+          description: expect.stringContaining("author and moderators"),
+        },
+      },
+    })
+    expect(apiSpecJSON.components.schemas.User).toMatchObject({
+      properties: {
+        isAdmin: { readOnly: true },
+        privilege: { readOnly: true },
+      },
+    })
+  })
 
   class TestService extends AbstractDbService {
     authDELETE = async (): Promise<Success | Error> => {

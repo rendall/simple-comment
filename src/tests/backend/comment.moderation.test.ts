@@ -1,5 +1,7 @@
+import type { APIGatewayEvent } from "aws-lambda"
 import { Collection } from "mongodb"
 import type { Db, FindOneAndUpdateOptions } from "mongodb"
+import { getAuthToken } from "../../lib/crypt"
 import { MongodbService } from "../../lib/MongodbService"
 import { getBackendEnv } from "../../lib/env"
 import type { Comment, Discussion, User } from "../../lib/simple-comment-types"
@@ -75,6 +77,171 @@ describe("Comment moderation", () => {
     expect(response.statusCode).toBe(200)
     return (response.body as Discussion).replies ?? []
   }
+
+  test("serves the documented account, comment, and discussion responses", async () => {
+    const loadHandlers = () => {
+      let handlers!: {
+        comment: typeof import("../../functions/comment").handler
+        topic: typeof import("../../functions/topic").handler
+        user: typeof import("../../functions/user").handler
+      }
+      jest.isolateModules(() => {
+        jest.doMock("../../lib/MongodbService", () => ({
+          MongodbService: jest.fn(() => service),
+        }))
+        handlers = {
+          comment: jest.requireActual("../../functions/comment").handler,
+          topic: jest.requireActual("../../functions/topic").handler,
+          user: jest.requireActual("../../functions/user").handler,
+        }
+      })
+      jest.dontMock("../../lib/MongodbService")
+      return handlers
+    }
+
+    const handlers = loadHandlers()
+    const request = (
+      route: keyof typeof handlers,
+      httpMethod: string,
+      path: string,
+      user?: User,
+      body: string | null = null
+    ) =>
+      handlers[route]({
+        httpMethod,
+        path: `/.netlify/functions/${route}/${path}`,
+        headers: user
+          ? { Authorization: `Bearer ${getAuthToken(user.id)}` }
+          : {},
+        body,
+      } as APIGatewayEvent)
+
+    expect(
+      await request("user", "PUT", author.id, author, "isAdmin=true")
+    ).toMatchObject({ statusCode: 403 })
+
+    const created = await request(
+      "comment",
+      "POST",
+      discussion.id,
+      author,
+      "Plain comment"
+    )
+    expect(created).toMatchObject({
+      statusCode: 201,
+      headers: { "Content-Type": "application/json" },
+    })
+    const published = JSON.parse(String(created.body))
+    expect(published).toMatchObject({ text: "Plain comment", isApproved: true })
+    expect(published).not.toHaveProperty("heldReason")
+
+    const heldText = "See https://example.org for the announcement"
+    const submitted = await request(
+      "comment",
+      "POST",
+      discussion.id,
+      author,
+      heldText
+    )
+    expect(submitted.statusCode).toBe(201)
+    const pending = JSON.parse(String(submitted.body))
+    expect(pending).toMatchObject({
+      text: heldText,
+      isApproved: false,
+      heldReason: expect.any(String),
+    })
+
+    const edited = await request(
+      "comment",
+      "PUT",
+      published.id,
+      author,
+      "Try example.org instead"
+    )
+    expect(edited).toMatchObject({
+      statusCode: 200,
+      headers: { "Content-Type": "application/json" },
+    })
+    expect(JSON.parse(String(edited.body))).toMatchObject({
+      id: published.id,
+      text: "Try example.org instead",
+      isApproved: false,
+      heldReason: expect.any(String),
+    })
+    const released = await request(
+      "comment",
+      "PUT",
+      published.id,
+      author,
+      "Edited plain comment"
+    )
+    expect(released.statusCode).toBe(200)
+    const releasedComment = JSON.parse(String(released.body))
+    expect(releasedComment).toMatchObject({
+      id: published.id,
+      text: "Edited plain comment",
+      isApproved: true,
+    })
+    expect(releasedComment).not.toHaveProperty("heldReason")
+
+    expect(await request("comment", "GET", pending.id)).toMatchObject({
+      statusCode: 404,
+      headers: { "Cache-Control": "private, no-store" },
+    })
+    const publicTopic = await request("topic", "GET", discussion.id)
+    expect(publicTopic).toMatchObject({
+      statusCode: 200,
+      headers: { "Cache-Control": "private, no-store" },
+    })
+    expect(JSON.parse(String(publicTopic.body)).replies).toEqual([
+      expect.objectContaining({ id: published.id, isApproved: true }),
+    ])
+    const authorizedTopic = await request(
+      "topic",
+      "GET",
+      discussion.id,
+      moderator
+    )
+    expect(JSON.parse(String(authorizedTopic.body)).replies).toContainEqual(
+      expect.objectContaining({
+        id: pending.id,
+        text: heldText,
+        heldReason: pending.heldReason,
+      })
+    )
+
+    const approvalPath = `${pending.id}/approve`
+    expect(
+      await request("comment", "POST", approvalPath, moderator, "Stale text")
+    ).toMatchObject({ statusCode: 409 })
+    expect(
+      await request("comment", "POST", approvalPath, moderator, heldText)
+    ).toMatchObject({ statusCode: 200, body: "Comment approved" })
+    expect(
+      await request("comment", "DELETE", pending.id, moderator)
+    ).toMatchObject({ statusCode: 400 })
+    expect(
+      await request(
+        "comment",
+        "DELETE",
+        pending.id,
+        moderator,
+        "Private removal reason"
+      )
+    ).toMatchObject({ statusCode: 202 })
+    expect(
+      await request("comment", "POST", approvalPath, moderator, heldText)
+    ).toMatchObject({ statusCode: 404 })
+    const deleted = await request("comment", "GET", pending.id, author)
+    expect(deleted.statusCode).toBe(200)
+    expect(JSON.parse(String(deleted.body))).toMatchObject({
+      text: null,
+      deletedReason: "Private removal reason",
+    })
+    expect(await request("comment", "GET", pending.id, outsider)).toMatchObject(
+      { statusCode: 404 }
+    )
+  })
 
   test("redacts held ancestors and retains independently visible descendants", async () => {
     const root = comment("root")

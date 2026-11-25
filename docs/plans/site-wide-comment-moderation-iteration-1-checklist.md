@@ -211,7 +211,7 @@ Source plan: [Site-wide comment moderation, iteration one](site-wide-comment-mod
     - “Existing recipient and event behavior is preserved, with correct hold information” (Iteration 1 — Validation Strategy)
     - “Failed submissions, unchanged edits, approvals and deletions generate no new notifications.” (AC7 — Notifications)
 
-- [ ] T06 `[tests]` Verify handler-to-schema parity in `src/tests/backend/api.test.ts` and `src/tests/backend/comment.moderation.test.ts` for the shipped account, comment, and discussion routes. Exercise published and held create/edit responses, rejected `isAdmin` writes, approval including `409` and deleted targets, required cross-author delete reasons, and public versus authorized representations. Run `yarn test:backend`.
+- [x] T06 `[tests]` Verify handler-to-schema parity in `src/tests/backend/api.test.ts` and `src/tests/backend/comment.moderation.test.ts` for the shipped account, comment, and discussion routes. Exercise published and held create/edit responses, rejected `isAdmin` writes, approval including `409` and deleted targets, required cross-author delete reasons, and public versus authorized representations. Run `yarn test:backend`.
   - Depends on C16 and C17.
   - Trace:
     - “Authorization, approval, deletion, visibility and response contracts conform to acceptance criteria” (Iteration 1 — Validation Strategy)
