@@ -55,6 +55,21 @@ Re-evaluate changed comment text so an author cannot evade review by editing a p
 
 The rules identify material for human review rather than declare it illegal or unacceptable, and need not detect every possible obfuscation or evasion technique.
 
+#### Comment creation and edit response contract
+
+Distinguish successfully saving a comment from publishing it. A held comment has been successfully persisted; it is not a failed submission or an operation awaiting completion. Return the authoritative, viewer-appropriate comment object for both published and held results.
+
+| Operation | Published result | Held result |
+| --- | --- | --- |
+| Create comment | HTTP 201 Created | HTTP 201 Created |
+| Edit comment | HTTP 200 OK | HTTP 200 OK |
+
+The returned representation includes `isApproved` and the active `heldReason` when applicable. A successful edit replaces the existing HTTP 204 response with HTTP 200 and the updated comment object; document this API contract change. Do not use HTTP 202 or an error status merely because publication is held. Genuine failed or unauthorized submissions and edits retain their appropriate error responses and leave the comment unchanged.
+
+The widget uses the returned server representation rather than merging submitted text into stale local comment state. Show the author that their submission or changes were saved but are not publicly visible, together with the hold reason. For changes made by another user, subsequent fetches, refreshes or attempted replies are sufficient; coordinate with the incremental-fetch design without requiring real-time synchronization or incremental fetching. On logout or account switch, discard no-longer-authorized private content and ignore outstanding responses belonging to the previous identity.
+
+The exact API schema, placeholder representation and detailed validation checklist remain part of the iteration-one specification discussion.
+
 #### Optional private moderation terms file
 
 The actual list is supplied by the installation owner, not distributed with Simple Comment. It may contain words and phrases in any language. Do not commit a real objectionable-terms list to the repository or require the owner to put its contents in an environment variable.
@@ -66,9 +81,9 @@ Use an optional server-only plain-text file, provisionally named `moderation-ter
 | Absent | Term filtering disabled; link filtering still applies |
 | Empty, or only blank/comment lines | No terms trigger moderation |
 | Contains terms | Matching comments are held for review |
-| Present but unreadable or invalid | Fail build/CI; at runtime, report a configuration error and provisionally disable only term filtering |
+| Present but unreadable or invalid | Fail build/CI; at runtime, report a configuration error and disable only term filtering (fail open) |
 
-Use UTF-8, one literal word or phrase per line, case-insensitive matching, ignore blank lines and lines beginning with `#`, and do not support regular expressions initially. The exact matching boundaries and normalization can be settled during implementation. A supplied file indicates an intentional, important filtering policy: validate it during CI/build, and fail if it is invalid or unreadable. If a file nevertheless fails at runtime, the preferred initial behavior is to log the configuration failure without exposing the terms and keep accepting comments with link filtering still active. This fail-open runtime default is provisional pending the detailed iteration-one discussion. Later software-managed configuration may allow owners to choose fail-open or fail-closed behavior (reject creates and text edits subject to the failed rule).
+Use UTF-8, one literal word or phrase per line, case-insensitive matching, ignore blank lines and lines beginning with `#`, and do not support regular expressions initially. The exact matching boundaries and normalization can be settled during implementation. A supplied file indicates an intentional, important filtering policy: validate it during CI/build, and fail if it is invalid or unreadable. If a file nevertheless fails at runtime, the agreed preferred default is fail-open: log the configuration failure without exposing the terms, disable the affected term rule, and keep accepting comments and edits with link filtering and other applicable rules still active. An invalid or unreadable file remains a build/CI failure; fail-open applies only to runtime failures. Later software-managed configuration may allow owners to choose fail-open or fail-closed behavior (reject creates and text edits subject to the failed rule).
 
 Provide a harmless example file, such as `moderation-terms.example.txt`, and document how installation owners supply the actual file. Exclude the real file from Git and from public assets, client bundles, API responses and logs. The deployment mechanism must make it available to the server/API functions only. Verify how Netlify packages serverless function files before settling the precise location and deployment instructions; do not assume that placing a file in an API source directory automatically makes it available at runtime. This is a small optional deployment input, not a persistent configuration subsystem or hot-reload feature. Include a deployment smoke test using harmless fixture terms that demonstrates the deployed server actually loads and applies the list and that the public build does not include it.
 
@@ -79,6 +94,8 @@ For matching terms, use a generic author-facing hold reason (for example, "Your 
 - Link or configured term matches by non-moderators are held before public exposure; nonmatching comments and moderator submissions publish immediately. Existing comments remain published unless subsequently edited or moderated.
 - Preserve best-effort notifications for all successfully created comments and changed text to the configured address list, adding a held-for-review indication and reason when applicable. A delivery failure does not publish a held comment or undo a successful write. Unchanged, failed and unauthorized writes do not send notifications.
 - The original author (including a recognized guest) and effective moderators can see the held content and reason; unrelated readers cannot retrieve them through the UI or API. Apply visibility rules to all implemented comment read paths.
+- Successful creates return HTTP 201 and successful text edits return HTTP 200 with the authoritative comment object, regardless of whether it is published or held. The widget displays the resulting publication state and applicable hold reason; genuine errors leave the comment unchanged.
+- A supplied invalid or unreadable moderation terms file fails build/CI. An unexpected runtime failure logs a configuration error and fails open for the affected term rule, leaving link filtering and other applicable rules active.
 - An authenticated user with effective moderator privileges can approve the reviewed text or delete the held comment. Approval is atomic and idempotent; stale reviewed text that remains held returns HTTP 409. A deleted comment cannot be approved. Rejection uses the same deletion mechanism, not a separate publication state.
 - Preserve visible descendants and their thread structure when a parent becomes held or deleted. Do not allow new direct replies to held or deleted comments. Treat #280 (soft deletion for all comments) as a prerequisite. A reply already in flight may finish if the parent was eligible at the server's eligibility check.
 - Only the author can edit comment text; remove the existing admin cross-author editing permission. Reject writes to the legacy `isAdmin` field. Enforce authorization on the server.
@@ -541,7 +558,6 @@ This draft leaves reader reports, appeals, bulk actions, IP blocking, and shadow
 
 ## Open Questions
 
-- **Edit response contract:** an author must see that a submitted edit triggers a hold and see the reason. Distinguish a failed edit (no persistence) from an edit successfully saved but unpublished. Whether to return an error-style response or a successful response with authoritative hold state, and the exact API response/placeholder shape, remain to be settled in the detailed iteration-one discussion. Do not simply merge submitted text into the old widget state. For moderation actions by another user, subsequent fetches, refreshes or attempted replies are sufficient; coordinate with the incremental-fetch design without requiring real-time synchronization or incremental fetching. On logout or account switch, discard no-longer-authorized private content and ignore outstanding responses belonging to the previous identity.
 - **Iteration-one specification:** agree dedicated scope, exclusions, acceptance criteria and validation headings and exact API contracts together before checklist generation. Existing completion criteria are preliminary, not a finalized iteration-one checklist.
 
 - The focused first iteration re-evaluates changed comment text against the initial publication rules. Further edit-policy configuration remains open. Immediate publication applies when no rule requires a hold; manual holds survive edits, and new direct replies to held comments are not permitted. The concurrency and idempotency semantics of explicit approval are defined above.
@@ -683,6 +699,8 @@ Use the corresponding validation group for each implementation slice. Conditiona
 - Test explicit approval of own and other authors' held comments according to the setting and the content-matching policy.
 - Verify that admins and the owner can change the setting, moderators and ordinary users cannot, and direct API requests cannot bypass approval authorization.
 - Test publish-by-default with no applicable holding rule, automatic holds that can be cleared by qualifying edits, and manual holds that survive edits even when all rules pass or an allowlist applies.
+- Verify HTTP 201 for both published and held creates and HTTP 200 for both published and held edits, returning the authoritative publication status and hold reason. Verify widget state after an edit becomes held, and removal of private content when authentication changes.
+- Test absent, valid, empty and invalid moderation terms files, CI/build failure for an invalid supplied file, runtime fail-open behavior with independent link filtering intact, and the deployment smoke test.
 - Test allowlist management with the setting enabled and disabled for each privilege level, including direct API requests, persistence, runtime changes, permitted self-listing and listing of other moderators when authorized, and preservation of existing entries when moderator management is disabled.
 - Verify prospective-only application of publication rules and allowlist changes: existing approved and held comments retain their state, while subsequent submissions follow the new policy.
 - Test mandatory-review list changes in the same manner if implemented, and edits according to the eventual edit policy.
