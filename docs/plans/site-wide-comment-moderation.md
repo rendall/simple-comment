@@ -12,6 +12,159 @@ Build a site-wide moderation system so an installation owner can appoint moderat
 
 The first iteration addresses a single practical concern: potentially objectionable links or terms should not appear publicly without human review. Use the existing environment-configured owner account as the initial reviewer. Do not build moderator appointments, a role-management dashboard, or a general policy configuration system as prerequisites.
 
+### Iteration 1 — Automatic holds and moderator review
+
+#### Goal
+
+Prevent potentially objectionable comments from appearing publicly without moderator approval.
+
+#### Plain-Language Intent
+
+Ordinary comments appear immediately. Comments containing links or matching an optional list of objectionable words and phrases are held for review.
+
+The author can see their held comment and the reason it is being held. A moderator can approve or delete it directly within the discussion. Other readers cannot see the unpublished content.
+
+Moderators' own comments bypass automatic moderation. Existing notification behavior is preserved, with additional information identifying comments that require review.
+
+#### In Scope
+
+| Area | Scope |
+|---|---|
+| Privileges | Numerical privilege model and derived authorization predicates |
+| Publication policy | Automatic link and optional term filtering |
+| Moderator exemption | Automatic approval of moderator submissions |
+| Review | Approval and deletion within the existing discussion tree |
+| Visibility | Server-enforced restrictions on unpublished content |
+| Deletion | Soft deletion, deleting actor and required reason for moderator removal |
+| Editing | Author-only editing and publication policy re-evaluation |
+| Notifications | Existing recipients and events, with hold information added |
+| API | Authoritative comment responses and updated OpenAPI contract |
+| Deployment | Private terms file validation and packaging |
+| Documentation | Installation, upgrade and usage instructions |
+
+**Prerequisite:** [#280 — Soft deletion for all comments](https://github.com/rendall/simple-comment/issues/280).
+
+#### Out of Scope
+
+- Manually holding published comments — iteration two.
+- Moderator appointments, demotions, software-managed notification recipients and legacy administrator upgrade utility — iteration three.
+- Dedicated moderation dashboard, focused views and shareable comment links.
+- Persistent configuration, configurable publication policies and allowlists.
+- Real-time synchronization and incremental fetching.
+- Advanced detection of deliberately obfuscated links or objectionable terms.
+- Hold identifiers, revision histories and cross-document locking.
+
+#### Acceptance Criteria
+
+##### AC1 — Privileges and authorization
+
+The configured owner has effective privilege 3. A missing stored privilege defaults to 0. A valid stored privilege determines a non-owner's effective privilege.
+
+Moderation actions require `isModerator`, meaning effective privilege ≥ 1. Legacy `isAdmin` flags do not confer authority. Attempts to write that derived property are rejected.
+
+Only authors can edit their comments.
+
+##### AC2 — Automatic publication policy
+
+| Submission or changed text | Result |
+|---|---|
+| Moderator author | Published |
+| Ordinary author, no matching rule | Published |
+| Ordinary author, contains link | Held |
+| Ordinary author, matches configured term | Held |
+
+A qualifying edit can release an automatic hold. Introducing or changing the filtering rules does not retroactively change existing comments.
+
+##### AC3 — Visibility
+
+Authors and moderators can see held content, its publication status and its hold reason. Other readers cannot retrieve the content or reason through any API or widget view.
+
+Visible descendants remain accessible beneath structural placeholders. New direct replies to held or deleted comments are rejected when the server checks parent eligibility.
+
+Previously loaded private content is discarded when the viewer's authentication changes.
+
+##### AC4 — Approval
+
+A moderator can approve a held comment directly within the discussion.
+
+| Current state | Reviewed text matches | Result |
+|---|---|---|
+| Approved | Either | Successful no-op |
+| Held | Yes | Approved |
+| Held | No | `409 Conflict` |
+| Deleted | Either | Rejected |
+
+Approval is atomic. Successful approval clears active hold metadata.
+
+##### AC5 — Deletion
+
+Deleted comments retain their structural records but lose their text.
+
+Deletion records `dateDeleted`, `deletedBy` and, for cross-author deletion, a mandatory `deletedReason`.
+
+The original author identity is retained internally. Deletion reasons are visible only to the original author and moderators.
+
+##### AC6 — Comment creation and editing
+
+Successful creates return `201 Created`. Successful edits return `200 OK`.
+
+Both return the authoritative comment object regardless of publication status. The widget displays the returned state and explains any hold to the author.
+
+##### AC7 — Notifications
+
+Preserve existing notifications for successful comment creation and changed text, using `SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL`.
+
+Notifications concerning held comments identify the hold and its reason. Failed submissions, unchanged edits, approvals and deletions generate no new notifications.
+
+Notification failures do not invalidate successful writes.
+
+##### AC8 — Private moderation terms file
+
+The optional server-side terms file is excluded from version control and public deployment assets.
+
+| Condition | Expected behavior |
+|---|---|
+| Absent | Term filtering disabled |
+| Empty | No matching terms |
+| Valid | Term filtering operational |
+| Invalid during build | Build fails |
+| Invalid at runtime | Log error; fail open |
+
+Link filtering operates independently.
+
+#### Validation Strategy
+
+| Evidence | Passing condition |
+|---|---|
+| Unit tests | Privilege derivation, filtering and publication decisions produce the specified results |
+| API integration tests | Authorization, approval, deletion, visibility and response contracts conform to acceptance criteria |
+| Concurrency tests | Approval cannot publish mismatched text or restore deleted comments |
+| Widget tests | Review controls, hold messages, edit responses and authentication changes behave correctly |
+| Notification tests | Existing recipient and event behavior is preserved, with correct hold information |
+| Deployment smoke test | The server loads and applies harmless fixture terms without exposing the file publicly |
+| Documentation review | Installation owners can configure the feature and understand intentional compatibility changes |
+
+#### Accepted limitations
+
+A reply already in flight may complete after its parent becomes held or deleted. A stale approval request may release a subsequent hold on identical text.
+
+Moderators may need to locate held comments manually. Other users may need to refresh their discussions to see moderation changes.
+
+These limitations do not warrant additional infrastructure in the first iteration.
+
+#### Remaining details
+
+Leave the following details for engineering design:
+
+- Exact approval endpoint and request schema.
+- Exact placeholder response structure.
+- Link detection algorithm and term-matching boundaries.
+- Netlify packaging of the private terms file.
+
+**Existing comments without an `isApproved` field are considered approved**, just as existing users without a privilege field are considered privilege 0. This avoids an unnecessary database migration.
+
+### Iteration-one detailed design
+
 ### Privilege foundation
 
 Implement the numerical privilege model in iteration one, without implementing any role appointment or demotion workflow.
@@ -68,7 +221,7 @@ The returned representation includes `isApproved` and the active `heldReason` wh
 
 The widget uses the returned server representation rather than merging submitted text into stale local comment state. Show the author that their submission or changes were saved but are not publicly visible, together with the hold reason. For changes made by another user, subsequent fetches, refreshes or attempted replies are sufficient; coordinate with the incremental-fetch design without requiring real-time synchronization or incremental fetching. On logout or account switch, discard no-longer-authorized private content and ignore outstanding responses belonging to the previous identity.
 
-The exact API schema, placeholder representation and detailed validation checklist remain part of the iteration-one specification discussion.
+The exact API schema and placeholder representation remain engineering design details. The validation strategy is defined in the iteration-one specification.
 
 #### Optional private moderation terms file
 
@@ -90,6 +243,8 @@ Provide a harmless example file, such as `moderation-terms.example.txt`, and doc
 For matching terms, use a generic author-facing hold reason (for example, "Your comment contains a word or phrase that requires moderation"). Do not reveal the matched term or the contents of the list. Link-based holds likewise supply a clear reason. The list is a private filtering input, not a guarantee that objectionable content will be detected.
 
 ### First-iteration completion criteria
+
+These detailed design checks supplement the iteration-one specification's acceptance criteria.
 
 - Link or configured term matches by non-moderators are held before public exposure; nonmatching comments and moderator submissions publish immediately. Existing comments remain published unless subsequently edited or moderated.
 - Preserve best-effort notifications for all successfully created comments and changed text to the configured address list, adding a held-for-review indication and reason when applicable. A delivery failure does not publish a held comment or undo a successful write. Unchanged, failed and unauthorized writes do not send notifications.
@@ -558,7 +713,7 @@ This draft leaves reader reports, appeals, bulk actions, IP blocking, and shadow
 
 ## Open Questions
 
-- **Iteration-one specification:** agree dedicated scope, exclusions, acceptance criteria and validation headings and exact API contracts together before checklist generation. Existing completion criteria are preliminary, not a finalized iteration-one checklist.
+- **Iteration-one engineering details:** the [iteration-one specification](#iteration-1--automatic-holds-and-moderator-review) establishes the scope, acceptance criteria and validation strategy. The remaining engineering details are listed under [Remaining details](#remaining-details). Checklist authoring follows the project's planning conventions and conformance QC.
 
 - The focused first iteration re-evaluates changed comment text against the initial publication rules. Further edit-policy configuration remains open. Immediate publication applies when no rule requires a hold; manual holds survive edits, and new direct replies to held comments are not permitted. The concurrency and idempotency semantics of explicit approval are defined above.
 - The focused first iteration requires no persistent policy settings. Which additional configurable policies should be prioritized in later releases? The initial comment notification defaults are defined above; remaining event details and a possible moderator resolution notice are open. A configurable notification system is a separate future design.
@@ -567,7 +722,7 @@ This draft leaves reader reports, appeals, bulk actions, IP blocking, and shadow
 
 ## Draft Acceptance Criteria
 
-The criteria below describe the broader agreed behavior of the relevant features when implemented. Use the completion criteria in the [focused first iteration](#first-iteration-completion-criteria) for the initial release; later features are not prerequisites.
+The criteria below describe the broader agreed behavior of the relevant features when implemented. Use the [iteration-one specification](#iteration-1--automatic-holds-and-moderator-review), particularly AC1–AC8, for the initial release; later features are not prerequisites.
 
 ### Privilege hierarchy and role management
 
