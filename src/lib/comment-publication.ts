@@ -13,7 +13,7 @@ const containsLink = (text: string) =>
 
     return isURL(candidate, {
       allow_protocol_relative_urls: true,
-      disallow_auth: true,
+      disallow_auth: !explicitLink,
       require_tld: !explicitLink,
       validate_length: false,
     })

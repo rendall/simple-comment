@@ -102,6 +102,36 @@ describe("Comment moderation", () => {
     })
   })
 
+  test.each([
+    ["https://visitor@example.org", false],
+    ["https://visitor:sample@example.org", false],
+    ["//visitor@example.org", false],
+    ["visitor@example.org", true],
+  ])(
+    "applies the link rule to %s on create and edit",
+    async (address, isApproved) => {
+      const text = `See ${address} for details.`
+      const publication = isApproved
+        ? { isApproved }
+        : { isApproved, heldReason: linkReason }
+      const existing = comment("edit-link")
+      await comments.insertOne(existing)
+
+      expect(
+        await service.commentPOST(discussion.id, text, author.id)
+      ).toMatchObject({
+        statusCode: 201,
+        body: { text, ...publication },
+      })
+      expect(
+        await service.commentPUT(existing.id, text, author.id)
+      ).toMatchObject({
+        statusCode: 200,
+        body: { text, ...publication },
+      })
+    }
+  )
+
   test("publishes a cleaned-up comment and clears the stored reason", async () => {
     const submitted = held("automatic-release", {
       text: "A paper crane",
