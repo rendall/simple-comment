@@ -76,7 +76,7 @@ Source plan: [Site-wide comment moderation, iteration one](site-wide-comment-mod
     - “Approval is atomic. Successful approval clears active hold metadata.” (AC4 — Approval)
     - “A successful no-op approval does not modify timestamps or generate duplicate publication side effects.” (Approval idempotency and concurrent edits)
 
-- [ ] C10 `[backend]` Apply the initial link rule at `MongodbService.commentPOST` using a shared publication decision in `src/lib/comment-publication.ts`. Hold recognized links from non-moderator authors, including common schemeless forms. Persist the text, approval status, and applicable author-facing reason together before returning the authoritative `201` response. Preserve any applicable existing developer-provided filtering. Limit the moderator bypass to automatic publication rules and keep submission authorization, parent eligibility, duplicate checks, and the create-length limit in force for every role.
+- [x] C10 `[backend]` Apply the initial link rule at `MongodbService.commentPOST` using a shared publication decision in `src/lib/comment-publication.ts`. Hold recognized links from non-moderator authors, including common schemeless forms. Persist the text, approval status, and applicable author-facing reason together before returning the authoritative `201` response. Preserve any applicable existing developer-provided filtering. Limit the moderator bypass to automatic publication rules and keep submission authorization, parent eligibility, duplicate checks, and the create-length limit in force for every role.
   - Depends on C01, C06, and C07. Validated by T06 and T10.
   - Trace:
     - “Detect common URL forms, including recognizable links without an explicit scheme” (Initial publication policy)

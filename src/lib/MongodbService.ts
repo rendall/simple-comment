@@ -84,6 +84,7 @@ import { comparePassword, getAuthToken, hashPassword } from "./crypt"
 import * as jwt from "jsonwebtoken"
 import { isGuestId, isValidResult } from "./shared-utilities"
 import { AbstractNotificationService } from "./AbstractNotificationService"
+import { getCommentPublication } from "./comment-publication"
 import { getBackendEnv } from "./env"
 
 const {
@@ -746,6 +747,7 @@ export class MongodbService extends AbstractDbService {
       dateCreated: new Date(),
       parentId,
       userId: authUserId,
+      ...getCommentPublication(text, getUserRole(authUser).isModerator),
     } as Comment
 
     try {
