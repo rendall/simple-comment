@@ -34,7 +34,7 @@ Source plan: [Site-wide comment moderation, iteration one](site-wide-comment-mod
     - “it is a derived, read-only response property” (Privilege foundation)
     - “without implementing any role appointment or demotion workflow” (Privilege foundation)
 
-- [ ] C04 `[backend]` Enforce the actor-and-target privilege checks in `MongodbService.userPUT` and `userDELETE`. Return `403` for forbidden cross-account actions, protect the configured owner using the target identity, and preserve ordinary self-service for permitted fields.
+- [x] C04 `[backend]` Enforce the actor-and-target privilege checks in `MongodbService.userPUT` and `userDELETE`. Return `403` for forbidden cross-account actions, protect the configured owner using the target identity, and preserve ordinary self-service for permitted fields.
   - Depends on C01 and C03. Validated by T01.
   - Trace:
     - “requires both admin privileges and a strictly higher effective privilege than the target account” (Account administration authority)

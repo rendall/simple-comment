@@ -511,7 +511,7 @@ export const toUpdatedUser = (obj: GenericObj) =>
   narrowType<UpdateUser>(obj, updatedUserKeys) as UpdateUser
 
 export const getUpdatedUserInfo = (body: string): UpdateUser =>
-  toUpdatedUser(parseUserQuery(body))
+  narrowType<UpdateUser>(parseUserQuery(body), [...updatedUserKeys, "password"])
 
 export const getNewTopicInfo = (body: string): Topic =>
   toTopic(parseQuery(body))

@@ -118,6 +118,10 @@ const replyAuthorStages = [
 
 const notificationAuthorLookupTimeoutMs = 1000
 
+const canAdministerTarget = (actorPrivilege: Privilege, target: User) =>
+  actorPrivilege >= Privilege.Admin &&
+  actorPrivilege > getUserRole(target).privilege
+
 const addCommentAuthorRole = (comment: { user?: Comment["user"] }) => {
   if (comment.user?.id) {
     comment.user = { ...comment.user, ...getUserRole(comment.user) }
@@ -509,8 +513,9 @@ export class MongodbService extends AbstractDbService {
         body: "Authenticating user not found",
       }
 
-    const { isAdmin } = getUserRole(authUser)
-    if (targetId !== authUser.id && !isAdmin) {
+    const { isAdmin, privilege } = getUserRole(authUser)
+    const isSelf = targetId === authUser.id
+    if (!isSelf && !isAdmin) {
       return {
         ...error403UserNotAuthorized,
         body: `id of user ${targetId} does not match id of credentials ${authUser.id} and credentialed user is not admin`,
@@ -526,7 +531,7 @@ export class MongodbService extends AbstractDbService {
       return error403ForbiddenToModify
     }
 
-    if (authUserId === simpleCommentModeratorId) {
+    if (targetId === simpleCommentModeratorId) {
       const cannotModify: (keyof UpdateUser)[] = ["password", "email"]
       const isForbidden = (Object.keys(user) as (keyof UpdateUser)[]).some(
         key => cannotModify.includes(key)
@@ -543,6 +548,10 @@ export class MongodbService extends AbstractDbService {
 
     if (!foundUser) {
       return error404UserUnknown
+    }
+
+    if (!isSelf && !canAdministerTarget(privilege, foundUser)) {
+      return error403UserNotAuthorized
     }
 
     const newProps = toUpdatedUser(user)
@@ -604,9 +613,11 @@ export class MongodbService extends AbstractDbService {
       return error401UserNotAuthenticated
     }
 
-    const { isAdmin } = getUserRole(authUser)
+    const { isAdmin, privilege } = getUserRole(authUser)
     const canDelete =
-      isAdmin || (authUserId === userId && policy.canUserDeleteSelf)
+      authUserId === userId
+        ? isAdmin || policy.canUserDeleteSelf
+        : canAdministerTarget(privilege, foundUser)
 
     if (!canDelete) {
       return error403UserNotAuthorized

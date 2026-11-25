@@ -696,7 +696,7 @@ describe("Full API service test", () => {
     expect(e).toBe(error403Forbidden)
   })
   test("DELETE to /user/{userId} should delete user and return 202 User deleted", () => {
-    const userToDelete = getTargetUser()
+    const userToDelete = getTargetUser(user => !user.isAdmin)
     const adminAuthUser = getAuthUser(u => u.isAdmin!)
     expect.assertions(2)
     return service
