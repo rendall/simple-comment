@@ -8,6 +8,76 @@ Parent issue — [#284](https://github.com/rendall/simple-comment/issues/284)
 
 Build a site-wide moderation system so an installation owner can appoint moderators and those moderators can manage comments across all discussions.
 
+## Focused first iteration
+
+The first release should give an installation owner enough control to operate a public comment system with confidence. In particular, a comment containing a potentially objectionable link or term should be held for human review rather than immediately becoming public. The aim is a small, useful moderation system, not a comprehensive policy configuration platform.
+
+An owner appoints trusted moderators. Ordinary comments are published immediately unless an initial publication rule requires review. Authors can see their held comments and understand why they are held. Moderators can review comments across discussions, approve or delete held comments, and hold or delete comments that are already public.
+
+This section defines the focused initial release. The broader design below describes the intended system across releases; its additional capabilities are not prerequisites for the first iteration.
+
+### Initial roles
+
+| Effective privilege | Role | First iteration |
+| ---: | --- | --- |
+| 0 | Regular user | Participates in discussions |
+| 1 | Moderator | Appointed and demoted by the owner; moderates comments across the installation |
+| 2 | Admin | Preserve existing administrator accounts and privileges; new admin appointments and demotions are deferred |
+| 3 | Owner | Derived from deployment configuration; appoints moderators, administers accounts and moderates comments |
+
+Retain the full integer privilege model and derived predicates. Newly created owner accounts store privilege 2 and derive privilege 3. Only the owner manages moderator appointments in the first iteration. Moderators cannot administer other users' accounts or appoint other moderators. Implement the agreed owner protections and account-administration authorization boundaries; owner password rotation (#286) remains an independent security fix. Do not implement ownership transfer reconciliation or persist a last-known-owner identity in this iteration.
+
+### Initial publication policy
+
+Use a small set of server-side rules, with no runtime policy configuration UI or persistent configuration object.
+
+| Comment or edit | Result |
+| --- | --- |
+| Contains a link | Hold for review |
+| Matches a term or phrase in the optional server-side moderation list | Hold for review |
+| Passes every applicable publication rule | Publish immediately, unless manually held |
+| Authored by a moderator, existing admin or owner | Automatically approve, unless manually held |
+
+The link rule is enabled by default. Detect common URL forms, including recognizable links without an explicit scheme; the precise detection algorithm and false-positive trade-offs are implementation details. The optional term rule is active only when a nonempty moderation list is supplied. Keep the rules independent and use the existing publication decision convention. Preserve applicable existing developer-provided filtering rather than building a general policy engine.
+
+Apply the initial publication rules to new comments and changed comment text, so an author cannot evade review merely by adding a link or matching term in a subsequent edit. A qualifying edit may release an automatic hold. A manual hold and its reason survive edits and automatic exemptions; the current content must be explicitly reviewed and approved by an authorized moderator. Do not scan or reclassify existing comments merely because a moderation rule or term list is introduced or changed.
+
+The rules are deliberately simple. They identify material for human review rather than declare it illegal or unacceptable, and need not detect every possible obfuscation or evasion technique.
+
+#### Optional private moderation terms file
+
+The actual list is supplied by the installation owner, not distributed with Simple Comment. It may contain words and phrases in any language. Do not commit a real objectionable-terms list to the repository or require the owner to put its contents in an environment variable.
+
+Use an optional server-only plain-text file, provisionally named `moderation-terms.txt`:
+
+| File condition | Behavior |
+| --- | --- |
+| Absent | Term filtering disabled; link filtering still applies |
+| Empty, or only blank/comment lines | No terms trigger moderation |
+| Contains terms | Matching ordinary-user comments are held for review |
+| Present but unreadable or invalid | Report a configuration error; do not silently disable an intended filter |
+
+Use UTF-8, one literal word or phrase per line, case-insensitive matching, ignore blank lines and lines beginning with `#`, and do not support regular expressions initially. The exact matching boundaries and normalization can be settled during implementation.
+
+Provide a harmless example file, such as `moderation-terms.example.txt`, and document how installation owners supply the actual file. Exclude the real file from Git and from public assets, client bundles, API responses and logs. The deployment mechanism must make it available to the server/API functions only. Verify how Netlify packages serverless function files before settling the precise location and deployment instructions; do not assume that placing a file in an API source directory automatically makes it available at runtime. This is a small optional deployment input, not a persistent configuration subsystem or hot-reload feature.
+
+For matching terms, use a generic author-facing hold reason (for example, "Your comment contains a word or phrase that requires moderation"). Do not reveal the matched term or the contents of the list. Link-based holds likewise supply a clear reason. The list is a private filtering input, not a guarantee that objectionable content will be detected.
+
+### Included capabilities
+
+- Owner-appointed moderators, a site-wide role roster and idempotent appointments/demotions, with the agreed role-change notifications.
+- A site-wide moderation interface for held and recent comments, with access to the original discussion and controls for approval, manual hold and deletion.
+- Comment publication metadata, required hold reasons, atomic content-matched approval, permanent soft deletion, author visibility and protected public reads.
+- Placeholders for unavailable ancestors and continuation of surviving discussion branches; no new direct replies to held or deleted comments.
+- The initial link and optional term rules, automatic approval for privileged authors, and enforcement on changed text. Only authors edit their comments by default.
+- The agreed attention-based comment notification defaults using the existing notification service, without a new configurable notification system. Notification failures do not invalidate successful operations.
+
+### Later iterations
+
+Defer persistent configuration and its design, the Administration Settings dashboard (#275), new admin appointments and demotions, configurable permission and publication policies, allowlists and mandatory-review lists, ownership change detection/transfers and collision warnings, configurable notifications, and the optional administration log. Site-wide user comment history (#288) is a separate enhancement, not an initial-release prerequisite. Preserve their design discussion below so they can be introduced as the project matures.
+
+The detailed implementation slices, dependencies and validation remain to be planned in [Implementation](#implementation). Deferral must not weaken the authorization, moderation or visibility invariants of the features actually shipped.
+
 ## Plain-Language Intent
 
 The configured site owner controls the entire Simple Comment installation and all its discussions. The owner can appoint admins and revoke admin or moderator access. The owner and admins can appoint and demote moderators. Nobody can delete the owner's account or take away its admin access through the API. Moderators can see comments from across the site in one place, review comments before they appear publicly, and act on comments that are already public.
@@ -112,6 +182,8 @@ The environment-configured Simple Comment Moderator account is created with `isA
 See [account creation](../../src/lib/MongodbService.ts#L349), [user updates](../../src/lib/MongodbService.ts#L460), [user deletion](../../src/lib/MongodbService.ts#L532), and [comment deletion](../../src/lib/MongodbService.ts#L1039).
 
 ## In Scope
+
+The following sections describe the broader intended system. The [focused first iteration](#focused-first-iteration) defines the initial release boundary; later capabilities in this section are not required to ship the first iteration.
 
 ### Owner permissions and role appointments
 
@@ -292,7 +364,7 @@ Apply the same visibility rules in the user comment history as in the discussion
 
 ### Publication policy and notifications
 
-Every applicable publication rule answers **Should this comment be published?** A rule returns `true` when it permits immediate publication and `false` when it requires moderation. Publish immediately only if every applicable rule returns `true`. A single `false` holds the comment for review. The developer-provided filter follows the same convention. **Default policy: publish immediately.** When no applicable rule requires moderation, a new comment is published without review. A fresh installation must not hold comments by default. An active manual hold is not overridden by automatic publication rules or exemptions.
+Every applicable publication rule answers **Should this comment be published?** A rule returns `true` when it permits immediate publication and `false` when it requires moderation. Publish immediately only if every applicable rule returns `true`. A single `false` holds the comment for review. The developer-provided filter follows the same convention. **Default policy: publish immediately.** When no applicable rule requires moderation, a new comment is published without review. A fresh installation does not hold all comments indiscriminately. The focused first iteration enables the link rule by default and optionally enables term filtering when the installation owner supplies a list. An active manual hold is not overridden by automatic publication rules or exemptions.
 
 #### Moderator automatic approval
 
@@ -345,7 +417,7 @@ Publication policy changes are prospective, not retroactive. Changing a publicat
 
 Apply the current publication policy to subsequent submissions and to future edits where the agreed edit policy calls for re-evaluation. Moderators can still explicitly approve, hold or delete individual existing comments. A setting that changes moderation authority, such as allowlist management, applies to subsequent actions under the current settings; it does not undo previously authorized actions.
 
-Explore opt-in settings that hold all comments from guests or new accounts, or hold comments that match rules such as links or selected words or phrases. Immediate publication is the default. Moderator automatic approval is defined above. The scope and implementation of trusted-user automatic exemptions remain open. Coordinate policy settings and enforcement with #275.
+The focused first iteration implements fixed link filtering and optional file-based term filtering. Later, explore opt-in settings that hold all comments from guests or new accounts and configurable link or term rules. Immediate publication is the default. Moderator automatic approval is defined above. The scope and implementation of trusted-user automatic exemptions remain open. Coordinate policy settings and enforcement with #275.
 
 #### Default comment notifications
 
@@ -417,8 +489,8 @@ This draft leaves reader reports, appeals, bulk actions, IP blocking, and shadow
 ## Open Questions
 
 
-- Which edits should trigger automatic publication policy evaluation? Immediate publication is the default; manual holds survive edits, and new direct replies to held comments are not permitted. The concurrency and idempotency semantics of explicit approval are defined above.
-- Which policy settings are essential to completing #284? The initial comment notification defaults are defined above; remaining event details and a possible moderator resolution notice are open. A configurable notification system is a separate future design.
+- The focused first iteration re-evaluates changed comment text against the initial publication rules. Further edit-policy configuration remains open. Immediate publication applies when no rule requires a hold; manual holds survive edits, and new direct replies to held comments are not permitted. The concurrency and idempotency semantics of explicit approval are defined above.
+- The focused first iteration requires no persistent policy settings. Which additional configurable policies should be prioritized in later releases? The initial comment notification defaults are defined above; remaining event details and a possible moderator resolution notice are open. A configurable notification system is a separate future design.
 - Should a persistent, reviewable administration log be added, and which actions, viewers and retention policy should it support?
 - Should deployment-based ownership transfers to existing accounts be accepted or rejected? How should unexpected replacement or disappearance of the last known owner account be handled? See [Owner configuration and ownership changes](#owner-configuration-and-ownership-changes).
 
@@ -588,13 +660,13 @@ As implementation is planned, categorize and prioritize the features here. The i
 | Designed but deferrable | Behavior has been agreed, but implementation can follow in a later release |
 | Exploratory | Further design discussion is required before implementation can be planned |
 
-The assignment of individual features to these categories, their dependencies, and their implementation order remain to be decided here. Deferring a feature does not discard its design, and must not weaken the authorization, visibility or other invariants applicable to features that are implemented.
+The [focused first iteration](#focused-first-iteration) establishes the initial feature boundary. The detailed assignment of tasks to implementation slices, dependencies and order remains to be decided here. Deferring a feature does not discard its design, and must not weaken the authorization, visibility or other invariants applicable to features that are implemented.
 
 ### Implementation tracking
 
 - [#284](https://github.com/rendall/simple-comment/issues/284) — Parent issue for site-wide moderation.
-- [#285](https://github.com/rendall/simple-comment/issues/285) — First implementation slice: admin and moderator role appointments.
-- [#275](https://github.com/rendall/simple-comment/issues/275) — Administration settings dashboard.
+- [#285](https://github.com/rendall/simple-comment/issues/285) — First implementation slice: moderator appointments and the underlying privilege model; the existing issue describes the broader admin appointment scope and needs narrowing before implementation.
+- [#275](https://github.com/rendall/simple-comment/issues/275) — Administration settings dashboard, deferred with persistent configuration.
 - [#286](https://github.com/rendall/simple-comment/issues/286) — Owner credential rotation, tracked independently of the moderation rollout.
 
 Implementation PRs for sub-issues under #284 use `284-build-a-site-wide-comment-moderation-system` as their base branch.
@@ -603,9 +675,10 @@ Detailed implementation plans, scope decisions and further sub-issues can be add
 
 ## Deferred considerations and possible solutions
 
-This section records ideas for later consideration, not additional initial-release acceptance criteria. When implementation is broken into sub-issues, distinguish essential end-to-end moderation capabilities from nice-to-haves. Features can be deferred without discarding the corresponding design discussion. The exact initial release boundary remains to be agreed; deferral must not weaken the agreed authorization and visibility invariants.
+This section records ideas for later consideration, not additional initial-release acceptance criteria. When implementation is broken into sub-issues, distinguish essential end-to-end moderation capabilities from nice-to-haves. Features can be deferred without discarding the corresponding design discussion. The focused first iteration sets the initial feature boundary, with detailed implementation slices still to be planned; deferral must not weaken the agreed authorization and visibility invariants.
 
 - **Additional administration notification events:** Consider notifications for consequential policy changes (especially enabling admin editing of other authors' comments), allowlist membership changes, and account deletions. These might aid oversight but could generate excessive email traffic. Prefer a later configurable event/recipient policy or an administration log over adding blanket notices now. No new administration event types are required in the initial design.
 - **Administration log:** Consider a persistent, reviewable log in the Administration view recording the action, actor, affected account or resource, and timestamp independently of email delivery. Authorized users could review it even when email is disabled or delivery fails. Access permissions, retention, scope and presentation are TBD.
 - **Configurable notifications:** Design notification preferences separately, with attention to event types, recipients, traffic levels, free-tier email limits, and optional notifications that a held comment has already been resolved by another moderator. Preserve the initial default comment notification policy until a separate design changes it.
-- **Additional publication policy features:** Rule-specific exemptions, global trusted-user and mandatory-review lists, and the detailed rule catalogue may be phased in as needed. Determine the minimal set for #284 during implementation planning rather than requiring every explored feature at once.
+- **Persistent configuration and ownership lifecycle:** Treat installation-wide runtime configuration as a separate design effort; defer settings UI, administrator appointments, ownership transfer detection and collision handling until later.
+- **Additional publication policy features:** The first iteration uses fixed link filtering and an optional private server-side term list. Rule-specific exemptions, global trusted-user and mandatory-review lists, and a configurable rule catalogue may be phased in later.
