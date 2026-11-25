@@ -151,6 +151,17 @@ Add a **Settings** section to the Administration tab. Admins and the owner can m
 
 By default, only authors can edit their own comments. The owner can enable editing of other users’ comments for admins. The owner inherits that permission when it is enabled. Moderators can hold or delete comments and ask authors to revise them. The server enforces the current editing policy on every update, including direct API requests.
 
+#### Policy settings at a glance
+
+| Setting | Default | Who can change it |
+| --- | --- | --- |
+| [Publication policy](#publication-policy-and-notifications) | Publish immediately unless an applicable rule requires moderation | Admin, owner |
+| [Moderator automatic approval](#moderator-automatic-approval) | Enabled | Admin, owner |
+| [Moderator allowlist management](#moderator-allowlist-management) | Enabled | Admin, owner |
+| [Admin editing of other authors' comments](#administration-settings) | Disabled | Owner |
+
+The table summarizes agreed policy defaults and configuration authority; the detailed sections define their behavior and constraints. It does not prescribe the exact settings schema or require every feature to ship in the initial release.
+
 If owners need to delegate control of permission settings later, consider delegation for specific settings or groups of settings.
 
 ### Site-wide comment review
@@ -411,25 +422,182 @@ This draft leaves reader reports, appeals, bulk actions, IP blocking, and shadow
 
 ## Draft Acceptance Criteria
 
-The configured owner has effective privilege 3 and retains admin and moderator access regardless of the stored privilege or legacy `isAdmin` flag. An account created for the configured owner stores privilege 2 and retains it when ownership is transferred away, becoming an admin by default. All accounts store exactly one privilege in the range 0–2; the API derives the role predicates from the effective privilege. Attempts to delete or demote the configured owner account return HTTP 403 and leave the record intact. Users cannot gain ownership through profile changes or role changes. Rotating the configured password and redeploying restores owner access for an existing account and invalidates the previous password. Owner username, email and password cannot be changed through application APIs; the owner can edit non-identity profile details. The last-known-owner record detects ownership changes and potential collisions without granting ownership. Successful transfers to new accounts update that record and generate administration notices. Handling of transfers to existing accounts and unexpected account replacement or disappearance remains open.
+The criteria below describe the agreed behavior of the relevant features when implemented. The [Implementation](#implementation) section will determine which feature groups belong in each release.
 
-The owner and admins can appoint and remove moderators. Only the owner can appoint and demote admins; admin demotion explicitly assigns privilege 1 or 0. The API rejects attempts by moderators to appoint, create, or remove another moderator, attempts by admins to grant or revoke admin access, and attempts to assign owner privilege or invalid privilege values. Existing admin accounts migrate to privilege 2 and ordinary accounts to privilege 0. The same role-management interface supports admin and moderator appointments and demotions, subject to actor and target privileges. Appointment grants already implemented moderation capabilities, including authorized cross-author comment deletion, and revocation removes the corresponding privileges on subsequent requests. Approval and holding capabilities are added as the comment review system is implemented. Authorized role assignments to the existing privilege succeed without changes or notifications, including repeated requests. Administration actions are committed before email delivery is attempted. Notification failures or disabled email delivery do not undo successful actions or turn them into failed API responses. No additional administration notification event types are required beyond role changes and the specified ownership events.
+### Privilege hierarchy and role management
 
-An admin cannot delete another admin's account, change its password, or modify any of its account details. Only the owner can perform administrative account mutations on an admin account. Unauthorized cross-account mutations return HTTP 403 and leave the account unchanged. The same restrictions protect the owner from administrative changes by other users.
+- All accounts store exactly one privilege in the range 0–2; the API derives the role predicates from the effective privilege.
+- The owner and admins can appoint and remove moderators.
+- Only the owner can appoint and demote admins; admin demotion explicitly assigns privilege 1 or 0.
+- The API rejects attempts by moderators to appoint, create, or remove another moderator, attempts by admins to grant or revoke admin access, and attempts to assign owner privilege or invalid privilege values.
+- Existing admin accounts migrate to privilege 2 and ordinary accounts to privilege 0.
+- The same role-management interface supports admin and moderator appointments and demotions, subject to actor and target privileges.
+- Appointment grants already implemented moderation capabilities, including authorized cross-author comment deletion, and revocation removes the corresponding privileges on subsequent requests.
+- Approval and holding capabilities are added as the comment review system is implemented.
+- Authorized role assignments to the existing privilege succeed without changes or notifications, including repeated requests.
 
-A designated moderator can see held and recent comments across multiple discussions in one place. Approving a held comment makes it public, and moderators can hold or delete published comments or delete held comments. Deletion removes content, records deletion time and actor, and takes precedence over approval. Author deletion and moderator removal (rejection) are distinguishable from deletion metadata without a separate state or operation. New comments publish by default unless an applicable rule requires moderation. An active manual hold is recorded in `heldBy`, survives edits and is cleared only by an authorized explicit approval. Every active hold has an author-facing `heldReason`, required from the moderator for manual holds and supplied by policy for automatic holds. Only the author and moderators can read it. Manual reasons survive author edits; approval clears active hold metadata atomically. Explicit approval is idempotent: an already approved comment returns success without a change even if its text differs from what the moderator reviewed; a held comment is approved only if its current text matches the reviewed text, otherwise the request returns HTTP 409 Conflict. A deleted comment cannot be approved. The conditional approval is atomic. Moderator automatic approval is enabled by default and can be disabled or re-enabled by admins and the owner through persisted publication settings. Enabled means privileged authors' new comments bypass ordinary publication rules; disabled means ordinary publication rules and applicable exemptions apply. Automatic approval never releases a manual hold. When disabled, a privileged author cannot explicitly approve their own held comment; another moderator can approve it. The server rejects unauthorized setting changes and explicit approval actions. Authors and moderators can see held comments; unrelated ordinary readers cannot. Authors see their own held comments in their original tree position, identified as unpublished. Independently visible descendants of unavailable comments remain visible under structural placeholders, and new direct replies to held or deleted comments are rejected (including for authors and moderators) while replies to eligible descendants are allowed. The site-wide user comment history allows ordinary readers to see public contributions, authors to see their own held contributions, and moderators to see held contributions by any user, consistently with the same server-enforced visibility policy. By default, only authors can edit comment text. When the owner enables admin editing, admins and the owner can edit others’ comments. The API rejects cross-author edits by moderators in either mode and rejects attempts by non-owners to change the editing setting. Where publication allowlists are implemented, moderator allowlist management is enabled by default; admins and the owner can disable or re-enable it without losing their own allowlist management authority. Authorized allowlist managers may manage their own entries and those of other moderators; no special anti-collusion restriction is imposed. Publication policy and list membership changes never automatically change existing comments' publication states. New automatically approved comments do not generate moderator or ordinary-subscriber email by default. New policy-held comments and edited comments that remain held alert moderators, not ordinary subscribers; approval of a held comment can notify ordinary subscribers where subscriptions exist. Notification delivery does not undo successful actions. The remaining notification event details, possible resolution notices, and initial release scope for configurable rules remain open.
+### Account administration
+
+- An admin cannot delete another admin's account, change its password, or modify any of its account details.
+- Only the owner can perform administrative account mutations on an admin account.
+- Unauthorized cross-account mutations return HTTP 403 and leave the account unchanged.
+- The same restrictions protect the owner from administrative changes by other users.
+
+### Comment lifecycle and moderation
+
+- A designated moderator can see held and recent comments across multiple discussions in one place.
+- Approving a held comment makes it public, and moderators can hold or delete published comments or delete held comments.
+- Deletion removes content, records deletion time and actor, and takes precedence over approval.
+- Author deletion and moderator removal (rejection) are distinguishable from deletion metadata without a separate state or operation.
+- An active manual hold is recorded in `heldBy`, survives edits and is cleared only by an authorized explicit approval.
+- Every active hold has an author-facing `heldReason`, required from the moderator for manual holds and supplied by policy for automatic holds.
+- Manual reasons survive author edits; approval clears active hold metadata atomically.
+- Explicit approval is idempotent: an already approved comment returns success without a change even if its text differs from what the moderator reviewed; a held comment is approved only if its current text matches the reviewed text, otherwise the request returns HTTP 409 Conflict.
+- A deleted comment cannot be approved.
+- The conditional approval is atomic.
+
+### Comment visibility and discussion continuity
+
+- Only the author and moderators can read it.
+- Authors and moderators can see held comments; unrelated ordinary readers cannot.
+- Authors see their own held comments in their original tree position, identified as unpublished.
+- Independently visible descendants of unavailable comments remain visible under structural placeholders, and new direct replies to held or deleted comments are rejected (including for authors and moderators) while replies to eligible descendants are allowed.
+- The site-wide user comment history allows ordinary readers to see public contributions, authors to see their own held contributions, and moderators to see held contributions by any user, consistently with the same server-enforced visibility policy.
+
+### Publication and editing policies
+
+- New comments publish by default unless an applicable rule requires moderation.
+- Moderator automatic approval is enabled by default and can be disabled or re-enabled by admins and the owner through persisted publication settings.
+- Enabled means privileged authors' new comments bypass ordinary publication rules; disabled means ordinary publication rules and applicable exemptions apply.
+- Automatic approval never releases a manual hold.
+- When disabled, a privileged author cannot explicitly approve their own held comment; another moderator can approve it.
+- The server rejects unauthorized setting changes and explicit approval actions.
+- By default, only authors can edit comment text.
+- When the owner enables admin editing, admins and the owner can edit others’ comments.
+- The API rejects cross-author edits by moderators in either mode and rejects attempts by non-owners to change the editing setting.
+- Where publication allowlists are implemented, moderator allowlist management is enabled by default; admins and the owner can disable or re-enable it without losing their own allowlist management authority.
+- Authorized allowlist managers may manage their own entries and those of other moderators; no special anti-collusion restriction is imposed.
+- Publication policy and list membership changes never automatically change existing comments' publication states.
+
+### Notifications
+
+- Administration actions are committed before email delivery is attempted.
+- Notification failures or disabled email delivery do not undo successful actions or turn them into failed API responses.
+- No additional administration notification event types are required beyond role changes and the specified ownership events.
+- New automatically approved comments do not generate moderator or ordinary-subscriber email by default.
+- New policy-held comments and edited comments that remain held alert moderators, not ordinary subscribers; approval of a held comment can notify ordinary subscribers where subscriptions exist.
+- Notification delivery does not undo successful actions.
+- The remaining notification event details, possible resolution notices, and initial release scope for configurable rules remain open.
+
+### Ownership configuration and recovery
+
+- The configured owner has effective privilege 3 and retains admin and moderator access regardless of the stored privilege or legacy `isAdmin` flag.
+- An account created for the configured owner stores privilege 2 and retains it when ownership is transferred away, becoming an admin by default.
+- Attempts to delete or demote the configured owner account return HTTP 403 and leave the record intact.
+- Users cannot gain ownership through profile changes or role changes.
+- Rotating the configured password and redeploying restores owner access for an existing account and invalidates the previous password.
+- Owner username, email and password cannot be changed through application APIs; the owner can edit non-identity profile details.
+- The last-known-owner record detects ownership changes and potential collisions without granting ownership.
+- Successful transfers to new accounts update that record and generate administration notices.
+- Handling of transfers to existing accounts and unexpected account replacement or disappearance remains open.
 
 ## Validation Strategy
 
-Unit tests should cover every effective privilege level and its derived predicates, including owner records with a lower stored privilege or legacy `isAdmin: false`. Test migration of existing admin and ordinary accounts, initialization of a missing stored privilege to 2 for the existing configured owner, migration reruns, rejection of invalid stored privileges, and preservation of owner access without persisting privilege 3. Verify a newly created owner account stores privilege 2 while deriving privilege 3. Test promotion from moderator to admin and demotion from admin to either moderator or regular user, including the resulting effective permissions. API integration tests should exercise owner deletion and demotion as both the owner and another admin, confirm HTTP 403, and confirm the record and effective permissions afterward. Test moderator appointment by the owner and an admin, removal by the owner and an admin, owner-only admin appointments and demotions, rejection of role changes attempted by a moderator, and rejection of attempts to grant or revoke admin access by an admin. Verify that direct API requests cannot assign privilege 3 or bypass role checks through legacy flag inputs. Test the shared role-management interface for admin and moderator appointments and demotions, including restricted destination roles. Verify appointment enables existing moderation actions and demotion removes lost privileges on subsequent requests. Verify that each actual successful role change attempts one notice per intended recipient, including a removed moderator, and that rejected requests and authorized no-op assignments send none. Test repeated and concurrent identical assignments, ensuring the role changes once and notification side effects are not duplicated. Verify that unauthorized no-op requests cannot bypass permissions and no other administration actions introduce new notification events. Test disabled notifications, provider errors, timeouts and partial delivery failures; verify that the action remains committed, the API reports success, and delivery failures are logged. Verify that a moderator cannot demote or delete the owner through a direct API request. The API contract and dashboard should agree on who can perform each action.
+Use the corresponding validation group for each implementation slice. Conditional and deferred features are tested when they are implemented.
 
-Test cross-account administration against the privilege matrix, including account deletion, password changes, and profile and identity updates. In particular, verify that an admin cannot modify or delete another admin or the owner through direct API requests, that the owner can administer admins, and that admins can administer lower-privilege accounts subject to the separate role-assignment rules. Verify that forbidden requests leave the target unchanged and that ordinary authorized self-service actions remain distinct from cross-account administration.
+### Privilege hierarchy and role management
 
-Exercise the full review flow across multiple discussions. Test held-to-approved and approved-to-held transitions and deletion of either state. Exercise every row of the approval decision table, including repeated approval requests, automatic approval after an author edit, a changed comment that remains held, and intervening edits that restore identical text. Test concurrent edit, deletion and approval operations against the MongoDB conditional update, ensuring no unreviewed held content is published and no deleted comment is restored. Verify that no-op approvals do not modify timestamps or repeat publication side effects. Test moderator automatic approval with the setting enabled and disabled for moderators, admins and the owner, including bypass of ordinary rules when enabled, ordinary evaluation when disabled, manual holds surviving edits in either mode, prospective-only changes, persistence and runtime changes. Test explicit approval of own and other authors' held comments according to the setting and the content-matching policy. Verify that admins and the owner can change the setting, moderators and ordinary users cannot, and direct API requests cannot bypass approval authorization. Verify that deletion records the authenticated deleting account ID and timestamp, removes content, retains the structural comment object, and cannot be reversed through approval. Test author deletion and moderator removal, deriving the distinction from the author and deleting account IDs without introducing another state. Test publish-by-default with no applicable holding rule, automatic holds that can be cleared by qualifying edits, and manual holds that survive edits even when all rules pass or an allowlist applies. Test imposing a manual hold on an already automatically held comment, explicit approval clearing `heldBy` and `heldReason` atomically, and concurrent edits and manual holds preserving the manual hold. Test required non-empty manual hold reasons, policy-generated automatic reasons, automatic reason updates on re-evaluation, preservation of manual reasons across author edits, and replacement of automatic reasons on manual hold. Verify that automatic approval also clears active hold metadata, and that reasons are visible only to the author and moderators, including through direct reads, history, placeholders and alternate retrieval paths. Test visibility for unauthenticated readers, unrelated authenticated users, authors and privileged users in the discussion tree, direct comment reads, user comment history and site-wide moderation views as applicable. Verify that an authenticated returning guest can see their own held comments and reasons under the same author-visibility rule, and an unrecognized visitor cannot. Verify that authors see their own held comments in their original tree position, that unauthorized readers cannot access held content through alternate retrieval paths, and that no viewer can retrieve deleted text. Test preservation of independently visible descendants beneath deleted or held parents, including nested placeholders without hidden content. Verify that the server rejects new direct replies to held or deleted comments for every role (including when the parent is held or deleted after the reply form is opened), but permits replies to eligible existing descendants and to a formerly held comment after approval. Verify user comment history across multiple discussions and that the moderator queue excludes deleted comments. Test allowlist management with the setting enabled and disabled for each privilege level, including direct API requests, persistence, runtime changes, permitted self-listing and listing of other moderators when authorized, and preservation of existing entries when moderator management is disabled. Verify prospective-only application of publication rules and allowlist changes: existing approved and held comments retain their state, while subsequent submissions follow the new policy. Test mandatory-review list changes in the same manner if implemented, and edits according to the eventual edit policy. Verify the defined default notification matrix, especially that automatically approved new comments send no notification to moderators or ordinary subscribers, new policy-held comments alert moderators only, and no-op approvals and deletions do not send comment notifications. Confirm no held content is sent to ordinary subscribers and email delivery failure does not undo a persisted action. Validate remaining notification events once agreed.
+- Unit tests should cover every effective privilege level and its derived predicates, including owner records with a lower stored privilege or legacy `isAdmin: false`.
+- Test migration of existing admin and ordinary accounts, initialization of a missing stored privilege to 2 for the existing configured owner, migration reruns, rejection of invalid stored privileges, and preservation of owner access without persisting privilege 3.
+- Test promotion from moderator to admin and demotion from admin to either moderator or regular user, including the resulting effective permissions.
+- Test moderator appointment by the owner and an admin, removal by the owner and an admin, owner-only admin appointments and demotions, rejection of role changes attempted by a moderator, and rejection of attempts to grant or revoke admin access by an admin.
+- Verify that direct API requests cannot assign privilege 3 or bypass role checks through legacy flag inputs.
+- Test the shared role-management interface for admin and moderator appointments and demotions, including restricted destination roles.
+- Verify appointment enables existing moderation actions and demotion removes lost privileges on subsequent requests.
+- Test repeated and concurrent identical assignments, ensuring the role changes once and notification side effects are not duplicated.
+- Verify that unauthorized no-op requests cannot bypass permissions and no other administration actions introduce new notification events.
+- The API contract and dashboard should agree on who can perform each action.
 
-Test owner initialization, normal restart, credential rotation, protected owner identity fields, permitted owner profile edits, transfer to a previously unused username, and detection of existing-account collisions, mismatched account IDs, missing owner records and conflicting username/email identities. Verify that the last-known-owner record is not authoritative for permissions, successful reconciliation updates the baseline, the previous owner loses effective owner access and retains its stored admin privilege by default, the newly created owner stores privilege 2, and concurrent initialization does not process the same change twice. Verify notices include the former and new owner on successful transfers and omit secrets. Validate the remaining collision cases once their policy is agreed.
+### Account administration
+
+- Test cross-account administration against the privilege matrix, including account deletion, password changes, and profile and identity updates.
+- In particular, verify that an admin cannot modify or delete another admin or the owner through direct API requests, that the owner can administer admins, and that admins can administer lower-privilege accounts subject to the separate role-assignment rules.
+- Verify that forbidden requests leave the target unchanged and that ordinary authorized self-service actions remain distinct from cross-account administration.
+
+### Comment lifecycle and moderation
+
+- Exercise the full review flow across multiple discussions.
+- Test held-to-approved and approved-to-held transitions and deletion of either state.
+- Exercise every row of the approval decision table, including repeated approval requests, automatic approval after an author edit, a changed comment that remains held, and intervening edits that restore identical text.
+- Test concurrent edit, deletion and approval operations against the MongoDB conditional update, ensuring no unreviewed held content is published and no deleted comment is restored.
+- Verify that no-op approvals do not modify timestamps or repeat publication side effects.
+- Verify that deletion records the authenticated deleting account ID and timestamp, removes content, retains the structural comment object, and cannot be reversed through approval.
+- Test author deletion and moderator removal, deriving the distinction from the author and deleting account IDs without introducing another state.
+- Test imposing a manual hold on an already automatically held comment, explicit approval clearing `heldBy` and `heldReason` atomically, and concurrent edits and manual holds preserving the manual hold.
+- Test required non-empty manual hold reasons, policy-generated automatic reasons, automatic reason updates on re-evaluation, preservation of manual reasons across author edits, and replacement of automatic reasons on manual hold.
+
+### Comment visibility and discussion continuity
+
+- Verify that automatic approval also clears active hold metadata, and that reasons are visible only to the author and moderators, including through direct reads, history, placeholders and alternate retrieval paths.
+- Test visibility for unauthenticated readers, unrelated authenticated users, authors and privileged users in the discussion tree, direct comment reads, user comment history and site-wide moderation views as applicable.
+- Verify that an authenticated returning guest can see their own held comments and reasons under the same author-visibility rule, and an unrecognized visitor cannot.
+- Verify that authors see their own held comments in their original tree position, that unauthorized readers cannot access held content through alternate retrieval paths, and that no viewer can retrieve deleted text.
+- Test preservation of independently visible descendants beneath deleted or held parents, including nested placeholders without hidden content.
+- Verify that the server rejects new direct replies to held or deleted comments for every role (including when the parent is held or deleted after the reply form is opened), but permits replies to eligible existing descendants and to a formerly held comment after approval.
+- Verify user comment history across multiple discussions and that the moderator queue excludes deleted comments.
+
+### Publication and editing policies
+
+- Test moderator automatic approval with the setting enabled and disabled for moderators, admins and the owner, including bypass of ordinary rules when enabled, ordinary evaluation when disabled, manual holds surviving edits in either mode, prospective-only changes, persistence and runtime changes.
+- Test explicit approval of own and other authors' held comments according to the setting and the content-matching policy.
+- Verify that admins and the owner can change the setting, moderators and ordinary users cannot, and direct API requests cannot bypass approval authorization.
+- Test publish-by-default with no applicable holding rule, automatic holds that can be cleared by qualifying edits, and manual holds that survive edits even when all rules pass or an allowlist applies.
+- Test allowlist management with the setting enabled and disabled for each privilege level, including direct API requests, persistence, runtime changes, permitted self-listing and listing of other moderators when authorized, and preservation of existing entries when moderator management is disabled.
+- Verify prospective-only application of publication rules and allowlist changes: existing approved and held comments retain their state, while subsequent submissions follow the new policy.
+- Test mandatory-review list changes in the same manner if implemented, and edits according to the eventual edit policy.
+
+### Notifications
+
+- Verify that each actual successful role change attempts one notice per intended recipient, including a removed moderator, and that rejected requests and authorized no-op assignments send none.
+- Test disabled notifications, provider errors, timeouts and partial delivery failures; verify that the action remains committed, the API reports success, and delivery failures are logged.
+- Verify the defined default notification matrix, especially that automatically approved new comments send no notification to moderators or ordinary subscribers, new policy-held comments alert moderators only, and no-op approvals and deletions do not send comment notifications.
+- Confirm no held content is sent to ordinary subscribers and email delivery failure does not undo a persisted action.
+- Validate remaining notification events once agreed.
+
+### Ownership configuration and recovery
+
+- Verify a newly created owner account stores privilege 2 while deriving privilege 3.
+- API integration tests should exercise owner deletion and demotion as both the owner and another admin, confirm HTTP 403, and confirm the record and effective permissions afterward.
+- Verify that a moderator cannot demote or delete the owner through a direct API request.
+- Test owner initialization, normal restart, credential rotation, protected owner identity fields, permitted owner profile edits, transfer to a previously unused username, and detection of existing-account collisions, mismatched account IDs, missing owner records and conflicting username/email identities.
+- Verify that the last-known-owner record is not authoritative for permissions, successful reconciliation updates the baseline, the previous owner loses effective owner access and retains its stored admin privilege by default, the newly created owner stores privilege 2, and concurrent initialization does not process the same change twice.
+- Verify notices include the former and new owner on successful transfers and omit secrets.
+- Validate the remaining collision cases once their policy is agreed.
+
+## Implementation
+
+This section is reserved for implementation plans, implementation-specific decisions, sequencing and links to the relevant sub-issues. The preceding sections describe the intended system, not a commitment to deliver every feature in the first release.
+
+As implementation is planned, categorize and prioritize the features here. The initial release should deliver a functional end-to-end moderation system without requiring all of the designed or exploratory capabilities at once.
+
+| Category | Meaning |
+| --- | --- |
+| Essential | Required for the initial functional moderation release |
+| Designed but deferrable | Behavior has been agreed, but implementation can follow in a later release |
+| Exploratory | Further design discussion is required before implementation can be planned |
+
+The assignment of individual features to these categories, their dependencies, and their implementation order remain to be decided here. Deferring a feature does not discard its design, and must not weaken the authorization, visibility or other invariants applicable to features that are implemented.
+
+### Implementation tracking
+
+- [#284](https://github.com/rendall/simple-comment/issues/284) — Parent issue for site-wide moderation.
+- [#285](https://github.com/rendall/simple-comment/issues/285) — First implementation slice: admin and moderator role appointments.
+- [#275](https://github.com/rendall/simple-comment/issues/275) — Administration settings dashboard.
+- [#286](https://github.com/rendall/simple-comment/issues/286) — Owner credential rotation, tracked independently of the moderation rollout.
 
 Implementation PRs for sub-issues under #284 use `284-build-a-site-wide-comment-moderation-system` as their base branch.
+
+Detailed implementation plans, scope decisions and further sub-issues can be added here as the work is broken down.
 
 ## Deferred considerations and possible solutions
 
@@ -439,4 +607,3 @@ This section records ideas for later consideration, not additional initial-relea
 - **Administration log:** Consider a persistent, reviewable log in the Administration view recording the action, actor, affected account or resource, and timestamp independently of email delivery. Authorized users could review it even when email is disabled or delivery fails. Access permissions, retention, scope and presentation are TBD.
 - **Configurable notifications:** Design notification preferences separately, with attention to event types, recipients, traffic levels, free-tier email limits, and optional notifications that a held comment has already been resolved by another moderator. Preserve the initial default comment notification policy until a separate design changes it.
 - **Additional publication policy features:** Rule-specific exemptions, global trusted-user and mandatory-review lists, and the detailed rule catalogue may be phased in as needed. Determine the minimal set for #284 during implementation planning rather than requiring every explored feature at once.
-- **Document readability:** Reorganization of the acceptance criteria and validation strategy into thematic sections, and a consolidated policy settings table, are deferred until the current design discussion is complete.
