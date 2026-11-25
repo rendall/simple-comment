@@ -46,7 +46,7 @@ Source plan: [Site-wide comment moderation, iteration one](site-wide-comment-mod
   - Trace:
     - “Only authors can edit their comments.” (AC1 — Privileges and authorization)
 
-- [ ] C06 `[backend]` Enforce viewer-specific publication visibility in `MongodbService.commentGET` and `topicGET` for requested comments and nested replies. Extend `Comment` and `DeletedComment` in `src/lib/simple-comment-types.ts` for the chosen response representation. Treat a live comment with no `isApproved` as approved and give `dateDeleted` precedence. Return held text and reasons to the recognized author or a moderator. Keep unavailable ancestors as redacted placeholders where visible descendants need them, and apply the same viewer checks to private deletion reasons and metadata.
+- [x] C06 `[backend]` Enforce viewer-specific publication visibility in `MongodbService.commentGET` and `topicGET` for requested comments and nested replies. Extend `Comment` and `DeletedComment` in `src/lib/simple-comment-types.ts` for the chosen response representation. Treat a live comment with no `isApproved` as approved and give `dateDeleted` precedence. Return held text and reasons to the recognized author or a moderator. Keep unavailable ancestors as redacted placeholders where visible descendants need them, and apply the same viewer checks to private deletion reasons and metadata.
   - Depends on C01 and #280. Validated by T02 and T06.
   - Trace:
     - “Authors and moderators can see held content, its publication status and its hold reason.” (AC3 — Visibility)

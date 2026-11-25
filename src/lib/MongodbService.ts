@@ -126,6 +126,73 @@ const addCommentAuthorRole = (comment: { user?: Comment["user"] }) => {
   }
 }
 
+type CommentViewer = { id?: UserId; isModerator: boolean }
+
+const canReadModerationDetails = (comment: Comment, viewer: CommentViewer) =>
+  viewer.isModerator ||
+  (viewer.id !== undefined && viewer.id === comment.userId)
+
+const toVisibleComment = (comment: Comment, viewer: CommentViewer): Comment => {
+  const { id, parentId, dateCreated, dateDeleted, _id } = comment
+  const canReadDetails = canReadModerationDetails(comment, viewer)
+  const structure = { id, parentId, dateCreated, ...(_id && { _id }) }
+  if (dateDeleted != null) {
+    return {
+      ...structure,
+      text: null,
+      dateDeleted,
+      ...(canReadDetails &&
+        comment.deletedReason && { deletedReason: comment.deletedReason }),
+    }
+  }
+
+  const isApproved = comment.isApproved !== false
+  const visible: Comment = { ...structure, isApproved, text: null }
+  if (!isApproved && !canReadDetails) return visible
+
+  visible.text = comment.text
+  if (comment.user) visible.user = comment.user
+  if (!isApproved && comment.heldReason) visible.heldReason = comment.heldReason
+  addCommentAuthorRole(visible)
+  return visible
+}
+
+const toVisibleReplies = (
+  replies: Comment[] | undefined,
+  viewer: CommentViewer
+) => {
+  const comments = (replies ?? []).filter(reply => reply.id)
+  const byId = new Map(comments.map(comment => [comment.id, comment]))
+  const required = new Set<CommentId>()
+
+  for (const comment of comments) {
+    if (
+      isDeletedComment(comment) &&
+      !(comment.deletedReason && canReadModerationDetails(comment, viewer))
+    )
+      continue
+    if (
+      comment.isApproved === false &&
+      !canReadModerationDetails(comment, viewer)
+    )
+      continue
+
+    let ancestor: Comment | undefined = comment
+    while (ancestor && !required.has(ancestor.id)) {
+      required.add(ancestor.id)
+      ancestor = byId.get(ancestor.parentId)
+    }
+  }
+
+  return comments
+    .filter(comment => required.has(comment.id) || isDeletedComment(comment))
+    .filter(comment => {
+      const parent = byId.get(comment.parentId)
+      return !parent || parent.isApproved !== false || required.has(parent.id)
+    })
+    .map(comment => toVisibleComment(comment, viewer))
+}
+
 export class MongodbService extends AbstractDbService {
   private isCrossSite = isCrossSite
   private _client?: MongoClient
@@ -749,7 +816,8 @@ export class MongodbService extends AbstractDbService {
       return error401UserNotAuthenticated
     }
 
-    const { isAdmin } = getUserRole(authUser)
+    const { isAdmin, isModerator } = getUserRole(authUser)
+    const viewer = { id: authUser?.id, isModerator }
     const comments: Collection<Comment | DeletedComment | Discussion> = (
       await this.getDb()
     ).collection("comments")
@@ -759,7 +827,6 @@ export class MongodbService extends AbstractDbService {
         $match: {
           id,
           parentId: { $exists: true },
-          dateDeleted: { $exists: false },
         },
       },
       {
@@ -805,6 +872,11 @@ export class MongodbService extends AbstractDbService {
           title: 1,
           text: 1,
           dateCreated: 1,
+          dateDeleted: 1,
+          userId: 1,
+          isApproved: 1,
+          heldReason: 1,
+          deletedReason: 1,
           "user.id": 1,
           "user.email": {
             $cond: {
@@ -831,6 +903,10 @@ export class MongodbService extends AbstractDbService {
           "replies.text": 1,
           "replies.dateCreated": 1,
           "replies.dateDeleted": 1,
+          "replies.userId": 1,
+          "replies.isApproved": 1,
+          "replies.heldReason": 1,
+          "replies.deletedReason": 1,
           "replies.user.id": 1,
           "replies.user.name": 1,
           "replies.user.privilege": 1,
@@ -857,7 +933,6 @@ export class MongodbService extends AbstractDbService {
       {
         $project: {
           "replies.userarr": 0,
-          "replies.userId": 0,
           "replies.user.hash": 0,
           "user.hash": 0,
         },
@@ -889,6 +964,10 @@ export class MongodbService extends AbstractDbService {
           dateDeleted: {
             $first: "$dateDeleted",
           },
+          userId: { $first: "$userId" },
+          isApproved: { $first: "$isApproved" },
+          heldReason: { $first: "$heldReason" },
+          deletedReason: { $first: "$deletedReason" },
         },
       },
     ]
@@ -896,15 +975,18 @@ export class MongodbService extends AbstractDbService {
     const comment = await comments
       .aggregate<Comment>(fullCommentPipeline(targetId, isAdmin))
       .next()
-    if (!comment) {
-      return {
-        ...error404CommentNotFound,
-        body: `Comment '${targetId}' not found`,
-      }
+    const notFound = {
+      ...error404CommentNotFound,
+      body: `Comment '${targetId}' not found`,
     }
-    addCommentAuthorRole(comment)
-    comment.replies?.forEach(addCommentAuthorRole)
-    return { ...success200OK, body: comment }
+    if (!comment) return notFound
+
+    const body = toVisibleComment(comment, viewer)
+    const replies = toVisibleReplies(comment.replies, viewer)
+    if (body.dateDeleted && !body.deletedReason) return notFound
+    if (body.isApproved === false && body.text === null && !replies.length)
+      return notFound
+    return { ...success200OK, body: { ...body, replies } }
   }
 
   /**
@@ -1207,13 +1289,14 @@ export class MongodbService extends AbstractDbService {
     }
 
     const users: Collection<User> = (await this.getDb()).collection("users")
-    const authUser = await users.findOne({ id: authUserId })
+    const authUser = authUserId ? await users.findOne({ id: authUserId }) : null
 
     if (!authUser && !policy.canPublicReadDiscussion) {
       return error404UserUnknown
     }
 
-    const { isAdmin } = getUserRole(authUser)
+    const { isAdmin, isModerator } = getUserRole(authUser)
+    const viewer = { id: authUser?.id, isModerator }
     const comments: Collection<Comment | DeletedComment | Discussion> = (
       await this.getDb()
     ).collection("comments")
@@ -1295,6 +1378,10 @@ export class MongodbService extends AbstractDbService {
           "replies.text": 1,
           "replies.dateCreated": 1,
           "replies.dateDeleted": 1,
+          "replies.userId": 1,
+          "replies.isApproved": 1,
+          "replies.heldReason": 1,
+          "replies.deletedReason": 1,
           "replies.user.id": 1,
           "replies.user.name": 1,
           "replies.user.privilege": 1,
@@ -1317,7 +1404,6 @@ export class MongodbService extends AbstractDbService {
       {
         $project: {
           "replies.userarr": 0,
-          "replies.userId": 0,
           "replies.user.hash": 0,
           "user.hash": 0,
         },
@@ -1376,7 +1462,9 @@ export class MongodbService extends AbstractDbService {
       .next()) as Discussion & { user?: Comment["user"] }
     if (comment) {
       addCommentAuthorRole(comment)
-      comment.replies?.forEach(addCommentAuthorRole)
+      comment.replies = comment.replies
+        ? toVisibleReplies(comment.replies, viewer)
+        : undefined
     }
     const body = comment
 

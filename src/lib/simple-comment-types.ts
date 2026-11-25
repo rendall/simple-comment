@@ -88,13 +88,18 @@ export type NewTopic = Pick<
 export type Comment = {
   _id?: ObjectId
   id: CommentId
-  userId: UserId | null
+  userId?: UserId | null
   user?: PublicSafeUser | AdminSafeUser
   text: string | null
   parentId: TopicId | CommentId
   replies?: Comment[]
   dateCreated: Date
   dateDeleted?: Date
+  isApproved?: boolean
+  heldBy?: UserId | null
+  heldReason?: string
+  deletedBy?: UserId
+  deletedReason?: string
 }
 
 export type DeletedComment = Comment & {
