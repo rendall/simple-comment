@@ -199,6 +199,7 @@ describe("Ensures API specs match controller service", () => {
     ["/comment/{commentId}", "get", "commentGET"],
     ["/comment/{commentId}", "put", "commentPUT"],
     ["/comment/{commentId}", "delete", "commentDELETE"],
+    ["/comment/{commentId}/approve", "post", "commentAPPROVE"],
     ["/user", "get", "userListGET"],
     ["/user", "post", "userPOST"],
     ["/user/{userId}", "get", "userGET"],

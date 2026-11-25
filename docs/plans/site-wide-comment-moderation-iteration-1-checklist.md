@@ -123,7 +123,7 @@ Source plan: [Site-wide comment moderation, iteration one](site-wide-comment-mod
     - “it is a derived, read-only response property” (Privilege foundation)
     - “updated OpenAPI contract” (Iteration 1 — In Scope)
 
-- [ ] C17 `[contract]` Update the `/comment` and `/topic` contracts in `src/schema/simple-comment-openapi3.json` to match the implemented review operation, redacted and private response variants, deletion reason input, and authoritative create and edit responses.
+- [x] C17 `[contract]` Update the `/comment` and `/topic` contracts in `src/schema/simple-comment-openapi3.json` to match the implemented review operation, redacted and private response variants, deletion reason input, and authoritative create and edit responses.
   - Depends on C06, C07, C08, C09, C10, and C11. Validated by T06.
   - Trace:
     - “updated OpenAPI contract” (Iteration 1 — In Scope)

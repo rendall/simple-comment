@@ -261,7 +261,7 @@
             "BearerAuth": []
           }
         ],
-        "description": "Returns the topic and its replies. Authentication is required when public discussion reads are disabled."
+        "description": "Returns the topic and its replies. Authentication is required when public discussion reads are disabled. Discussion replies are filtered for the viewer. Redacted ancestors preserve the structure of visible replies."
       },
       "put": {
         "summary": "Edit a topic",
@@ -454,7 +454,7 @@
         },
         "responses": {
           "201": {
-            "description": "Comment created",
+            "description": "Comment saved. Publication status and any hold reason are included.",
             "content": {
               "application/json": {
                 "schema": {
@@ -579,7 +579,7 @@
             }
           },
           "404": {
-            "description": "{commentId} is not found",
+            "description": "Comment does not exist or is unavailable to the viewer",
             "content": {
               "text/plain": {
                 "schema": {
@@ -608,7 +608,7 @@
             "BearerAuth": []
           }
         ],
-        "description": "Returns the comment and its replies. Read access depends on the discussion read policy."
+        "description": "Returns a viewer-appropriate comment and its replies. Authors and moderators can see held content and reasons. Other viewers receive redacted placeholders for unavailable comments when visible replies require their ancestry."
       },
       "put": {
         "summary": "Edit a comment",
@@ -628,8 +628,15 @@
           "$ref": "#/components/requestBodies/text"
         },
         "responses": {
-          "204": {
-            "description": "Comment {commentId} updated"
+          "200": {
+            "description": "Comment saved with its current publication status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Comment"
+                }
+              }
+            }
           },
           "400": {
             "description": "Missing request body or unchanged comment text",
@@ -689,7 +696,8 @@
           {
             "BearerAuth": []
           }
-        ]
+        ],
+        "description": "Only the original author can edit the comment. Changed text is saved and its publication status is re-evaluated."
       },
       "delete": {
         "summary": "Delete a comment",
@@ -708,6 +716,16 @@
         "responses": {
           "202": {
             "description": "Comment {commentId} deleted",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "A deletion reason is required for cross-author removal",
             "content": {
               "text/plain": {
                 "schema": {
@@ -738,6 +756,127 @@
           },
           "404": {
             "description": "Comment or authenticating user was not found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "CookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "Authors can delete their own comments. Moderators can remove another author's comment by supplying a reason. Deletion removes the text and retains the thread record.",
+        "requestBody": {
+          "description": "A non-empty plain-text reason is required for cross-author removal.",
+          "required": false,
+          "content": {
+            "text/plain": {
+              "schema": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/comment/{commentId}/approve": {
+      "post": {
+        "summary": "Approve reviewed comment text",
+        "description": "An authenticated moderator can approve a held comment if its current text matches what the moderator reviewed. Repeated approvals of a published comment succeed without changing it.",
+        "parameters": [
+          {
+            "name": "commentId",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "The exact comment text reviewed by the moderator.",
+          "required": true,
+          "content": {
+            "text/plain": {
+              "schema": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The reviewed text was approved or the comment was already approved",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Reviewed text is required",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Reviewer is not authenticated",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Reviewer lacks moderation privileges",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Comment was deleted or could not be found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The current held text differs from the text submitted for approval",
             "content": {
               "text/plain": {
                 "schema": {
@@ -1084,7 +1223,7 @@
       },
       "delete": {
         "summary": "Delete a user",
-        "description": "Deleting another user requires administrator privileges strictly above the target's privilege. The configured owner account is protected from deletion.",
+        "description": "Administrators can delete users. A signed-in non-guest user can delete their own account when self-deletion is enabled. The built-in moderator account is protected.",
         "parameters": [
           {
             "name": "userId",
@@ -1156,8 +1295,7 @@
           {
             "BearerAuth": []
           }
-        ],
-        "description": "Administrators can delete users. A signed-in non-guest user can delete their own account when self-deletion is enabled. The built-in moderator account is protected."
+        ]
       }
     },
     "/auth": {
@@ -1434,8 +1572,21 @@
           "dateDeleted": {
             "type": "string",
             "format": "date-time"
+          },
+          "isApproved": {
+            "type": "boolean",
+            "description": "Whether a live comment is published. Legacy live comments without a stored value are treated as approved."
+          },
+          "heldReason": {
+            "type": "string",
+            "description": "The active hold reason, visible to the author and moderators."
+          },
+          "deletedReason": {
+            "type": "string",
+            "description": "The recorded removal reason, visible to the original author and moderators."
           }
-        }
+        },
+        "description": "The comment representation is filtered for the viewer. A placeholder has null text and omits author information. A held placeholder carries isApproved false, and a deletion record carries dateDeleted."
       },
       "User": {
         "type": "object",
