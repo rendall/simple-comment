@@ -25,3 +25,4 @@ debug.log
 deno.lock
 .codex
 scripts/beep.*
+/moderation-terms.txt

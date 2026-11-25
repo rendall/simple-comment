@@ -104,7 +104,7 @@ Source plan: [Site-wide comment moderation, iteration one](site-wide-comment-mod
   - Trace:
     - “validate it during CI/build, and fail if it is invalid or unreadable” (Optional private moderation terms file)
 
-- [ ] C14 `[deployment]` Make the optional list available to the comment function using the existing Netlify function build and packaging configuration in `netlify.toml` or `webpack.netlify.functions.cjs`, as appropriate. Add a `.gitignore` rule for the real file and keep it out of public assets and client bundles.
+- [x] C14 `[deployment]` Make the optional list available to the comment function using the existing Netlify function build and packaging configuration in `netlify.toml` or `webpack.netlify.functions.cjs`, as appropriate. Add a `.gitignore` rule for the real file and keep it out of public assets and client bundles.
   - Depends on C12. Validated by T08.
   - Trace:
     - “Exclude the real file from Git and from public assets, client bundles, API responses and logs.” (Optional private moderation terms file)
