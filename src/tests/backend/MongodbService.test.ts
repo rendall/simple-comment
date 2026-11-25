@@ -15,7 +15,7 @@ import type {
   User,
 } from "../../../src/lib/simple-comment-types"
 import { MongodbService } from "../../../src/lib/MongodbService"
-import { Db, MongoClient } from "mongodb"
+import { type Collection, Db, MongoClient } from "mongodb"
 import {
   error401BadCredentials,
   error401UserNotAuthenticated,
@@ -954,6 +954,128 @@ describe("Full API service test", () => {
     return service
       .commentDELETE(targetComment.id, targetComment.userId!)
       .then(value => expect(value).toHaveProperty("statusCode", 202))
+  })
+
+  describe("comment soft deletion", () => {
+    const author: User = {
+      id: "soft-delete-author",
+      name: "Comment Author",
+      email: "soft-delete-author@example.com",
+    }
+    const topic: Topic = {
+      id: "soft-delete-topic",
+      title: "Comment deletion",
+      isLocked: false,
+      dateCreated: new Date("2026-01-01T00:00:00Z"),
+    }
+    const ancestor: Comment = {
+      id: "soft-delete-ancestor",
+      parentId: topic.id,
+      dateCreated: new Date("2026-01-02T00:00:00Z"),
+      userId: author.id,
+      text: "A live ancestor",
+    }
+    const target = {
+      id: "soft-delete-target",
+      parentId: ancestor.id,
+      dateCreated: new Date("2026-01-03T00:00:00Z"),
+      userId: author.id,
+      text: "The original comment text",
+    } satisfies Comment
+    const reply: Comment = {
+      id: "soft-delete-live-reply",
+      parentId: target.id,
+      dateCreated: new Date("2026-01-04T00:00:00Z"),
+      userId: author.id,
+      text: "A surviving reply",
+    }
+    const dateDeleted = new Date("2026-01-05T00:00:00Z")
+    let comments: Collection<Topic | Comment>
+
+    beforeEach(async () => {
+      await db.collection<User>("users").insertOne({ ...author })
+      comments = db.collection<Topic | Comment>("comments")
+      await comments.insertMany([{ ...topic }, { ...ancestor }, { ...target }])
+    })
+
+    afterEach(async () => {
+      await comments.deleteMany({
+        $or: [
+          { id: topic.id },
+          { parentId: { $in: [topic.id, ancestor.id, target.id] } },
+        ],
+      })
+      await db.collection<User>("users").deleteOne({ id: author.id })
+    })
+
+    const expectRetainedDeletion = async (deletedBy: User["id"]) => {
+      expect(await service.commentDELETE(target.id, deletedBy)).toEqual(
+        success202CommentDeleted
+      )
+      const deleted = await comments.findOne<Comment>({ id: target.id })
+      expect(deleted).toMatchObject({
+        id: target.id,
+        parentId: target.parentId,
+        userId: author.id,
+        dateCreated: target.dateCreated,
+        dateDeleted: expect.any(Date),
+      })
+      expect(deleted?.text ?? null).toBeNull()
+    }
+
+    test("retains the record when the author deletes a leaf comment", async () => {
+      await expectRetainedDeletion(author.id)
+    })
+
+    test("retains the original author and live reply when an admin deletes a parent comment", async () => {
+      await comments.insertOne({ ...reply })
+
+      await expectRetainedDeletion(authUserTest.id)
+      expect(await comments.findOne({ id: reply.id })).toMatchObject(reply)
+    })
+
+    test.each(["discussion", "ancestor comment"])(
+      "keeps the author of a deleted comment private when reading its %s",
+      async readFrom => {
+        await comments.updateOne(
+          { id: target.id },
+          { $set: { text: null, dateDeleted } }
+        )
+        await comments.insertOne({ ...reply })
+
+        const response =
+          readFrom === "discussion"
+            ? await service.topicGET(topic.id, author.id)
+            : await service.commentGET(ancestor.id, author.id)
+
+        expect(response.statusCode).toBe(200)
+        const deleted = (response.body as Discussion | Comment).replies?.find(
+          comment => comment.id === target.id
+        )
+        expect(deleted).toMatchObject({
+          id: target.id,
+          parentId: ancestor.id,
+          text: null,
+          dateDeleted,
+        })
+        expect(deleted).not.toHaveProperty("userId")
+        expect(deleted?.user ?? {}).toEqual({})
+      }
+    )
+
+    test("rejects a duplicate of the latest live comment when the author has a newer deleted comment", async () => {
+      await comments.insertOne({
+        ...target,
+        id: "soft-delete-newer-comment",
+        dateCreated: reply.dateCreated,
+        text: null,
+        dateDeleted,
+      })
+
+      expect(
+        await service.commentPOST(target.parentId, target.text, author.id)
+      ).toEqual(error409DuplicateComment)
+    })
   })
 
   // Topic Create

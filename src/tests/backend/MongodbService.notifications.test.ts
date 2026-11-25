@@ -450,7 +450,6 @@ describe("comment notification lifecycle", () => {
           const deleted = await comments.findOne({ id: editableComment.id })
           expect(deleted).toMatchObject({
             text: null,
-            userId: null,
             dateDeleted: expect.any(Date),
           })
           deletedAt = deleted?.dateDeleted
@@ -471,7 +470,11 @@ describe("comment notification lifecycle", () => {
         notificationCount: notifyModerators.mock.calls.length,
       }).toMatchObject({
         statusCode: 500,
-        comment: { text: null, userId: null, dateDeleted: deletedAt },
+        comment: {
+          text: null,
+          userId: editableComment.userId,
+          dateDeleted: deletedAt,
+        },
         notificationCount: 0,
       })
     })
