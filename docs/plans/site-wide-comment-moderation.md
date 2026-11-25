@@ -12,6 +12,22 @@ Build a site-wide moderation system so an installation owner can appoint moderat
 
 The first iteration addresses a single practical concern: potentially objectionable links or terms should not appear publicly without human review. Use the existing environment-configured owner account as the initial reviewer. Do not build moderator appointments, a role-management dashboard, or a general policy configuration system as prerequisites.
 
+### Privilege foundation
+
+Implement the numerical privilege model in iteration one, without implementing any role appointment or demotion workflow.
+
+| Stored privilege | Meaning |
+| ---: | --- |
+| Absent or 0 | Regular user |
+| 1 | Moderator |
+| 2 | Admin |
+
+The configured owner has effective privilege 3, derived on the server from deployment configuration and never stored as 3. Newly created owner accounts store 2. Newly created ordinary accounts store 0; existing ordinary accounts without a privilege field need not be rewritten.
+
+For a non-owner, an absent privilege field resolves to 0; a present valid stored value is used as-is. Derive `isModerator` from effective privilege >= 1, `isAdmin` from >= 2, and `isOwner` from === 3. Reject invalid stored or requested privilege values; do not interpret arbitrary numbers or legacy flag inputs as authority. Preserve legitimate existing administrator privileges through a targeted migration of legacy admin accounts to 2 (and initialize the existing owner's underlying privilege to 2 if missing), rather than backfilling every ordinary user. Once migrated, the old Boolean flag is not an authorization source.
+
+Use the privilege foundation for server-side authorization, but retain the owner-only scope of the new review workflow and alerts in iterations one and two. The predicates are available from the first iteration; delegation of the new review capabilities and role-management actions follows in iteration three. Existing administrator permissions remain intact, subject to the agreed account protection boundaries.
+
 ### Initial workflow
 
 1. A user submits a comment or changes existing comment text.
@@ -32,7 +48,7 @@ The owner can review a held comment in its discussion or through a minimal revie
 
 The link rule is enabled by default. Detect common URL forms, including recognizable links without an explicit scheme; the precise detection algorithm and false-positive trade-offs are implementation details. The term rule is active only when a nonempty moderation list is supplied. Keep the rules independent and use the existing publication decision convention. Preserve applicable existing developer-provided filtering rather than building a general policy engine.
 
-For this minimal iteration, the rules apply to all authors; no role-based automatic publication exemption is required. The configured owner is the only recipient of new review alerts and the only account granted the new explicit approval authority. Preserve existing account and comment permissions, but do not introduce new role appointments or require the integer privilege migration for this slice. Identify the configured owner on the server and retain the existing owner protections. Owner credential rotation (#286) remains an independent security fix.
+For this minimal iteration, the rules apply to all authors; no role-based automatic publication exemption is required. The configured owner is the only recipient of new review alerts and the only account granted the new explicit approval authority. Preserve existing account and comment permissions, and implement the privilege foundation above, including only the targeted migration needed to preserve legacy administrator access. Do not introduce new role appointments in this slice. Identify the configured owner on the server and retain the existing owner protections. Owner credential rotation (#286) remains an independent security fix.
 
 Re-evaluate changed comment text so an author cannot evade review by editing a published comment. A qualifying edit may release an automatic hold. Do not scan or reclassify existing comments merely because a rule or term list is introduced or changed. Manual holding of published comments belongs to iteration two; manual holds must survive edits and automatic exemptions as specified below.
 
@@ -65,6 +81,7 @@ For matching terms, use a generic author-facing hold reason (for example, "Your 
 - The authenticated owner can approve the reviewed text or delete the held comment. Approval is atomic and idempotent; stale reviewed text that remains held returns HTTP 409. A deleted comment cannot be approved. Rejection uses the same deletion mechanism, not a separate publication state.
 - Preserve visible descendants and their thread structure when a parent becomes held or deleted. Do not allow new direct replies to held or deleted comments. Coordinate the necessary soft-deletion behavior with #280.
 - Ordinary author editing remains distinct from moderation; do not expand cross-author editing authority. Enforce authorization on the server.
+- The server derives effective privilege and role predicates correctly, including missing privilege resolving to 0 and configured owner resolving to 3. New owner accounts store 2; existing ordinary records need no backfill. Preserve legacy administrator access through targeted migration. Role assignments remain unavailable in this iteration.
 
 ### Second iteration — manually holding published comments
 
@@ -93,7 +110,7 @@ Existing replies remain independently visible and eligible for further replies a
 
 ### Third iteration — moderator appointments
 
-Introduce owner-appointed moderators (#285), the integer privilege model and the shared role-management infrastructure, then delegate the first and second iterations' review and manual-hold capabilities to moderators. Preserve existing administrators' privileges; new admin appointments remain deferred. Include the agreed idempotent role assignments and role-change notifications.
+Introduce owner-appointed moderators (#285) and the shared role-management infrastructure using the integer privilege model already implemented in iteration one, then delegate the first and second iterations' review and manual-hold capabilities to moderators. Preserve existing administrators' privileges; new admin appointments remain deferred. Include the agreed idempotent role assignments and role-change notifications.
 
 A dedicated site-wide review interface and user comment history (#288) may also be useful early enhancements, but their inclusion in the third iteration is not yet decided.
 
@@ -119,7 +136,7 @@ Only the owner can appoint admins or demote admins. The owner and admins can app
 
 ### Stored privilege and derived permissions
 
-Store a single integer `privilege` on each user record instead of independent `isAdmin` and `isModerator` flags. Roles form a strict, cumulative hierarchy. Each account has one role at a time, and every higher role inherits the privileges of the lower roles.
+Represent each user's underlying role with a single integer `privilege` instead of independent `isAdmin` and `isModerator` flags. New user records store the value; an existing record without the field is treated as privilege 0 without requiring a write. Roles form a strict, cumulative hierarchy. Each account has one role at a time, and every higher role inherits the privileges of the lower roles.
 
 | Role | Effective privilege | `isModerator` | `isAdmin` | `isOwner` |
 | --- | ---: | --- | --- | --- |
@@ -139,12 +156,12 @@ enum Privilege {
 }
 ```
 
-**Stored versus effective privilege.** Only values 0–2 are valid stored privileges. Level 3 is derived exclusively on the server from the authenticated account's configured owner identity; it is never persisted or assignable through the API. When the server creates a new user account for the configured owner (whether on first owner login or during owner initialization), initialize its stored privilege to 2 (Admin), not 0 or 3. The account has effective privilege 3 while it is the configured owner. If deployment configuration later transfers ownership away from that account, its stored privilege remains 2 by default and it becomes an admin. Any subsequent demotion must follow the ordinary role-management rules. Resolve the effective privilege for each request using the authenticated account's current role:
+**Stored versus effective privilege.** Only values 0–2 are valid stored privileges. Level 3 is derived exclusively on the server from the authenticated account's configured owner identity; it is never persisted or assignable through the API. When the server creates a new user account for the configured owner (whether on first owner login or during owner initialization), initialize its stored privilege to 2 (Admin), not 0 or 3. The account has effective privilege 3 while it is the configured owner. If deployment configuration later transfers ownership away from that account, its stored privilege remains 2 by default and it becomes an admin. Any subsequent demotion must follow the ordinary role-management rules. Resolve the effective privilege for each request using the authenticated account's current role. The following example assumes stored values have been validated; a missing field defaults to 0, while invalid present values are rejected:
 
 ```typescript
 const privilege = isConfiguredOwner(user)
   ? Privilege.Owner
-  : user.privilege;
+  : (user.privilege ?? Privilege.User);
 ```
 
 The API exposes the effective privilege and derived predicates, including `isModerator`, `isAdmin`, and `isOwner`. These remain useful to the frontend and preserve compatibility with consumers of the existing `isAdmin` response field, but they are not independently stored or writable sources of authority.
@@ -186,7 +203,7 @@ Use server-derived effective privileges for both actor and target. Apply the res
 
 #### Migration
 
-Migrate existing non-owner accounts with `isAdmin: true` to privilege 2; ordinary accounts default to privilege 0. For the existing configured owner, initialize a missing stored privilege to 2 as the default underlying role. Preserve any already valid stored privilege when rerunning the migration. The configured owner's effective privilege is always 3, independent of the stored value or legacy admin flag. Retire the legacy persisted flags once existing records and all read/write paths have been migrated; retain the derived API predicates. Ensure existing installations preserve their legitimate admin access throughout the migration and that legacy role-update inputs cannot bypass the new authorization rules.
+In iteration one, target only existing non-owner accounts with `isAdmin: true` and no stored privilege for migration to 2. For the existing configured owner, initialize a missing stored privilege to 2 as the default underlying role. Existing ordinary accounts with no `privilege` field are already logically privilege 0 and do not require a migration write. New ordinary accounts store 0. Preserve any already valid stored privilege when rerunning the migration. The configured owner's effective privilege is always 3, independent of the stored value or legacy admin flag. Retire legacy flags as authorization inputs after the targeted migration and update the read/write paths; retain the derived API predicates. Old flag fields on otherwise unchanged ordinary records may be left unused rather than forcing a collection-wide rewrite. Ensure existing installations preserve their legitimate admin access throughout the migration and that legacy role-update inputs cannot bypass the new authorization rules.
 
 #### Rationale
 
@@ -212,7 +229,7 @@ The following sections describe the broader intended system. The [focused first 
 
 ### Owner permissions and role appointments
 
-The role-management sub-issue under #284 ([#285](https://github.com/rendall/simple-comment/issues/285)) follows owner-only automatic review and manual holding in the first two iterations. Its third-iteration scope is owner appointment and demotion of moderators and the underlying privilege model; the shared admin appointment capability described here is for later releases. The owner can appoint and demote admins and moderators; admins can appoint and demote moderators only. The server authorizes and persists each change using the same privilege model. This capability can proceed independently of the broader comment review and publication workflows.
+The role-management sub-issue under #284 ([#285](https://github.com/rendall/simple-comment/issues/285)) follows owner-only automatic review and manual holding in the first two iterations. Its third-iteration scope is owner appointment and demotion of moderators using the privilege model introduced in iteration one; the shared admin appointment capability described here is for later releases. The owner can appoint and demote admins and moderators; admins can appoint and demote moderators only. The server authorizes and persists each change using the same privilege model. This capability can proceed independently of the broader comment review and publication workflows.
 
 Appointment immediately grants the moderation capabilities already implemented for the assigned role, including authorized deletion of other users' comments. As the broader review system is implemented, moderators also gain the ability to approve held comments, withdraw approval (hold or hide comments), and delete held or published comments, subject to applicable policies. Revocation removes the capabilities associated with the lost privilege on subsequent requests. The role-appointment sub-issue need not implement all future comment review workflows.
 
@@ -525,11 +542,11 @@ The criteria below describe the broader agreed behavior of the relevant features
 
 ### Privilege hierarchy and role management
 
-- All accounts store exactly one privilege in the range 0–2; the API derives the role predicates from the effective privilege.
+- Each account has an underlying privilege in the range 0–2; an absent field resolves to 0 without a database rewrite. The API derives the role predicates from the effective privilege.
 - The owner and admins can appoint and remove moderators.
 - Only the owner can appoint and demote admins; admin demotion explicitly assigns privilege 1 or 0.
 - The API rejects attempts by moderators to appoint, create, or remove another moderator, attempts by admins to grant or revoke admin access, and attempts to assign owner privilege or invalid privilege values.
-- Existing admin accounts migrate to privilege 2 and ordinary accounts to privilege 0.
+- Existing legacy admin accounts without stored privilege migrate to 2; existing ordinary accounts without a stored privilege default to 0 without a backfill. New ordinary accounts store 0.
 - The same role-management interface supports admin and moderator appointments and demotions, subject to actor and target privileges.
 - Appointment grants already implemented moderation capabilities, including authorized cross-author comment deletion, and revocation removes the corresponding privileges on subsequent requests.
 - Approval and holding capabilities are added as the comment review system is implemented.
@@ -608,7 +625,7 @@ Use the corresponding validation group for each implementation slice. Conditiona
 ### Privilege hierarchy and role management
 
 - Unit tests should cover every effective privilege level and its derived predicates, including owner records with a lower stored privilege or legacy `isAdmin: false`.
-- Test migration of existing admin and ordinary accounts, initialization of a missing stored privilege to 2 for the existing configured owner, migration reruns, rejection of invalid stored privileges, and preservation of owner access without persisting privilege 3.
+- Test targeted migration of legacy admin accounts, missing privilege resolving to 0 without rewriting existing ordinary accounts, new ordinary accounts storing 0, initialization of a missing stored privilege to 2 for the existing configured owner, migration reruns, rejection of invalid stored privileges, and preservation of owner access without persisting privilege 3.
 - Test promotion from moderator to admin and demotion from admin to either moderator or regular user, including the resulting effective permissions.
 - Test moderator appointment by the owner and an admin, removal by the owner and an admin, owner-only admin appointments and demotions, rejection of role changes attempted by a moderator, and rejection of attempts to grant or revoke admin access by an admin.
 - Verify that direct API requests cannot assign privilege 3 or bypass role checks through legacy flag inputs.
@@ -686,12 +703,12 @@ As implementation is planned, categorize and prioritize the features here. The i
 | Designed but deferrable | Behavior has been agreed, but implementation can follow in a later release |
 | Exploratory | Further design discussion is required before implementation can be planned |
 
-The [focused first iteration](#focused-first-iteration--owner-review) establishes owner-only automatic holds and review as the first deliverable. Manual holding of published comments follows in iteration two. Moderator appointments and the underlying privilege model follow in iteration three. The detailed assignment of tasks to implementation slices and remaining dependencies is still to be planned. Deferring a feature does not discard its design, and must not weaken the authorization, visibility or other invariants applicable to features that are implemented.
+The [focused first iteration](#focused-first-iteration--owner-review) establishes the privilege foundation and owner-only automatic holds and review as the first deliverable. Manual holding of published comments follows in iteration two. Moderator appointments using the existing privilege model follow in iteration three. The detailed assignment of tasks to implementation slices and remaining dependencies is still to be planned. Deferring a feature does not discard its design, and must not weaken the authorization, visibility or other invariants applicable to features that are implemented.
 
 ### Implementation tracking
 
 - [#284](https://github.com/rendall/simple-comment/issues/284) — Parent issue for site-wide moderation.
-- [#285](https://github.com/rendall/simple-comment/issues/285) — Third iteration: owner-appointed moderators and the underlying privilege model; new admin appointments remain deferred.
+- [#285](https://github.com/rendall/simple-comment/issues/285) — Third iteration: owner-appointed moderators using the iteration-one privilege model; new admin appointments remain deferred.
 - [#275](https://github.com/rendall/simple-comment/issues/275) — Administration settings dashboard, deferred with persistent configuration.
 - [#286](https://github.com/rendall/simple-comment/issues/286) — Owner credential rotation, tracked independently of the moderation rollout.
 
