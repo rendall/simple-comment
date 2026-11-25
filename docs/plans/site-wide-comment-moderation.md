@@ -34,7 +34,7 @@ The link rule is enabled by default. Detect common URL forms, including recogniz
 
 For this minimal iteration, the rules apply to all authors; no role-based automatic publication exemption is required. The configured owner is the only recipient of new review alerts and the only account granted the new explicit approval authority. Preserve existing account and comment permissions, but do not introduce new role appointments or require the integer privilege migration for this slice. Identify the configured owner on the server and retain the existing owner protections. Owner credential rotation (#286) remains an independent security fix.
 
-Re-evaluate changed comment text so an author cannot evade review by editing a published comment. A qualifying edit may release an automatic hold. Do not scan or reclassify existing comments merely because a rule or term list is introduced or changed. Manual holding of published comments is a later capability; when implemented, manual holds must survive edits and automatic exemptions as specified below.
+Re-evaluate changed comment text so an author cannot evade review by editing a published comment. A qualifying edit may release an automatic hold. Do not scan or reclassify existing comments merely because a rule or term list is introduced or changed. Manual holding of published comments belongs to iteration two; manual holds must survive edits and automatic exemptions as specified below.
 
 The rules identify material for human review rather than declare it illegal or unacceptable, and need not detect every possible obfuscation or evasion technique.
 
@@ -66,11 +66,36 @@ For matching terms, use a generic author-facing hold reason (for example, "Your 
 - Preserve visible descendants and their thread structure when a parent becomes held or deleted. Do not allow new direct replies to held or deleted comments. Coordinate the necessary soft-deletion behavior with #280.
 - Ordinary author editing remains distinct from moderation; do not expand cross-author editing authority. Enforce authorization on the server.
 
-### Second iteration — moderator appointments
+### Second iteration — manually holding published comments
 
-Introduce owner-appointed moderators (#285), the integer privilege model and the shared role-management infrastructure, then delegate the first iteration's review capabilities to moderators. Preserve existing administrators' privileges; new admin appointments remain deferred. Include the agreed idempotent role assignments and role-change notifications. A site-wide review interface and manual holding of published comments can be planned alongside or after this work, without being prerequisites for the first iteration.
+Extend the existing review workflow so a moderator can unpublish an already published comment. In this iteration, the configured owner is still the only moderator authorized to perform the new moderation actions. Use the term moderator to describe the person performing these actions; appointed moderator accounts are introduced in iteration three.
 
-User comment history (#288) may also be a useful early enhancement, but its inclusion in the second iteration is not yet decided.
+A moderator can choose to hide a published comment and must supply a non-empty reason. This is a manual hold, not deletion. Preserve the comment's content and original position, set `isApproved` to false, and record `heldBy` and `heldReason` together. Enforce authorization and required reasons on the server.
+
+| Viewer | Comment content | Hidden state | Specific hold reason |
+| --- | --- | --- | --- |
+| Original author | Visible | Visible | Visible |
+| Authorized moderator (owner in this iteration) | Visible | Visible | Visible |
+| Other readers | Not visible | Visible as a placeholder | Not visible |
+
+For ordinary readers, replace the previously published comment with a placeholder, including when it has no replies. The provisional label is **Hidden pending moderation**. Do not expose the text or specific reason through the API, placeholder, history, or other read paths. The author and moderator see the held comment in its original position, clearly marked as hidden, together with the reason. This public placeholder requirement is for manually hidden published comments; it does not require exposing the existence of every automatically held new comment.
+
+Existing replies remain independently visible and eligible for further replies according to their own states. New direct replies to the hidden comment are not permitted. The author may edit their comment, but a manual hold and its reason survive edits. Only explicit authorized approval of the current reviewed text republishes it and clears the active hold metadata; deletion remains a separate terminal action. No new administration or manual-hold email notification is required for this iteration.
+
+#### Second-iteration completion criteria
+
+- The moderator can hide a published comment with a reason and subsequently approve it using the existing review workflow.
+- Unauthorized hide requests and requests without a reason are rejected without changing the comment.
+- Other readers see the hidden placeholder, including for a manually hidden leaf, but cannot retrieve the content or specific reason.
+- The author and moderator can read the content, hidden state and reason; the author's edits do not lift the hold.
+- Existing descendants remain independently visible; new direct replies to the held comment are rejected.
+- Concurrent edits and moderation actions preserve the manual hold and the atomic content-matched approval rules. Public reads and any implemented synchronization paths reflect the changed visibility.
+
+### Third iteration — moderator appointments
+
+Introduce owner-appointed moderators (#285), the integer privilege model and the shared role-management infrastructure, then delegate the first and second iterations' review and manual-hold capabilities to moderators. Preserve existing administrators' privileges; new admin appointments remain deferred. Include the agreed idempotent role assignments and role-change notifications.
+
+A dedicated site-wide review interface and user comment history (#288) may also be useful early enhancements, but their inclusion in the third iteration is not yet decided.
 
 ### Later iterations
 
@@ -183,11 +208,11 @@ See [account creation](../../src/lib/MongodbService.ts#L349), [user updates](../
 
 ## In Scope
 
-The following sections describe the broader intended system. The [focused first iteration](#focused-first-iteration) defines the initial release boundary; later capabilities in this section are not required to ship the first iteration.
+The following sections describe the broader intended system. The [focused first iteration](#focused-first-iteration--owner-review) defines the initial release boundary; later capabilities in this section are not required to ship the first iteration.
 
 ### Owner permissions and role appointments
 
-The role-management sub-issue under #284 ([#285](https://github.com/rendall/simple-comment/issues/285)) follows the first iteration's owner-only review. Its second-iteration scope is owner appointment and demotion of moderators and the underlying privilege model; the shared admin appointment capability described here is for later releases. The owner can appoint and demote admins and moderators; admins can appoint and demote moderators only. The server authorizes and persists each change using the same privilege model. This capability can proceed independently of the broader comment review and publication workflows.
+The role-management sub-issue under #284 ([#285](https://github.com/rendall/simple-comment/issues/285)) follows owner-only automatic review and manual holding in the first two iterations. Its third-iteration scope is owner appointment and demotion of moderators and the underlying privilege model; the shared admin appointment capability described here is for later releases. The owner can appoint and demote admins and moderators; admins can appoint and demote moderators only. The server authorizes and persists each change using the same privilege model. This capability can proceed independently of the broader comment review and publication workflows.
 
 Appointment immediately grants the moderation capabilities already implemented for the assigned role, including authorized deletion of other users' comments. As the broader review system is implemented, moderators also gain the ability to approve held comments, withdraw approval (hold or hide comments), and delete held or published comments, subject to applicable policies. Revocation removes the capabilities associated with the lost privilege on subsequent requests. The role-appointment sub-issue need not implement all future comment review workflows.
 
@@ -341,7 +366,7 @@ Apply the same server-enforced visibility policy to every comment retrieval path
 
 Holding or deleting a comment does not automatically hold or delete its replies or descendants. Evaluate each descendant independently under the same publication and visibility rules.
 
-When a comment is unavailable to a viewer but has descendants visible to that viewer, show a placeholder at its original position in the discussion tree to preserve the thread's structure. A deleted comment with no descendants can be omitted. Do not expose held or deleted content through a placeholder. The exact wording and detail are UX decisions: ordinary readers may see a generic unavailable or deleted-comment message, while moderators may see more information about the reason, state or deletion metadata. A held comment remains visible in full to its author and moderators.
+When a comment is unavailable to a viewer but has descendants visible to that viewer, show a placeholder at its original position in the discussion tree to preserve the thread's structure. A deleted comment with no descendants can be omitted. A previously published comment manually hidden by a moderator is an explicit exception to the descendant requirement: display a hidden placeholder even if it has no replies, provisionally labeled **Hidden pending moderation**. Do not expose held or deleted content or the private hold reason through a public placeholder. The exact wording and detail are UX decisions: ordinary readers may see a generic unavailable or deleted-comment message, while moderators may see more information about the reason, state or deletion metadata. A held comment remains visible in full to its author and moderators.
 
 A user cannot post a new direct reply to a held or deleted comment, including through direct API requests. This applies even to authors and moderators who can see a held comment. Existing replies remain intact, and users may continue the thread by replying to an existing, eligible descendant. A held or deleted ancestor does not make its descendants ineligible for replies. Once a held comment is approved, ordinary reply rules apply again. The exact presentation of held placeholders to different viewers remains a UX decision. Use the hold reason rather than a reply to explain moderation decisions to an author.
 
@@ -536,6 +561,7 @@ The criteria below describe the broader agreed behavior of the relevant features
 - Authors and moderators can see held comments; unrelated ordinary readers cannot.
 - Authors see their own held comments in their original tree position, identified as unpublished.
 - Independently visible descendants of unavailable comments remain visible under structural placeholders, and new direct replies to held or deleted comments are rejected (including for authors and moderators) while replies to eligible descendants are allowed.
+- A manually hidden published comment has a public hidden placeholder even if it has no replies; only the author and authorized moderators can see its content and specific reason.
 - The site-wide user comment history allows ordinary readers to see public contributions, authors to see their own held contributions, and moderators to see held contributions by any user, consistently with the same server-enforced visibility policy.
 
 ### Publication and editing policies
@@ -616,7 +642,7 @@ Use the corresponding validation group for each implementation slice. Conditiona
 - Test visibility for unauthenticated readers, unrelated authenticated users, authors and privileged users in the discussion tree, direct comment reads, user comment history and site-wide moderation views as applicable.
 - Verify that an authenticated returning guest can see their own held comments and reasons under the same author-visibility rule, and an unrecognized visitor cannot.
 - Verify that authors see their own held comments in their original tree position, that unauthorized readers cannot access held content through alternate retrieval paths, and that no viewer can retrieve deleted text.
-- Test preservation of independently visible descendants beneath deleted or held parents, including nested placeholders without hidden content.
+- Test preservation of independently visible descendants beneath deleted or held parents, including nested placeholders without hidden content. Test that manually hidden published leaf comments also retain a public placeholder, without exposing their text or private reason.
 - Verify that the server rejects new direct replies to held or deleted comments for every role (including when the parent is held or deleted after the reply form is opened), but permits replies to eligible existing descendants and to a formerly held comment after approval.
 - Verify user comment history across multiple discussions and that the moderator queue excludes deleted comments.
 
@@ -660,12 +686,12 @@ As implementation is planned, categorize and prioritize the features here. The i
 | Designed but deferrable | Behavior has been agreed, but implementation can follow in a later release |
 | Exploratory | Further design discussion is required before implementation can be planned |
 
-The [focused first iteration](#focused-first-iteration) establishes owner-only automatic holds and review as the first deliverable. Moderator appointments and the underlying privilege model follow in iteration two. The detailed assignment of tasks to implementation slices and remaining dependencies is still to be planned. Deferring a feature does not discard its design, and must not weaken the authorization, visibility or other invariants applicable to features that are implemented.
+The [focused first iteration](#focused-first-iteration--owner-review) establishes owner-only automatic holds and review as the first deliverable. Manual holding of published comments follows in iteration two. Moderator appointments and the underlying privilege model follow in iteration three. The detailed assignment of tasks to implementation slices and remaining dependencies is still to be planned. Deferring a feature does not discard its design, and must not weaken the authorization, visibility or other invariants applicable to features that are implemented.
 
 ### Implementation tracking
 
 - [#284](https://github.com/rendall/simple-comment/issues/284) — Parent issue for site-wide moderation.
-- [#285](https://github.com/rendall/simple-comment/issues/285) — Second iteration: owner-appointed moderators and the underlying privilege model; new admin appointments remain deferred.
+- [#285](https://github.com/rendall/simple-comment/issues/285) — Third iteration: owner-appointed moderators and the underlying privilege model; new admin appointments remain deferred.
 - [#275](https://github.com/rendall/simple-comment/issues/275) — Administration settings dashboard, deferred with persistent configuration.
 - [#286](https://github.com/rendall/simple-comment/issues/286) — Owner credential rotation, tracked independently of the moderation rollout.
 
