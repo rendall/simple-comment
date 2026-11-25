@@ -99,7 +99,7 @@ Source plan: [Site-wide comment moderation, iteration one](site-wide-comment-mod
     - “log the configuration failure without exposing the terms, disable the affected term rule” (Optional private moderation terms file)
     - “Do not reveal the matched term or the contents of the list.” (Optional private moderation terms file)
 
-- [ ] C13 `[build]` Reject an invalid or unreadable supplied terms file in the existing build and CI validation paths. Reuse the parser from `src/lib/moderation-terms.ts`, wire the check through `package.json`, and keep `yarn build`, the Netlify build command in `netlify.toml`, and the PR and local CI paths aligned.
+- [x] C13 `[build]` Reject an invalid or unreadable supplied terms file in the existing build and CI validation paths. Reuse the parser from `src/lib/moderation-terms.ts`, wire the check through `package.json`, and keep `yarn build`, the Netlify build command in `netlify.toml`, and the PR and local CI paths aligned.
   - Depends on C12. Validated by T04.
   - Trace:
     - “validate it during CI/build, and fail if it is invalid or unreadable” (Optional private moderation terms file)
