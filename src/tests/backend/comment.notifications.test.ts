@@ -342,6 +342,32 @@ describe("comment endpoint notification wiring", () => {
       configureProvider("resend")
     })
 
+    it("sends held submissions to every configured recipient", async () => {
+      const secondRecipient = "reviewer@example.com"
+      process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL = `${recipient},${secondRecipient}`
+      const handler = await loadHandler()
+      const text = "Look up example.org"
+      const response = await handler(eventFor({ body: text }))
+      expect(response.statusCode).toBe(201)
+      const body = JSON.parse(response.body as string) as Comment
+      expect(body.isApproved).toBe(false)
+      expect(resendSend.mock.calls.map(([message]) => message.to)).toEqual(
+        expect.arrayContaining([recipient, secondRecipient])
+      )
+      expect(resendSend).toHaveBeenCalledTimes(2)
+      for (const [message] of resendSend.mock.calls) {
+        expect(message).toHaveProperty("text", expect.stringContaining(text))
+        expect(message).toHaveProperty(
+          "text",
+          expect.stringContaining(`Held for review: ${body.heldReason}`)
+        )
+        expect(message).toHaveProperty(
+          "text",
+          expect.stringContaining(`Comment ID: ${body.id}`)
+        )
+      }
+    })
+
     it("saves the comment before sending through Resend", async () => {
       let savedAtSend: Comment | null = null
       resendSend.mockImplementation(async () => {

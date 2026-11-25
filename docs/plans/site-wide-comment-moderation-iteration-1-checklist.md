@@ -205,7 +205,7 @@ Source plan: [Site-wide comment moderation, iteration one](site-wide-comment-mod
   - Trace:
     - “Test absent, valid, empty and invalid moderation terms files, CI/build failure for an invalid supplied file, runtime fail-open behavior with independent link filtering intact” (Validation Strategy — Publication and editing policies)
 
-- [ ] T05 `[tests]` Verify notification compatibility in `src/tests/backend/MongodbService.notifications.test.ts` and `src/tests/backend/comment.notifications.test.ts`. Confirm exactly the configured recipients and the existing creation and changed-text events for held and published results, preservation of the prior message information, added hold details, and successful writes despite delivery failures. Confirm failed or unauthorized writes, unchanged edits, approvals, and deletions send nothing. Run `yarn test:backend`.
+- [x] T05 `[tests]` Verify notification compatibility in `src/tests/backend/MongodbService.notifications.test.ts` and `src/tests/backend/comment.notifications.test.ts`. Confirm exactly the configured recipients and the existing creation and changed-text events for held and published results, preservation of the prior message information, added hold details, and successful writes despite delivery failures. Confirm failed or unauthorized writes, unchanged edits, approvals, and deletions send nothing. Run `yarn test:backend`.
   - Depends on C08, C09, and C15.
   - Trace:
     - “Existing recipient and event behavior is preserved, with correct hold information” (Iteration 1 — Validation Strategy)

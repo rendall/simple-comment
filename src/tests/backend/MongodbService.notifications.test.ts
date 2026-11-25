@@ -102,6 +102,41 @@ describe("comment notification lifecycle", () => {
     await client.close()
   })
 
+  it("sends hold details after a changed text save and no notices for approval or removal", async () => {
+    const moderator = {
+      ...author,
+      id: "notification-reviewer",
+      privilege: Privilege.Moderator,
+    }
+    await db.collection<User>("users").insertOne(moderator)
+    const post = await service.commentPOST(topic.id, commentText, author.id)
+    expect(post.statusCode).toBe(201)
+    const comment = post.body as Comment
+    expect(notifyModerators.mock.calls[0][0]).not.toContain("Held for review")
+
+    const updatedText = "Visit example.org for more information"
+    const edit = await service.commentPUT(comment.id, updatedText, author.id)
+    expect(edit).toMatchObject({ statusCode: 200, body: { isApproved: false } })
+    expect(notifyModerators).toHaveBeenCalledTimes(2)
+    const editNotice = notifyModerators.mock.calls[1][0]
+    expect(editNotice).toContain(updatedText)
+    expect(editNotice).toContain(
+      "Held for review: This comment contains a link"
+    )
+    expect(editNotice).toContain(`Comment ID: ${comment.id}`)
+    expect(editNotice).toContain(`Parent ID: ${topic.id}`)
+
+    expect(
+      (await service.commentAPPROVE(comment.id, updatedText, moderator.id))
+        .statusCode
+    ).toBe(200)
+    expect(
+      (await service.commentDELETE(comment.id, moderator.id, "Removal reason"))
+        .statusCode
+    ).toBe(202)
+    expect(notifyModerators).toHaveBeenCalledTimes(2)
+  })
+
   const expectCreatedAndPersisted = async (
     response: Success<Comment> | Error
   ) => {
