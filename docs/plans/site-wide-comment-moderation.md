@@ -8,41 +8,35 @@ Parent issue — [#284](https://github.com/rendall/simple-comment/issues/284)
 
 Build a site-wide moderation system so an installation owner can appoint moderators and those moderators can manage comments across all discussions.
 
-## Focused first iteration
+## Focused first iteration — owner review
 
-The first release should give an installation owner enough control to operate a public comment system with confidence. In particular, a comment containing a potentially objectionable link or term should be held for human review rather than immediately becoming public. The aim is a small, useful moderation system, not a comprehensive policy configuration platform.
+The first iteration addresses a single practical concern: potentially objectionable links or terms should not appear publicly without human review. Use the existing environment-configured owner account as the initial reviewer. Do not build moderator appointments, a role-management dashboard, or a general policy configuration system as prerequisites.
 
-An owner appoints trusted moderators. Ordinary comments are published immediately unless an initial publication rule requires review. Authors can see their held comments and understand why they are held. Moderators can review comments across discussions, approve or delete held comments, and hold or delete comments that are already public.
+### Initial workflow
 
-This section defines the focused initial release. The broader design below describes the intended system across releases; its additional capabilities are not prerequisites for the first iteration.
+1. A user submits a comment or changes existing comment text.
+2. The server checks the text against the link rule and the optional private moderation terms list.
+3. If neither rule requires review, the comment is published immediately. If either rule requires review, the server saves it as held, with an author-facing reason, before any public read can expose the content.
+4. Notify the configured owner by email that a comment requires review, identifying the comment and providing a way to locate it.
+5. The authenticated owner can review the held content and explicitly approve it or delete it (disapprove/reject). A held comment stays unpublished until approved or until an edit legitimately clears an automatic hold. There is no separate rejection state.
 
-### Initial roles
-
-| Effective privilege | Role | First iteration |
-| ---: | --- | --- |
-| 0 | Regular user | Participates in discussions |
-| 1 | Moderator | Appointed and demoted by the owner; moderates comments across the installation |
-| 2 | Admin | Preserve existing administrator accounts and privileges; new admin appointments and demotions are deferred |
-| 3 | Owner | Derived from deployment configuration; appoints moderators, administers accounts and moderates comments |
-
-Retain the full integer privilege model and derived predicates. Newly created owner accounts store privilege 2 and derive privilege 3. Only the owner manages moderator appointments in the first iteration. Moderators cannot administer other users' accounts or appoint other moderators. Implement the agreed owner protections and account-administration authorization boundaries; owner password rotation (#286) remains an independent security fix. Do not implement ownership transfer reconciliation or persist a last-known-owner identity in this iteration.
+The owner can review a held comment in its discussion or through a minimal review entry point. Do not require a site-wide moderation dashboard or a new browsing mode for this iteration. Approval and deletion are authenticated application actions, not unauthenticated mutations triggered by visiting an email link. The precise navigation and UI are implementation decisions.
 
 ### Initial publication policy
-
-Use a small set of server-side rules, with no runtime policy configuration UI or persistent configuration object.
 
 | Comment or edit | Result |
 | --- | --- |
 | Contains a link | Hold for review |
 | Matches a term or phrase in the optional server-side moderation list | Hold for review |
-| Passes every applicable publication rule | Publish immediately, unless manually held |
-| Authored by a moderator, existing admin or owner | Automatically approve, unless manually held |
+| Passes every applicable publication rule | Publish immediately, unless subject to a manual hold |
 
-The link rule is enabled by default. Detect common URL forms, including recognizable links without an explicit scheme; the precise detection algorithm and false-positive trade-offs are implementation details. The optional term rule is active only when a nonempty moderation list is supplied. Keep the rules independent and use the existing publication decision convention. Preserve applicable existing developer-provided filtering rather than building a general policy engine.
+The link rule is enabled by default. Detect common URL forms, including recognizable links without an explicit scheme; the precise detection algorithm and false-positive trade-offs are implementation details. The term rule is active only when a nonempty moderation list is supplied. Keep the rules independent and use the existing publication decision convention. Preserve applicable existing developer-provided filtering rather than building a general policy engine.
 
-Apply the initial publication rules to new comments and changed comment text, so an author cannot evade review merely by adding a link or matching term in a subsequent edit. A qualifying edit may release an automatic hold. A manual hold and its reason survive edits and automatic exemptions; the current content must be explicitly reviewed and approved by an authorized moderator. Do not scan or reclassify existing comments merely because a moderation rule or term list is introduced or changed.
+For this minimal iteration, the rules apply to all authors; no role-based automatic publication exemption is required. The configured owner is the only recipient of new review alerts and the only account granted the new explicit approval authority. Preserve existing account and comment permissions, but do not introduce new role appointments or require the integer privilege migration for this slice. Identify the configured owner on the server and retain the existing owner protections. Owner credential rotation (#286) remains an independent security fix.
 
-The rules are deliberately simple. They identify material for human review rather than declare it illegal or unacceptable, and need not detect every possible obfuscation or evasion technique.
+Re-evaluate changed comment text so an author cannot evade review by editing a published comment. A qualifying edit may release an automatic hold. Do not scan or reclassify existing comments merely because a rule or term list is introduced or changed. Manual holding of published comments is a later capability; when implemented, manual holds must survive edits and automatic exemptions as specified below.
+
+The rules identify material for human review rather than declare it illegal or unacceptable, and need not detect every possible obfuscation or evasion technique.
 
 #### Optional private moderation terms file
 
@@ -54,7 +48,7 @@ Use an optional server-only plain-text file, provisionally named `moderation-ter
 | --- | --- |
 | Absent | Term filtering disabled; link filtering still applies |
 | Empty, or only blank/comment lines | No terms trigger moderation |
-| Contains terms | Matching ordinary-user comments are held for review |
+| Contains terms | Matching comments are held for review |
 | Present but unreadable or invalid | Report a configuration error; do not silently disable an intended filter |
 
 Use UTF-8, one literal word or phrase per line, case-insensitive matching, ignore blank lines and lines beginning with `#`, and do not support regular expressions initially. The exact matching boundaries and normalization can be settled during implementation.
@@ -63,20 +57,26 @@ Provide a harmless example file, such as `moderation-terms.example.txt`, and doc
 
 For matching terms, use a generic author-facing hold reason (for example, "Your comment contains a word or phrase that requires moderation"). Do not reveal the matched term or the contents of the list. Link-based holds likewise supply a clear reason. The list is a private filtering input, not a guarantee that objectionable content will be detected.
 
-### Included capabilities
+### First-iteration completion criteria
 
-- Owner-appointed moderators, a site-wide role roster and idempotent appointments/demotions, with the agreed role-change notifications.
-- A site-wide moderation interface for held and recent comments, with access to the original discussion and controls for approval, manual hold and deletion.
-- Comment publication metadata, required hold reasons, atomic content-matched approval, permanent soft deletion, author visibility and protected public reads.
-- Placeholders for unavailable ancestors and continuation of surviving discussion branches; no new direct replies to held or deleted comments.
-- The initial link and optional term rules, automatic approval for privileged authors, and enforcement on changed text. Only authors edit their comments by default.
-- The agreed attention-based comment notification defaults using the existing notification service, without a new configurable notification system. Notification failures do not invalidate successful operations.
+- Link or configured term matches are held before public exposure; nonmatching comments publish immediately. Existing comments remain published unless subsequently edited or moderated.
+- The owner receives a best-effort notification when a new comment or changed text requires review. A delivery failure does not publish the comment or undo a successful write. Unchanged, failed and unauthorized writes do not send review alerts.
+- The original author (including a recognized guest) and the owner can see the held content and reason; unrelated readers cannot retrieve them through the UI or API. Apply visibility rules to all implemented comment read paths.
+- The authenticated owner can approve the reviewed text or delete the held comment. Approval is atomic and idempotent; stale reviewed text that remains held returns HTTP 409. A deleted comment cannot be approved. Rejection uses the same deletion mechanism, not a separate publication state.
+- Preserve visible descendants and their thread structure when a parent becomes held or deleted. Do not allow new direct replies to held or deleted comments. Coordinate the necessary soft-deletion behavior with #280.
+- Ordinary author editing remains distinct from moderation; do not expand cross-author editing authority. Enforce authorization on the server.
+
+### Second iteration — moderator appointments
+
+Introduce owner-appointed moderators (#285), the integer privilege model and the shared role-management infrastructure, then delegate the first iteration's review capabilities to moderators. Preserve existing administrators' privileges; new admin appointments remain deferred. Include the agreed idempotent role assignments and role-change notifications. A site-wide review interface and manual holding of published comments can be planned alongside or after this work, without being prerequisites for the first iteration.
+
+User comment history (#288) may also be a useful early enhancement, but its inclusion in the second iteration is not yet decided.
 
 ### Later iterations
 
-Defer persistent configuration and its design, the Administration Settings dashboard (#275), new admin appointments and demotions, configurable permission and publication policies, allowlists and mandatory-review lists, ownership change detection/transfers and collision warnings, configurable notifications, and the optional administration log. Site-wide user comment history (#288) is a separate enhancement, not an initial-release prerequisite. Preserve their design discussion below so they can be introduced as the project matures.
+Defer persistent configuration and its design, the Administration Settings dashboard (#275), new admin appointments and demotions, configurable permission and publication policies, role-based automatic approval, allowlists and mandatory-review lists, ownership change detection/transfers and collision warnings, configurable notifications, and the optional administration log. Preserve the broader design below for when the project matures.
 
-The detailed implementation slices, dependencies and validation remain to be planned in [Implementation](#implementation). Deferral must not weaken the authorization, moderation or visibility invariants of the features actually shipped.
+The detailed implementation slices, dependencies and validation are tracked in [Implementation](#implementation). Deferral must not weaken the authorization, moderation or visibility invariants of features actually shipped.
 
 ## Plain-Language Intent
 
@@ -187,7 +187,7 @@ The following sections describe the broader intended system. The [focused first 
 
 ### Owner permissions and role appointments
 
-The first implementation sub-issue under #284 ([#285](https://github.com/rendall/simple-comment/issues/285)) covers admin and moderator appointments and demotions through a shared role-management interface. The owner can appoint and demote admins and moderators; admins can appoint and demote moderators only. The server authorizes and persists each change using the same privilege model. This capability can proceed independently of the broader comment review and publication workflows.
+The role-management sub-issue under #284 ([#285](https://github.com/rendall/simple-comment/issues/285)) follows the first iteration's owner-only review. Its second-iteration scope is owner appointment and demotion of moderators and the underlying privilege model; the shared admin appointment capability described here is for later releases. The owner can appoint and demote admins and moderators; admins can appoint and demote moderators only. The server authorizes and persists each change using the same privilege model. This capability can proceed independently of the broader comment review and publication workflows.
 
 Appointment immediately grants the moderation capabilities already implemented for the assigned role, including authorized deletion of other users' comments. As the broader review system is implemented, moderators also gain the ability to approve held comments, withdraw approval (hold or hide comments), and delete held or published comments, subject to applicable policies. Revocation removes the capabilities associated with the lost privilege on subsequent requests. The role-appointment sub-issue need not implement all future comment review workflows.
 
@@ -421,7 +421,7 @@ The focused first iteration implements fixed link filtering and optional file-ba
 
 #### Default comment notifications
 
-The initial notification policy prioritizes events that require moderators' attention rather than notifying them of every comment. Simple Comment is intended to operate within free-tier email service limits for low-volume installations; avoid unnecessary email traffic. A future configurable notification system may support different preferences for low- and high-traffic installations, recipients and event types. Its detailed design is outside the scope of this moderation project.
+The broader notification policy prioritizes events that require moderators' attention rather than notifying them of every comment. In the first iteration, review alerts go only to the configured owner for new or changed comments requiring review. Other notification event types are not prerequisites for the initial owner-only workflow. Simple Comment is intended to operate within free-tier email service limits for low-volume installations; avoid unnecessary email traffic. A future configurable notification system may support different preferences for low- and high-traffic installations, recipients and event types. Its detailed design is outside the scope of this moderation project.
 
 | Event | Notify moderators by default | Notify ordinary subscribers by default |
 | --- | --- | --- |
@@ -496,7 +496,7 @@ This draft leaves reader reports, appeals, bulk actions, IP blocking, and shadow
 
 ## Draft Acceptance Criteria
 
-The criteria below describe the agreed behavior of the relevant features when implemented. The [Implementation](#implementation) section will determine which feature groups belong in each release.
+The criteria below describe the broader agreed behavior of the relevant features when implemented. Use the completion criteria in the [focused first iteration](#first-iteration-completion-criteria) for the initial release; later features are not prerequisites.
 
 ### Privilege hierarchy and role management
 
@@ -660,12 +660,12 @@ As implementation is planned, categorize and prioritize the features here. The i
 | Designed but deferrable | Behavior has been agreed, but implementation can follow in a later release |
 | Exploratory | Further design discussion is required before implementation can be planned |
 
-The [focused first iteration](#focused-first-iteration) establishes the initial feature boundary. The detailed assignment of tasks to implementation slices, dependencies and order remains to be decided here. Deferring a feature does not discard its design, and must not weaken the authorization, visibility or other invariants applicable to features that are implemented.
+The [focused first iteration](#focused-first-iteration) establishes owner-only automatic holds and review as the first deliverable. Moderator appointments and the underlying privilege model follow in iteration two. The detailed assignment of tasks to implementation slices and remaining dependencies is still to be planned. Deferring a feature does not discard its design, and must not weaken the authorization, visibility or other invariants applicable to features that are implemented.
 
 ### Implementation tracking
 
 - [#284](https://github.com/rendall/simple-comment/issues/284) — Parent issue for site-wide moderation.
-- [#285](https://github.com/rendall/simple-comment/issues/285) — First implementation slice: moderator appointments and the underlying privilege model; the existing issue describes the broader admin appointment scope and needs narrowing before implementation.
+- [#285](https://github.com/rendall/simple-comment/issues/285) — Second iteration: owner-appointed moderators and the underlying privilege model; new admin appointments remain deferred.
 - [#275](https://github.com/rendall/simple-comment/issues/275) — Administration settings dashboard, deferred with persistent configuration.
 - [#286](https://github.com/rendall/simple-comment/issues/286) — Owner credential rotation, tracked independently of the moderation rollout.
 
