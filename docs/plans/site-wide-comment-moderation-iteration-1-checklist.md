@@ -200,7 +200,7 @@ Source plan: [Site-wide comment moderation, iteration one](site-wide-comment-mod
     - “records the authenticated deleting account ID and timestamp” (Validation Strategy — Comment lifecycle and moderation)
     - “Permit a reply already in flight after a successful eligibility check to finish” (Validation Strategy — Comment visibility and discussion continuity)
 
-- [ ] T04 `[tests]` Verify terms parsing and file-failure behavior in `src/tests/backend/moderation-terms.test.ts` and `src/tests/environment/moderation-terms.environment.test.ts`. Cover valid literal terms, absent and empty files, comments and blank lines, invalid UTF-8 or unreadable input, failed build and CI validation with invalid supplied input, and runtime fail-open with links still held and terms absent from errors. Use harmless fixtures and run `yarn test:backend`, `yarn test:environment`, and `yarn build`.
+- [x] T04 `[tests]` Verify terms parsing and file-failure behavior in `src/tests/backend/moderation-terms.test.ts` and `src/tests/environment/moderation-terms.environment.test.ts`. Cover valid literal terms, absent and empty files, comments and blank lines, invalid UTF-8 or unreadable input, failed build and CI validation with invalid supplied input, and runtime fail-open with links still held and terms absent from errors. Use harmless fixtures and run `yarn test:backend`, `yarn test:environment`, and `yarn build`.
   - Depends on C12 and C13.
   - Trace:
     - “Test absent, valid, empty and invalid moderation terms files, CI/build failure for an invalid supplied file, runtime fail-open behavior with independent link filtering intact” (Validation Strategy — Publication and editing policies)
