@@ -47,6 +47,7 @@
 
   let canEdit: (comment: Comment) => boolean
   let canDelete: (comment: Comment) => boolean
+  $: isHeld = comment?.isApproved === false
 
   const onEditClick = (comment: Comment) => {
     const commentId = comment?.id
@@ -148,17 +149,21 @@
     <article class="comment-body">
       <p>This comment was deleted {longFormatDate(comment.dateDeleted)}</p>
     </article>
+  {:else if isHeld && comment.text === null}
+    <article class="comment-body">
+      <p>This comment is awaiting moderation.</p>
+    </article>
   {:else}
     <header class="comment-header">
       <div class="user-avatar">
         <img
-          src={idIconDataUrl(comment.user.id)}
-          alt={`${comment.user.name} avatar`}
+          src={idIconDataUrl(comment.user?.id ?? comment.id)}
+          alt={`${comment.user?.name ?? "Anonymous"} avatar`}
         />
       </div>
       <div class="comment-info">
         <p class="user-name" dir="auto">
-          {comment.user.name ?? "Anonymous"}
+          {comment.user?.name ?? "Anonymous"}
         </p>
         <p
           class="comment-date"
@@ -170,6 +175,9 @@
       </div>
     </header>
     <article class="comment-body" bind:this={commentBodyRef}>
+      {#if isHeld}
+        <p role="status">Awaiting moderation. {comment.heldReason ?? ""}</p>
+      {/if}
       {#if isEditing}
         <CommentEdit
           placeholder="Your edit"
@@ -184,7 +192,7 @@
           <p dir="auto">{paragraph}</p>
         {/each}
       {/if}
-      {#if showReply === comment.id && !isEditing}
+      {#if showReply === comment.id && !isEditing && !isHeld}
         <CommentInput
           {authService}
           placeholder="Your reply"
@@ -199,13 +207,15 @@
           class="button-row comment-footer"
           class:is-overflow={isOverflowToggled}
         >
-          <button
-            on:click={onOpenCommentInput(comment.id)}
-            class="comment-reply-button"
-            title="Click REPLY to reply to this comment"
-          >
-            <ReplyIcon size={20} /> Reply
-          </button>
+          {#if !isHeld}
+            <button
+              on:click={onOpenCommentInput(comment.id)}
+              class="comment-reply-button"
+              title="Click REPLY to reply to this comment"
+            >
+              <ReplyIcon size={20} /> Reply
+            </button>
+          {/if}
           {#if isOverflowToggled}
             <div class="overflow-menu" in:toggleExpand out:toggleExpand>
               {#if canEdit(comment)}

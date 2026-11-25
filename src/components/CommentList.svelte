@@ -105,7 +105,7 @@
 </script>
 
 <ul class="comment-replies" class:is-root={isRoot} class:is-deep={depth > 4}>
-  {#each replies as comment}
+  {#each replies as comment (comment.id)}
     <CommentDisplay
       {authService}
       {comment}

@@ -66,7 +66,7 @@
       topicReplies,
       (a, b) =>
         new Date(b.dateCreated).valueOf() - new Date(a.dateCreated).valueOf(),
-      reply => !reply.dateDeleted || Boolean(reply.replies?.length)
+      reply => reply.text !== null || Boolean(reply.replies?.length)
     )
   }
 

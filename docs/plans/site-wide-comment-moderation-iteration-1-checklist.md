@@ -135,7 +135,7 @@ Source plan: [Site-wide comment moderation, iteration one](site-wide-comment-mod
   - Trace:
     - “The widget uses the returned server representation” (Comment creation and edit response contract)
 
-- [ ] C19 `[frontend]` Render held comments, reasons, and unavailable ancestors in `src/components/CommentDisplay.svelte` and `CommentList.svelte`, using the server-provided state in `DiscussionDisplay.svelte`. Keep visible descendants in place and disable direct replies on held or deleted comments.
+- [x] C19 `[frontend]` Render held comments, reasons, and unavailable ancestors in `src/components/CommentDisplay.svelte` and `CommentList.svelte`, using the server-provided state in `DiscussionDisplay.svelte`. Keep visible descendants in place and disable direct replies on held or deleted comments.
   - Depends on C06, C07, and C18. Validated by T07.
   - Trace:
     - “The widget displays the returned state and explains any hold to the author.” (AC6 — Comment creation and editing)
