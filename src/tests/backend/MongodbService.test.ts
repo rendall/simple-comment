@@ -1115,7 +1115,7 @@ describe("Full API service test", () => {
     const targetComment = chooseRandomElement(testComments.filter(isComment))
     const adminUser = getAuthUser(u => u.isAdmin!)
     return service
-      .commentDELETE(targetComment.id, adminUser.id)
+      .commentDELETE(targetComment.id, adminUser.id, "Moderator removal")
       .then(value =>
         expect(value).toEqual(expect.objectContaining(success202CommentDeleted))
       )
@@ -1186,9 +1186,9 @@ describe("Full API service test", () => {
     })
 
     const expectRetainedDeletion = async (deletedBy: User["id"]) => {
-      expect(await service.commentDELETE(target.id, deletedBy)).toEqual(
-        success202CommentDeleted
-      )
+      expect(
+        await service.commentDELETE(target.id, deletedBy, "Moderator removal")
+      ).toEqual(success202CommentDeleted)
       const deleted = await comments.findOne<Comment>({ id: target.id })
       expect(deleted).toMatchObject({
         id: target.id,
@@ -1269,9 +1269,13 @@ describe("Full API service test", () => {
         })
 
       try {
-        expect(await service.commentDELETE(target.id, authUserTest.id)).toEqual(
-          success202CommentDeleted
-        )
+        expect(
+          await service.commentDELETE(
+            target.id,
+            authUserTest.id,
+            "Moderator removal"
+          )
+        ).toEqual(success202CommentDeleted)
         expect(await comments.findOne({ id: target.id })).toMatchObject({
           text: null,
           dateDeleted,

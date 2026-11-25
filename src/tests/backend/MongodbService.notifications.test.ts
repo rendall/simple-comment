@@ -449,7 +449,8 @@ describe("comment notification lifecycle", () => {
           updateSpy.mockRestore()
           const deletion = await service.commentDELETE(
             editableComment.id,
-            administrator.id
+            administrator.id,
+            "Moderator removal"
           )
           expect(deletion.statusCode).toBe(202)
           const deleted = await comments.findOne({ id: editableComment.id })

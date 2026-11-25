@@ -60,7 +60,7 @@ Source plan: [Site-wide comment moderation, iteration one](site-wide-comment-mod
     - “New direct replies to held or deleted comments are rejected when the server checks parent eligibility.” (AC3 — Visibility)
     - “an in-flight reply may complete” (Placeholders and continuity of discussion threads)
 
-- [ ] C08 `[backend]` Apply the moderation deletion contract in `MongodbService.commentDELETE`, `AbstractDbService.commentDELETE`, and `src/functions/comment.ts`. Preserve author deletion and require effective moderator privileges and a non-empty `deletedReason` for cross-author deletion. Use one atomic write conditional on the record still being undeleted. Remove the text, clear active hold metadata, record `dateDeleted`, the authenticated `deletedBy`, and `deletedReason` when applicable, and retain the original author identity internally. Preserve the metadata recorded by the first successful deletion on repeated or concurrent requests.
+- [x] C08 `[backend]` Apply the moderation deletion contract in `MongodbService.commentDELETE`, `AbstractDbService.commentDELETE`, and `src/functions/comment.ts`. Preserve author deletion and require effective moderator privileges and a non-empty `deletedReason` for cross-author deletion. Use one atomic write conditional on the record still being undeleted. Remove the text, clear active hold metadata, record `dateDeleted`, the authenticated `deletedBy`, and `deletedReason` when applicable, and retain the original author identity internally. Preserve the metadata recorded by the first successful deletion on repeated or concurrent requests.
   - Depends on C01, C06, and #280. Validated by T02, T03, and T06.
   - Trace:
     - “Moderation actions require `isModerator`” (AC1 — Privileges and authorization)

@@ -1094,7 +1094,8 @@ export class MongodbService extends AbstractDbService {
    **/
   commentDELETE = async (
     targetId: CommentId,
-    authUserId?: UserId
+    authUserId?: UserId,
+    deletedReason?: string
   ): Promise<Success | Error> => {
     if (!authUserId) {
       return error401UserNotAuthenticated
@@ -1111,7 +1112,7 @@ export class MongodbService extends AbstractDbService {
       await this.getDb()
     ).collection("comments")
     const foundComment = await comments.find({ id: targetId }).limit(1).next()
-    const { isAdmin } = getUserRole(authUser)
+    const { isAdmin, isModerator } = getUserRole(authUser)
 
     const notFound = {
       ...error404CommentNotFound,
@@ -1122,19 +1123,37 @@ export class MongodbService extends AbstractDbService {
     }
 
     if (isDeletedComment(foundComment)) {
-      return isAdmin ? success202CommentDeleted : notFound
+      return isModerator ? success202CommentDeleted : notFound
     }
 
-    const canDelete = isAdmin || authUser.id === foundComment.userId
-
-    if (!canDelete) {
+    const isAuthor = authUser.id === foundComment.userId
+    if (!isAuthor && !isModerator) {
       return error403UserNotAuthorized
+    }
+
+    const reason = deletedReason?.trim()
+    if (!isAuthor && !reason) {
+      return { ...error400BadRequest, body: "A deletion reason is required" }
     }
 
     try {
       const result = await comments.updateOne(
         { _id: foundComment._id, dateDeleted: { $exists: false } },
-        { $set: { text: null, dateDeleted: new Date() }, $unset: { user: "" } }
+        {
+          $set: {
+            text: null,
+            dateDeleted: new Date(),
+            deletedBy: authUser.id,
+            ...(!isAuthor && { deletedReason: reason }),
+          },
+          $unset: {
+            user: "",
+            heldBy: "",
+            heldReason: "",
+            isApproved: "",
+            ...(isAuthor && { deletedReason: "" }),
+          },
+        }
       )
       if (!result.acknowledged) {
         return error500UpdateError
@@ -1145,7 +1164,7 @@ export class MongodbService extends AbstractDbService {
 
       // A concurrent delete may have already recorded the deletion.
       if (
-        isAdmin &&
+        isModerator &&
         (await comments.findOne({
           _id: foundComment._id,
           dateDeleted: { $exists: true },

@@ -70,9 +70,9 @@ describe("Ensures API specs match controller service", () => {
       throw "Error: not implemented"
     }
     commentDELETE = async (
-      _topicId: TopicId,
       _commentId: CommentId,
-      _authUser: UserId
+      _authUserId?: UserId,
+      _deletedReason?: string
     ): Promise<Success | Error> => {
       throw "Error: not implemented"
     }

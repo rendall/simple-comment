@@ -85,7 +85,11 @@ export const handler = async (event: APIGatewayEvent) => {
           return service.commentPUT(targetId, event.body, authUserId)
         else return new Promise<Error>(resolve => resolve(error400BadRequest))
       case "DELETE":
-        return service.commentDELETE(targetId, authUserId)
+        return service.commentDELETE(
+          targetId,
+          authUserId,
+          event.body ?? undefined
+        )
       case "OPTIONS":
         return new Promise<Success>(resolve =>
           resolve({ ...success200OK, headers })
