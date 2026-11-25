@@ -61,9 +61,9 @@
 
   const onCloseCommentInput = onOpenCommentInput("")
 
-  const onCommentTextUpdated = text => {
+  const onCommentUpdated = (updated: Comment) => {
     isEditing = false
-    onUpdateSuccess({ ...comment, text })
+    onUpdateSuccess(updated)
   }
 
   const onDeleteClick = () => {
@@ -177,7 +177,7 @@
           commentId={comment.id}
           commentText={comment.text}
           onCancel={onCancelEditClick}
-          onTextUpdated={onCommentTextUpdated}
+          {onCommentUpdated}
         />
       {:else}
         {#each toParagraphs(comment.text) as paragraph}
@@ -250,6 +250,7 @@
       depth={depth + 1}
       on:delete={onDeleteSuccess}
       on:posted={onPostSuccess}
+      on:updated={event => onUpdateSuccess(event.detail.comment)}
       on:reply={handleReplyEvent}
       replies={comment.replies}
       {currentUser}

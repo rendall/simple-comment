@@ -1,10 +1,9 @@
 <script lang="ts">
   import SkeletonCommentInput from "./low-level/SkeletonCommentInput.svelte"
-  import type { CommentId } from "../lib/simple-comment-types"
+  import type { Comment, CommentId } from "../lib/simple-comment-types"
   import type { StateValue } from "xstate"
   import { commentEditMachine } from "../lib/commentEdit.xstate"
   import { onMount } from "svelte"
-  import { isResponseOk } from "../frontend-utilities"
   import { putComment } from "../apiClient"
   import { useMachine } from "@xstate/svelte"
   export let commentId: CommentId
@@ -12,7 +11,7 @@
   export let autofocus = false
   export let placeholder = "Your comment"
   export let commentText = ""
-  export let onTextUpdated
+  export let onCommentUpdated: (comment: Comment) => void
 
   let textareaRef
   let textAreaWidth = "100%"
@@ -24,7 +23,7 @@
 
   const onSubmit = e => {
     e.preventDefault()
-    send("SUBMIT")
+    send({ type: "SUBMIT", commentId })
   }
 
   const updatingStateHandler = async () => {
@@ -34,7 +33,7 @@
     }
     try {
       const response = await putComment(commentId, commentText)
-      if (isResponseOk(response)) send({ type: "SUCCESS", commentText })
+      if (response.ok) send({ type: "SUCCESS", comment: response.body })
       else send({ type: "ERROR", error: response })
     } catch (error) {
       send({ type: "ERROR", error })
@@ -42,8 +41,8 @@
   }
 
   const updatedStateHandler = () => {
-    const { commentText } = $state.context
-    onTextUpdated(commentText)
+    const { comment } = $state.context
+    if (comment) onCommentUpdated(comment)
     send({ type: "RESET" })
   }
 

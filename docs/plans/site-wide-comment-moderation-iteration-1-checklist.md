@@ -130,7 +130,7 @@ Source plan: [Site-wide comment moderation, iteration one](site-wide-comment-mod
     - “Both return the authoritative comment object regardless of publication status.” (AC6 — Comment creation and editing)
     - “Exact approval endpoint and request schema.” (Remaining details)
 
-- [ ] C18 `[frontend]` Use the saved comment returned by `src/apiClient.ts` `putComment` in `src/components/CommentEdit.svelte` and `src/lib/commentEdit.xstate.ts`. Pass it through `CommentDisplay.svelte`, `CommentList.svelte`, and `DiscussionDisplay.svelte` to replace the local record. Preserve the authoritative `201` payload already passed along by `CommentInput.svelte`.
+- [x] C18 `[frontend]` Use the saved comment returned by `src/apiClient.ts` `putComment` in `src/components/CommentEdit.svelte` and `src/lib/commentEdit.xstate.ts`. Pass it through `CommentDisplay.svelte`, `CommentList.svelte`, and `DiscussionDisplay.svelte` to replace the local record. Preserve the authoritative `201` payload already passed along by `CommentInput.svelte`.
   - Depends on C10 and C11. Validated by T07.
   - Trace:
     - “The widget uses the returned server representation” (Comment creation and edit response contract)
