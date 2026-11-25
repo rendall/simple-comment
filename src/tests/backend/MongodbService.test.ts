@@ -15,7 +15,7 @@ import type {
   User,
 } from "../../../src/lib/simple-comment-types"
 import { MongodbService } from "../../../src/lib/MongodbService"
-import { type Collection, Db, MongoClient } from "mongodb"
+import { Collection, Db, MongoClient } from "mongodb"
 import {
   error401BadCredentials,
   error401UserNotAuthenticated,
@@ -1025,6 +1025,9 @@ describe("Full API service test", () => {
 
     test("retains the record when the author deletes a leaf comment", async () => {
       await expectRetainedDeletion(author.id)
+      expect(
+        await service.commentGET(target.id, authUserTest.id)
+      ).toHaveProperty("statusCode", 404)
     })
 
     test("retains the original author and live reply when an admin deletes a parent comment", async () => {
@@ -1032,6 +1035,74 @@ describe("Full API service test", () => {
 
       await expectRetainedDeletion(authUserTest.id)
       expect(await comments.findOne({ id: reply.id })).toMatchObject(reply)
+    })
+
+    test("returns a deletion record when it is the only comment in a discussion", async () => {
+      await comments.deleteOne({ id: target.id })
+      expect(await service.commentDELETE(ancestor.id, author.id)).toEqual(
+        success202CommentDeleted
+      )
+
+      expect(await service.topicGET(topic.id, author.id)).toMatchObject({
+        statusCode: 200,
+        body: {
+          replies: [
+            {
+              id: ancestor.id,
+              parentId: topic.id,
+              text: null,
+              dateDeleted: expect.any(Date),
+            },
+          ],
+        },
+      })
+    })
+
+    test.each([author.id, null])(
+      "preserves an existing deletion with stored userId %p",
+      async userId => {
+        const deletion = { text: null, dateDeleted, userId }
+        await comments.updateOne({ id: target.id }, { $set: deletion })
+
+        expect(
+          await service.commentDELETE(target.id, author.id)
+        ).toHaveProperty("statusCode", 404)
+        expect(await service.commentDELETE(target.id, authUserTest.id)).toEqual(
+          success202CommentDeleted
+        )
+        expect(await comments.findOne({ id: target.id })).toMatchObject(
+          deletion
+        )
+      }
+    )
+
+    test("keeps the first deletion timestamp when administrator deletes overlap", async () => {
+      const storedComments = db.collection("comments")
+      const updateSpy = jest
+        .spyOn(Collection.prototype, "updateOne")
+        .mockImplementationOnce(async (filter, update) => {
+          updateSpy.mockRestore()
+          // Persist a competing deletion after the in-flight request has read
+          // the live comment, and then let its original update reach MongoDB.
+          await storedComments.updateOne(
+            { id: target.id },
+            { $set: { text: null, dateDeleted } }
+          )
+          return storedComments.updateOne(filter, update)
+        })
+
+      try {
+        expect(await service.commentDELETE(target.id, authUserTest.id)).toEqual(
+          success202CommentDeleted
+        )
+        expect(await comments.findOne({ id: target.id })).toMatchObject({
+          text: null,
+          dateDeleted,
+          userId: author.id,
+        })
+      } finally {
+        updateSpy.mockRestore()
+      }
     })
 
     test.each(["discussion", "ancestor comment"])(
