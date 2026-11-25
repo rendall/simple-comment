@@ -1059,7 +1059,7 @@ describe("Full API service test", () => {
     )
     expect(e).toHaveProperty("statusCode", 404)
   })
-  test("PUT comment to /comment/{commentId} should return the edited comment with 204 Comment updated", () => {
+  test("PUT comment to /comment/{commentId} returns the saved comment with 200 OK", () => {
     const targetComment = chooseRandomElement(
       testComments.filter(isComment).filter(c => c.userId !== null)
     ) as Comment & { userId: string }
@@ -1078,10 +1078,10 @@ describe("Full API service test", () => {
               id: targetComment.id,
               parentId: targetComment.parentId,
               text: updatedComment.text,
-              user: undefined,
+              user: expect.objectContaining({ id: userId }),
               userId,
             }),
-            statusCode: 204,
+            statusCode: 200,
           })
         )
       })

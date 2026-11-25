@@ -811,7 +811,7 @@ describe("comment endpoint notification wiring", () => {
         ...overrides,
       })
     const expectSavedEdit = async (response: Awaited<ReturnType<Handler>>) => {
-      expect(response.statusCode).toBe(204)
+      expect(response.statusCode).toBe(200)
       expect(JSON.parse(response.body as string)).toMatchObject({
         id: existingComment.id,
         text: updatedText,

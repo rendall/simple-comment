@@ -190,7 +190,7 @@ describe("Comment moderation", () => {
     expect(
       (await service.commentPUT(heldParent.id, "Own edit", author.id))
         .statusCode
-    ).toBe(204)
+    ).toBe(200)
   })
 
   test.each([

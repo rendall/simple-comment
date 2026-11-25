@@ -111,6 +111,10 @@ export const error504NotificationTimeout: Error = {
   body: "Notification timed out",
 }
 export const success200OK: Success = { statusCode: 200, body: "OK" }
+export const success200CommentUpdated: Success = {
+  statusCode: 200,
+  body: "Comment updated",
+}
 
 export const success201CommentCreated: Success = {
   statusCode: 201,

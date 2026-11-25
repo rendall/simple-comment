@@ -85,7 +85,7 @@ Source plan: [Site-wide comment moderation, iteration one](site-wide-comment-mod
     - “the server saves it as held, with an author-facing reason, before any public read can expose the content” (Initial workflow)
     - “Successful creates return `201 Created`.” (AC6 — Comment creation and editing)
 
-- [ ] C11 `[backend]` Re-evaluate changed text in `MongodbService.commentPUT` using the same publication decision as creation. Keep the existing edit validation and author-only authorization in force for every role. Commit text and publication state together, prevent updates to deleted records, and clear active hold metadata when a qualifying edit releases an automatic hold. Return the saved comment with HTTP `200` through `src/functions/comment.ts` and update the response definition in `src/lib/messages.ts`.
+- [x] C11 `[backend]` Re-evaluate changed text in `MongodbService.commentPUT` using the same publication decision as creation. Keep the existing edit validation and author-only authorization in force for every role. Commit text and publication state together, prevent updates to deleted records, and clear active hold metadata when a qualifying edit releases an automatic hold. Return the saved comment with HTTP `200` through `src/functions/comment.ts` and update the response definition in `src/lib/messages.ts`.
   - Depends on C05, C06, and C10. Validated by T03, T06, and T10.
   - Trace:
     - “Only authors can edit their comments.” (AC1 — Privileges and authorization)

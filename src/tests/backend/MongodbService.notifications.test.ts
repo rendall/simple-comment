@@ -9,7 +9,13 @@ import {
   jest,
 } from "@jest/globals"
 import { Collection, MongoClient, ObjectId } from "mongodb"
-import type { Db, Document, InsertOneResult, ModifyResult } from "mongodb"
+import type {
+  Db,
+  Document,
+  FindOneAndUpdateOptions,
+  InsertOneResult,
+  ModifyResult,
+} from "mongodb"
 import { inspect } from "node:util"
 import type { AbstractNotificationService } from "../../lib/AbstractNotificationService"
 import { MongodbService } from "../../lib/MongodbService"
@@ -225,7 +231,7 @@ describe("comment notification lifecycle", () => {
     })
 
     const expectUpdated = async (response: Success<Comment> | Error) => {
-      expect(response.statusCode).toBe(204)
+      expect(response.statusCode).toBe(200)
       expect(response.body).toMatchObject({
         id: editableComment.id,
         text: updatedText,
@@ -607,19 +613,18 @@ describe("comment notification lifecycle", () => {
       const comments = db.collection<Comment>("comments")
       const updateSpy = jest
         .spyOn(Collection.prototype, "findOneAndUpdate")
-        .mockImplementationOnce(async () => {
-          updateSpy.mockRestore()
-          await comments.updateOne(
-            { id: editableComment.id },
-            { $set: { text: updatedText } }
-          )
-          return db
-            .collection("comments")
-            .findOneAndUpdate(
+        .mockImplementationOnce(
+          async (filter, update, options?: FindOneAndUpdateOptions) => {
+            updateSpy.mockRestore()
+            await comments.updateOne(
               { id: editableComment.id },
               { $set: { text: updatedText } }
             )
-        })
+            return db
+              .collection("comments")
+              .findOneAndUpdate(filter, update, { ...options })
+          }
+        )
 
       await expectUpdated(
         await service.commentPUT(editableComment.id, updatedText, author.id)

@@ -71,6 +71,7 @@ import {
   error413CommentTooLong,
   error500UpdateError,
   success200OK,
+  success200CommentUpdated,
   success201UserCreated,
   success201CommentCreated,
   success202CommentDeleted,
@@ -1042,49 +1043,66 @@ export class MongodbService extends AbstractDbService {
       return error400NoUpdate
     }
 
-    const { isAdmin } = getUserRole(authUser)
-    const user = toSafeUser(foundComment.user as User, isAdmin)
-    const returnComment = { ...foundComment, text, user }
+    const { isAdmin, isModerator } = getUserRole(authUser)
+    const changes = { text, ...getCommentPublication(text, isModerator) }
+    const liveComment = {
+      _id: foundComment._id,
+      dateDeleted: { $exists: false },
+    }
+    const collation = { locale: "simple" }
 
     const modifyResult = await comments.findOneAndUpdate(
-      { id: foundComment.id, dateDeleted: { $exists: false } },
-      { $set: returnComment }
+      { ...liveComment, text: { $ne: text } },
+      {
+        $set: changes,
+        ...(changes.isApproved && { $unset: { heldReason: "" } }),
+      },
+      { collation, returnDocument: "before" }
     )
 
-    if (
-      modifyResult.ok &&
-      modifyResult.value &&
-      isComment(modifyResult.value)
-    ) {
-      if (this._notificationService && modifyResult.value.text !== text) {
-        // The edit is saved; preparing or sending its notice must not fail it.
-        try {
-          const notification = await this._notificationService.notifyModerators(
-            `Comment edited. Author: ${authUser.name} (${authUser.email})\n\n${returnComment.text}`
-          )
-          if (notification && isError(notification)) {
-            console.error("Comment edit notification failed", {
-              commentId: targetId,
-              statusCode: notification.statusCode,
-            })
-          }
-        } catch {
-          console.error("Comment edit notification failed", {
-            commentId: targetId,
-          })
-        }
-      }
-      return {
-        ...success204CommentUpdated,
-        body: returnComment,
-      }
-    } else {
+    const previous = modifyResult.ok ? modifyResult.value : null
+    const saved = previous
+      ? { ...previous, ...changes }
+      : modifyResult.ok &&
+        (await comments.findOne({ ...liveComment, text }, { collation }))
+
+    if (!saved || !isComment(saved)) {
       if (isAdmin) {
         const errorMessage = modifyResult.lastErrorObject
           ? JSON.stringify(modifyResult.lastErrorObject)
           : "Unknown error"
         return { ...error500UpdateError, body: errorMessage }
-      } else return error500UpdateError
+      }
+      return error500UpdateError
+    }
+
+    if (this._notificationService && previous) {
+      try {
+        const notification = await this._notificationService.notifyModerators(
+          `Comment edited. Author: ${authUser.name} (${authUser.email})\n\n${saved.text}`
+        )
+        if (notification && isError(notification)) {
+          console.error("Comment edit notification failed", {
+            commentId: targetId,
+            statusCode: notification.statusCode,
+          })
+        }
+      } catch {
+        console.error("Comment edit notification failed", {
+          commentId: targetId,
+        })
+      }
+    }
+
+    return {
+      ...success200CommentUpdated,
+      body: {
+        ...toVisibleComment(
+          { ...saved, user: toAdminSafeUser(authUser) },
+          { id: authUser.id, isModerator }
+        ),
+        userId: authUser.id,
+      },
     }
   }
 
