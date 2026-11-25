@@ -196,6 +196,11 @@ const toVisibleReplies = (
     .map(comment => toVisibleComment(comment, viewer))
 }
 
+const describeCommentHold = (comment: Comment) =>
+  comment.isApproved === false
+    ? `\n\nHeld for review: ${comment.heldReason}\nComment ID: ${comment.id}\nParent ID: ${comment.parentId}`
+    : ""
+
 export class MongodbService extends AbstractDbService {
   private isCrossSite = isCrossSite
   private _client?: MongoClient
@@ -770,7 +775,7 @@ export class MongodbService extends AbstractDbService {
     if (this._notificationService) {
       try {
         const notification = await this._notificationService.notifyModerators(
-          `New comment posted by ${authUser.name} (${authUser.email})\n\n${insertComment.text}`
+          `New comment posted by ${authUser.name} (${authUser.email})\n\n${insertComment.text}${describeCommentHold(insertComment)}`
         )
         if (notification && isError(notification)) {
           console.error("Comment notification failed", {
@@ -1079,7 +1084,7 @@ export class MongodbService extends AbstractDbService {
     if (this._notificationService && previous) {
       try {
         const notification = await this._notificationService.notifyModerators(
-          `Comment edited. Author: ${authUser.name} (${authUser.email})\n\n${saved.text}`
+          `Comment edited. Author: ${authUser.name} (${authUser.email})\n\n${saved.text}${describeCommentHold(saved)}`
         )
         if (notification && isError(notification)) {
           console.error("Comment edit notification failed", {

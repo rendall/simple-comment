@@ -110,7 +110,7 @@ Source plan: [Site-wide comment moderation, iteration one](site-wide-comment-mod
     - “Exclude the real file from Git and from public assets, client bundles, API responses and logs.” (Optional private moderation terms file)
     - “The deployment mechanism must make it available to the server/API functions only.” (Optional private moderation terms file)
 
-- [ ] C15 `[backend]` Add the hold indication, reason, and available comment identifiers to the existing post and edit emails in `MongodbService.commentPOST` and `commentPUT`. Use the existing provider and configured recipient list. Keep delivery after the successful write and preserve the current events and failure handling.
+- [x] C15 `[backend]` Add the hold indication, reason, and available comment identifiers to the existing post and edit emails in `MongodbService.commentPOST` and `commentPUT`. Use the existing provider and configured recipient list. Keep delivery after the successful write and preserve the current events and failure handling.
   - Depends on C10, C11, and C12. Validated by T05.
   - Trace:
     - “Preserve existing notifications for successful comment creation and changed text, using `SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL`.” (AC7 — Notifications)
