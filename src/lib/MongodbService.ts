@@ -91,6 +91,29 @@ const {
   moderatorPassword: simpleCommentModeratorPassword,
 } = getBackendEnv()
 
+// Keep deleted replies anonymous even when the stored record has an author ID.
+const replyAuthorStages = [
+  {
+    $lookup: {
+      from: "users",
+      localField: "replies.userId",
+      foreignField: "id",
+      as: "replies.userarr",
+    },
+  },
+  {
+    $addFields: {
+      "replies.user": {
+        $cond: [
+          { $eq: [{ $type: "$replies.dateDeleted" }, "missing"] },
+          { $arrayElemAt: ["$replies.userarr", 0] },
+          "$$REMOVE",
+        ],
+      },
+    },
+  },
+]
+
 const notificationAuthorLookupTimeoutMs = 1000
 
 const findNotificationAuthor = async (
@@ -617,7 +640,7 @@ export class MongodbService extends AbstractDbService {
     }
 
     const lastComment = (await comments.findOne(
-      { "userId": authUserId },
+      { userId: authUserId, dateDeleted: { $exists: false } },
       { sort: { dateCreated: -1 } }
     )) as Comment
 
@@ -717,31 +740,13 @@ export class MongodbService extends AbstractDbService {
     const comments: Collection<Comment | DeletedComment | Discussion> = (
       await this.getDb()
     ).collection("comments")
-    const cursor = await comments.find({ id: targetId }).limit(1)
-
-    if (!cursor) {
-      return {
-        ...error404CommentNotFound,
-        body: `Comment '${targetId}' not found`,
-      }
-    }
-
-    const foundComment = await cursor.next()
-    if (
-      foundComment === null ||
-      !isComment(foundComment) ||
-      isDeletedComment(foundComment)
-    ) {
-      return {
-        ...error404CommentNotFound,
-        body: `Comment '${targetId}' not found`,
-      }
-    }
 
     const fullCommentPipeline = (id: CommentId, isAdminSafe: boolean) => [
       {
         $match: {
           id,
+          parentId: { $exists: true },
+          dateDeleted: { $exists: false },
         },
       },
       {
@@ -779,21 +784,7 @@ export class MongodbService extends AbstractDbService {
           preserveNullAndEmptyArrays: true,
         },
       },
-      {
-        $lookup: {
-          from: "users",
-          localField: "replies.userId",
-          foreignField: "id",
-          as: "replies.userarr",
-        },
-      },
-      {
-        $addFields: {
-          "replies.user": {
-            $arrayElemAt: ["$replies.userarr", 0],
-          },
-        },
-      },
+      ...replyAuthorStages,
       {
         $project: {
           parentId: 1,
@@ -889,11 +880,16 @@ export class MongodbService extends AbstractDbService {
       },
     ]
 
-    const comment = (await comments
-      .aggregate(fullCommentPipeline(targetId, isAdmin))
-      .next()) as Comment
-    const body = comment
-    return { ...success200OK, body }
+    const comment = await comments
+      .aggregate<Comment>(fullCommentPipeline(targetId, isAdmin))
+      .next()
+    if (!comment) {
+      return {
+        ...error404CommentNotFound,
+        body: `Comment '${targetId}' not found`,
+      }
+    }
+    return { ...success200OK, body: comment }
   }
 
   /**
@@ -1025,15 +1021,16 @@ export class MongodbService extends AbstractDbService {
     ).collection("comments")
     const foundComment = await comments.find({ id: targetId }).limit(1).next()
 
-    if (
-      !foundComment ||
-      !isComment(foundComment) ||
-      (isDeletedComment(foundComment) && !authUser.isAdmin)
-    ) {
-      return {
-        ...error404CommentNotFound,
-        body: `Comment '${targetId}' not found`,
-      }
+    const notFound = {
+      ...error404CommentNotFound,
+      body: `Comment '${targetId}' not found`,
+    }
+    if (!foundComment || !isComment(foundComment)) {
+      return notFound
+    }
+
+    if (isDeletedComment(foundComment)) {
+      return authUser.isAdmin ? success202CommentDeleted : notFound
     }
 
     const canDelete = authUser.isAdmin || authUser.id === foundComment.userId
@@ -1042,37 +1039,33 @@ export class MongodbService extends AbstractDbService {
       return error403UserNotAuthorized
     }
 
-    const reply = await comments.findOne({ parentId: targetId })
-
-    if (reply) {
-      const commentToDelete = foundComment as Comment
-      const deletedComment = {
-        ...commentToDelete,
-        userId: null as null,
-        text: null as null,
-        dateDeleted: new Date(),
-      } as DeletedComment
-
-      try {
-        await comments.updateOne(
-          { id: foundComment.id },
-          { $set: deletedComment }
-        )
-        return { ...success202CommentDeleted }
-      } catch (e) {
-        return authUser.isAdmin
-          ? { ...error500UpdateError, body: toErrorBody(e) }
-          : error500UpdateError
+    try {
+      const result = await comments.updateOne(
+        { _id: foundComment._id, dateDeleted: { $exists: false } },
+        { $set: { text: null, dateDeleted: new Date() }, $unset: { user: "" } }
+      )
+      if (!result.acknowledged) {
+        return error500UpdateError
       }
-    } else {
-      try {
-        await comments.findOneAndDelete({ id: foundComment.id })
+      if (result.matchedCount) {
         return success202CommentDeleted
-      } catch (e) {
-        return authUser.isAdmin
-          ? { ...error500UpdateError, body: toErrorBody(e) }
-          : error500UpdateError
       }
+
+      // A concurrent delete may have already recorded the deletion.
+      if (
+        authUser.isAdmin &&
+        (await comments.findOne({
+          _id: foundComment._id,
+          dateDeleted: { $exists: true },
+        }))
+      ) {
+        return success202CommentDeleted
+      }
+      return notFound
+    } catch (e) {
+      return authUser.isAdmin
+        ? { ...error500UpdateError, body: toErrorBody(e) }
+        : error500UpdateError
     }
   }
 
@@ -1264,21 +1257,7 @@ export class MongodbService extends AbstractDbService {
           preserveNullAndEmptyArrays: true,
         },
       },
-      {
-        $lookup: {
-          from: "users",
-          localField: "replies.userId",
-          foreignField: "id",
-          as: "replies.userarr",
-        },
-      },
-      {
-        $addFields: {
-          "replies.user": {
-            $arrayElemAt: ["$replies.userarr", 0],
-          },
-        },
-      },
+      ...replyAuthorStages,
       {
         $project: {
           "parentId": 1,
@@ -1376,14 +1355,8 @@ export class MongodbService extends AbstractDbService {
           dateDeleted: 1,
           replies: {
             $cond: {
-              if: { $eq: [{ $size: "$replies" }, 1] },
-              then: {
-                $cond: {
-                  if: { $eq: [{ $arrayElemAt: ["$replies.user", 0] }, {}] },
-                  then: "$$REMOVE",
-                  else: "$replies",
-                },
-              },
+              if: { $eq: [{ $size: "$replies.id" }, 0] },
+              then: "$$REMOVE",
               else: "$replies",
             },
           },

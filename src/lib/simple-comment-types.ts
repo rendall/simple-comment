@@ -98,7 +98,6 @@ export type Comment = {
 }
 
 export type DeletedComment = Comment & {
-  userId: null
   text: null
   dateDeleted: Date
 }

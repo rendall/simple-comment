@@ -81,6 +81,65 @@ describe("threadComments", () => {
     expect(result).toEqual(expected)
   })
 
+  it("keeps deleted ancestors of a live reply and prunes branches with no live replies", () => {
+    type Reply = Pick<Comment, "id" | "parentId" | "dateDeleted" | "replies">
+    const topic: { id: string; replies?: Reply[] } = { id: "topic" }
+    const dateDeleted = new Date("2026-01-01T12:00:00Z")
+    const deletedParent = {
+      id: "deleted-parent",
+      parentId: topic.id,
+      dateDeleted,
+    }
+    const deletedChild = {
+      id: "deleted-child",
+      parentId: deletedParent.id,
+      dateDeleted,
+    }
+    const grandchild = { id: "grandchild", parentId: deletedChild.id }
+    const deletedLeaf = { id: "deleted-leaf", parentId: topic.id, dateDeleted }
+    const liveComment = { id: "live-comment", parentId: topic.id }
+    const flatReplies: Reply[] = [
+      deletedParent,
+      deletedChild,
+      grandchild,
+      deletedLeaf,
+      liveComment,
+    ]
+    flatReplies.forEach(Object.freeze)
+    Object.freeze(flatReplies)
+
+    const threadVisibleReplies = (replies: Reply[]) =>
+      threadComments(
+        topic,
+        replies,
+        (a, b) => a.id.localeCompare(b.id),
+        reply => !reply.dateDeleted || Boolean(reply.replies?.length)
+      ).replies
+
+    expect(threadVisibleReplies(flatReplies)).toEqual([
+      {
+        ...deletedParent,
+        replies: [{ ...deletedChild, replies: [grandchild] }],
+      },
+      liveComment,
+    ])
+
+    const deletedGrandchild = Object.freeze({ ...grandchild, dateDeleted })
+    const repliesAfterDeletion = flatReplies.map(reply =>
+      reply.id === grandchild.id ? deletedGrandchild : reply
+    )
+    Object.freeze(repliesAfterDeletion)
+
+    expect(threadVisibleReplies(repliesAfterDeletion)).toEqual([liveComment])
+    expect(repliesAfterDeletion).toEqual([
+      deletedParent,
+      deletedChild,
+      deletedGrandchild,
+      deletedLeaf,
+      liveComment,
+    ])
+  })
+
   it("should thread mockDiscussion.json with one sibling sort per reply group", () => {
     const topic = mockDiscussion as unknown as Discussion
     const topicReplies = topic.replies as Comment[]
