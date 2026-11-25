@@ -217,7 +217,7 @@ Source plan: [Site-wide comment moderation, iteration one](site-wide-comment-mod
     - “Authorization, approval, deletion, visibility and response contracts conform to acceptance criteria” (Iteration 1 — Validation Strategy)
     - “Verify HTTP 201 for both published and held creates and HTTP 200 for both published and held edits” (Validation Strategy — Publication and editing policies)
 
-- [ ] T07 `[tests]` Verify moderation in `src/tests/frontend/components/DiscussionDisplay.moderation.test.ts` and the existing `SimpleComment.auth-cleanup.test.ts`. Cover saved create and edit state, held reasons, effective moderator controls, stale approvals, removal reasons, redacted ancestors with visible replies, and correct visibility after a refresh. Verify logout and account switches discard previously fetched private content and ignore late reads or mutation results from the old identity. Run `yarn test:frontend`.
+- [x] T07 `[tests]` Verify moderation in `src/tests/frontend/components/DiscussionDisplay.moderation.test.ts` and the existing `SimpleComment.auth-cleanup.test.ts`. Cover saved create and edit state, held reasons, effective moderator controls, stale approvals, removal reasons, redacted ancestors with visible replies, and correct visibility after a refresh. Verify logout and account switches discard previously fetched private content and ignore late reads or mutation results from the old identity. Run `yarn test:frontend`.
   - Depends on C18–C22.
   - Trace:
     - “Review controls, hold messages, edit responses and authentication changes behave correctly” (Iteration 1 — Validation Strategy)
