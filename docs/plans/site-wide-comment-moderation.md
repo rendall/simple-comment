@@ -277,6 +277,8 @@ For example, if Alice's comment is deleted after Bob replies, Alice's comment be
 
 ### User comment history
 
+Related feature: [#288 — Explore a site-wide user comment history view](https://github.com/rendall/simple-comment/issues/288). See also [Views and focus](incremental-fetch.md#views-and-focus) for the distinction between selecting comments, presenting them as a tree or list, and focusing an individual comment.
+
 Provide a site-wide view of comments authored by a particular user. This is a general feature, not exclusively a moderation tool. Readers can explore a user's public contributions, authors can review their own contributions including held comments, and moderators can inspect a user's history across discussions to assess patterns of misconduct or suitability for moderator appointments.
 
 | View | Purpose |
