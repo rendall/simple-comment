@@ -65,6 +65,7 @@ import {
   error404TopicNotFound,
   error404UserUnknown,
   error409DuplicateComment,
+  error409ReviewedCommentChanged,
   error409DuplicateTopic,
   error409UserExists,
   error413CommentTooLong,
@@ -1083,6 +1084,55 @@ export class MongodbService extends AbstractDbService {
         return { ...error500UpdateError, body: errorMessage }
       } else return error500UpdateError
     }
+  }
+
+  commentAPPROVE = async (
+    targetId: CommentId,
+    reviewedText: string,
+    authUserId?: UserId
+  ): Promise<Success | Error> => {
+    if (!authUserId) return error401UserNotAuthenticated
+
+    const db = await this.getDb()
+    const reviewer = await db
+      .collection<User>("users")
+      .findOne({ id: authUserId })
+    if (!reviewer) return error401UserNotAuthenticated
+    if (!getUserRole(reviewer).isModerator) return error403UserNotAuthorized
+
+    const matchesReview = {
+      $and: [
+        { $eq: ["$isApproved", false] },
+        { $eq: ["$text", { $literal: reviewedText }] },
+      ],
+    }
+    const result = await db.collection<Comment>("comments").findOneAndUpdate(
+      {
+        id: targetId,
+        parentId: { $exists: true },
+        dateDeleted: { $exists: false },
+      },
+      [
+        {
+          $set: {
+            isApproved: { $cond: [matchesReview, true, "$isApproved"] },
+            heldReason: { $cond: [matchesReview, "$$REMOVE", "$heldReason"] },
+            heldBy: { $cond: [matchesReview, "$$REMOVE", "$heldBy"] },
+          },
+        },
+      ],
+      { collation: { locale: "simple" }, returnDocument: "before" }
+    )
+
+    if (!result.ok) return error500UpdateError
+    if (!result.value) return error404CommentNotFound
+    if (
+      result.value.isApproved === false &&
+      result.value.text !== reviewedText
+    ) {
+      return error409ReviewedCommentChanged
+    }
+    return { ...success200OK, body: "Comment approved" }
   }
 
   /**

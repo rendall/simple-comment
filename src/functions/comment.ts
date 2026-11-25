@@ -52,7 +52,9 @@ const getAllowHeaders = (event: APIGatewayEvent) => {
 
 export const handler = async (event: APIGatewayEvent) => {
   const dirs = event.path.split("/")
-  const isValidPath = dirs.length <= 5
+  const isApproval =
+    dirs[dirs.length - 3] === "comment" && dirs[dirs.length - 1] === "approve"
+  const isValidPath = dirs.length <= 5 || (dirs.length === 6 && isApproval)
   const headers = {
     ...getAllowHeaders(event),
     ...(event.httpMethod === "GET" && { "Cache-Control": "private, no-store" }),
@@ -70,9 +72,14 @@ export const handler = async (event: APIGatewayEvent) => {
   const authUserId = getUserId(eventHeaders) ?? undefined
   const targetId = getTargetId(event.path, "comment") as CommentId
 
-  const handleMethod = (
+  const handleMethod = async (
     method: APIGatewayEvent["httpMethod"]
   ): Promise<Success<Comment> | Error> => {
+    if (isApproval && method !== "OPTIONS") {
+      if (method !== "POST") return error405MethodNotAllowed
+      if (!targetId || !isDefined(event.body)) return error400BadRequest
+      return service.commentAPPROVE(targetId, event.body, authUserId)
+    }
     switch (method) {
       case "GET":
         return service.commentGET(targetId, authUserId)

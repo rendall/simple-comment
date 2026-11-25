@@ -128,6 +128,12 @@ export abstract class AbstractDbService {
     deletedReason?: string
   ) => Promise<Success | Error>
 
+  abstract commentAPPROVE: (
+    commentId: CommentId,
+    reviewedText: string,
+    authUserId?: UserId
+  ) => Promise<Success | Error>
+
   /**
    * returns an authenticated guest token
    **/

@@ -58,6 +58,10 @@ export const error409DuplicateComment: Error = {
   statusCode: 409,
   body: "Duplicate comment",
 }
+export const error409ReviewedCommentChanged: Error = {
+  statusCode: 409,
+  body: "The comment changed. Review the updated text before approving it.",
+}
 export const error409UserExists: Error = {
   statusCode: 409,
   body: "UserId exists",

@@ -69,7 +69,7 @@ Source plan: [Site-wide comment moderation, iteration one](site-wide-comment-mod
     - “Deletion takes precedence over approval.” (Comment publication states)
     - “A deleted comment no longer has an active hold” (Reasons for holding comments)
 
-- [ ] C09 `[backend]` Add an authenticated approval operation at `src/functions/comment.ts` backed by `src/lib/MongodbService.ts` and its service contract in `src/lib/AbstractDbService.ts`. Authorize effective moderators, including self-approval, and atomically approve only a live held comment with matching reviewed text. Apply AC4 to a conditional miss and clear active hold metadata in the approval write. Preserve timestamps and side effects on successful no-ops.
+- [x] C09 `[backend]` Add an authenticated approval operation at `src/functions/comment.ts` backed by `src/lib/MongodbService.ts` and its service contract in `src/lib/AbstractDbService.ts`. Authorize effective moderators, including self-approval, and atomically approve only a live held comment with matching reviewed text. Apply AC4 to a conditional miss and clear active hold metadata in the approval write. Preserve timestamps and side effects on successful no-ops.
   - Depends on C01 and C06. Validated by T03, T06, and T10.
   - Trace:
     - “Privileged authors bypass automatic moderation and may explicitly approve their own held comments.” (Initial publication policy)
