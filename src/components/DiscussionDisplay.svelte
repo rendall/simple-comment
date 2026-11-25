@@ -65,7 +65,8 @@
       topic,
       topicReplies,
       (a, b) =>
-        new Date(b.dateCreated).valueOf() - new Date(a.dateCreated).valueOf()
+        new Date(b.dateCreated).valueOf() - new Date(a.dateCreated).valueOf(),
+      reply => !reply.dateDeleted || Boolean(reply.replies?.length)
     )
   }
 
@@ -160,7 +161,9 @@
   const onCommentUpdated = commentUpdatedEvent => {
     const { comment } = commentUpdatedEvent.detail
     repliesFlatArray = repliesFlatArray.map(reply =>
-      reply.id === comment.id ? { ...comment, isNew: true } : reply
+      reply.id === comment.id && !reply.dateDeleted
+        ? { ...comment, isNew: true }
+        : reply
     )
     updateDiscussionDisplay(discussion, repliesFlatArray)
   }
@@ -178,30 +181,18 @@
   // Update the single source of truth without roundtrip to the server
   const onCommentDeleted = commentDeletedEvent => {
     const { commentId } = commentDeletedEvent.detail
-    const comment = repliesFlatArray.find(comment => comment.id === commentId)
-    const hasReplies = repliesFlatArray.some(
-      comment => comment.parentId === commentId
+    const replies = repliesFlatArray.map(comment =>
+      comment.id === commentId && !comment.dateDeleted
+        ? {
+            ...comment,
+            user: undefined,
+            userId: null,
+            text: null,
+            dateDeleted: new Date(),
+          }
+        : comment
     )
-    // if comment has replies, it is a soft delete
-    if (hasReplies) {
-      const softDeletedComment: Comment = {
-        ...comment,
-        user: null,
-        userId: null,
-        text: null,
-        dateDeleted: new Date(),
-      }
-      repliesFlatArray = repliesFlatArray.map(comment =>
-        comment.id === commentId ? softDeletedComment : comment
-      )
-    }
-    // otherwise it is a hard delete
-    else
-      repliesFlatArray = repliesFlatArray.filter(
-        comment => comment.id !== commentId
-      )
-
-    updateDiscussionDisplay(discussion, repliesFlatArray)
+    updateDiscussionDisplay(discussion, replies)
   }
 
   $: {

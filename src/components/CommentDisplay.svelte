@@ -147,11 +147,6 @@
     </header>
     <article class="comment-body">
       <p>This comment was deleted {longFormatDate(comment.dateDeleted)}</p>
-      <div class="button-row">
-        {#if currentUser?.isAdmin && !comment.replies?.length}
-          <button on:click={onDeleteClick}> Delete </button>
-        {/if}
-      </div>
     </article>
   {:else}
     <header class="comment-header">

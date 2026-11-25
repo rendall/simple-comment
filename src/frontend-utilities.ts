@@ -20,13 +20,15 @@ type MinComment = {
  * @param {T} topic - The topic to which the comments belong.
  * @param {U[]} replies - An array of replies to the topic.
  * @param {(a: U, b: U) => number} [sort=(a, b) => (b.id < a.id ? 0 : 1)] - An optional sorting function for ordering the replies. By default, it sorts by id in descending order.
+ * @param {(reply: U) => boolean} [includeReply] - Decide whether to include a reply after threading its descendants.
  *
  * @returns {T} - A new topic object with the same type as the input topic, where each comment includes its child replies.
  */
 export const threadComments = <T extends MinComment, U extends MinComment>(
   comment: T,
   allComments: U[] | undefined,
-  sort: (a: U, b: U) => number = (a, b) => (b.id < a.id ? 0 : 1)
+  sort: (a: U, b: U) => number = (a, b) => (b.id < a.id ? 0 : 1),
+  includeReply: (reply: U) => boolean = () => true
 ): T => {
   const commentWithoutReplies = <W extends MinComment>(comment: W): W => {
     const { replies: _replies, ...commentWithNoReplies } = comment
@@ -59,14 +61,11 @@ export const threadComments = <T extends MinComment, U extends MinComment>(
   // Now we can use this map to quickly look up the child comments for each comment
   const threadCommentsWithMap = <W extends MinComment>(comment: W): W => {
     const replies = parentToChildrenMap[comment.id]
-    if (replies) {
-      return {
-        ...comment,
-        replies: replies.map(reply => threadCommentsWithMap(reply)).sort(sort),
-      }
-    } else {
-      return commentWithoutReplies(comment)
-    }
+      ?.map(reply => threadCommentsWithMap(reply))
+      .filter(includeReply)
+    if (!replies?.length) return commentWithoutReplies(comment)
+
+    return { ...comment, replies: replies.sort(sort) }
   }
 
   return threadCommentsWithMap(comment)
