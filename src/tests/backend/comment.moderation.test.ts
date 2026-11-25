@@ -1,5 +1,5 @@
 import { Collection } from "mongodb"
-import type { Db } from "mongodb"
+import type { Db, FindOneAndUpdateOptions } from "mongodb"
 import { MongodbService } from "../../lib/MongodbService"
 import { getBackendEnv } from "../../lib/env"
 import type { Comment, Discussion, User } from "../../lib/simple-comment-types"
@@ -268,4 +268,212 @@ describe("Comment moderation", () => {
       ).toBe(404)
     }
   })
+
+  test("approves exact text once and preserves record fields on retries", async () => {
+    const reviewedText = "$Reviewed text"
+    const submitted = held("reviewed", {
+      text: reviewedText,
+      heldBy: moderator.id,
+    })
+    await comments.insertOne(submitted)
+    expect(
+      (
+        await service.commentAPPROVE(
+          submitted.id,
+          "$reviewed text",
+          moderator.id
+        )
+      ).statusCode
+    ).toBe(409)
+    expect(await comments.findOne({ id: submitted.id })).toMatchObject(
+      submitted
+    )
+    expect(
+      (await service.commentAPPROVE(submitted.id, reviewedText, moderator.id))
+        .statusCode
+    ).toBe(200)
+    const approved = await comments.findOne({ id: submitted.id })
+    expect(approved).toMatchObject({
+      isApproved: true,
+      text: reviewedText,
+      dateCreated,
+    })
+    expect(approved).not.toHaveProperty("heldReason")
+    expect(approved).not.toHaveProperty("heldBy")
+
+    for (const text of [reviewedText, "An obsolete version"]) {
+      expect(
+        (await service.commentAPPROVE(submitted.id, text, moderator.id))
+          .statusCode
+      ).toBe(200)
+    }
+    expect(await comments.findOne({ id: submitted.id })).toEqual(approved)
+  })
+
+  test.each([
+    {
+      state: "published by an edit",
+      replacement: "No link now",
+      result: 200,
+      approved: true,
+    },
+    {
+      state: "held after an edit",
+      replacement: "Changed link example.org",
+      result: 409,
+      approved: false,
+    },
+    {
+      state: "held with the original text restored",
+      replacement: "Original link example.com",
+      result: 200,
+      approved: true,
+    },
+    { state: "deleted", replacement: null, result: 404, approved: undefined },
+  ])(
+    "uses the state at the approval write when $state",
+    async ({ state, replacement, result, approved }) => {
+      const reviewedText = "Original link example.com"
+      const submitted = held("review-in-flight", { text: reviewedText })
+      await comments.insertOne(submitted)
+      const update = jest
+        .spyOn(Collection.prototype, "findOneAndUpdate")
+        .mockImplementationOnce(
+          async (filter, change, options?: FindOneAndUpdateOptions) => {
+            update.mockRestore()
+            if (replacement === null) {
+              expect(
+                (await service.commentDELETE(submitted.id, author.id))
+                  .statusCode
+              ).toBe(202)
+            } else {
+              if (state === "held with the original text restored") {
+                await service.commentPUT(
+                  submitted.id,
+                  "Another link example.net",
+                  author.id
+                )
+              }
+              expect(
+                (await service.commentPUT(submitted.id, replacement, author.id))
+                  .statusCode
+              ).toBe(200)
+            }
+            return db
+              .collection("comments")
+              .findOneAndUpdate(filter, change, { ...options })
+          }
+        )
+
+      try {
+        expect(
+          (
+            await service.commentAPPROVE(
+              submitted.id,
+              reviewedText,
+              moderator.id
+            )
+          ).statusCode
+        ).toBe(result)
+        const record = await comments.findOne<Comment>({ id: submitted.id })
+        expect(record?.text).toBe(replacement)
+        expect(record?.isApproved).toBe(approved)
+      } finally {
+        update.mockRestore()
+      }
+    }
+  )
+
+  test("preserves the first moderator removal across repeated and concurrent deletes", async () => {
+    const submitted = held("concurrent-removal")
+    await comments.insertOne(submitted)
+    let firstDeletion: Comment | null = null
+    const update = jest
+      .spyOn(Collection.prototype, "updateOne")
+      .mockImplementationOnce(async (filter, change) => {
+        update.mockRestore()
+        expect(
+          (
+            await service.commentDELETE(
+              submitted.id,
+              moderator.id,
+              "First removal"
+            )
+          ).statusCode
+        ).toBe(202)
+        firstDeletion = await comments.findOne<Comment>({ id: submitted.id })
+        return db.collection("comments").updateOne(filter, change)
+      })
+
+    try {
+      expect(
+        (await service.commentDELETE(submitted.id, admin.id, "Later removal"))
+          .statusCode
+      ).toBe(202)
+      expect(
+        (await service.commentDELETE(submitted.id, owner.id)).statusCode
+      ).toBe(202)
+      expect(firstDeletion).toMatchObject({
+        dateDeleted: expect.any(Date),
+        deletedBy: moderator.id,
+        deletedReason: "First removal",
+      })
+      expect(await comments.findOne({ id: submitted.id })).toEqual(
+        firstDeletion
+      )
+    } finally {
+      update.mockRestore()
+    }
+  })
+
+  test.each(["held", "deleted"])(
+    "keeps a reply that passed eligibility before its parent was %s",
+    async state => {
+      const parent = comment("parent-in-flight")
+      await comments.insertOne(parent)
+      const insertion = jest
+        .spyOn(Collection.prototype, "insertOne")
+        .mockImplementationOnce(async reply => {
+          insertion.mockRestore()
+          if (state === "held") {
+            expect(
+              (
+                await service.commentPUT(
+                  parent.id,
+                  "A new link example.com",
+                  author.id
+                )
+              ).statusCode
+            ).toBe(200)
+          } else {
+            expect(
+              (await service.commentDELETE(parent.id, author.id)).statusCode
+            ).toBe(202)
+          }
+          return db.collection("comments").insertOne(reply)
+        })
+
+      try {
+        expect(
+          (await service.commentPOST(parent.id, "Reply in flight", outsider.id))
+            .statusCode
+        ).toBe(201)
+        expect(
+          (await service.commentPOST(parent.id, "Later reply", outsider.id))
+            .statusCode
+        ).toBe(404)
+        expect(await readDiscussion(outsider)).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({ id: parent.id, text: null }),
+            expect.objectContaining({
+              parentId: parent.id,
+              text: "Reply in flight",
+            }),
+          ])
+        )
+      } finally {
+        insertion.mockRestore()
+      }
+    }
+  )
 })
