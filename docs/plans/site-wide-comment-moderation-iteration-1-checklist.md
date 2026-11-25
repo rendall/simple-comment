@@ -54,7 +54,7 @@ Source plan: [Site-wide comment moderation, iteration one](site-wide-comment-mod
     - “Existing comments without an `isApproved` field are considered approved” (Remaining details)
     - “Do not expose internal author or actor identifiers in public tombstones.” (Comment publication states)
 
-- [ ] C07 `[backend]` Reject a new direct reply in `MongodbService.commentPOST` if its parent is held or deleted at the eligibility check. Keep eligible descendants replyable and preserve an in-flight reply that passed the check before the parent changed state.
+- [x] C07 `[backend]` Reject a new direct reply in `MongodbService.commentPOST` if its parent is held or deleted at the eligibility check. Keep eligible descendants replyable and preserve an in-flight reply that passed the check before the parent changed state.
   - Depends on C06. Validated by T02 and T03.
   - Trace:
     - “New direct replies to held or deleted comments are rejected when the server checks parent eligibility.” (AC3 — Visibility)

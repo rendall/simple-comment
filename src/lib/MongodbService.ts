@@ -712,7 +712,11 @@ export class MongodbService extends AbstractDbService {
     ).collection("comments")
     const parent = await comments.findOne({ id: parentId })
 
-    if (!parent || isDeleted(parent)) {
+    if (
+      !parent ||
+      isDeleted(parent) ||
+      (isComment(parent) && parent.isApproved === false)
+    ) {
       return {
         ...error404CommentNotFound,
         body: `Discussion '${parentId}' not found`,
