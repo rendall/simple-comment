@@ -147,7 +147,7 @@ Source plan: [Site-wide comment moderation, iteration one](site-wide-comment-mod
     - “Add approval alongside the existing delete control on the comment itself.” (Initial workflow)
     - “they must review the updated comment before approving it” (Approval idempotency and concurrent edits)
 
-- [ ] C21 `[frontend]` Update the removal flow in `src/components/CommentDisplay.svelte`, `CommentList.svelte`, `DiscussionDisplay.svelte`, `src/lib/commentDelete.xstate.ts`, and `src/apiClient.ts` `deleteComment`. Use `isModerator` for cross-author removal, require a reason for that action, and render the resulting removal and any viewer-authorized reason using the server state.
+- [x] C21 `[frontend]` Update the removal flow in `src/components/CommentDisplay.svelte`, `CommentList.svelte`, `DiscussionDisplay.svelte`, `src/lib/commentDelete.xstate.ts`, and `src/apiClient.ts` `deleteComment`. Use `isModerator` for cross-author removal, require a reason for that action, and render the resulting removal and any viewer-authorized reason using the server state.
   - Depends on C01, C08, and C19. Validated by T07.
   - Trace:
     - “including review, approval and cross-author deletion” (Privilege foundation)

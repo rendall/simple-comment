@@ -66,7 +66,7 @@
       topicReplies,
       (a, b) =>
         new Date(b.dateCreated).valueOf() - new Date(a.dateCreated).valueOf(),
-      reply => reply.text !== null || Boolean(reply.replies?.length)
+      reply => reply.text !== null || Boolean(reply.replies?.length || reply.deletedReason)
     )
   }
 
@@ -186,15 +186,16 @@
     const replies = repliesFlatArray.map(comment =>
       comment.id === commentId && !comment.dateDeleted
         ? {
-            ...comment,
-            user: undefined,
-            userId: null,
+            id: comment.id,
+            parentId: comment.parentId,
+            dateCreated: comment.dateCreated,
             text: null,
             dateDeleted: new Date(),
           }
         : comment
     )
     updateDiscussionDisplay(discussion, replies)
+    refreshDiscussion()
   }
 
   $: {

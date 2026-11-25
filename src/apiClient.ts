@@ -236,9 +236,10 @@ export const approveComment = (commentId: CommentId, reviewedText: string) =>
  * @param {string} commentId
  * @return {ServerResponse}
  */
-export const deleteComment = (commentId: CommentId) =>
+export const deleteComment = (commentId: CommentId, reason?: string) =>
   fetch(`${getSimpleCommentURL()}/comment/${commentId}`, {
     method: "DELETE",
+    ...(reason && { body: reason }),
     credentials: "include",
   }).then(res => resolveBody<string>(res))
 

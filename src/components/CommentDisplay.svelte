@@ -33,10 +33,13 @@
   export let depth
   export let handleReplyEvent
   export let refreshDiscussion: () => void
+  export let isDeleting = false
+  export let deleteFailed = false
 
   const isRoot = depth === 0
 
-  let commentDeleted
+  let isEnteringRemovalReason = false
+  let removalReason = ""
   let isEditing = false
   let isOverflowToggled = false
   let isApproving = false
@@ -91,10 +94,22 @@
     onUpdateSuccess(updated)
   }
 
-  const onDeleteClick = () => {
-    commentDeleted = comment.id
+  const deleteCurrentComment = (reason?: string) => {
     commentBodyHeight = refs[comment.id] ?? 74
-    onDeleteCommentClick(comment.id)()
+    onDeleteCommentClick(comment.id, reason)()
+  }
+
+  const onDeleteClick = () => {
+    if (currentUser?.id === comment.user?.id) deleteCurrentComment()
+    else isEnteringRemovalReason = true
+  }
+
+  const onRemove = () => {
+    const reason = removalReason.trim()
+    if (!reason) return
+    isEnteringRemovalReason = false
+    removalReason = ""
+    deleteCurrentComment(reason)
   }
 
   onMount(() => {
@@ -110,10 +125,7 @@
       currentUser?.id === comment.user?.id &&
       new Date().valueOf() - new Date(comment.dateCreated).valueOf() <= 7200000
     canDelete = (comment: Comment): boolean =>
-      currentUser?.isAdmin ||
-      (currentUser &&
-        currentUser?.id === comment.user?.id &&
-        !comment?.replies?.length)
+      Boolean(currentUser && (currentUser.isModerator || currentUser.id === comment.user?.id))
 
     if (showReply !== comment.id) isOverflowToggled = false
   }
@@ -153,7 +165,7 @@
   class:is-open={showReply === comment.id}
   class:is-rtl={isRtl(comment.text)}
 >
-  {#if commentDeleted === comment.id && !comment.dateDeleted}
+  {#if isDeleting && !comment.dateDeleted}
     <SkeletonCommentDelete commentHeight={commentBodyHeight} />
   {:else if comment.dateDeleted}
     <header class="comment-header">
@@ -172,6 +184,7 @@
     </header>
     <article class="comment-body">
       <p>This comment was deleted {longFormatDate(comment.dateDeleted)}</p>
+      {#if comment.deletedReason}<p>{comment.deletedReason}</p>{/if}
     </article>
   {:else if isHeld && comment.text === null}
     <article class="comment-body">
@@ -205,6 +218,9 @@
       {#if approvalError}
         <p role="alert">{approvalError}</p>
       {/if}
+      {#if deleteFailed}
+        <p role="alert">The comment could not be deleted. Try again.</p>
+      {/if}
       {#if isEditing}
         <CommentEdit
           placeholder="Your edit"
@@ -219,7 +235,16 @@
           <p dir="auto">{paragraph}</p>
         {/each}
       {/if}
-      {#if showReply === comment.id && !isEditing && !isHeld}
+      {#if isEnteringRemovalReason}
+        <form on:submit|preventDefault={onRemove}>
+          <label>
+            Reason for removal
+            <textarea bind:value={removalReason} required></textarea>
+          </label>
+          <button type="submit" disabled={!removalReason.trim()}>Remove comment</button>
+          <button type="button" on:click={() => { isEnteringRemovalReason = false; removalReason = "" }}>Cancel</button>
+        </form>
+      {:else if showReply === comment.id && !isEditing && !isHeld}
         <CommentInput
           {authService}
           placeholder="Your reply"

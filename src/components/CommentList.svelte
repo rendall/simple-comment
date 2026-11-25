@@ -1,9 +1,5 @@
 <script lang="ts">
-  import type {
-    Comment,
-    ServerResponse,
-    User,
-  } from "../lib/simple-comment-types"
+  import type { Comment, User } from "../lib/simple-comment-types"
   import { createEventDispatcher } from "svelte"
   import { isResponseOk } from "../frontend-utilities"
   import { useMachine } from "@xstate/svelte"
@@ -20,6 +16,7 @@
   export let refreshDiscussion: () => void
 
   const { state, send } = useMachine(commentDeleteMachine)
+  let deleteErrorId: string | undefined
 
   //TODO: Loosen tight coupling of CommentDisplay and CommentList
   // The refactor of splitting one component into CommentList and
@@ -39,8 +36,9 @@
     dispatch("reply", { commentId })
   }
 
-  const onDeleteCommentClick = commentId => () => {
-    send({ type: "DELETE", commentId })
+  const onDeleteCommentClick = (commentId: string, reason?: string) => () => {
+    deleteErrorId = undefined
+    send({ type: "DELETE", commentId, reason })
   }
 
   const onDeleteSuccess = commentDeletedEvent => {
@@ -49,9 +47,9 @@
   }
 
   const deletingStateHandler = async () => {
-    const commentId = $state.context.commentId
+    const { commentId, reason } = $state.context
     try {
-      const response = await deleteComment(commentId)
+      const response = await deleteComment(commentId, reason)
       if (isResponseOk(response)) {
         dispatch("delete", { commentId })
         send("SUCCESS")
@@ -76,20 +74,7 @@
 
   const errorStateHandler = () => {
     const error = $state.context.error
-    if (!error) {
-      console.error("Unknown error")
-      console.trace()
-      return
-    }
-
-    if (typeof error === "string") {
-      console.error(error)
-      return
-    }
-
-    const { ok } = error as ServerResponse
-    if (ok) console.warn("Error handler caught an OK response", error)
-
+    if (error) deleteErrorId = $state.context.commentId
     send({ type: "RESET" })
   }
 
@@ -114,6 +99,8 @@
       {depth}
       {handleReplyEvent}
       {onDeleteCommentClick}
+      isDeleting={$state.matches("deleting") && $state.context.commentId === comment.id}
+      deleteFailed={deleteErrorId === comment.id}
       {onDeleteSuccess}
       {onOpenCommentInput}
       {onPostSuccess}
