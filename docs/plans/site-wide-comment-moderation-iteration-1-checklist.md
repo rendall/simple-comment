@@ -92,7 +92,7 @@ Source plan: [Site-wide comment moderation, iteration one](site-wide-comment-mod
     - “A qualifying edit can release an automatic hold.” (AC2 — Automatic publication policy)
     - “A successful edit replaces the existing HTTP 204 response with HTTP 200 and the updated comment object” (Comment creation and edit response contract)
 
-- [ ] C12 `[backend]` Apply the optional private term rule to the shared publication decision in `src/lib/comment-publication.ts`, within the same moderator exemption as the link rule. Put file reading and validation in `src/lib/moderation-terms.ts` for reuse by the build. Use UTF-8, literal case-insensitive words or phrases, and skip blank and comment lines. At runtime, log a sanitized configuration error for an invalid or unreadable supplied file, disable the term rule, and continue evaluating links. Use an author-facing reason that does not reveal the match.
+- [x] C12 `[backend]` Apply the optional private term rule to the shared publication decision in `src/lib/comment-publication.ts`, within the same moderator exemption as the link rule. Put file reading and validation in `src/lib/moderation-terms.ts` for reuse by the build. Use UTF-8, literal case-insensitive words or phrases, and skip blank and comment lines. At runtime, log a sanitized configuration error for an invalid or unreadable supplied file, disable the term rule, and continue evaluating links. Use an author-facing reason that does not reveal the match.
   - Depends on C10 and C11. Validated by T04 and T10.
   - Trace:
     - “Use UTF-8, one literal word or phrase per line, case-insensitive matching” (Optional private moderation terms file)
