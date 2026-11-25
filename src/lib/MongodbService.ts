@@ -18,7 +18,7 @@ import type {
   Email,
   CreateUserPayload,
 } from "./simple-comment-types"
-import { Action } from "./simple-comment-types"
+import { Action, Privilege } from "./simple-comment-types"
 import { isUserAllowedTo } from "./policyEnforcement"
 import type { Collection, Db, WithId } from "mongodb"
 import { MongoClient } from "mongodb"
@@ -340,6 +340,7 @@ export class MongodbService extends AbstractDbService {
       id,
       name: name.trim(),
       email,
+      privilege: Privilege.User,
       ...(isAdmin !== undefined && { isAdmin }),
       ...(isVerified !== undefined && { isVerified }),
     }
@@ -398,7 +399,7 @@ export class MongodbService extends AbstractDbService {
       const adminUser: User = {
         id: targetUserId,
         name: "Simple Comment Moderator",
-        isAdmin: true,
+        privilege: Privilege.Admin,
         hash,
         email: simpleCommentModeratorEmail,
       }
@@ -407,6 +408,19 @@ export class MongodbService extends AbstractDbService {
       // Big Moderator is created, let's return it
       const body = toAdminSafeUser(adminUser)
       return { ...success200OK, body }
+    }
+
+    if (
+      targetUserId === simpleCommentModeratorId &&
+      authUserId === targetUserId &&
+      !("privilege" in user)
+    ) {
+      await users
+        .updateOne(
+          { id: targetUserId, privilege: { $exists: false } },
+          { $set: { privilege: Privilege.Admin } }
+        )
+        .catch(() => console.error("Owner privilege initialization failed"))
     }
 
     const authUser = await users.findOne({ id: authUserId })

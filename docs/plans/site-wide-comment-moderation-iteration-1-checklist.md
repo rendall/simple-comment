@@ -21,7 +21,7 @@ Source plan: [Site-wide comment moderation, iteration one](site-wide-comment-mod
     - “The API exposes the effective privilege and derived predicates” (Stored privilege and derived permissions)
     - “Reject invalid stored or requested privilege values” (Privilege foundation)
 
-- [ ] C02 `[backend]` Persist privilege 0 for new ordinary accounts in `MongodbService.userPOST` and privilege 2 for new owner accounts in `MongodbService.userGET`. Initialize a missing stored privilege to 2 during existing-owner initialization, preserving a value already present and deriving owner access independently of that write.
+- [x] C02 `[backend]` Persist privilege 0 for new ordinary accounts in `MongodbService.userPOST` and privilege 2 for new owner accounts in `MongodbService.userGET`. Initialize a missing stored privilege to 2 during existing-owner initialization, preserving a value already present and deriving owner access independently of that write.
   - Depends on C01. Validated by T01.
   - Trace:
     - “Newly created owner accounts store 2. Newly created ordinary accounts store 0” (Privilege foundation)
