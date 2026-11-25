@@ -116,8 +116,6 @@ const replyAuthorStages = [
   },
 ]
 
-const notificationAuthorLookupTimeoutMs = 1000
-
 const canAdministerTarget = (actorPrivilege: Privilege, target: User) =>
   actorPrivilege >= Privilege.Admin &&
   actorPrivilege > getUserRole(target).privilege
@@ -125,29 +123,6 @@ const canAdministerTarget = (actorPrivilege: Privilege, target: User) =>
 const addCommentAuthorRole = (comment: { user?: Comment["user"] }) => {
   if (comment.user?.id) {
     comment.user = { ...comment.user, ...getUserRole(comment.user) }
-  }
-}
-
-const findNotificationAuthor = async (
-  users: Collection<User>,
-  userId: UserId
-) => {
-  let timeout: ReturnType<typeof setTimeout> | undefined
-  try {
-    return await Promise.race([
-      users.findOne({ id: userId }),
-      new Promise<never>((_resolve, reject) => {
-        timeout = setTimeout(
-          () =>
-            reject(
-              new globalThis.Error("Notification author lookup timed out")
-            ),
-          notificationAuthorLookupTimeoutMs
-        )
-      }),
-    ])
-  } finally {
-    clearTimeout(timeout)
   }
 }
 
@@ -970,17 +945,15 @@ export class MongodbService extends AbstractDbService {
       }
     }
 
+    if (authUser.id !== foundComment.userId) {
+      return error403UserNotAuthorized
+    }
+
     if (foundComment.text === text) {
       return error400NoUpdate
     }
 
     const { isAdmin } = getUserRole(authUser)
-    const canEdit = isAdmin || authUser.id === foundComment.userId
-
-    if (!canEdit) {
-      return error403UserNotAuthorized
-    }
-
     const user = toSafeUser(foundComment.user as User, isAdmin)
     const returnComment = { ...foundComment, text, user }
 
@@ -997,17 +970,8 @@ export class MongodbService extends AbstractDbService {
       if (this._notificationService && modifyResult.value.text !== text) {
         // The edit is saved; preparing or sending its notice must not fail it.
         try {
-          const commentAuthor =
-            foundComment.userId === authUser.id
-              ? authUser
-              : foundComment.userId
-                ? await findNotificationAuthor(users, foundComment.userId)
-                : null
-          const authorDescription = commentAuthor
-            ? `Author: ${commentAuthor.name} (${commentAuthor.email})`
-            : "Author unavailable"
           const notification = await this._notificationService.notifyModerators(
-            `Comment edited. ${authorDescription}\n\n${returnComment.text}`
+            `Comment edited. Author: ${authUser.name} (${authUser.email})\n\n${returnComment.text}`
           )
           if (notification && isError(notification)) {
             console.error("Comment edit notification failed", {

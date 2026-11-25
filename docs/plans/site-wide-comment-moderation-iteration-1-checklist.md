@@ -41,7 +41,7 @@ Source plan: [Site-wide comment moderation, iteration one](site-wide-comment-mod
     - “Reject unauthorized requests with HTTP 403 without modifying the target account.” (Account administration authority)
     - “Use the target account's ID to protect the owner's record.” (Owner permissions and role appointments)
 
-- [ ] C05 `[backend]` Restrict `MongodbService.commentPUT` to the original author at the server authorization check, including when the caller has privilege 1, 2, or 3.
+- [x] C05 `[backend]` Restrict `MongodbService.commentPUT` to the original author at the server authorization check, including when the caller has privilege 1, 2, or 3.
   - Validated by T02 and T06.
   - Trace:
     - “Only authors can edit their comments.” (AC1 — Privileges and authorization)

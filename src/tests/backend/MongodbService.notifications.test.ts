@@ -239,38 +239,35 @@ describe("comment notification lifecycle", () => {
     }
 
     describe.each(["comment", "reply"] as const)("edited %s", target => {
-      it.each(["author", "administrator"] as const)(
-        "notifies with the saved text and original author when edited by the %s",
-        async editor => {
-          if (target === "reply") {
-            const parent = { ...editableComment, id: "parent-of-edited-reply" }
-            await db.collection<Comment>("comments").insertOne(parent)
-            await db
-              .collection<Comment>("comments")
-              .updateOne(
-                { id: editableComment.id },
-                { $set: { parentId: parent.id } }
-              )
-          }
-
-          const response = await service.commentPUT(
-            editableComment.id,
-            updatedText,
-            editor === "author" ? author.id : administrator.id
-          )
-
-          await expectUpdated(response)
-          expect(notifyModerators).toHaveBeenCalledTimes(1)
-          const [message] = notifyModerators.mock.calls[0]
-          expect(message).toMatch(/comment edited/i)
-          expect(message).toContain(author.name)
-          expect(message).toContain(author.email)
-          expect(message).toContain(updatedText)
-          expect(message).not.toContain(editableComment.text)
-          expect(message).not.toContain(administrator.name)
-          expect(message).not.toContain(administrator.email)
+      it("notifies with the saved text and author", async () => {
+        if (target === "reply") {
+          const parent = { ...editableComment, id: "parent-of-edited-reply" }
+          await db.collection<Comment>("comments").insertOne(parent)
+          await db
+            .collection<Comment>("comments")
+            .updateOne(
+              { id: editableComment.id },
+              { $set: { parentId: parent.id } }
+            )
         }
-      )
+
+        const response = await service.commentPUT(
+          editableComment.id,
+          updatedText,
+          author.id
+        )
+
+        await expectUpdated(response)
+        expect(notifyModerators).toHaveBeenCalledTimes(1)
+        const [message] = notifyModerators.mock.calls[0]
+        expect(message).toMatch(/comment edited/i)
+        expect(message).toContain(author.name)
+        expect(message).toContain(author.email)
+        expect(message).toContain(updatedText)
+        expect(message).not.toContain(editableComment.text)
+        expect(message).not.toContain(administrator.name)
+        expect(message).not.toContain(administrator.email)
+      })
     })
 
     it("does not notify before the database acknowledges the update", async () => {
@@ -369,6 +366,13 @@ describe("comment notification lifecycle", () => {
       {
         name: "another ordinary user",
         userId: "other-editor",
+        targetId: editableComment.id,
+        text: updatedText,
+        statusCode: 403,
+      },
+      {
+        name: "a non-author administrator",
+        userId: administrator.id,
         targetId: editableComment.id,
         text: updatedText,
         statusCode: 403,
@@ -561,12 +565,12 @@ describe("comment notification lifecycle", () => {
       }
     )
 
-    it.each([false, true])(
-      "reuses the loaded author for a self-edit with isAdmin=%s",
-      async isAdmin => {
+    it.each([Privilege.User, Privilege.Admin])(
+      "reuses the loaded author for a self-edit at privilege %s",
+      async privilege => {
         await db
           .collection<User>("users")
-          .updateOne({ id: author.id }, { $set: { isAdmin } })
+          .updateOne({ id: author.id }, { $set: { privilege } })
         const authorLookup = jest.spyOn(Collection.prototype, "findOne")
 
         const response = await service.commentPUT(
@@ -586,174 +590,6 @@ describe("comment notification lifecycle", () => {
         expect(message).toContain(updatedText)
       }
     )
-
-    describe("administrator notification author lookup", () => {
-      it.each(["found", "missing", "rejected"] as const)(
-        "cleans up the lookup deadline when the author is %s",
-        async outcome => {
-          const entered = deferred<void>()
-          const release = deferred<void>()
-          const lookup = jest
-            .spyOn(Collection.prototype, "findOne")
-            .mockImplementationOnce(async () => {
-              // Authentication and persistence use real timers; only this read is controlled.
-              jest.useFakeTimers({ doNotFake: ["nextTick", "setImmediate"] })
-              entered.resolve()
-              await release.promise
-              if (outcome === "rejected") throw sensitiveProviderError()
-              return outcome === "missing"
-                ? null
-                : { ...author, _id: new ObjectId() }
-            })
-          let timersAtSend: number | undefined
-          notifyModerators.mockImplementation(() => {
-            timersAtSend = jest.getTimerCount()
-            return Promise.resolve(notificationAccepted)
-          })
-          const request = service.commentPUT(
-            editableComment.id,
-            updatedText,
-            administrator.id
-          )
-
-          try {
-            await Promise.race([entered.promise, request.then(() => {})])
-            release.resolve()
-            const response = await request
-            const pendingTimers = jest.getTimerCount()
-            const lookupCount = lookup.mock.calls.length
-            lookup.mockRestore()
-            jest.useRealTimers()
-
-            await expectUpdated(response)
-            expect(lookupCount).toBe(1)
-            expect(pendingTimers).toBe(0)
-            if (outcome === "rejected") {
-              expect(notifyModerators).not.toHaveBeenCalled()
-              expectSanitizedDiagnostic([...privateDetails, updatedText])
-            } else {
-              expect(timersAtSend).toBe(0)
-              expect(notifyModerators).toHaveBeenCalledTimes(1)
-              const [message] = notifyModerators.mock.calls[0]
-              expect(message).toContain(updatedText)
-              if (outcome === "found") {
-                expect(message).toContain(author.name)
-                expect(message).toContain(author.email)
-              } else expect(message).toContain("Author unavailable")
-              expect(errorLog).not.toHaveBeenCalled()
-            }
-          } finally {
-            release.resolve()
-            lookup.mockRestore()
-            jest.useRealTimers()
-          }
-        }
-      )
-
-      it.each(["resolves", "rejects"] as const)(
-        "returns the saved edit by the deadline and sends nothing when the stalled lookup later %s",
-        async lateResult => {
-          const entered = deferred<void>()
-          const release = deferred<void>()
-          const lookup = jest
-            .spyOn(Collection.prototype, "findOne")
-            .mockImplementationOnce(async () => {
-              jest.useFakeTimers({ doNotFake: ["nextTick", "setImmediate"] })
-              entered.resolve()
-              await release.promise
-              return { ...author, _id: new ObjectId() }
-            })
-          let completed: Success<Comment> | Error | undefined
-          const request = service
-            .commentPUT(editableComment.id, updatedText, administrator.id)
-            .then(response => {
-              completed = response
-              return response
-            })
-
-          try {
-            await Promise.race([entered.promise, request.then(() => {})])
-            const completedBeforeDeadline = completed
-            await jest.runOnlyPendingTimersAsync()
-            const completedAtDeadline = completed
-            // Release even if a regression leaves the request waiting for this read.
-            if (lateResult === "rejects")
-              release.reject(sensitiveProviderError())
-            else release.resolve()
-            const response = await request
-            await new Promise<void>(resolve => setImmediate(resolve))
-            const pendingTimers = jest.getTimerCount()
-            const lookupCount = lookup.mock.calls.length
-            lookup.mockRestore()
-            jest.useRealTimers()
-
-            expect(completedBeforeDeadline).toBeUndefined()
-            expect(completedAtDeadline).toBe(response)
-            await expectUpdated(response)
-            expect(lookupCount).toBe(1)
-            expect(pendingTimers).toBe(0)
-            expect(notifyModerators).not.toHaveBeenCalled()
-            expect(errorLog).toHaveBeenCalledTimes(1)
-            expect(errorLog).toHaveBeenCalledWith(
-              "Comment edit notification failed",
-              { commentId: editableComment.id }
-            )
-            expectSanitizedDiagnostic([...privateDetails, updatedText])
-            privateDetails.forEach(detail =>
-              expect(inspect(response)).not.toContain(detail)
-            )
-          } finally {
-            release.resolve()
-            lookup.mockRestore()
-            jest.useRealTimers()
-          }
-        }
-      )
-    })
-
-    it("keeps a saved administrator edit successful when the author lookup fails", async () => {
-      jest
-        .spyOn(Collection.prototype, "findOne")
-        .mockRejectedValueOnce(sensitiveProviderError())
-
-      const response = await service.commentPUT(
-        editableComment.id,
-        updatedText,
-        administrator.id
-      )
-
-      await expectUpdated(response)
-      expect(notifyModerators).not.toHaveBeenCalled()
-      expectSanitizedDiagnostic([...privateDetails, updatedText])
-      privateDetails.forEach(detail =>
-        expect(inspect(response)).not.toContain(detail)
-      )
-    })
-
-    it("does not wait for a notification author lookup when notifications are disabled", async () => {
-      const disabledService = new MongodbService(
-        global.__MONGO_URI__,
-        databaseName
-      )
-      jest.spyOn(disabledService, "getDb").mockResolvedValue(db)
-      // Editing uses find/next; findOne is the additional notification author lookup.
-      const authorLookup = jest
-        .spyOn(Collection.prototype, "findOne")
-        .mockRejectedValueOnce(sensitiveProviderError())
-
-      const response = await disabledService.commentPUT(
-        editableComment.id,
-        updatedText,
-        administrator.id
-      )
-      const lookupsDuringEdit = authorLookup.mock.calls.length
-      authorLookup.mockRestore()
-
-      await expectUpdated(response)
-      expect(lookupsDuringEdit).toBe(0)
-      expect(notifyModerators).not.toHaveBeenCalled()
-      expect(errorLog).not.toHaveBeenCalled()
-    })
 
     it("accepts a notification implementation returning void after an edit", async () => {
       notifyModerators.mockReturnValue(undefined)
@@ -789,24 +625,6 @@ describe("comment notification lifecycle", () => {
       )
 
       expect(notifyModerators).not.toHaveBeenCalled()
-    })
-
-    it("still sends an edit notice when the original author record is unavailable", async () => {
-      await db.collection<User>("users").deleteOne({ id: author.id })
-
-      const response = await service.commentPUT(
-        editableComment.id,
-        updatedText,
-        administrator.id
-      )
-
-      await expectUpdated(response)
-      expect(notifyModerators).toHaveBeenCalledTimes(1)
-      const [message] = notifyModerators.mock.calls[0]
-      expect(message).toMatch(/comment edited/i)
-      expect(message).toMatch(/author unavailable/i)
-      expect(message).toContain(updatedText)
-      expect(message).not.toContain(administrator.email)
     })
   })
 
