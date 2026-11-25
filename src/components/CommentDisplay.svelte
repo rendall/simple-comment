@@ -20,6 +20,7 @@
   import ChevronLeft from "carbon-icons-svelte/lib/ChevronLeft.svelte"
   import { linear } from "svelte/easing"
   import type { AuthService } from "../lib/auth-service"
+  import { useViewerRevision } from "../lib/discussion-viewer"
 
   export let comment: (Comment & { isNew?: true }) | undefined = undefined
   export let showReply: string
@@ -35,6 +36,7 @@
   export let refreshDiscussion: () => void
   export let isDeleting = false
   export let deleteFailed = false
+  export let viewerRevision = 0
 
   const isRoot = depth === 0
 
@@ -44,6 +46,20 @@
   let isOverflowToggled = false
   let isApproving = false
   let approvalError = ""
+  const getViewerRevision = useViewerRevision()
+  let visibleViewer = viewerRevision
+
+  const changeViewer = (revision: number) => {
+    if (revision === visibleViewer) return
+    visibleViewer = revision
+    approvalError = ""
+    isApproving = false
+    removalReason = ""
+    isEnteringRemovalReason = false
+    isEditing = false
+    isOverflowToggled = false
+  }
+  $: changeViewer(viewerRevision)
 
   let commentBodyHeight = 74
   let commentBodyRef
@@ -59,12 +75,14 @@
 
   const onApprove = async () => {
     if (!canApprove || !comment || comment.text === null || isApproving) return
+    const viewer = getViewerRevision()
     isApproving = true
     approvalError = ""
     try {
       await approveComment(comment.id, comment.text)
-      refreshDiscussion()
+      if (viewer === getViewerRevision()) refreshDiscussion()
     } catch (error) {
+      if (viewer !== getViewerRevision()) return
       if ((error as ServerResponseError)?.status === 409) {
         approvalError = "This comment changed. Review the updated text before approving it."
         refreshDiscussion()
@@ -72,7 +90,7 @@
         approvalError = "The comment could not be approved. Try again."
       }
     } finally {
-      isApproving = false
+      if (viewer === getViewerRevision()) isApproving = false
     }
   }
 
@@ -322,6 +340,7 @@
       {currentUser}
       {showReply}
       {refreshDiscussion}
+      {viewerRevision}
     />
   {/if}
 </li>

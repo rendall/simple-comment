@@ -6,6 +6,7 @@
   import { onMount } from "svelte"
   import { putComment } from "../apiClient"
   import { useMachine } from "@xstate/svelte"
+  import { useViewerRevision } from "../lib/discussion-viewer"
   export let commentId: CommentId
   export let onCancel = null
   export let autofocus = false
@@ -20,6 +21,8 @@
   let errorText
 
   const { state, send } = useMachine(commentEditMachine)
+  const getViewerRevision = useViewerRevision()
+  let requestViewer: number
 
   const onSubmit = e => {
     e.preventDefault()
@@ -31,18 +34,21 @@
       if (onCancel) onCancel()
       return
     }
+    requestViewer = getViewerRevision()
     try {
       const response = await putComment(commentId, commentText)
+      if (requestViewer !== getViewerRevision()) return
       if (response.ok) send({ type: "SUCCESS", comment: response.body })
       else send({ type: "ERROR", error: response })
     } catch (error) {
+      if (requestViewer !== getViewerRevision()) return
       send({ type: "ERROR", error })
     }
   }
 
   const updatedStateHandler = () => {
     const { comment } = $state.context
-    if (comment) onCommentUpdated(comment)
+    if (comment && requestViewer === getViewerRevision()) onCommentUpdated(comment)
     send({ type: "RESET" })
   }
 

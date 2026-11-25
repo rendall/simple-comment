@@ -38,6 +38,7 @@ export const commentDeleteMachine = createMachine<
       },
       deleting: {
         on: {
+          RESET: "idle",
           ERROR: { target: "error", actions: "assignErrorMessage" },
           SUCCESS: { target: "deleted" },
         },

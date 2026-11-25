@@ -7,6 +7,7 @@
   import { deleteComment } from "../apiClient"
   import CommentDisplay from "./CommentDisplay.svelte"
   import type { AuthService } from "../lib/auth-service"
+  import { useViewerRevision } from "../lib/discussion-viewer"
 
   export let currentUser: User | undefined
   export let authService: AuthService
@@ -14,8 +15,10 @@
   export let depth: number = 0
   export let showReply = ""
   export let refreshDiscussion: () => void
+  export let viewerRevision = 0
 
   const { state, send } = useMachine(commentDeleteMachine)
+  const getViewerRevision = useViewerRevision()
   let deleteErrorId: string | undefined
 
   //TODO: Loosen tight coupling of CommentDisplay and CommentList
@@ -47,14 +50,17 @@
   }
 
   const deletingStateHandler = async () => {
+    const viewer = getViewerRevision()
     const { commentId, reason } = $state.context
     try {
       const response = await deleteComment(commentId, reason)
+      if (viewer !== getViewerRevision()) return send("RESET")
       if (isResponseOk(response)) {
         dispatch("delete", { commentId })
         send("SUCCESS")
       } else send({ type: "ERROR", error: response })
     } catch (error) {
+      if (viewer !== getViewerRevision()) return send("RESET")
       send({ type: "ERROR", error })
     }
   }
@@ -106,6 +112,7 @@
       {onPostSuccess}
       {onUpdateSuccess}
       {refreshDiscussion}
+      {viewerRevision}
       {showReply}
     />
   {/each}

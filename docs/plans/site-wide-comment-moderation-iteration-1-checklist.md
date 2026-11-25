@@ -154,7 +154,7 @@ Source plan: [Site-wide comment moderation, iteration one](site-wide-comment-mod
     - “Deletion reasons are visible only to the original author and moderators.” (AC5 — Deletion)
     - “a non-empty explanation required when `deletedBy` differs from the original author's account ID” (Comment publication states)
 
-- [ ] C22 `[frontend]` Scope discussion data and pending requests to the active viewer in `src/components/SimpleComment.svelte` and `DiscussionDisplay.svelte`, including comment read and mutation results passed from child components. Discard private data on logout or account switch, ignore late responses from the previous identity, and load the view for the new identity.
+- [x] C22 `[frontend]` Scope discussion data and pending requests to the active viewer in `src/components/SimpleComment.svelte` and `DiscussionDisplay.svelte`, including comment read and mutation results passed from child components. Discard private data on logout or account switch, ignore late responses from the previous identity, and load the view for the new identity.
   - Depends on C18, C19, C20, and C21. Validated by T07.
   - Trace:
     - “On logout or account switch, discard no-longer-authorized private content and ignore outstanding responses belonging to the previous identity.” (Comment creation and edit response contract)
