@@ -16,6 +16,7 @@ import { Collection, MongoClient, ObjectId } from "mongodb"
 import type { Db } from "mongodb"
 import * as jwt from "jsonwebtoken"
 import type { Comment, Discussion, User } from "../../lib/simple-comment-types"
+import { Privilege } from "../../lib/simple-comment-types"
 import policy from "../../policy.json"
 
 declare const global: { __MONGO_URI__: string; __MONGO_DB_NAME__: string }
@@ -799,7 +800,7 @@ describe("comment endpoint notification wiring", () => {
       id: "endpoint-editing-administrator",
       name: "Editing Administrator",
       email: "editing-admin@example.com",
-      isAdmin: true,
+      privilege: Privilege.Admin,
     }
     const updatedText = "Edited text\n\n<b>Literal markup</b> & שלום"
     const editEvent = (overrides: Partial<APIGatewayEvent> = {}) =>

@@ -14,7 +14,7 @@ Source plan: [Site-wide comment moderation, iteration one](site-wide-comment-mod
 
 ## Atomic checklist items
 
-- [ ] C01 `[backend]` Derive effective privilege and role predicates from stored privilege and the configured owner identity. Define named levels in `src/lib/simple-comment-types.ts`, derive the values in `src/lib/backend-utilities.ts`, and use them in `src/lib/MongodbService.ts` for existing authorization and safe user responses, including users embedded in `commentGET` and `topicGET`. Reject invalid present stored values. Treat missing privilege as 0 for non-owners and derive 3 for the configured owner. Preserve the existing distinction between public and admin-safe account data. Update existing test fixtures that require stored admin authority to use privilege 2.
+- [x] C01 `[backend]` Derive effective privilege and role predicates from stored privilege and the configured owner identity. Define named levels in `src/lib/simple-comment-types.ts`, derive the values in `src/lib/backend-utilities.ts`, and use them in `src/lib/MongodbService.ts` for existing authorization and safe user responses, including users embedded in `commentGET` and `topicGET`. Reject invalid present stored values. Treat missing privilege as 0 for non-owners and derive 3 for the configured owner. Preserve the existing distinction between public and admin-safe account data. Update existing test fixtures that require stored admin authority to use privilege 2.
   - Validated by T01 and T06.
   - Trace:
     - “A missing stored privilege defaults to 0.” (AC1 — Privileges and authorization)

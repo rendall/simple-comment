@@ -21,6 +21,7 @@ import type {
   Success,
   User,
 } from "../../lib/simple-comment-types"
+import { Privilege } from "../../lib/simple-comment-types"
 import policy from "../../policy.json"
 
 declare const global: { __MONGO_URI__: string; __MONGO_DB_NAME__: string }
@@ -207,7 +208,7 @@ describe("comment notification lifecycle", () => {
       id: "notification-administrator",
       name: "Editing Administrator",
       email: "editing-admin@example.com",
-      isAdmin: true,
+      privilege: Privilege.Admin,
     }
     const editableComment = {
       id: "editable-notification-comment",

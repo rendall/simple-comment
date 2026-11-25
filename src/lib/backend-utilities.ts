@@ -20,6 +20,7 @@ import type {
   UserId,
   ValidationResult,
 } from "./simple-comment-types"
+import { Privilege } from "./simple-comment-types"
 import urlNormalizer from "normalize-url"
 import {
   isGuestId,
@@ -30,7 +31,7 @@ import {
 } from "./shared-utilities"
 import { getBackendEnv } from "./env"
 
-const { allowOrigin, jwtSecret } = getBackendEnv()
+const { allowOrigin, jwtSecret, moderatorId } = getBackendEnv()
 
 export const REALM = "Access to restricted resources"
 const AUTHORIZATION_HEADER = "Authorization"
@@ -108,23 +109,51 @@ export const adminOnlyModifiableUserProperties: (keyof User)[] = [
 /**
  * Return a user object that is clean and secure
  */
+const getEffectivePrivilege = (
+  user?: Pick<User, "id" | "privilege"> | null
+) => {
+  if (user?.id === moderatorId) return Privilege.Owner
+  if (!user || !("privilege" in user)) return Privilege.User
+
+  switch (user.privilege) {
+    case Privilege.User:
+    case Privilege.Moderator:
+    case Privilege.Admin:
+      return user.privilege
+    default:
+      throw new globalThis.Error("Invalid stored user privilege")
+  }
+}
+
+export const getUserRole = (user?: Pick<User, "id" | "privilege"> | null) => {
+  const privilege = getEffectivePrivilege(user)
+  return {
+    privilege,
+    isModerator: privilege >= Privilege.Moderator,
+    isAdmin: privilege >= Privilege.Admin,
+    isOwner: privilege === Privilege.Owner,
+  }
+}
+
 export const toSafeUser = (
   user: User,
   isAdmin: boolean = false
 ): PublicSafeUser | AdminSafeUser =>
   isAdmin ? toAdminSafeUser(user) : toPublicSafeUser(user)
 export const toPublicSafeUser = (user: User) =>
-  user ? narrowType<PublicSafeUser>(user, ["id", "name", "isAdmin"]) : user
+  user ? { id: user.id, name: user.name, ...getUserRole(user) } : user
 export const toAdminSafeUser = (user: User) =>
   user
-    ? narrowType<AdminSafeUser>(user, [
-        "id",
-        "name",
-        "email",
-        "isAdmin",
-        "isVerified",
-        "challenge",
-      ])
+    ? {
+        ...narrowType<AdminSafeUser>(user, [
+          "id",
+          "name",
+          "email",
+          "isVerified",
+          "challenge",
+        ]),
+        ...getUserRole(user),
+      }
     : user
 
 export const isEmail = (x: string | Email): x is Email =>

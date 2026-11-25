@@ -29,6 +29,7 @@ import {
   generateGuestChallenge,
   generateGuestId,
   getAllowedOrigins,
+  getUserRole,
   isAllowedReferer,
   isComment,
   isDefined,
@@ -115,6 +116,12 @@ const replyAuthorStages = [
 ]
 
 const notificationAuthorLookupTimeoutMs = 1000
+
+const addCommentAuthorRole = (comment: { user?: Comment["user"] }) => {
+  if (comment.user?.id) {
+    comment.user = { ...comment.user, ...getUserRole(comment.user) }
+  }
+}
 
 const findNotificationAuthor = async (
   users: Collection<User>,
@@ -309,7 +316,7 @@ export class MongodbService extends AbstractDbService {
       prop => prop in newUser
     )
 
-    if (hasAdminOnlyProps && (!authUser || !authUser.isAdmin)) {
+    if (hasAdminOnlyProps && !getUserRole(authUser).isAdmin) {
       const adminOnlyProp = Object.keys(newUser).find(prop =>
         adminOnlyModifiableUserProperties.includes(prop as keyof User)
       )
@@ -328,13 +335,17 @@ export class MongodbService extends AbstractDbService {
     const hash = isGuestId(newUser.id)
       ? ""
       : await hashPassword(newUser.password)
-    const adminSafeUser = {
-      ...toAdminSafeUser(newUser),
-      name: newUser.name.trim(),
+    const { id, name, email, isAdmin, isVerified } = newUser
+    const userDetails = {
+      id,
+      name: name.trim(),
+      email,
+      ...(isAdmin !== undefined && { isAdmin }),
+      ...(isVerified !== undefined && { isVerified }),
     }
     const user: User = isGuestId(newUser.id)
-      ? { ...adminSafeUser, challenge: generateGuestChallenge() }
-      : ({ ...adminSafeUser, hash } as User)
+      ? { ...userDetails, challenge: generateGuestChallenge() }
+      : { ...userDetails, hash }
 
     const result = await users.insertOne(user)
     if (!result.acknowledged) {
@@ -417,7 +428,7 @@ export class MongodbService extends AbstractDbService {
       }
     }
 
-    const isAdmin = authUser ? authUser.isAdmin : isHardcodedModerator
+    const isAdmin = getUserRole(authUser).isAdmin || isHardcodedModerator
     const isSelf = authUser && targetUserId === authUser.id
     const body = toSafeUser(user, isSelf || isAdmin)
     return { ...success200OK, body }
@@ -436,7 +447,7 @@ export class MongodbService extends AbstractDbService {
     )
     const users = await usersCollection.find({}).toArray()
     const authUser = users.find(u => u.id === authUserId)
-    const isAdmin = authUser ? authUser.isAdmin : false
+    const { isAdmin } = getUserRole(authUser)
     const outUsers = isAdmin
       ? users.map(toAdminSafeUser)
       : users.map(toPublicSafeUser)
@@ -480,7 +491,8 @@ export class MongodbService extends AbstractDbService {
         body: "Authenticating user not found",
       }
 
-    if (targetId !== authUser.id && !authUser.isAdmin) {
+    const { isAdmin } = getUserRole(authUser)
+    if (targetId !== authUser.id && !isAdmin) {
       return {
         ...error403UserNotAuthorized,
         body: `id of user ${targetId} does not match id of credentials ${authUser.id} and credentialed user is not admin`,
@@ -488,7 +500,7 @@ export class MongodbService extends AbstractDbService {
     }
 
     if (
-      !authUser.isAdmin &&
+      !isAdmin &&
       (Object.keys(user) as (keyof User)[]).some(key =>
         adminOnlyModifiableUserProperties.includes(key)
       )
@@ -523,7 +535,7 @@ export class MongodbService extends AbstractDbService {
     const updatedUser = { ...foundUser, ...newProps }
 
     const checkUser = isGuestId(targetId)
-      ? validateGuestUser(updatedUser, authUserId, authUser.isAdmin)
+      ? validateGuestUser(updatedUser, authUserId, isAdmin)
       : validateUser(updatedUser)
 
     if (!isValidResult(checkUser)) {
@@ -578,8 +590,9 @@ export class MongodbService extends AbstractDbService {
       return error401UserNotAuthenticated
     }
 
+    const { isAdmin } = getUserRole(authUser)
     const canDelete =
-      authUser.isAdmin || (authUserId === userId && policy.canUserDeleteSelf)
+      isAdmin || (authUserId === userId && policy.canUserDeleteSelf)
 
     if (!canDelete) {
       return error403UserNotAuthorized
@@ -589,7 +602,7 @@ export class MongodbService extends AbstractDbService {
       await users.deleteOne({ id: userId })
       return success202UserDeleted
     } catch (e) {
-      return authUser.isAdmin
+      return isAdmin
         ? { ...error500UpdateError, body: toErrorBody(e) }
         : error500UpdateError
     }
@@ -673,7 +686,7 @@ export class MongodbService extends AbstractDbService {
       }
     } catch (e) {
       console.error(e)
-      return authUser.isAdmin
+      return getUserRole(authUser).isAdmin
         ? { ...error500UpdateError, body: toErrorBody(e) }
         : error500UpdateError
     }
@@ -736,7 +749,7 @@ export class MongodbService extends AbstractDbService {
       return error401UserNotAuthenticated
     }
 
-    const isAdmin = authUser?.isAdmin ?? false
+    const { isAdmin } = getUserRole(authUser)
     const comments: Collection<Comment | DeletedComment | Discussion> = (
       await this.getDb()
     ).collection("comments")
@@ -812,7 +825,7 @@ export class MongodbService extends AbstractDbService {
               "else": "$$REMOVE",
             },
           },
-          "user.isAdmin": 1,
+          "user.privilege": 1,
           "replies.parentId": 1,
           "replies.id": 1,
           "replies.text": 1,
@@ -820,7 +833,7 @@ export class MongodbService extends AbstractDbService {
           "replies.dateDeleted": 1,
           "replies.user.id": 1,
           "replies.user.name": 1,
-          "replies.user.isAdmin": 1,
+          "replies.user.privilege": 1,
           "replies.user.isVerified": {
             $cond: {
               "if": {
@@ -889,6 +902,8 @@ export class MongodbService extends AbstractDbService {
         body: `Comment '${targetId}' not found`,
       }
     }
+    addCommentAuthorRole(comment)
+    comment.replies?.forEach(addCommentAuthorRole)
     return { ...success200OK, body: comment }
   }
 
@@ -934,13 +949,14 @@ export class MongodbService extends AbstractDbService {
       return error400NoUpdate
     }
 
-    const canEdit = authUser.isAdmin || authUser.id === foundComment.userId
+    const { isAdmin } = getUserRole(authUser)
+    const canEdit = isAdmin || authUser.id === foundComment.userId
 
     if (!canEdit) {
       return error403UserNotAuthorized
     }
 
-    const user = toSafeUser(foundComment.user as User, authUser.isAdmin)
+    const user = toSafeUser(foundComment.user as User, isAdmin)
     const returnComment = { ...foundComment, text, user }
 
     const modifyResult = await comments.findOneAndUpdate(
@@ -985,7 +1001,7 @@ export class MongodbService extends AbstractDbService {
         body: returnComment,
       }
     } else {
-      if (authUser.isAdmin) {
+      if (isAdmin) {
         const errorMessage = modifyResult.lastErrorObject
           ? JSON.stringify(modifyResult.lastErrorObject)
           : "Unknown error"
@@ -1020,6 +1036,7 @@ export class MongodbService extends AbstractDbService {
       await this.getDb()
     ).collection("comments")
     const foundComment = await comments.find({ id: targetId }).limit(1).next()
+    const { isAdmin } = getUserRole(authUser)
 
     const notFound = {
       ...error404CommentNotFound,
@@ -1030,10 +1047,10 @@ export class MongodbService extends AbstractDbService {
     }
 
     if (isDeletedComment(foundComment)) {
-      return authUser.isAdmin ? success202CommentDeleted : notFound
+      return isAdmin ? success202CommentDeleted : notFound
     }
 
-    const canDelete = authUser.isAdmin || authUser.id === foundComment.userId
+    const canDelete = isAdmin || authUser.id === foundComment.userId
 
     if (!canDelete) {
       return error403UserNotAuthorized
@@ -1053,7 +1070,7 @@ export class MongodbService extends AbstractDbService {
 
       // A concurrent delete may have already recorded the deletion.
       if (
-        authUser.isAdmin &&
+        isAdmin &&
         (await comments.findOne({
           _id: foundComment._id,
           dateDeleted: { $exists: true },
@@ -1063,7 +1080,7 @@ export class MongodbService extends AbstractDbService {
       }
       return notFound
     } catch (e) {
-      return authUser.isAdmin
+      return isAdmin
         ? { ...error500UpdateError, body: toErrorBody(e) }
         : error500UpdateError
     }
@@ -1111,11 +1128,12 @@ export class MongodbService extends AbstractDbService {
       return error404UserUnknown
     }
 
-    if (!policy.canFirstVisitCreateTopic && (!authUser || !authUser.isAdmin)) {
+    const { isAdmin } = getUserRole(authUser)
+    if (!policy.canFirstVisitCreateTopic && !isAdmin) {
       return error403UserNotAuthorized
     }
 
-    if (!authUserId || !authUser || !authUser.isAdmin) {
+    if (!authUserId || !isAdmin) {
       // User is anonymous, public can create topics, and referrer restrictions are true
       // Let's validate the topic. We do that by comparing the proposed topicId with the `referer` header
       // They should be the same. If not, reject it
@@ -1206,7 +1224,7 @@ export class MongodbService extends AbstractDbService {
       return error404UserUnknown
     }
 
-    const isAdmin = authUser?.isAdmin ?? false
+    const { isAdmin } = getUserRole(authUser)
     const comments: Collection<Comment | DeletedComment | Discussion> = (
       await this.getDb()
     ).collection("comments")
@@ -1282,7 +1300,7 @@ export class MongodbService extends AbstractDbService {
               else: "$$REMOVE",
             },
           },
-          "user.isAdmin": 1,
+          "user.privilege": 1,
           "replies.parentId": 1,
           "replies.id": 1,
           "replies.text": 1,
@@ -1290,7 +1308,7 @@ export class MongodbService extends AbstractDbService {
           "replies.dateDeleted": 1,
           "replies.user.id": 1,
           "replies.user.name": 1,
-          "replies.user.isAdmin": 1,
+          "replies.user.privilege": 1,
           "replies.user.isVerified": {
             $cond: {
               if: { $eq: ["$isAdminSafe", true] },
@@ -1366,7 +1384,11 @@ export class MongodbService extends AbstractDbService {
 
     const comment = (await comments
       .aggregate(fullTopicPipeline(targetId, isAdmin))
-      .next()) as Discussion
+      .next()) as Discussion & { user?: Comment["user"] }
+    if (comment) {
+      addCommentAuthorRole(comment)
+      comment.replies?.forEach(addCommentAuthorRole)
+    }
     const body = comment
 
     return { ...success200OK, body }
@@ -1441,7 +1463,8 @@ export class MongodbService extends AbstractDbService {
       }
     }
 
-    if (!authUser.isAdmin) {
+    const { isAdmin } = getUserRole(authUser)
+    if (!isAdmin) {
       return error403UserNotAuthorized
     }
 
@@ -1456,13 +1479,13 @@ export class MongodbService extends AbstractDbService {
         else
           return {
             statusCode: 500,
-            body: authUser.isAdmin
+            body: isAdmin
               ? modifyResult.lastErrorObject
               : error500UpdateError.body,
           } as Error
       })
       .catch(e => {
-        if (authUser.isAdmin) {
+        if (isAdmin) {
           const errorMessage = e ? JSON.stringify(e) : "Unknown error"
           return { ...error500UpdateError, body: errorMessage } as Error
         } else return error500UpdateError
@@ -1501,7 +1524,8 @@ export class MongodbService extends AbstractDbService {
       }
     }
 
-    if (!authUser.isAdmin) {
+    const { isAdmin } = getUserRole(authUser)
+    if (!isAdmin) {
       return error403UserNotAuthorized
     }
 
@@ -1539,7 +1563,7 @@ export class MongodbService extends AbstractDbService {
       await discussions.deleteMany({ id: { $in: commentIds } })
       return success202TopicDeleted
     } catch (e) {
-      return authUser.isAdmin
+      return isAdmin
         ? { ...error500UpdateError, body: toErrorBody(e) }
         : error500UpdateError
     }

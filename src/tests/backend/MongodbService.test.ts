@@ -14,6 +14,7 @@ import type {
   UpdateUser,
   User,
 } from "../../../src/lib/simple-comment-types"
+import { Privilege } from "../../../src/lib/simple-comment-types"
 import { MongodbService } from "../../../src/lib/MongodbService"
 import { Collection, Db, MongoClient } from "mongodb"
 import {
@@ -94,7 +95,9 @@ const isAdminSafeUser = (u: Partial<User>): u is AdminSafeUser =>
 
 // Fake data objects
 
-const testUsers = mockUsersArray(100)
+const testUsers = mockUsersArray(100).map(user =>
+  user.isAdmin ? { ...user, privilege: Privilege.Admin } : user
+)
 
 const testNewTopic = mockTopic("new-")
 const testNewUser: CreateUserPayload = {
@@ -117,6 +120,7 @@ const testComments = mockCommentTree(500, testUsers, testTopics)
 const authUserTest = {
   ...mockUser("auth-"),
   isAdmin: true,
+  privilege: Privilege.Admin,
   password: mockPassword(),
   email: mockEmail(),
 }
@@ -292,7 +296,18 @@ describe("Full API service test", () => {
       }
       expect.assertions(1)
       const response = await service.userPOST(newUser)
-      expect(response).toEqual({ body: { email, id, name }, statusCode: 201 })
+      expect(response).toEqual({
+        body: {
+          email,
+          id,
+          name,
+          privilege: Privilege.User,
+          isModerator: false,
+          isAdmin: false,
+          isOwner: false,
+        },
+        statusCode: 201,
+      })
     })
     test("POST to /user with admin-only properties without credentials should error 403", async () => {
       const newUser = {
@@ -605,7 +620,7 @@ describe("Full API service test", () => {
       .then((res: Success<AdminSafeUser> | Error) => {
         expect(res).toHaveProperty("statusCode", 204)
         expect(res).toHaveProperty("body", toAdminSafeUser(updatedUser))
-        expect(res.body).toHaveProperty("isAdmin", true)
+        expect(res.body).toHaveProperty("isAdmin", false)
         expect(res.body).toHaveProperty("isVerified", true)
       })
   })

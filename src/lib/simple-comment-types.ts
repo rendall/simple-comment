@@ -102,6 +102,13 @@ export type DeletedComment = Comment & {
   dateDeleted: Date
 }
 
+export enum Privilege {
+  User = 0,
+  Moderator = 1,
+  Admin = 2,
+  Owner = 3,
+}
+
 export type User = {
   _id?: ObjectId
   id: UserId
@@ -109,17 +116,21 @@ export type User = {
   email: Email
   challenge?: string
   hash?: string
+  privilege?: Privilege
+  isModerator?: boolean
   isAdmin?: boolean
+  isOwner?: boolean
   isVerified?: boolean
 }
 
 // This is a user that is safe to return from the server to the public
-export type PublicSafeUser = Pick<User, "id" | "name" | "isAdmin">
-// This is a user that is safe to return from the server to admin
-export type AdminSafeUser = Pick<
+export type PublicSafeUser = Pick<
   User,
-  "id" | "name" | "email" | "isAdmin" | "isVerified" | "challenge"
+  "id" | "name" | "privilege" | "isModerator" | "isAdmin" | "isOwner"
 >
+// This is a user that is safe to return from the server to admin
+export type AdminSafeUser = PublicSafeUser &
+  Pick<User, "email" | "isVerified" | "challenge">
 // The information that may be expected for a new user
 export type NewUser = {
   id: UserId
