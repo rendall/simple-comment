@@ -32,6 +32,7 @@ import {
   success202UserDeleted,
 } from "../../../src/lib/messages"
 import { getExpirationTime, hashPassword } from "../../../src/lib/crypt"
+import { getBackendEnv } from "../../../src/lib/env"
 import * as jwt from "jsonwebtoken"
 import policy from "../../policy.json"
 import {
@@ -59,6 +60,197 @@ import {
 declare const global: { __MONGO_URI__: string; __MONGO_DB_NAME__: string }
 const MONGO_URI = global.__MONGO_URI__
 const MONGO_DB = global.__MONGO_DB_NAME__
+
+describe("Account privilege persistence and administration", () => {
+  const service = new MongodbService(MONGO_URI, `${MONGO_DB}-account-privilege`)
+  const ownerId = getBackendEnv().moderatorId
+  const account = (id: string, privilege?: Privilege): User => ({
+    id,
+    name: "Test Account",
+    email: "account@example.com",
+    hash: "stored-test-hash",
+    ...(privilege !== undefined && { privilege }),
+  })
+  const regular = account("regular-account", Privilege.User)
+  const moderator = account("moderator-account", Privilege.Moderator)
+  const admin = account("admin-account", Privilege.Admin)
+  const peer = account("peer-admin-account", Privilege.Admin)
+  const owner = account(ownerId, Privilege.Admin)
+  let db: Db
+
+  beforeAll(async () => {
+    db = await service.getDb()
+  })
+
+  beforeEach(async () => {
+    await db.collection("users").deleteMany({})
+    await db.collection("comments").deleteMany({})
+  })
+
+  afterAll(async () => {
+    await db.dropDatabase()
+    await service.close()
+  })
+
+  test("persists role 0 for regular registration and role 2 for owner bootstrap", async () => {
+    const users = db.collection<User>("users")
+    expect(await service.userGET(ownerId, ownerId)).toMatchObject({
+      statusCode: 200,
+      body: { privilege: Privilege.Owner, isOwner: true },
+    })
+    expect(await users.findOne({ id: ownerId })).toMatchObject({
+      privilege: Privilege.Admin,
+    })
+
+    const newUser = {
+      id: regular.id,
+      name: regular.name,
+      email: regular.email,
+      password: mockPassword(),
+    }
+    expect(await service.userPOST(newUser, ownerId)).toMatchObject({
+      statusCode: 201,
+      body: { privilege: Privilege.User, isModerator: false },
+    })
+    expect(await users.findOne({ id: regular.id })).toMatchObject({
+      privilege: Privilege.User,
+    })
+  })
+
+  test("initializes only a missing stored owner privilege", async () => {
+    const users = db.collection<User>("users")
+    await users.insertOne({ ...account(ownerId), isAdmin: false })
+
+    expect(await service.userGET(ownerId)).toMatchObject({
+      body: { privilege: Privilege.Owner, isOwner: true },
+    })
+    expect(await users.findOne({ id: ownerId })).not.toHaveProperty("privilege")
+
+    await service.userGET(ownerId, ownerId)
+    expect(await users.findOne({ id: ownerId })).toMatchObject({
+      privilege: Privilege.Admin,
+    })
+
+    await users.updateOne(
+      { id: ownerId },
+      { $set: { privilege: Privilege.User } }
+    )
+    expect(await service.userGET(ownerId, ownerId)).toMatchObject({
+      body: { privilege: Privilege.Owner, isOwner: true },
+    })
+    expect(await users.findOne({ id: ownerId })).toMatchObject({
+      privilege: Privilege.User,
+    })
+  })
+
+  test("derives roles in account and discussion reads without rewriting legacy users", async () => {
+    const users = db.collection<User>("users")
+    const legacy = { ...account("legacy-account"), isAdmin: true }
+    await users.insertMany([legacy, moderator, regular])
+    const topic = mockTopic("privileges-")
+    const parent = {
+      id: "privilege-comment",
+      parentId: topic.id,
+      text: "A comment",
+      userId: legacy.id,
+      dateCreated: new Date(),
+    }
+    const reply = {
+      ...parent,
+      id: "privilege-reply",
+      parentId: parent.id,
+      userId: moderator.id,
+    }
+    await db.collection("comments").insertMany([topic, parent, reply])
+
+    const legacyRole = { privilege: Privilege.User, isAdmin: false }
+    const replyRole = { privilege: Privilege.Moderator, isModerator: true }
+    expect(await service.userGET(legacy.id)).toMatchObject({ body: legacyRole })
+    expect(await service.commentGET(parent.id)).toMatchObject({
+      body: { user: legacyRole, replies: [{ user: replyRole }] },
+    })
+    expect(await service.topicGET(topic.id)).toMatchObject({
+      body: {
+        replies: expect.arrayContaining([
+          expect.objectContaining({
+            id: parent.id,
+            user: expect.objectContaining(legacyRole),
+          }),
+          expect.objectContaining({
+            id: reply.id,
+            user: expect.objectContaining(replyRole),
+          }),
+        ]),
+      },
+    })
+    expect(
+      await service.userPUT(regular.id, { name: "Changed" }, legacy.id)
+    ).toMatchObject({
+      statusCode: 403,
+    })
+    expect(await users.findOne({ id: legacy.id })).not.toHaveProperty(
+      "privilege"
+    )
+  })
+
+  test.each([
+    { actor: regular, target: moderator, allowed: false },
+    { actor: moderator, target: regular, allowed: false },
+    { actor: admin, target: regular, allowed: true },
+    { actor: admin, target: moderator, allowed: true },
+    { actor: admin, target: peer, allowed: false },
+    { actor: admin, target: owner, allowed: false },
+    { actor: owner, target: admin, allowed: true },
+  ])(
+    "allows $actor.id to administer $target.id only when authorized ($allowed)",
+    async ({ actor, target, allowed }) => {
+      const users = db.collection<User>("users")
+      await users.insertMany([{ ...actor }, { ...target }])
+      const name = "Updated Profile"
+      const update = await service.userPUT(target.id, { name }, actor.id)
+
+      expect(update.statusCode).toBe(allowed ? 204 : 403)
+      expect(await users.findOne({ id: target.id })).toMatchObject({
+        name: allowed ? name : target.name,
+      })
+
+      const deletion = await service.userDELETE(target.id, actor.id)
+      expect(deletion.statusCode).toBe(allowed ? 202 : 403)
+      expect(Boolean(await users.findOne({ id: target.id }))).toBe(!allowed)
+    }
+  )
+
+  test("keeps ordinary and owner self-service available for permitted fields", async () => {
+    const users = db.collection<User>("users")
+    await users.insertMany([{ ...regular }, { ...owner }])
+    const name = "Updated Profile"
+
+    for (const user of [regular, owner]) {
+      expect(await service.userPUT(user.id, { name }, user.id)).toMatchObject({
+        statusCode: 204,
+        body: { name },
+      })
+    }
+
+    expect(
+      await service.userPUT(ownerId, { email: "new@example.com" }, ownerId)
+    ).toMatchObject({ statusCode: 403 })
+    expect(
+      await service.userPUT(
+        ownerId,
+        { password: "different-password" },
+        ownerId
+      )
+    ).toMatchObject({ statusCode: 403 })
+    expect(await service.userDELETE(ownerId, ownerId)).toMatchObject({
+      statusCode: 403,
+    })
+    expect(await users.findOne({ id: ownerId })).toMatchObject({
+      email: owner.email,
+      hash: owner.hash,
+    })
+  })
+})
 
 const longFile = `${process.cwd()}/src/tests/veryLongRandomTestString`
 const veryLongString = fs.readFileSync(longFile, "utf8")

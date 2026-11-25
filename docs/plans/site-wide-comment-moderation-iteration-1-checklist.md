@@ -180,7 +180,7 @@ Source plan: [Site-wide comment moderation, iteration one](site-wide-comment-mod
 
 ## Validation items
 
-- [ ] T01 `[tests]` Unit-test privilege derivation in `src/tests/backend/user.privilege.test.ts` and verify storage and account authorization in `src/tests/backend/MongodbService.test.ts`. Cover levels 0–3, owner bootstrap and existing-owner initialization, missing and invalid stored values, legacy flags, rejected role writes, and the account matrix for self-service and attempts against protected targets. In `src/tests/frontend/apiClient.account-update.test.ts`, verify that an ordinary profile edit using account data with derived roles preserves the changes, sends only writable fields, and receives a successful response. Run `yarn test:backend` and `yarn test:frontend:unit`.
+- [x] T01 `[tests]` Unit-test privilege derivation in `src/tests/backend/user.privilege.test.ts` and verify storage and account authorization in `src/tests/backend/MongodbService.test.ts`. Cover levels 0–3, owner bootstrap and existing-owner initialization, missing and invalid stored values, legacy flags, rejected role writes, and the account matrix for self-service and attempts against protected targets. In `src/tests/frontend/apiClient.account-update.test.ts`, verify that an ordinary profile edit using account data with derived roles preserves the changes, sends only writable fields, and receives a successful response. Run `yarn test:backend` and `yarn test:frontend:unit`.
   - Depends on C01–C04.
   - Trace:
     - “Privilege derivation, filtering and publication decisions produce the specified results” (Iteration 1 — Validation Strategy)
