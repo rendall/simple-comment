@@ -8,7 +8,7 @@ See the demo: <https://simple-comment.netlify.app>
 
 ## Status
 
-_NB:_ Moderation tools are not yet adequate. There is not yet a way to hold comments in moderation before approval. If you like this project and would like to see it developed further on a specific timeline, contact me. Otherwise, this project is still on the road, but on the slow road.
+Moderators can review held comments directly in discussions. See [Moderating](#moderating) for setup and upgrade guidance.
 
 [![Netlify Status](https://api.netlify.com/api/v1/badges/fb816766-6f5b-4dff-9c27-3f5948ac9705/deploy-status)](https://app.netlify.com/sites/simple-comment/deploys)
 [![Open API 3.0 Validator](https://img.shields.io/swagger/valid/3.0?label=Open%20API%203.0%20spec&specUrl=https%3A%2F%2Fraw.githubusercontent.com%2Frendall%2Fsimple-comment%2Fmaster%2Fsrc%2Fschema%2Fsimple-comment-openapi3.json)](https://app.swaggerhub.com/apis/rendall-dev/simple-comment_api/1.0.0)
@@ -42,11 +42,11 @@ The minimum functionality is [up and running](https://simple-comment.netlify.app
   - [![Powered by Simple Comment](docs/simple-comment-badge.svg)](https://simple-comment.netlify.app)
 - Visitors can read and reply to comments
 - Optional administrator email notifications through Resend or SendGrid
+- Automatic comment holds and moderator review
 
 ### Top priority after MVP
 
 - Optional user authentication and identification
-- Moderator holds posts for approval
 - Spam prevention measures
 - Integration with 3rd party authentication
 - Framework-friendly frontends
@@ -159,7 +159,7 @@ Configure only one email provider. Leave all provider settings unset to keep not
 
 ### Email notifications
 
-Simple Comment can email your moderators when someone posts a new comment or reply. Notifications are **off until you configure an email provider**.
+Simple Comment can email your moderators when someone posts a comment or reply or changes its text. Notifications are **off until you configure an email provider**.
 
 We recommend Resend for getting started, and SendGrid is also supported. Existing SendGrid installations can keep their provider, API key, and verified sender, including its display name.
 
@@ -176,8 +176,15 @@ See the [notification guide](docs/NOTIFICATIONS.md) for setup instructions, swit
 
 ## Moderating
 
-1. Visit the `login.html` page you uploaded in _Setup_ and
-1. Log in using the `SIMPLE_COMMENT_MODERATOR_ID` and `SIMPLE_COMMENT_MODERATOR_PASSWORD` values in your `.env` file
+Sign in on your `login.html` page with the configured owner's credentials, then open the discussion. The owner and accounts with effective moderator privileges can see held comments and their reasons. Open a comment's action menu to approve the text you reviewed or remove the comment with a reason.
+
+Most comments publish immediately. Links and matches in the optional terms file hold a comment for review. Moderator submissions bypass these automatic rules. Authors can still edit their own held comments, and a qualifying edit can release the hold.
+
+### Upgrading from legacy administrator flags
+
+An existing non-owner account with only an `isAdmin` flag and no stored privilege becomes a regular account. The configured owner keeps owner access. Existing live comments without stored publication status are treated as approved.
+
+The API derives `privilege` and the role flags from the account. Omit these fields from account writes. Only the original author can edit comment text. Successful comment edits now return `200 OK` with the updated comment, including its publication status and any hold reason. The previous success status was `204 No Content`.
 
 ### Optional moderation terms file
 
@@ -288,7 +295,7 @@ The comment endpoint is for the creation, reading, updating and deleting (CRUD) 
 
 A topic is a special kind of comment that by default can only be created by admin users, and forms an organizational bucket for comments that reply. It is a kind of root comment, and therefore has no parent
 
-The /topic endpoint handles CRUD for these root comments. A GET operation of `/topic` will get a list of topics and GET on `/topic/{topicId}` will get all comments in reply to that topic and their descendents
+The `/topic` endpoint handles CRUD for these root comments. `GET /topic` lists topics. `GET /topic/{topicId}` returns the discussion and replies visible to the requesting viewer.
 
 ### `/user`
 

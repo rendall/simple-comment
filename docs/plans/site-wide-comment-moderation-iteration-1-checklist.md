@@ -165,7 +165,7 @@ Source plan: [Site-wide comment moderation, iteration one](site-wide-comment-mod
     - “Provide a harmless example file” (Optional private moderation terms file)
     - “document how installation owners supply the actual file” (Optional private moderation terms file)
 
-- [ ] C24 `[docs]` Update the moderation, upgrade, and API guidance in `README.md`. Cover the in-discussion review and removal controls, moderator bypass, legacy non-owner admins losing privilege, rejected role writes, author-only edits, and the edit response change from `204` to `200`.
+- [x] C24 `[docs]` Update the moderation, upgrade, and API guidance in `README.md`. Cover the in-discussion review and removal controls, moderator bypass, legacy non-owner admins losing privilege, rejected role writes, author-only edits, and the edit response change from `204` to `200`.
   - Depends on C16, C17, C20, and C21. Validated by T09.
   - Trace:
     - “Installation, upgrade and usage instructions” (Iteration 1 — In Scope)
