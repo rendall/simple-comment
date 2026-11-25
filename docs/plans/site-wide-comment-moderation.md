@@ -145,9 +145,66 @@ If owners need to delegate control of permission settings later, consider delega
 
 ### Site-wide comment review
 
-After owner permissions and appointments, design a moderator view with **Held for review** and **All recent comments**. Both views should show comment status and link to the discussion. Moderators can approve or reject held comments and can delete a published comment or withdraw its approval and hold it from public view so the author can revise it. By default, only the author can edit the text. The current comment update API allows admins to edit other users’ comments. Apply the owner-controlled editing setting in both the backend and the widget. See #275.
+After owner permissions and appointments, design a moderator view with **Held for review** and **All recent comments**. Both views should show comment status and link to the discussion. Moderators can approve or delete held comments, and can delete a published comment or withdraw its approval and hold it from public view so the author can revise it. By default, only the author can edit the text. The current comment update API allows admins to edit other users’ comments. Apply the owner-controlled editing setting in both the backend and the widget. See #275.
 
-Track whether a comment is approved for publication. An `isApproved` flag is one option. A comment can start approved or held according to policy, and an edit that triggers review can cause approval to be withdrawn. Held comments stay private until approved. The default publication policy and the exact handling of edited comments and replies remain open. Use #241 for prior investigation and check whether #63 offers a starting point.
+#### Comment publication states
+
+A comment has three effective states. There is no separate rejection state or workflow: a moderator who decides that a held comment should be removed deletes it.
+
+| State | Publicly visible content | Content retained | Reversible |
+| --- | --- | --- | --- |
+| Approved | Yes | Yes | Yes |
+| Held for review | No | Yes | Yes |
+| Deleted | No | No | No |
+
+Use an `isApproved` boolean alongside soft-deletion metadata:
+
+- `isApproved` — whether the comment is approved for publication.
+- `deletedAt` — when the comment was deleted.
+- `deletedBy` — the immutable account ID of the user who deleted the comment. A username snapshot may additionally preserve the name at the time of deletion if historical display is needed.
+
+Deletion takes precedence over approval. A comment can start approved or held according to publication policy, and an edit that triggers review can cause approval to be withdrawn. A moderator can approve a held comment or return an approved comment to the held state. Either an approved or a held comment can be deleted; deleted comments cannot be restored by approving them.
+
+Deletion removes the content but retains the comment object and structural metadata, consistent with the incremental loading design. Deleted text is no longer available to the author or moderators. The default publication policy and exact handling of edited comments remain open. Use #241 for prior investigation and check whether #63 offers a starting point.
+
+#### Visibility of unpublished comments
+
+An unpublished comment is visible only to its original author and users with effective moderator privileges. Ordinary readers cannot see its content.
+
+| Viewer | Approved content | Held content |
+| --- | --- | --- |
+| Ordinary reader (not the author) | Yes | No |
+| Original author | Yes | Yes |
+| Moderator | Yes | Yes |
+| Admin | Yes | Yes |
+| Owner | Yes | Yes |
+
+Authors see their held comments in their original position in the discussion tree, with a clear indication that they are not yet published. Holding is reversible and retains the comment content, unlike deletion.
+
+Apply the same server-enforced visibility policy to every comment retrieval path, including direct API requests, discussion trees, comment histories and site-wide views. Excerpts and other public-facing data must not disclose held content to unauthorized viewers. Comment selection and comment visibility are separate concerns: a view determines which comments it selects, while the visibility policy determines what the requesting user may see.
+
+#### Placeholders and continuity of discussion threads
+
+Holding or deleting a comment does not automatically hold or delete its replies or descendants. Evaluate each descendant independently under the same publication and visibility rules.
+
+When a comment is unavailable to a viewer but has descendants visible to that viewer, show a placeholder at its original position in the discussion tree to preserve the thread's structure. A deleted comment with no descendants can be omitted. Do not expose held or deleted content through a placeholder. The exact wording and detail are UX decisions: ordinary readers may see a generic unavailable or deleted-comment message, while moderators may see more information about the reason, state or deletion metadata. A held comment remains visible in full to its author and moderators.
+
+A user cannot post a new direct reply to an already deleted comment, including through direct API requests. Existing replies remain intact, and users may continue the thread by replying to an existing, eligible descendant. A deleted ancestor does not make its descendants ineligible for replies. Whether a visible held comment can receive new direct replies, and the exact presentation of held placeholders to different viewers, remain open.
+
+For example, if Alice's comment is deleted after Bob replies, Alice's comment becomes a placeholder, Bob's independently visible reply remains, and Carol can reply to Bob. Carol cannot create a new direct reply to Alice's deleted comment.
+
+### User comment history
+
+Provide a site-wide view of comments authored by a particular user. This is a general feature, not exclusively a moderation tool. Readers can explore a user's public contributions, authors can review their own contributions including held comments, and moderators can inspect a user's history across discussions to assess patterns of misconduct or suitability for moderator appointments.
+
+| View | Purpose |
+| --- | --- |
+| Discussion | Comments belonging to a particular discussion |
+| All recent comments | Recent comments across the installation for moderation |
+| Held for review | Site-wide moderation queue |
+| User comment history | Comments authored by a particular user across the installation |
+
+Apply the same visibility rules in the user comment history as in the discussion tree. Deleted content is not recoverable through any view. The exact navigation, sorting, pagination, and presentation of these views are deferred to subsequent UX and engineering design.
 
 ### Publication policy and notifications
 
@@ -208,12 +265,12 @@ After a successful reconciliation, persist the new last-known-owner username and
 
 ## Out of Scope
 
-This draft leaves reader reports, appeals, bulk actions, IP blocking, and shadowbanning as possible follow-ups. Their priority and scope are open.
+This draft leaves reader reports, appeals, bulk actions, IP blocking, and shadowbanning as possible follow-ups. Their priority and scope are open. A distinct rejection state or workflow is not part of the initial design; moderators delete comments instead.
 
 ## Open Questions
 
 
-- What should the installation publish or hold by default, and how should edits and replies be handled?
+- What should the installation publish or hold by default, how should edits affect approval, and should visible held comments accept new direct replies?
 - Which policy settings and notifications are essential to completing #284?
 - Should deployment-based ownership transfers to existing accounts be accepted or rejected? How should unexpected replacement or disappearance of the last known owner account be handled? See [Owner configuration and ownership changes](#owner-configuration-and-ownership-changes).
 
@@ -225,7 +282,7 @@ The owner and admins can appoint and remove moderators. Only the owner can appoi
 
 An admin cannot delete another admin's account, change its password, or modify any of its account details. Only the owner can perform administrative account mutations on an admin account. Unauthorized cross-account mutations return HTTP 403 and leave the account unchanged. The same restrictions protect the owner from administrative changes by other users.
 
-A designated moderator can see held and recent comments across multiple discussions in one place. Approving a held comment makes it public, rejecting it keeps it private, and moderators can hold or delete published comments. By default, only authors can edit comment text. When the owner enables admin editing, admins and the owner can edit others’ comments. The API rejects cross-author edits by moderators in either mode and rejects attempts by non-owners to change the editing setting. The initial release scope for configurable rules and notifications remains open for discussion.
+A designated moderator can see held and recent comments across multiple discussions in one place. Approving a held comment makes it public, and moderators can hold or delete published comments or delete held comments. Deletion removes content, records deletion time and actor, and takes precedence over approval. Authors and moderators can see held comments; unrelated ordinary readers cannot. Authors see their own held comments in their original tree position, identified as unpublished. Independently visible descendants of unavailable comments remain visible under structural placeholders, and new direct replies to deleted comments are rejected while replies to eligible descendants are allowed. The site-wide user comment history allows ordinary readers to see public contributions, authors to see their own held contributions, and moderators to see held contributions by any user, consistently with the same server-enforced visibility policy. By default, only authors can edit comment text. When the owner enables admin editing, admins and the owner can edit others’ comments. The API rejects cross-author edits by moderators in either mode and rejects attempts by non-owners to change the editing setting. The initial release scope for configurable rules and notifications remains open for discussion.
 
 ## Validation Strategy
 
@@ -233,7 +290,7 @@ Unit tests should cover every effective privilege level and its derived predicat
 
 Test cross-account administration against the privilege matrix, including account deletion, password changes, and profile and identity updates. In particular, verify that an admin cannot modify or delete another admin or the owner through direct API requests, that the owner can administer admins, and that admins can administer lower-privilege accounts subject to the separate role-assignment rules. Verify that forbidden requests leave the target unchanged and that ordinary authorized self-service actions remain distinct from cross-account administration.
 
-Exercise the full review flow across multiple discussions. Verify that public comment reads exclude held and rejected comments, approval makes a comment visible, and direct API requests apply the same permissions as the moderator view. Once policy and notification behavior are agreed, verify that rules produce the expected publication state and notifications follow that state.
+Exercise the full review flow across multiple discussions. Test held-to-approved and approved-to-held transitions and deletion of either state. Verify that deletion records the authenticated deleting account ID and timestamp, removes content, retains the structural comment object, and cannot be reversed through approval. Test visibility for unauthenticated readers, unrelated authenticated users, authors and privileged users in the discussion tree, direct comment reads, user comment history and site-wide moderation views as applicable. Verify that authors see their own held comments in their original tree position, that unauthorized readers cannot access held content through alternate retrieval paths, and that no viewer can retrieve deleted text. Test preservation of independently visible descendants beneath deleted or held parents, including nested placeholders without hidden content. Verify that the server rejects new direct replies to deleted comments (including when the parent is deleted after the reply form is opened), but permits replies to eligible existing descendants. Verify user comment history across multiple discussions and that the moderator queue excludes deleted comments. Once policy and notification behavior are agreed, verify that rules produce the expected publication state and notifications follow that state.
 
 Test owner initialization, normal restart, credential rotation, protected owner identity fields, permitted owner profile edits, transfer to a previously unused username, and detection of existing-account collisions, mismatched account IDs, missing owner records and conflicting username/email identities. Verify that the last-known-owner record is not authoritative for permissions, successful reconciliation updates the baseline, the previous owner loses effective owner access, and concurrent initialization does not process the same change twice. Verify notices include the former and new owner on successful transfers and omit secrets. Validate the remaining collision cases once their policy is agreed.
 
