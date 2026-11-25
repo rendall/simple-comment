@@ -172,7 +172,7 @@ Source plan: [Site-wide comment moderation, iteration one](site-wide-comment-mod
     - “Document the legacy-admin compatibility change prominently in upgrade instructions.” (Privilege foundation)
     - “document this API contract change” (Comment creation and edit response contract)
 
-- [ ] C25 `[docs]` Update `docs/NOTIFICATIONS.md` to describe hold information on successful creation and edit emails, the existing address list, and how moderators use the notification to locate the comment manually.
+- [x] C25 `[docs]` Update `docs/NOTIFICATIONS.md` to describe hold information on successful creation and edit emails, the existing address list, and how moderators use the notification to locate the comment manually.
   - Depends on C15 and C20. Validated by T09.
   - Trace:
     - “Notifications concerning held comments identify the hold and its reason.” (AC7 — Notifications)
