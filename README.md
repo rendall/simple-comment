@@ -179,6 +179,16 @@ See the [notification guide](docs/NOTIFICATIONS.md) for setup instructions, swit
 1. Visit the `login.html` page you uploaded in _Setup_ and
 1. Log in using the `SIMPLE_COMMENT_MODERATOR_ID` and `SIMPLE_COMMENT_MODERATOR_PASSWORD` values in your `.env` file
 
+### Optional moderation terms file
+
+Place a private UTF-8 file named `moderation-terms.txt` in the repository root of the build workspace. Use one literal word or phrase per line. Blank lines and lines starting with `#` are ignored. Matching uses case-insensitive substrings, including inside longer words. See [the harmless example](moderation-terms.example.txt).
+
+Supply the real file privately before the Netlify build. A Git-based build needs the file provisioned in its own workspace. Netlify's function configuration bundles it with the comment function. Keep it outside Git and the published `dist` directory.
+
+Run `yarn run validate:moderation-terms` to check the file. A missing or empty list leaves link filtering active and applies no term holds. A supplied file that is unreadable or invalid fails the build. If the file becomes unreadable or invalid at runtime, the comment function logs a generic configuration error and continues with link filtering.
+
+To verify the deployed setup, submit a comment containing a harmless fixture term and another comment that matches neither rule. Confirm that the first is held for review, the second is published, and the file is absent from the site's public assets.
+
 ## Default build
 
 The default stack uses Netlify + _MongoDB_ for the backend, and a minimal `fetch` based client for the frontend, but it can be readily adapted to use any technology stack, as long as the tests pass and the API conforms to the Open API 3 schema file

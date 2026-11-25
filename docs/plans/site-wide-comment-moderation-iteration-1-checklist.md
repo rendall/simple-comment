@@ -159,7 +159,7 @@ Source plan: [Site-wide comment moderation, iteration one](site-wide-comment-mod
   - Trace:
     - “On logout or account switch, discard no-longer-authorized private content and ignore outstanding responses belonging to the previous identity.” (Comment creation and edit response contract)
 
-- [ ] C23 `[docs]` Document optional terms-file setup and verification in `README.md` and provide `moderation-terms.example.txt` with harmless fixture terms. Explain how to supply the real file during deployment, the expected outcomes for absent, invalid, and unreadable files, and how to verify function-only delivery.
+- [x] C23 `[docs]` Document optional terms-file setup and verification in `README.md` and provide `moderation-terms.example.txt` with harmless fixture terms. Explain how to supply the real file during deployment, the expected outcomes for absent, invalid, and unreadable files, and how to verify function-only delivery.
   - Depends on C13 and C14. Validated by T09.
   - Trace:
     - “Provide a harmless example file” (Optional private moderation terms file)
