@@ -220,6 +220,16 @@ export const putComment = (
     credentials: "include",
   }).then(res => resolveBody<Comment>(res))
 
+export const approveComment = (commentId: CommentId, reviewedText: string) =>
+  fetch(
+    `${getSimpleCommentURL()}/comment/${encodeURIComponent(commentId)}/approve`,
+    {
+      body: reviewedText,
+      method: "POST",
+      credentials: "include",
+    }
+  ).then(res => resolveBody<string>(res))
+
 /** Delete a comment
  * @async
  * @function

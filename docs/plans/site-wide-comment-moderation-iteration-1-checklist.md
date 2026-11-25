@@ -141,7 +141,7 @@ Source plan: [Site-wide comment moderation, iteration one](site-wide-comment-mod
     - “The widget displays the returned state and explains any hold to the author.” (AC6 — Comment creation and editing)
     - “show a placeholder at its original position in the discussion tree” (Placeholders and continuity of discussion threads)
 
-- [ ] C20 `[frontend]` Add the in-discussion approval control beside deletion in `src/components/CommentDisplay.svelte`, using the approval request in `src/apiClient.ts`. Reconcile the discussion through `DiscussionDisplay.svelte` after success. On `409`, tell the moderator to review the updated text before trying again.
+- [x] C20 `[frontend]` Add the in-discussion approval control beside deletion in `src/components/CommentDisplay.svelte`, using the approval request in `src/apiClient.ts`. Reconcile the discussion through `DiscussionDisplay.svelte` after success. On `409`, tell the moderator to review the updated text before trying again.
   - Depends on C09 and C19. Validated by T07.
   - Trace:
     - “Add approval alongside the existing delete control on the comment itself.” (Initial workflow)

@@ -178,6 +178,8 @@
     showReply = discussionId
   }
 
+  const refreshDiscussion = () => send("LOAD")
+
   // Update the single source of truth without roundtrip to the server
   const onCommentDeleted = commentDeletedEvent => {
     const { commentId } = commentDeletedEvent.detail
@@ -236,6 +238,7 @@
       {currentUser}
       {showReply}
       replies={discussion.replies}
+      {refreshDiscussion}
       on:reply={onReply}
       on:delete={onCommentDeleted}
       on:posted={onCommentPosted}

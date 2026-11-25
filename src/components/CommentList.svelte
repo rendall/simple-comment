@@ -17,6 +17,7 @@
   export let replies: (Comment & { isNew?: true; isDelete?: true })[] = []
   export let depth: number = 0
   export let showReply = ""
+  export let refreshDiscussion: () => void
 
   const { state, send } = useMachine(commentDeleteMachine)
 
@@ -117,6 +118,7 @@
       {onOpenCommentInput}
       {onPostSuccess}
       {onUpdateSuccess}
+      {refreshDiscussion}
       {showReply}
     />
   {/each}

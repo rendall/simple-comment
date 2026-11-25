@@ -7,7 +7,8 @@
     toParagraphs,
     shortFormatDate,
   } from "../frontend-utilities"
-  import type { Comment, User } from "../lib/simple-comment-types"
+  import type { Comment, ServerResponseError, User } from "../lib/simple-comment-types"
+  import { approveComment } from "../apiClient"
   import SkeletonCommentDelete from "./low-level/SkeletonCommentDelete.svelte"
   import DeleteIcon from "./icons/DeleteIcon.svelte"
   import CommentList from "./CommentList.svelte"
@@ -31,12 +32,15 @@
   export let onUpdateSuccess
   export let depth
   export let handleReplyEvent
+  export let refreshDiscussion: () => void
 
   const isRoot = depth === 0
 
   let commentDeleted
   let isEditing = false
   let isOverflowToggled = false
+  let isApproving = false
+  let approvalError = ""
 
   let commentBodyHeight = 74
   let commentBodyRef
@@ -48,6 +52,26 @@
   let canEdit: (comment: Comment) => boolean
   let canDelete: (comment: Comment) => boolean
   $: isHeld = comment?.isApproved === false
+  $: canApprove = isHeld && comment?.text !== null && currentUser?.isModerator
+
+  const onApprove = async () => {
+    if (!canApprove || !comment || comment.text === null || isApproving) return
+    isApproving = true
+    approvalError = ""
+    try {
+      await approveComment(comment.id, comment.text)
+      refreshDiscussion()
+    } catch (error) {
+      if ((error as ServerResponseError)?.status === 409) {
+        approvalError = "This comment changed. Review the updated text before approving it."
+        refreshDiscussion()
+      } else {
+        approvalError = "The comment could not be approved. Try again."
+      }
+    } finally {
+      isApproving = false
+    }
+  }
 
   const onEditClick = (comment: Comment) => {
     const commentId = comment?.id
@@ -178,6 +202,9 @@
       {#if isHeld}
         <p role="status">Awaiting moderation. {comment.heldReason ?? ""}</p>
       {/if}
+      {#if approvalError}
+        <p role="alert">{approvalError}</p>
+      {/if}
       {#if isEditing}
         <CommentEdit
           placeholder="Your edit"
@@ -238,11 +265,15 @@
                 </button>
               {/if}
 
+              {#if canApprove}
+                <button on:click={onApprove} disabled={isApproving}>Approve</button>
+              {/if}
+
               <button on:click={() => (isOverflowToggled = false)}
                 ><ChevronLeft size={20} /></button
               >
             </div>
-          {:else if canEdit(comment) || canDelete(comment)}
+          {:else if canEdit(comment) || canDelete(comment) || canApprove}
             <button
               on:click={() => (isOverflowToggled = true)}
               class="overflow-menu-button"
@@ -265,6 +296,7 @@
       replies={comment.replies}
       {currentUser}
       {showReply}
+      {refreshDiscussion}
     />
   {/if}
 </li>
