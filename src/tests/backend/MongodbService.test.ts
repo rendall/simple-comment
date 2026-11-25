@@ -1195,6 +1195,7 @@ describe("Full API service test", () => {
         parentId: target.parentId,
         userId: author.id,
         dateCreated: target.dateCreated,
+        deletedBy,
         dateDeleted: expect.any(Date),
       })
       expect(deleted?.text ?? null).toBeNull()
