@@ -6,6 +6,12 @@ import { MongodbService } from "../../lib/MongodbService"
 import { getBackendEnv } from "../../lib/env"
 import type { Comment, Discussion, User } from "../../lib/simple-comment-types"
 import { Privilege } from "../../lib/simple-comment-types"
+import policy from "../../policy.json"
+
+jest.mock("../../lib/moderation-terms", () => ({
+  ...jest.requireActual("../../lib/moderation-terms"),
+  readModerationTerms: () => ["paper crane", "(a+b)"],
+}))
 
 declare const global: { __MONGO_URI__: string; __MONGO_DB_NAME__: string }
 
@@ -77,6 +83,103 @@ describe("Comment moderation", () => {
     expect(response.statusCode).toBe(200)
     return (response.body as Discussion).replies ?? []
   }
+
+  const linkReason = "This comment contains a link and requires review."
+  const termReason =
+    "This comment contains a word or phrase that requires review."
+
+  test.each([
+    ["Read the [article](HTTPS://example.org/article).", linkReason],
+    ["Visit example.org for the announcement.", linkReason],
+    ["A PAPER CRANE and a literal (A+B).", termReason],
+    ["A paper crane from example.org.", `${linkReason} ${termReason}`],
+  ])("automatically holds %s", async (text, heldReason) => {
+    expect(
+      await service.commentPOST(discussion.id, text, author.id)
+    ).toMatchObject({
+      statusCode: 201,
+      body: { text, isApproved: false, heldReason },
+    })
+  })
+
+  test("publishes a cleaned-up comment and clears the stored reason", async () => {
+    const submitted = held("automatic-release", {
+      text: "A paper crane",
+      heldReason: termReason,
+    })
+    await comments.insertOne(submitted)
+    const text = "A paper boat and a+b"
+    const result = await service.commentPUT(submitted.id, text, author.id)
+    expect(result).toMatchObject({
+      statusCode: 200,
+      body: { id: submitted.id, text, isApproved: true },
+    })
+    expect(result.body).not.toHaveProperty("heldReason")
+    const stored = await comments.findOne({ id: submitted.id })
+    expect(stored).toMatchObject({ text, isApproved: true })
+    expect(stored).not.toHaveProperty("heldReason")
+  })
+
+  test.each([moderator, admin, owner])(
+    "limits $id's bypass to automatic moderation",
+    async reviewer => {
+      const submitted = held("held-for-reviewer", {
+        text: "A paper crane at example.org",
+      })
+      const ownComment = held("reviewers-held-comment", { userId: reviewer.id })
+      await comments.insertMany([submitted, ownComment])
+      const text = "A paper crane from example.org"
+      expect(
+        await service.commentPOST(discussion.id, text, reviewer.id)
+      ).toMatchObject({
+        statusCode: 201,
+        body: { text, isApproved: true },
+      })
+      const edited = await service.commentPUT(
+        ownComment.id,
+        `Edited: ${text}`,
+        reviewer.id
+      )
+      expect(edited).toMatchObject({
+        statusCode: 200,
+        body: { isApproved: true },
+      })
+      expect(edited.body).not.toHaveProperty("heldReason")
+
+      const overlength = "a".repeat(policy.maxCommentLengthChars + 1)
+      expect(
+        (await service.commentPOST(discussion.id, overlength, reviewer.id))
+          .statusCode
+      ).toBe(413)
+      expect(
+        (await service.commentPOST(submitted.id, text, reviewer.id)).statusCode
+      ).toBe(404)
+      expect(
+        (await service.commentPUT(submitted.id, text, reviewer.id)).statusCode
+      ).toBe(403)
+    }
+  )
+
+  test("allows moderators to approve others' held comments and their own", async () => {
+    const submitted = held("ordinary-held", {
+      text: "A paper crane from example.org",
+    })
+    const ownComment = held("moderators-held", { userId: moderator.id })
+    await comments.insertMany([submitted, ownComment])
+    expect(
+      (await service.commentAPPROVE(submitted.id, submitted.text!, author.id))
+        .statusCode
+    ).toBe(403)
+    for (const pending of [submitted, ownComment]) {
+      expect(
+        (await service.commentAPPROVE(pending.id, pending.text!, moderator.id))
+          .statusCode
+      ).toBe(200)
+      const approved = await comments.findOne({ id: pending.id })
+      expect(approved).toMatchObject({ text: pending.text, isApproved: true })
+      expect(approved).not.toHaveProperty("heldReason")
+    }
+  })
 
   test("serves the documented account, comment, and discussion responses", async () => {
     const loadHandlers = () => {

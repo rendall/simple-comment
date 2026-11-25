@@ -233,7 +233,7 @@ Source plan: [Site-wide comment moderation, iteration one](site-wide-comment-mod
   - Trace:
     - “Installation owners can configure the feature and understand intentional compatibility changes” (Iteration 1 — Validation Strategy)
 
-- [ ] T10 `[tests]` Verify automatic publication and moderator review in `src/tests/backend/comment.moderation.test.ts`. Exercise link and term holds, mixed rule matches, moderator bypass on create and edit, automatic hold release and reason clearing, and explicit moderator approval and self-approval. Verify moderator bypass still rejects an overlength create, a reply to an ineligible parent, and a cross-author edit. Run `yarn test:backend`.
+- [x] T10 `[tests]` Verify automatic publication and moderator review in `src/tests/backend/comment.moderation.test.ts`. Exercise link and term holds, mixed rule matches, moderator bypass on create and edit, automatic hold release and reason clearing, and explicit moderator approval and self-approval. Verify moderator bypass still rejects an overlength create, a reply to an ineligible parent, and a cross-author edit. Run `yarn test:backend`.
   - Depends on C09–C12.
   - Trace:
     - “A qualifying edit can release an automatic hold.” (AC2 — Automatic publication policy)
