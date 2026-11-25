@@ -810,7 +810,7 @@
         "summary": "Create a user",
         "description": "Anonymous registration is available when public user creation is enabled. Guest registration is subject to the guest creation policy.",
         "requestBody": {
-          "description": "Supply id, name, and email. Regular accounts require a password of at least seven characters, with no leading or trailing whitespace. Common passwords are rejected. Guest registration uses the guest ID and may omit the password. The isAdmin and isVerified fields are restricted to administrators. Send ampersand-separated key=value pairs with percent-encoded values. Encode spaces as %20 and literal plus signs as %2B.",
+          "description": "Supply id, name, and email. Regular accounts require a password of at least seven characters, with no leading or trailing whitespace. Common passwords are rejected. Guest registration uses the guest ID and may omit the password. Only administrators can supply isVerified. Requests containing privilege, isModerator, isAdmin, or isOwner are rejected with HTTP 403. Send ampersand-separated key=value pairs with percent-encoded values. Encode spaces as %20 and literal plus signs as %2B.",
           "required": true,
           "content": {
             "text/plain": {
@@ -993,6 +993,7 @@
       },
       "put": {
         "summary": "Edit a user",
+        "description": "Users can update permitted fields on their own profile. Editing another user requires administrator privileges strictly above the target's privilege. The configured owner's identity fields are managed through deployment configuration.",
         "parameters": [
           {
             "name": "userId",
@@ -1069,7 +1070,7 @@
           }
         ],
         "requestBody": {
-          "description": "Supply the user fields to update: name and email. The isAdmin and isVerified fields are restricted to administrators and cannot be set on guest accounts. Send ampersand-separated key=value pairs with percent-encoded values. Encode spaces as %20 and literal plus signs as %2B.",
+          "description": "Supply the user fields to update: name and email. Only administrators can set isVerified, and guest accounts cannot be verified through this operation. Requests containing privilege, isModerator, isAdmin, or isOwner are rejected with HTTP 403. Send ampersand-separated key=value pairs with percent-encoded values. Encode spaces as %20 and literal plus signs as %2B.",
           "required": true,
           "content": {
             "text/plain": {
@@ -1083,6 +1084,7 @@
       },
       "delete": {
         "summary": "Delete a user",
+        "description": "Deleting another user requires administrator privileges strictly above the target's privilege. The configured owner account is protected from deletion.",
         "parameters": [
           {
             "name": "userId",
@@ -1437,7 +1439,14 @@
       },
       "User": {
         "type": "object",
-        "required": ["id", "name"],
+        "required": [
+          "id",
+          "name",
+          "privilege",
+          "isModerator",
+          "isAdmin",
+          "isOwner"
+        ],
         "properties": {
           "id": {
             "type": "string"
@@ -1449,9 +1458,26 @@
             "type": "string",
             "format": "email"
           },
+          "privilege": {
+            "type": "integer",
+            "enum": [0, 1, 2, 3],
+            "readOnly": true,
+            "description": "Effective server-derived privilege. 0 is a regular user, 1 is a moderator, 2 is an administrator, and 3 is the configured owner."
+          },
+          "isModerator": {
+            "type": "boolean",
+            "readOnly": true,
+            "description": "True if the effective privilege is at least 1."
+          },
           "isAdmin": {
             "type": "boolean",
-            "description": "true if the user is admin, false otherwise"
+            "readOnly": true,
+            "description": "True if the effective privilege is at least 2."
+          },
+          "isOwner": {
+            "type": "boolean",
+            "readOnly": true,
+            "description": "True for the configured owner with effective privilege 3."
           },
           "isVerified": {
             "type": "boolean"

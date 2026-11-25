@@ -117,7 +117,7 @@ Source plan: [Site-wide comment moderation, iteration one](site-wide-comment-mod
     - “Notifications concerning held comments identify the hold and its reason.” (AC7 — Notifications)
     - “Notification failures do not invalidate successful writes.” (AC7 — Notifications)
 
-- [ ] C16 `[contract]` Update the `/user` operations and user schemas in `src/schema/simple-comment-openapi3.json` for derived privilege and role fields, and for rejection of legacy role writes.
+- [x] C16 `[contract]` Update the `/user` operations and user schemas in `src/schema/simple-comment-openapi3.json` for derived privilege and role fields, and for rejection of legacy role writes.
   - Depends on C01 and C03. Validated by T06.
   - Trace:
     - “it is a derived, read-only response property” (Privilege foundation)
