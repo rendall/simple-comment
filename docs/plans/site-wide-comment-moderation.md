@@ -8,7 +8,7 @@ Parent issue — [#284](https://github.com/rendall/simple-comment/issues/284)
 
 Build a site-wide moderation system so an installation owner can appoint moderators and those moderators can manage comments across all discussions.
 
-## Focused first iteration — owner review
+## Focused first iteration — automatic holds and moderator review
 
 The first iteration addresses a single practical concern: potentially objectionable links or terms should not appear publicly without human review. Use the existing environment-configured owner account as the initial reviewer. Do not build moderator appointments, a role-management dashboard, or a general policy configuration system as prerequisites.
 
@@ -26,29 +26,30 @@ The configured owner has effective privilege 3, derived on the server from deplo
 
 For a non-owner, an absent privilege field resolves to 0; a present valid stored value is used as-is. Derive `isModerator` from effective privilege >= 1, `isAdmin` from >= 2, and `isOwner` from === 3. Reject invalid stored or requested privilege values; do not interpret arbitrary numbers or legacy flag inputs as authority. Do not perform a legacy-admin migration in iteration one. A non-owner with only `isAdmin: true` and no stored privilege resolves to 0; the old Boolean flag is never an authorization source under the new model. The optional legacy-admin upgrade script belongs to iteration three. Initialize the existing owner's underlying privilege to 2 if missing when initializing the owner account; effective owner access does not depend on that write. Document the legacy-admin compatibility change prominently in upgrade instructions.
 
-Use `isModerator` (effective privilege >= 1) as the authorization predicate for comment moderation from iteration one, including review, approval and cross-author deletion; iteration two uses the same predicate for manual holds. Select review notification recipients using the same effective moderator predicate. Initially the configured owner will normally be the only moderator, since there is no appointment workflow. Accounts already assigned a valid stored privilege of 1 or 2 can exercise moderation authority immediately. Do not hard-code an owner-only restriction that would need refactoring in iteration three. Keep author editing permissions separate: moderator status alone does not authorize editing someone else's text. Account administration remains subject to the higher privilege and target-account checks.
+Use `isModerator` (effective privilege >= 1) as the authorization predicate for comment moderation from iteration one, including review, approval and cross-author deletion; iteration two uses the same predicate for manual holds. Keep the existing deployment-configured notification recipient list for iterations one and two; switch to software-managed moderator recipient addresses in iteration three. Receiving an email does not confer application moderation authority. Initially the configured owner will normally be the only moderator, since there is no appointment workflow. Accounts already assigned a valid stored privilege of 1 or 2 can exercise moderation authority immediately. Do not hard-code an owner-only restriction that would need refactoring in iteration three. Keep author editing permissions separate: only the original author can edit comment text in iteration one, including through direct API requests. Remove the existing administrator cross-author edit permission in this iteration. The future owner-controlled exception is deferred. Reject attempts to write the legacy `isAdmin` field in account creation or update requests; it is a derived, read-only response property. Account administration remains subject to the higher privilege and target-account checks.
 
 ### Initial workflow
 
 1. A user submits a comment or changes existing comment text.
-2. The server checks the text against the link rule and the optional private moderation terms list.
+2. For authors who do not pass `isModerator`, the server checks the text against the link rule and the optional private moderation terms list. Moderators bypass automatic moderation.
 3. If neither rule requires review, the comment is published immediately. If either rule requires review, the server saves it as held, with an author-facing reason, before any public read can expose the content.
-4. Notify users with effective moderator privileges (normally just the configured owner initially) by email that a comment requires review, identifying the comment and providing a way to locate it.
+4. Preserve existing notifications for every successfully created comment or changed text, whether published or held. Send to `SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL` using the existing provider configuration. When held, indicate that review is required and provide the reason and available identifying information.
 5. An authenticated moderator can review the held content and explicitly approve it or delete it (disapprove/reject). A held comment stays unpublished until approved or until an edit legitimately clears an automatic hold. There is no separate rejection state.
 
-A moderator can review a held comment in its discussion or through a minimal review entry point. Do not require a site-wide moderation dashboard or a new browsing mode for this iteration. Approval and deletion are authenticated application actions, not unauthenticated mutations triggered by visiting an email link. The precise navigation and UI are implementation decisions.
+A moderator reviews a held comment in the existing discussion tree. Add approval alongside the existing delete control on the comment itself. Do not require a separate review route, focused view, site-wide review dashboard or #240 in iteration one. An optional anchor scroll after the comment loads may be considered, but even that is not required. The notification need only make the moderator aware of the held comment and provide available identifying information; recovering the host-page URL is not a prerequisite. Approval and deletion require authenticated application actions.
 
 ### Initial publication policy
 
 | Comment or edit | Result |
 | --- | --- |
-| Contains a link | Hold for review |
-| Matches a term or phrase in the optional server-side moderation list | Hold for review |
+| Authored by a moderator (`isModerator`) | Bypass automatic moderation |
+| Non-moderator author; contains a link | Hold for review |
+| Non-moderator author; matches a term or phrase in the optional server-side moderation list | Hold for review |
 | Passes every applicable publication rule | Publish immediately, unless subject to a manual hold |
 
 The link rule is enabled by default. Detect common URL forms, including recognizable links without an explicit scheme; the precise detection algorithm and false-positive trade-offs are implementation details. The term rule is active only when a nonempty moderation list is supplied. Keep the rules independent and use the existing publication decision convention. Preserve applicable existing developer-provided filtering rather than building a general policy engine.
 
-For this minimal iteration, the rules apply to all authors; no role-based automatic publication exemption is required. Use the moderator predicate for new review alerts and explicit approval authority. Preserve account and comment authorization boundaries using the privilege foundation above; do not treat legacy admin flags as authority or run an automatic migration. Do not introduce new role appointments in this slice. Identify the configured owner on the server and retain the existing owner protections. Owner credential rotation (#286) remains an independent security fix.
+For iteration one, moderator automatic approval is a fixed default policy, not a configurable setting. Privileged authors bypass automatic moderation and may explicitly approve their own held comments. Automatic approval never releases a manual hold when that capability is introduced. Use the moderator predicate for explicit approval authority; retain the existing deployment-configured email recipients. Preserve account and comment authorization boundaries using the privilege foundation above; do not treat legacy admin flags as authority or run an automatic migration. Do not introduce new role appointments in this slice. Identify the configured owner on the server and retain the existing owner protections. Owner credential rotation (#286) remains an independent security fix.
 
 Re-evaluate changed comment text so an author cannot evade review by editing a published comment. A qualifying edit may release an automatic hold. Do not scan or reclassify existing comments merely because a rule or term list is introduced or changed. Manual holding of published comments belongs to iteration two; manual holds must survive edits and automatic exemptions as specified below.
 
@@ -65,23 +66,23 @@ Use an optional server-only plain-text file, provisionally named `moderation-ter
 | Absent | Term filtering disabled; link filtering still applies |
 | Empty, or only blank/comment lines | No terms trigger moderation |
 | Contains terms | Matching comments are held for review |
-| Present but unreadable or invalid | Report a configuration error; do not silently disable an intended filter |
+| Present but unreadable or invalid | Fail build/CI; at runtime, report a configuration error and provisionally disable only term filtering |
 
-Use UTF-8, one literal word or phrase per line, case-insensitive matching, ignore blank lines and lines beginning with `#`, and do not support regular expressions initially. The exact matching boundaries and normalization can be settled during implementation.
+Use UTF-8, one literal word or phrase per line, case-insensitive matching, ignore blank lines and lines beginning with `#`, and do not support regular expressions initially. The exact matching boundaries and normalization can be settled during implementation. A supplied file indicates an intentional, important filtering policy: validate it during CI/build, and fail if it is invalid or unreadable. If a file nevertheless fails at runtime, the preferred initial behavior is to log the configuration failure without exposing the terms and keep accepting comments with link filtering still active. This fail-open runtime default is provisional pending the detailed iteration-one discussion. Later software-managed configuration may allow owners to choose fail-open or fail-closed behavior (reject creates and text edits subject to the failed rule).
 
-Provide a harmless example file, such as `moderation-terms.example.txt`, and document how installation owners supply the actual file. Exclude the real file from Git and from public assets, client bundles, API responses and logs. The deployment mechanism must make it available to the server/API functions only. Verify how Netlify packages serverless function files before settling the precise location and deployment instructions; do not assume that placing a file in an API source directory automatically makes it available at runtime. This is a small optional deployment input, not a persistent configuration subsystem or hot-reload feature.
+Provide a harmless example file, such as `moderation-terms.example.txt`, and document how installation owners supply the actual file. Exclude the real file from Git and from public assets, client bundles, API responses and logs. The deployment mechanism must make it available to the server/API functions only. Verify how Netlify packages serverless function files before settling the precise location and deployment instructions; do not assume that placing a file in an API source directory automatically makes it available at runtime. This is a small optional deployment input, not a persistent configuration subsystem or hot-reload feature. Include a deployment smoke test using harmless fixture terms that demonstrates the deployed server actually loads and applies the list and that the public build does not include it.
 
 For matching terms, use a generic author-facing hold reason (for example, "Your comment contains a word or phrase that requires moderation"). Do not reveal the matched term or the contents of the list. Link-based holds likewise supply a clear reason. The list is a private filtering input, not a guarantee that objectionable content will be detected.
 
 ### First-iteration completion criteria
 
-- Link or configured term matches are held before public exposure; nonmatching comments publish immediately. Existing comments remain published unless subsequently edited or moderated.
-- Effective moderators (normally just the owner initially) receive best-effort notifications when a new comment or changed text requires review. A delivery failure does not publish the comment or undo a successful write. Unchanged, failed and unauthorized writes do not send review alerts.
+- Link or configured term matches by non-moderators are held before public exposure; nonmatching comments and moderator submissions publish immediately. Existing comments remain published unless subsequently edited or moderated.
+- Preserve best-effort notifications for all successfully created comments and changed text to the configured address list, adding a held-for-review indication and reason when applicable. A delivery failure does not publish a held comment or undo a successful write. Unchanged, failed and unauthorized writes do not send notifications.
 - The original author (including a recognized guest) and effective moderators can see the held content and reason; unrelated readers cannot retrieve them through the UI or API. Apply visibility rules to all implemented comment read paths.
 - An authenticated user with effective moderator privileges can approve the reviewed text or delete the held comment. Approval is atomic and idempotent; stale reviewed text that remains held returns HTTP 409. A deleted comment cannot be approved. Rejection uses the same deletion mechanism, not a separate publication state.
-- Preserve visible descendants and their thread structure when a parent becomes held or deleted. Do not allow new direct replies to held or deleted comments. Coordinate the necessary soft-deletion behavior with #280.
-- Ordinary author editing remains distinct from moderation; do not expand cross-author editing authority. Enforce authorization on the server.
-- The server derives effective privilege and role predicates correctly, including missing privilege resolving to 0 and configured owner resolving to 3. New owner accounts store 2; existing ordinary records need no backfill. A legacy admin flag alone grants no privilege. No automatic migration or appointment interface is implemented in this iteration; the optional upgrade script is deferred to iteration three. Verify moderator authorization and notification selection at levels 0–3.
+- Preserve visible descendants and their thread structure when a parent becomes held or deleted. Do not allow new direct replies to held or deleted comments. Treat #280 (soft deletion for all comments) as a prerequisite. A reply already in flight may finish if the parent was eligible at the server's eligibility check.
+- Only the author can edit comment text; remove the existing admin cross-author editing permission. Reject writes to the legacy `isAdmin` field. Enforce authorization on the server.
+- The server derives effective privilege and role predicates correctly, including missing privilege resolving to 0 and configured owner resolving to 3. New owner accounts store 2; existing ordinary records need no backfill. A legacy admin flag alone grants no privilege. No automatic migration or appointment interface is implemented in this iteration; the optional upgrade script is deferred to iteration three. Verify moderator authorization at levels 0–3 and retention of existing notification recipient configuration.
 
 ### Second iteration — manually holding published comments
 
@@ -110,13 +111,13 @@ Existing replies remain independently visible and eligible for further replies a
 
 ### Third iteration — moderator appointments
 
-Introduce owner-appointed moderators (#285) and the shared role-management infrastructure using the integer privilege model already implemented in iteration one, allowing the owner to appoint and demote moderators who immediately gain or lose the first two iterations' moderation capabilities through the existing predicate. Include an optional legacy-admin upgrade script as described under [Migration](#migration). Preserve already assigned valid privileges; new admin appointments remain deferred. Include the agreed idempotent role assignments and role-change notifications.
+Introduce owner-appointed moderators (#285) and the shared role-management infrastructure using the integer privilege model already implemented in iteration one, allowing the owner to appoint and demote moderators who immediately gain or lose the first two iterations' moderation capabilities through the existing predicate. Include an optional legacy-admin upgrade script as described under [Migration](#migration). Preserve already assigned valid privileges; new admin appointments remain deferred. Include the agreed idempotent role assignments and role-change notifications. Move comment notification recipient selection from the deployment-configured mailing list to software-managed email addresses associated with effective moderator accounts in this iteration. Keep the existing notification events unless separately agreed.
 
-A dedicated site-wide review interface and user comment history (#288) may also be useful early enhancements, but their inclusion in the third iteration is not yet decided.
+Track the dedicated site-wide review interface as a separate follow-up issue under #284 (issue to be created); it is distinct from in-discussion moderation and not assigned to an iteration yet. User comment history (#288) likewise remains a separate enhancement.
 
 ### Later iterations
 
-Defer persistent configuration and its design, the Administration Settings dashboard (#275), new admin appointments and demotions, configurable permission and publication policies, role-based automatic approval, allowlists and mandatory-review lists, ownership change detection/transfers and collision warnings, configurable notifications, and the optional administration log. Preserve the broader design below for when the project matures.
+Defer persistent configuration and its design, the Administration Settings dashboard (#275), new admin appointments and demotions, configurable permission and publication policies, configuration of moderator automatic approval, allowlists and mandatory-review lists, ownership change detection/transfers and collision warnings, configurable notifications, and the optional administration log. Preserve the broader design below for when the project matures.
 
 The detailed implementation slices, dependencies and validation are tracked in [Implementation](#implementation). Deferral must not weaken the authorization, moderation or visibility invariants of features actually shipped.
 
@@ -234,7 +235,7 @@ See [account creation](../../src/lib/MongodbService.ts#L349), [user updates](../
 
 ## In Scope
 
-The following sections describe the broader intended system. The [focused first iteration](#focused-first-iteration--owner-review) defines the initial release boundary; later capabilities in this section are not required to ship the first iteration.
+The following sections describe the broader intended system. The [focused first iteration](#focused-first-iteration--automatic-holds-and-moderator-review) defines the initial release boundary; later capabilities in this section are not required to ship the first iteration.
 
 ### Owner permissions and role appointments
 
@@ -289,7 +290,7 @@ If owners need to delegate control of permission settings later, consider delega
 
 ### Site-wide comment review
 
-After owner permissions and appointments, design a moderator view with **Held for review** and **All recent comments**. Both views should show comment status and link to the discussion. Moderators can approve or delete held comments, and can delete a published comment or withdraw its approval and hold it from public view so the author can revise it. By default, only the author can edit the text. The current comment update API allows admins to edit other users’ comments. Apply the owner-controlled editing setting in both the backend and the widget. See #275.
+After owner permissions and appointments, design a moderator view with **Held for review** and **All recent comments**. Both views should show comment status and link to the discussion. Moderators can approve or delete held comments, and can delete a published comment or withdraw its approval and hold it from public view so the author can revise it. By default, only the author can edit the text. The current comment update API allows admins to edit other users’ comments. Remove that permission in iteration one, in both the backend and widget. A later owner-controlled setting may re-enable cross-author editing for admins and the owner. See #275.
 
 #### Comment publication states
 
@@ -306,14 +307,15 @@ Use an `isApproved` boolean alongside manual-hold and soft-deletion metadata:
 - `isApproved` — whether the comment is approved for publication.
 - `heldBy` — the immutable account ID of the moderator who imposed an active manual hold; absent or null when there is no active manual hold.
 - `heldReason` — an author-facing explanation of the active hold, generated by publication policy for automatic holds or supplied by the moderator for manual holds.
-- `deletedAt` — when the comment was deleted.
+- `dateDeleted` — when the comment was deleted; reuse the existing storage and API field.
 - `deletedBy` — the immutable account ID of the user who deleted the comment. A username snapshot may additionally preserve the name at the time of deletion if historical display is needed.
+- `deletedReason` — a non-empty explanation required when `deletedBy` differs from the original author's account ID; not required for author deletion. The server rejects cross-author deletion without a reason.
 
-The deletion metadata distinguishes an author's deletion of their own comment from a moderator's deletion of someone else's comment. Derive this distinction by comparing `deletedBy` with the comment's author account ID; no separate rejection flag or state is necessary. The interface may describe the former as deletion and the latter as rejection or moderator removal, with exact wording and disclosure deferred to UX design. Both use the same deletion mechanism and have the same effect on content and thread structure.
+The deletion metadata distinguishes an author's deletion of their own comment from a moderator's deletion of someone else's comment. Retain the original author account ID internally and derive this distinction by comparing it with `deletedBy`; no separate rejection flag or state is necessary. Do not expose internal author or actor identifiers in public tombstones. Only the original author and effective moderators may read the deletion reason; deleted text remains unavailable to everyone. Legacy deleted records without retained author or actor information cannot reliably be classified; do not invent missing metadata. The interface may describe the former as deletion and the latter as rejection or moderator removal, with exact wording and disclosure deferred to UX design. Both use the same deletion mechanism and have the same effect on content and thread structure.
 
 Deletion takes precedence over approval. A comment can start approved or held according to publication policy, and an edit that triggers review can cause approval to be withdrawn. A moderator can approve a held comment or return an approved comment to the held state. Either an approved or a held comment can be deleted; deleted comments cannot be restored by approving them.
 
-Deletion removes the content but retains the comment object and structural metadata, consistent with the incremental loading design. Deleted text is no longer available to the author or moderators. The default is to publish immediately unless an applicable publication rule requires a hold. The remaining details of edit-triggered policy evaluation are open. Use #241 for prior investigation and check whether #63 offers a starting point.
+Deletion removes the content but retains the comment object and structural metadata, including for leaf comments, consistent with the incremental loading design. #280 is a prerequisite for iteration one. Deleted text is no longer available to the author or moderators. The default is to publish immediately unless an applicable publication rule requires a hold. The remaining details of edit-triggered policy evaluation are open. Use #241 for prior investigation and check whether #63 offers a starting point.
 
 #### Manual holds survive edits
 
@@ -364,7 +366,7 @@ For example, Alice submits a comment that a publication rule holds for review. B
 
 On a content mismatch, the client should inform the moderator that the comment has been edited since they began reviewing it and that they must review the updated comment before approving it. The precise presentation is a UX decision.
 
-Submitting the reviewed text is the preferred approach for now. Comparing a hash of the reviewed text is an alternative that avoids sending the full text, while a content revision number would also detect intervening edits that restore the original text. The latter behavior is not required by the current design.
+Submitting the reviewed text is the preferred approach for now. Comparing a hash of the reviewed text is an alternative that avoids sending the full text, while a content revision number would also detect intervening edits that restore the original text. The latter behavior is not required by the current design. Do not introduce a hold ID or generation counter. An old approval retry can release a subsequent hold on identical text; this is an accepted limitation, not a correctness guarantee against all stale requests. Revisit only if operational experience or scale warrants it.
 
 **Atomicity.** The comparison and approval must be atomic at the database level. MongoDB supports conditional atomic updates to individual documents, so the server can condition the approval update on the comment ID, the comment still being held and not deleted, and its current text matching the submitted reviewed text. A successful explicit approval also clears any active `heldBy` and `heldReason` in the same atomic update. An unconditional update following a separate read and comparison would introduce a race in which an author could change the text before the approval is applied.
 
@@ -394,7 +396,7 @@ Holding or deleting a comment does not automatically hold or delete its replies 
 
 When a comment is unavailable to a viewer but has descendants visible to that viewer, show a placeholder at its original position in the discussion tree to preserve the thread's structure. A deleted comment with no descendants can be omitted. A previously published comment manually hidden by a moderator is an explicit exception to the descendant requirement: display a hidden placeholder even if it has no replies, provisionally labeled **Hidden pending moderation**. Do not expose held or deleted content or the private hold reason through a public placeholder. The exact wording and detail are UX decisions: ordinary readers may see a generic unavailable or deleted-comment message, while moderators may see more information about the reason, state or deletion metadata. A held comment remains visible in full to its author and moderators.
 
-A user cannot post a new direct reply to a held or deleted comment, including through direct API requests. This applies even to authors and moderators who can see a held comment. Existing replies remain intact, and users may continue the thread by replying to an existing, eligible descendant. A held or deleted ancestor does not make its descendants ineligible for replies. Once a held comment is approved, ordinary reply rules apply again. The exact presentation of held placeholders to different viewers remains a UX decision. Use the hold reason rather than a reply to explain moderation decisions to an author.
+A user cannot start a new direct reply to a comment that is held or deleted when the server checks parent eligibility, including through direct API requests. If the parent becomes held or deleted after that eligibility check, an in-flight reply may complete. Preserve the independently visible reply and parent placeholder; no cross-document transaction or locking is required solely to eliminate this race. This applies even to authors and moderators who can see a held comment. Existing replies remain intact, and users may continue the thread by replying to an existing, eligible descendant. A held or deleted ancestor does not make its descendants ineligible for replies. Once a held comment is approved, ordinary reply rules apply again. The exact presentation of held placeholders to different viewers remains a UX decision. Use the hold reason rather than a reply to explain moderation decisions to an author.
 
 For example, if Alice's comment is deleted after Bob replies, Alice's comment becomes a placeholder, Bob's independently visible reply remains, and Carol can reply to Bob. Carol cannot create a new direct reply to Alice's deleted comment.
 
@@ -421,7 +423,7 @@ Every applicable publication rule answers **Should this comment be published?** 
 
 Moderators are entrusted with the authority to publish comments. By default, new comments authored by users with effective moderator privileges (moderators, admins and the owner) are automatically approved without evaluating ordinary automatic publication rules or requiring an explicit approval action.
 
-Provide a persisted, installation-wide moderator automatic approval setting, enabled by default. Admins and the owner may disable or re-enable it through Administration settings without redeploying; moderators cannot change it themselves.
+Iteration one uses automatic approval as a fixed enabled policy and permits explicit self-approval. In a later iteration, provide a persisted, installation-wide moderator automatic approval setting, enabled by default. Admins and the owner may disable or re-enable it through Administration settings without redeploying; moderators cannot change it themselves.
 
 | Setting | New comments by moderators, admins and owner |
 | --- | --- |
@@ -472,7 +474,7 @@ The focused first iteration implements fixed link filtering and optional file-ba
 
 #### Default comment notifications
 
-The broader notification policy prioritizes events that require moderators' attention rather than notifying them of every comment. In the first iteration, review alerts go to effective moderators (normally only the configured owner) for new or changed comments requiring review. Other notification event types are not prerequisites for the initial workflow. Simple Comment is intended to operate within free-tier email service limits for low-volume installations; avoid unnecessary email traffic. A future configurable notification system may support different preferences for low- and high-traffic installations, recipients and event types. Its detailed design is outside the scope of this moderation project.
+Preserve the existing notification behavior in iterations one and two: when notifications are enabled, send email for every successful comment creation and changed text, whether held or published, to the explicitly configured `SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL` address list. Include the existing comment information and identify holds and their reasons; these deployment-configured recipients are trusted notification recipients, not necessarily authenticated moderators. Receipt of an email confers no application privileges. Do not send notifications for unchanged text, failed or unauthorized writes, approvals or deletions. Manual holds do not introduce a new email event in iteration two. Iteration three moves recipient selection to software-managed moderator addresses. The following table describes a possible later attention-based policy, not an initial-release requirement. Simple Comment is intended to operate within free-tier email service limits for low-volume installations; avoid unnecessary email traffic. A future configurable notification system may support different preferences for low- and high-traffic installations, recipients and event types. Its detailed design is outside the scope of this moderation project.
 
 | Event | Notify moderators by default | Notify ordinary subscribers by default |
 | --- | --- | --- |
@@ -484,9 +486,9 @@ The broader notification policy prioritizes events that require moderators' atte
 | Comment deleted | No | No |
 | Repeated no-op approval | No | No |
 
-A held-comment notification should direct moderators to the comment requiring review. Consider a follow-up resolution notification to moderators who were alerted about a held comment when it is subsequently approved, so they know that review is no longer necessary. This follow-up is a possibility rather than a required default; it may be more valuable as a configurable preference, particularly on installations with several moderators.
+A held-comment notification should identify the comment requiring review; a direct link or new navigation surface is not required in iteration one. Consider a follow-up resolution notification to moderators who were alerted about a held comment when it is subsequently approved, so they know that review is no longer necessary. This follow-up is a possibility rather than a required default; it may be more valuable as a configurable preference, particularly on installations with several moderators.
 
-Do not disclose unpublished content or hold reasons to ordinary subscribers. Coordinate the new defaults with existing notification behavior, including #248 (notifications after edits). The exact behavior for edited published comments, automatic approval after an edit, manually imposed holds and notifications to the affected author remains to be finalized. Email delivery must not invalidate a successfully persisted comment or moderation action.
+Do not disclose unpublished content or hold reasons to ordinary subscribers. Coordinate the new defaults with existing notification behavior, including #248 (notifications after edits). The initial event behavior is settled above; later attention-based event preferences, resolution notices and notifications to affected authors remain to be finalized. Email delivery must not invalidate a successfully persisted comment or moderation action.
 
 ## Owner configuration and ownership changes
 
@@ -539,6 +541,8 @@ This draft leaves reader reports, appeals, bulk actions, IP blocking, and shadow
 
 ## Open Questions
 
+- **Edit response contract:** an author must see that a submitted edit triggers a hold and see the reason. Distinguish a failed edit (no persistence) from an edit successfully saved but unpublished. Whether to return an error-style response or a successful response with authoritative hold state, and the exact API response/placeholder shape, remain to be settled in the detailed iteration-one discussion. Do not simply merge submitted text into the old widget state. For moderation actions by another user, subsequent fetches, refreshes or attempted replies are sufficient; coordinate with the incremental-fetch design without requiring real-time synchronization or incremental fetching. On logout or account switch, discard no-longer-authorized private content and ignore outstanding responses belonging to the previous identity.
+- **Iteration-one specification:** agree dedicated scope, exclusions, acceptance criteria and validation headings and exact API contracts together before checklist generation. Existing completion criteria are preliminary, not a finalized iteration-one checklist.
 
 - The focused first iteration re-evaluates changed comment text against the initial publication rules. Further edit-policy configuration remains open. Immediate publication applies when no rule requires a hold; manual holds survive edits, and new direct replies to held comments are not permitted. The concurrency and idempotency semantics of explicit approval are defined above.
 - The focused first iteration requires no persistent policy settings. Which additional configurable policies should be prioritized in later releases? The initial comment notification defaults are defined above; remaining event details and a possible moderator resolution notice are open. A configurable notification system is a separate future design.
@@ -573,7 +577,7 @@ The criteria below describe the broader agreed behavior of the relevant features
 - A designated moderator can see held and recent comments across multiple discussions in one place.
 - Approving a held comment makes it public, and moderators can hold or delete published comments or delete held comments.
 - Deletion removes content, records deletion time and actor, and takes precedence over approval.
-- Author deletion and moderator removal (rejection) are distinguishable from deletion metadata without a separate state or operation.
+- Author deletion and moderator removal (rejection) are distinguishable from retained internal author and deleting actor IDs without a separate state or operation. A non-empty `deletedReason` is mandatory for cross-author deletion; only the author and moderators may see it.
 - An active manual hold is recorded in `heldBy`, survives edits and is cleared only by an authorized explicit approval.
 - Every active hold has an author-facing `heldReason`, required from the moderator for manual holds and supplied by policy for automatic holds.
 - Manual reasons survive author edits; approval clears active hold metadata atomically.
@@ -610,8 +614,8 @@ The criteria below describe the broader agreed behavior of the relevant features
 - Administration actions are committed before email delivery is attempted.
 - Notification failures or disabled email delivery do not undo successful actions or turn them into failed API responses.
 - No additional administration notification event types are required beyond role changes and the specified ownership events.
-- New automatically approved comments do not generate moderator or ordinary-subscriber email by default.
-- New policy-held comments and edited comments that remain held alert moderators, not ordinary subscribers; approval of a held comment can notify ordinary subscribers where subscriptions exist.
+- In iterations one and two, every successful comment creation or changed text generates the existing configured-recipient notification if enabled; held notifications indicate the hold and reason. A later attention-based policy may suppress routine published-comment notices.
+- Initial notifications use the existing configured address list; iteration three moves to software-managed moderator addresses. Never send held content to ordinary subscribers. A later subscriber policy may notify them when a held comment is approved.
 - Notification delivery does not undo successful actions.
 - The remaining notification event details, possible resolution notices, and initial release scope for configurable rules remain open.
 
@@ -659,7 +663,7 @@ Use the corresponding validation group for each implementation slice. Conditiona
 - Test concurrent edit, deletion and approval operations against the MongoDB conditional update, ensuring no unreviewed held content is published and no deleted comment is restored.
 - Verify that no-op approvals do not modify timestamps or repeat publication side effects.
 - Verify that deletion records the authenticated deleting account ID and timestamp, removes content, retains the structural comment object, and cannot be reversed through approval.
-- Test author deletion and moderator removal, deriving the distinction from the author and deleting account IDs without introducing another state.
+- Test author deletion and moderator removal, deriving the distinction from retained internal author and deleting account IDs without introducing another state; reject cross-author deletion lacking a non-empty reason and verify reason privacy and public tombstones.
 - Test imposing a manual hold on an already automatically held comment, explicit approval clearing `heldBy` and `heldReason` atomically, and concurrent edits and manual holds preserving the manual hold.
 - Test required non-empty manual hold reasons, policy-generated automatic reasons, automatic reason updates on re-evaluation, preservation of manual reasons across author edits, and replacement of automatic reasons on manual hold.
 
@@ -670,7 +674,7 @@ Use the corresponding validation group for each implementation slice. Conditiona
 - Verify that an authenticated returning guest can see their own held comments and reasons under the same author-visibility rule, and an unrecognized visitor cannot.
 - Verify that authors see their own held comments in their original tree position, that unauthorized readers cannot access held content through alternate retrieval paths, and that no viewer can retrieve deleted text.
 - Test preservation of independently visible descendants beneath deleted or held parents, including nested placeholders without hidden content. Test that manually hidden published leaf comments also retain a public placeholder, without exposing their text or private reason.
-- Verify that the server rejects new direct replies to held or deleted comments for every role (including when the parent is held or deleted after the reply form is opened), but permits replies to eligible existing descendants and to a formerly held comment after approval.
+- Verify that the server rejects direct replies for every role if the parent is held or deleted at the server eligibility check, even if the reply form was opened earlier. Permit a reply already in flight after a successful eligibility check to finish if the parent is subsequently held or deleted, and preserve its structure. Permit replies to eligible existing descendants and to a formerly held comment after approval.
 - Verify user comment history across multiple discussions and that the moderator queue excludes deleted comments.
 
 ### Publication and editing policies
@@ -687,7 +691,7 @@ Use the corresponding validation group for each implementation slice. Conditiona
 
 - Verify that each actual successful role change attempts one notice per intended recipient, including a removed moderator, and that rejected requests and authorized no-op assignments send none.
 - Test disabled notifications, provider errors, timeouts and partial delivery failures; verify that the action remains committed, the API reports success, and delivery failures are logged.
-- Verify the defined default notification matrix, especially that automatically approved new comments send no notification to moderators or ordinary subscribers, new policy-held comments alert moderators only, and no-op approvals and deletions do not send comment notifications.
+- Verify iteration-one/two notification compatibility for successful creates and changed text, both published and held, with hold indications and reasons sent to the configured address list; failed/unchanged writes, approvals and deletions send none. Verify iteration-three recipient changes when implemented; test the later attention-based matrix only if adopted.
 - Confirm no held content is sent to ordinary subscribers and email delivery failure does not undo a persisted action.
 - Validate remaining notification events once agreed.
 
@@ -713,11 +717,13 @@ As implementation is planned, categorize and prioritize the features here. The i
 | Designed but deferrable | Behavior has been agreed, but implementation can follow in a later release |
 | Exploratory | Further design discussion is required before implementation can be planned |
 
-The [focused first iteration](#focused-first-iteration--owner-review) establishes the privilege foundation and automatic holds and moderator-authorized review as the first deliverable. Manual holding of published comments follows in iteration two. Moderator appointments using the existing privilege model and the optional legacy-admin upgrade utility follow in iteration three. The detailed assignment of tasks to implementation slices and remaining dependencies is still to be planned. Deferring a feature does not discard its design, and must not weaken the authorization, visibility or other invariants applicable to features that are implemented.
+The [focused first iteration](#focused-first-iteration--automatic-holds-and-moderator-review) establishes the privilege foundation and automatic holds and moderator-authorized review as the first deliverable. Manual holding of published comments follows in iteration two. Moderator appointments using the existing privilege model and the optional legacy-admin upgrade utility follow in iteration three. The detailed assignment of tasks to implementation slices and remaining dependencies is still to be planned. Deferring a feature does not discard its design, and must not weaken the authorization, visibility or other invariants applicable to features that are implemented.
 
 ### Implementation tracking
 
 - [#284](https://github.com/rendall/simple-comment/issues/284) — Parent issue for site-wide moderation.
+- [#280](https://github.com/rendall/simple-comment/issues/280) — Soft deletion for all comments; prerequisite for iteration one.
+- Dedicated site-wide moderation view — follow-up issue to create; distinct from the initial in-discussion approval control.
 - [#285](https://github.com/rendall/simple-comment/issues/285) — Third iteration: owner-appointed moderators using the iteration-one privilege model, plus the optional legacy-admin upgrade utility; new admin appointments remain deferred.
 - [#275](https://github.com/rendall/simple-comment/issues/275) — Administration settings dashboard, deferred with persistent configuration.
 - [#286](https://github.com/rendall/simple-comment/issues/286) — Owner credential rotation, tracked independently of the moderation rollout.
@@ -732,6 +738,6 @@ This section records ideas for later consideration, not additional initial-relea
 
 - **Additional administration notification events:** Consider notifications for consequential policy changes (especially enabling admin editing of other authors' comments), allowlist membership changes, and account deletions. These might aid oversight but could generate excessive email traffic. Prefer a later configurable event/recipient policy or an administration log over adding blanket notices now. No new administration event types are required in the initial design.
 - **Administration log:** Consider a persistent, reviewable log in the Administration view recording the action, actor, affected account or resource, and timestamp independently of email delivery. Authorized users could review it even when email is disabled or delivery fails. Access permissions, retention, scope and presentation are TBD.
-- **Configurable notifications:** Design notification preferences separately, with attention to event types, recipients, traffic levels, free-tier email limits, and optional notifications that a held comment has already been resolved by another moderator. Preserve the initial default comment notification policy until a separate design changes it.
+- **Configurable notifications:** Design notification preferences separately, with attention to event types, recipients, traffic levels, free-tier email limits, and optional notifications that a held comment has already been resolved by another moderator. Preserve existing comment notification events and configured recipients initially; iteration three changes recipient selection, and later configurable event preferences may change the notification matrix.
 - **Persistent configuration and ownership lifecycle:** Treat installation-wide runtime configuration as a separate design effort; defer settings UI, administrator appointments, ownership transfer detection and collision handling until later.
 - **Additional publication policy features:** The first iteration uses fixed link filtering and an optional private server-side term list. Rule-specific exemptions, global trusted-user and mandatory-review lists, and a configurable rule catalogue may be phased in later.
