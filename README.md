@@ -176,25 +176,7 @@ See the [notification guide](docs/NOTIFICATIONS.md) for setup instructions, swit
 
 ## Moderating
 
-Sign in on your `login.html` page with the configured owner's credentials, then open the discussion. The owner and accounts with effective moderator privileges can see held comments and their reasons. Open a comment's action menu to approve the text you reviewed or remove the comment with a reason.
-
-Most comments publish immediately. Links and matches in the optional terms file hold a comment for review. Moderator submissions bypass these automatic rules. Authors can still edit their own held comments, and a qualifying edit can release the hold.
-
-### Upgrading from legacy administrator flags
-
-An existing non-owner account with only an `isAdmin` flag and no stored privilege becomes a regular account. The configured owner keeps owner access. Existing live comments without stored publication status are treated as approved.
-
-The API derives `privilege` and the role flags from the account. Omit these fields from account writes. Only the original author can edit comment text. Successful comment edits now return `200 OK` with the updated comment, including its publication status and any hold reason. The previous success status was `204 No Content`.
-
-### Optional moderation terms file
-
-Place a private UTF-8 file named `moderation-terms.txt` in the repository root of the build workspace. Use one literal word or phrase per line. Blank lines and lines starting with `#` are ignored. Matching uses case-insensitive substrings, including inside longer words. See [the harmless example](moderation-terms.example.txt).
-
-Supply the real file privately before the Netlify build. A Git-based build needs the file provisioned in its own workspace. Netlify's function configuration bundles it with the comment function. Keep it outside Git and the published `dist` directory.
-
-Run `yarn run validate:moderation-terms` to check the file. A missing or empty list leaves link filtering active and applies no term holds. A supplied file that is unreadable or invalid fails the build. If the file becomes unreadable or invalid at runtime, the comment function logs a generic configuration error and continues with link filtering.
-
-To verify the deployed setup, submit a comment containing a harmless fixture term and another comment that matches neither rule. Confirm that the first is held for review, the second is published, and the file is absent from the site's public assets.
+The [moderation installation and operations guide](docs/MODERATION.md) covers owner access, automatic holds, the private terms list, in-discussion review, and deployment verification.
 
 ## Default build
 
