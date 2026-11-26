@@ -386,6 +386,32 @@ describe("Account privilege persistence and administration", () => {
       expect(await users.findOne(reservation)).toEqual(deleted)
     })
 
+    test("rejects signup for the same ID during and after account deletion", async () => {
+      const users = db.collection("users")
+      await users.insertOne({ ...regular })
+      const registration = signup(regular.id)
+      let signupStatusDuringDeletion: number | undefined
+      const replace = jest
+        .spyOn(Collection.prototype, "replaceOne")
+        .mockImplementationOnce(async (filter, replacement, options) => {
+          replace.mockRestore()
+          signupStatusDuringDeletion = (await service.userPOST(registration))
+            .statusCode
+          return users.replaceOne(filter, replacement, options)
+        })
+
+      try {
+        expect(await service.userDELETE(regular.id, regular.id)).toBe(
+          success202UserDeleted
+        )
+        expect(signupStatusDuringDeletion).toBe(409)
+        expect((await service.userPOST(registration)).statusCode).toBe(409)
+        expect(await users.countDocuments({ id: regular.id })).toBe(1)
+      } finally {
+        replace.mockRestore()
+      }
+    })
+
     test("preserves the first reservation when two deletions overlap", async () => {
       const users = db.collection("users")
       await users.insertMany([{ ...regular }, { ...admin }])
