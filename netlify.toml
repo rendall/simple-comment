@@ -7,6 +7,9 @@
   # TypeScript compilation during build requires @types packages from devDependencies.
   YARN_FLAGS = "--production=false"
 
+[functions.comment]
+  included_files = ["moderation-terms.txt"]
+
 [dev]
   framework = "#custom"
   command = "yarn run dev:frontend"

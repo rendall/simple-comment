@@ -13,11 +13,19 @@
   import CommentInput from "./CommentInput.svelte"
   import SkeletonComment from "./low-level/SkeletonComment.svelte"
   import type { AuthService } from "../lib/auth-service"
+  import { discussionViewer } from "../lib/discussion-viewer"
+  import { onDestroy, setContext } from "svelte"
 
   export let discussionId: string
   export let title: string = ""
   export let currentUser: User | undefined
   export let authService: AuthService
+  export let viewerRevision = 0
+  export let getViewerRevision = () => viewerRevision
+  setContext(discussionViewer, getViewerRevision)
+  let visibleViewer = viewerRevision
+  let latestLoad = 0
+  onDestroy(() => latestLoad++)
   const emptyTopicMessages = [
     "Looks like this topic is waiting for its first thoughts. Be the pioneer and start the conversation!",
     "This space is all yours! Kick off the discussion with your insights.",
@@ -41,8 +49,12 @@
     error ? console.error(message) : console.info(message)
 
   const loadingStateHandler = async () => {
+    const viewer = getViewerRevision()
+    const load = ++latestLoad
+    const isCurrent = () => load === latestLoad && viewer === getViewerRevision()
     await getOneDiscussion(discussionId)
       .then(response => {
+        if (!isCurrent()) return
         if (isResponseOk(response)) {
           const topic = response.body as Discussion
           updateDiscussionDisplay(topic, topic.replies)
@@ -52,7 +64,7 @@
         }
       })
       .catch(error => {
-        send({ type: "ERROR", error })
+        if (isCurrent()) send({ type: "ERROR", error })
       })
   }
 
@@ -66,7 +78,7 @@
       topicReplies,
       (a, b) =>
         new Date(b.dateCreated).valueOf() - new Date(a.dateCreated).valueOf(),
-      reply => !reply.dateDeleted || Boolean(reply.replies?.length)
+      reply => reply.text !== null || Boolean(reply.replies?.length || reply.deletedReason)
     )
   }
 
@@ -178,21 +190,55 @@
     showReply = discussionId
   }
 
+  const refreshDiscussion = () => {
+    if ($state.matches("loading")) void loadingStateHandler()
+    else if ($state.matches("error")) send("RETRY")
+    else send("LOAD")
+  }
+
+  const publicComment = (comment: Comment): Comment => {
+    const {id, parentId, dateCreated, dateDeleted, isApproved, user} = comment
+    const structure = {id, parentId, dateCreated, dateDeleted, isApproved}
+    if (dateDeleted || isApproved === false) return { ...structure, text: null }
+    return {
+      ...structure,
+      text: comment.text,
+      user: user && {
+        id: user.id,
+        name: user.name,
+        privilege: user.privilege,
+        isModerator: user.isModerator,
+        isAdmin: user.isAdmin,
+        isOwner: user.isOwner,
+      },
+    }
+  }
+
+  const changeViewer = (revision: number) => {
+    if (revision === visibleViewer) return
+    visibleViewer = revision
+    updateDiscussionDisplay(discussion, repliesFlatArray.map(publicComment))
+    refreshDiscussion()
+  }
+
+  $: changeViewer(viewerRevision)
+
   // Update the single source of truth without roundtrip to the server
   const onCommentDeleted = commentDeletedEvent => {
     const { commentId } = commentDeletedEvent.detail
     const replies = repliesFlatArray.map(comment =>
       comment.id === commentId && !comment.dateDeleted
         ? {
-            ...comment,
-            user: undefined,
-            userId: null,
+            id: comment.id,
+            parentId: comment.parentId,
+            dateCreated: comment.dateCreated,
             text: null,
             dateDeleted: new Date(),
           }
         : comment
     )
     updateDiscussionDisplay(discussion, replies)
+    refreshDiscussion()
   }
 
   $: {
@@ -236,6 +282,8 @@
       {currentUser}
       {showReply}
       replies={discussion.replies}
+      {refreshDiscussion}
+      {viewerRevision}
       on:reply={onReply}
       on:delete={onCommentDeleted}
       on:posted={onCommentPosted}

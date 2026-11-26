@@ -14,6 +14,7 @@ import type {
   UpdateUser,
   User,
 } from "../../../src/lib/simple-comment-types"
+import { Privilege } from "../../../src/lib/simple-comment-types"
 import { MongodbService } from "../../../src/lib/MongodbService"
 import { Collection, Db, MongoClient } from "mongodb"
 import {
@@ -31,6 +32,7 @@ import {
   success202UserDeleted,
 } from "../../../src/lib/messages"
 import { getExpirationTime, hashPassword } from "../../../src/lib/crypt"
+import { getBackendEnv } from "../../../src/lib/env"
 import * as jwt from "jsonwebtoken"
 import policy from "../../policy.json"
 import {
@@ -58,6 +60,197 @@ import {
 declare const global: { __MONGO_URI__: string; __MONGO_DB_NAME__: string }
 const MONGO_URI = global.__MONGO_URI__
 const MONGO_DB = global.__MONGO_DB_NAME__
+
+describe("Account privilege persistence and administration", () => {
+  const service = new MongodbService(MONGO_URI, `${MONGO_DB}-account-privilege`)
+  const ownerId = getBackendEnv().moderatorId
+  const account = (id: string, privilege?: Privilege): User => ({
+    id,
+    name: "Test Account",
+    email: "account@example.com",
+    hash: "stored-test-hash",
+    ...(privilege !== undefined && { privilege }),
+  })
+  const regular = account("regular-account", Privilege.User)
+  const moderator = account("moderator-account", Privilege.Moderator)
+  const admin = account("admin-account", Privilege.Admin)
+  const peer = account("peer-admin-account", Privilege.Admin)
+  const owner = account(ownerId, Privilege.Admin)
+  let db: Db
+
+  beforeAll(async () => {
+    db = await service.getDb()
+  })
+
+  beforeEach(async () => {
+    await db.collection("users").deleteMany({})
+    await db.collection("comments").deleteMany({})
+  })
+
+  afterAll(async () => {
+    await db.dropDatabase()
+    await service.close()
+  })
+
+  test("persists role 0 for regular registration and role 2 for owner bootstrap", async () => {
+    const users = db.collection<User>("users")
+    expect(await service.userGET(ownerId, ownerId)).toMatchObject({
+      statusCode: 200,
+      body: { privilege: Privilege.Owner, isOwner: true },
+    })
+    expect(await users.findOne({ id: ownerId })).toMatchObject({
+      privilege: Privilege.Admin,
+    })
+
+    const newUser = {
+      id: regular.id,
+      name: regular.name,
+      email: regular.email,
+      password: mockPassword(),
+    }
+    expect(await service.userPOST(newUser, ownerId)).toMatchObject({
+      statusCode: 201,
+      body: { privilege: Privilege.User, isModerator: false },
+    })
+    expect(await users.findOne({ id: regular.id })).toMatchObject({
+      privilege: Privilege.User,
+    })
+  })
+
+  test("initializes only a missing stored owner privilege", async () => {
+    const users = db.collection<User>("users")
+    await users.insertOne({ ...account(ownerId), isAdmin: false })
+
+    expect(await service.userGET(ownerId)).toMatchObject({
+      body: { privilege: Privilege.Owner, isOwner: true },
+    })
+    expect(await users.findOne({ id: ownerId })).not.toHaveProperty("privilege")
+
+    await service.userGET(ownerId, ownerId)
+    expect(await users.findOne({ id: ownerId })).toMatchObject({
+      privilege: Privilege.Admin,
+    })
+
+    await users.updateOne(
+      { id: ownerId },
+      { $set: { privilege: Privilege.User } }
+    )
+    expect(await service.userGET(ownerId, ownerId)).toMatchObject({
+      body: { privilege: Privilege.Owner, isOwner: true },
+    })
+    expect(await users.findOne({ id: ownerId })).toMatchObject({
+      privilege: Privilege.User,
+    })
+  })
+
+  test("derives roles in account and discussion reads without rewriting legacy users", async () => {
+    const users = db.collection<User>("users")
+    const legacy = { ...account("legacy-account"), isAdmin: true }
+    await users.insertMany([legacy, moderator, regular])
+    const topic = mockTopic("privileges-")
+    const parent = {
+      id: "privilege-comment",
+      parentId: topic.id,
+      text: "A comment",
+      userId: legacy.id,
+      dateCreated: new Date(),
+    }
+    const reply = {
+      ...parent,
+      id: "privilege-reply",
+      parentId: parent.id,
+      userId: moderator.id,
+    }
+    await db.collection("comments").insertMany([topic, parent, reply])
+
+    const legacyRole = { privilege: Privilege.User, isAdmin: false }
+    const replyRole = { privilege: Privilege.Moderator, isModerator: true }
+    expect(await service.userGET(legacy.id)).toMatchObject({ body: legacyRole })
+    expect(await service.commentGET(parent.id)).toMatchObject({
+      body: { user: legacyRole, replies: [{ user: replyRole }] },
+    })
+    expect(await service.topicGET(topic.id)).toMatchObject({
+      body: {
+        replies: expect.arrayContaining([
+          expect.objectContaining({
+            id: parent.id,
+            user: expect.objectContaining(legacyRole),
+          }),
+          expect.objectContaining({
+            id: reply.id,
+            user: expect.objectContaining(replyRole),
+          }),
+        ]),
+      },
+    })
+    expect(
+      await service.userPUT(regular.id, { name: "Changed" }, legacy.id)
+    ).toMatchObject({
+      statusCode: 403,
+    })
+    expect(await users.findOne({ id: legacy.id })).not.toHaveProperty(
+      "privilege"
+    )
+  })
+
+  test.each([
+    { actor: regular, target: moderator, allowed: false },
+    { actor: moderator, target: regular, allowed: false },
+    { actor: admin, target: regular, allowed: true },
+    { actor: admin, target: moderator, allowed: true },
+    { actor: admin, target: peer, allowed: false },
+    { actor: admin, target: owner, allowed: false },
+    { actor: owner, target: admin, allowed: true },
+  ])(
+    "allows $actor.id to administer $target.id only when authorized ($allowed)",
+    async ({ actor, target, allowed }) => {
+      const users = db.collection<User>("users")
+      await users.insertMany([{ ...actor }, { ...target }])
+      const name = "Updated Profile"
+      const update = await service.userPUT(target.id, { name }, actor.id)
+
+      expect(update.statusCode).toBe(allowed ? 204 : 403)
+      expect(await users.findOne({ id: target.id })).toMatchObject({
+        name: allowed ? name : target.name,
+      })
+
+      const deletion = await service.userDELETE(target.id, actor.id)
+      expect(deletion.statusCode).toBe(allowed ? 202 : 403)
+      expect(Boolean(await users.findOne({ id: target.id }))).toBe(!allowed)
+    }
+  )
+
+  test("keeps ordinary and owner self-service available for permitted fields", async () => {
+    const users = db.collection<User>("users")
+    await users.insertMany([{ ...regular }, { ...owner }])
+    const name = "Updated Profile"
+
+    for (const user of [regular, owner]) {
+      expect(await service.userPUT(user.id, { name }, user.id)).toMatchObject({
+        statusCode: 204,
+        body: { name },
+      })
+    }
+
+    expect(
+      await service.userPUT(ownerId, { email: "new@example.com" }, ownerId)
+    ).toMatchObject({ statusCode: 403 })
+    expect(
+      await service.userPUT(
+        ownerId,
+        { password: "different-password" },
+        ownerId
+      )
+    ).toMatchObject({ statusCode: 403 })
+    expect(await service.userDELETE(ownerId, ownerId)).toMatchObject({
+      statusCode: 403,
+    })
+    expect(await users.findOne({ id: ownerId })).toMatchObject({
+      email: owner.email,
+      hash: owner.hash,
+    })
+  })
+})
 
 const longFile = `${process.cwd()}/src/tests/veryLongRandomTestString`
 const veryLongString = fs.readFileSync(longFile, "utf8")
@@ -94,15 +287,16 @@ const isAdminSafeUser = (u: Partial<User>): u is AdminSafeUser =>
 
 // Fake data objects
 
-const testUsers = mockUsersArray(100)
+const testUsers = mockUsersArray(100).map(user =>
+  user.isAdmin ? { ...user, privilege: Privilege.Admin } : user
+)
 
-const testNewTopic = mockTopic("new-")
-const testNewUser: CreateUserPayload = {
-  ...mockUser("new-"),
-  isAdmin: false,
-  password: mockPassword(),
-  email: mockEmail(),
+const mockUserInput = (prefix = ""): CreateUserPayload => {
+  const { id, name, email } = mockUser(prefix)
+  return { id, name, email, password: mockPassword() }
 }
+const testNewTopic = mockTopic("new-")
+const testNewUser = mockUserInput("new-")
 
 // This is a topic + comments that will be deleted
 const testDeleteTopic: Topic = mockTopic("delete-")
@@ -117,6 +311,7 @@ const testComments = mockCommentTree(500, testUsers, testTopics)
 const authUserTest = {
   ...mockUser("auth-"),
   isAdmin: true,
+  privilege: Privilege.Admin,
   password: mockPassword(),
   email: mockEmail(),
 }
@@ -292,15 +487,21 @@ describe("Full API service test", () => {
       }
       expect.assertions(1)
       const response = await service.userPOST(newUser)
-      expect(response).toEqual({ body: { email, id, name }, statusCode: 201 })
+      expect(response).toEqual({
+        body: {
+          email,
+          id,
+          name,
+          privilege: Privilege.User,
+          isModerator: false,
+          isAdmin: false,
+          isOwner: false,
+        },
+        statusCode: 201,
+      })
     })
     test("POST to /user with admin-only properties without credentials should error 403", async () => {
-      const newUser = {
-        ...mockUser(),
-        password: mockPassword(),
-        email: mockEmail(),
-        isAdmin: true,
-      }
+      const newUser = { ...mockUserInput(), isVerified: true }
       expect.assertions(1)
       const e = await service.userPOST(newUser)
       expect(e).toEqual({
@@ -309,12 +510,7 @@ describe("Full API service test", () => {
       })
     })
     test("POST to /user with admin-only properties without admin credentials should error 403", async () => {
-      const newUser = {
-        ...mockUser(),
-        password: mockPassword(),
-        email: mockEmail(),
-        isAdmin: true,
-      }
+      const newUser = { ...mockUserInput(), isVerified: true }
       const ordinaryUser = getAuthUser(u => !u.isAdmin)
       expect.assertions(1)
       const e = await service.userPOST(newUser, ordinaryUser.id)
@@ -326,25 +522,13 @@ describe("Full API service test", () => {
   } else {
     // policy is canPublicCreateUser = false
     test("POST to /user without admin credentials should fail", async () => {
-      const newUser = {
-        ...mockUser(),
-        password: mockPassword(),
-        email: mockEmail(),
-        isAdmin: false,
-        isVerified: false,
-      }
+      const newUser = { ...mockUserInput(), isVerified: false }
       expect.assertions(1)
       const e = await service.userPOST(newUser)
       expect(e).toHaveProperty("statusCode", 401)
     })
     test("POST to /user without admin credentials should fail", () => {
-      const newUser = {
-        ...mockUser(),
-        password: mockPassword(),
-        email: mockEmail(),
-        isAdmin: false,
-        isVerified: false,
-      }
+      const newUser = { ...mockUserInput(), isVerified: false }
       const ordinaryUser = getAuthUser(u => !u.isAdmin)
       expect.assertions(1)
       return service
@@ -354,12 +538,8 @@ describe("Full API service test", () => {
   }
   test("POST to /user with a guestUserId as targetId should fail", async () => {
     const newUser = {
-      ...mockUser(),
+      ...mockUserInput(),
       id: generateGuestId(),
-      password: mockPassword(),
-      email: mockEmail(),
-      isAdmin: false,
-      isVerified: false,
     }
 
     const adminUser = getAuthUser(u => u.isAdmin!)
@@ -369,12 +549,7 @@ describe("Full API service test", () => {
   })
   test("POST to /user with existing username should return 409 user exists", async () => {
     const authUser = getAuthUser(u => u.isAdmin!)
-    const duplicateUser: CreateUserPayload = {
-      ...mockUser("duplicate-"),
-      isAdmin: false,
-      password: mockPassword(),
-      email: mockEmail(),
-    }
+    const duplicateUser = mockUserInput("duplicate-")
     expect.assertions(1)
     await service.userPOST(duplicateUser, authUser.id)
     const e = await service.userPOST(duplicateUser, authUser.id)
@@ -511,7 +686,11 @@ describe("Full API service test", () => {
     const targetUser = getTargetUser()
     const ordinaryUser = getAuthUser(u => !u.isAdmin)
     expect.assertions(1)
-    const e = await service.userPUT(targetUser.id, targetUser, ordinaryUser.id)
+    const e = await service.userPUT(
+      targetUser.id,
+      { name: targetUser.name },
+      ordinaryUser.id
+    )
     expect(e.statusCode).toBe(403)
   })
   test("PUT to /user/{userId} with public, own credentials cannot modify isAdmin", async () => {
@@ -527,11 +706,10 @@ describe("Full API service test", () => {
   })
   test("PUT to /user/{userId} with public, own credentials cannot modify isVerified", async () => {
     const ordinaryUser = getTargetUser(u => !u.isAdmin)
-    const updatedUser = { ...ordinaryUser, isVerified: true }
     expect.assertions(1)
     const e = await service.userPUT(
-      updatedUser.id,
-      updatedUser,
+      ordinaryUser.id,
+      { isVerified: true },
       ordinaryUser.id
     )
     expect(e).toBe(error403ForbiddenToModify)
@@ -576,11 +754,9 @@ describe("Full API service test", () => {
     const targetUser = getTargetUser(u => !u.isAdmin && !u.isVerified)
     const adminAuthUser = getAuthUser(u => u.isAdmin!)
     const updatedUser: UpdateUser = {
-      ...targetUser,
       name: " ",
       email: " ",
       password: " ",
-      isAdmin: true,
       isVerified: true,
     }
     expect.assertions(1)
@@ -595,9 +771,9 @@ describe("Full API service test", () => {
     const targetUser = getTargetUser(u => !u.isAdmin && !u.isVerified)
     const adminAuthUser = getAuthUser(u => u.isAdmin!)
     const updatedUser: User = {
-      ...targetUser,
+      id: targetUser.id,
+      email: targetUser.email,
       name: randomString(alphaUserInput, 25),
-      isAdmin: true,
       isVerified: true,
     }
     return service
@@ -605,7 +781,7 @@ describe("Full API service test", () => {
       .then((res: Success<AdminSafeUser> | Error) => {
         expect(res).toHaveProperty("statusCode", 204)
         expect(res).toHaveProperty("body", toAdminSafeUser(updatedUser))
-        expect(res.body).toHaveProperty("isAdmin", true)
+        expect(res.body).toHaveProperty("isAdmin", false)
         expect(res.body).toHaveProperty("isVerified", true)
       })
   })
@@ -662,16 +838,17 @@ describe("Full API service test", () => {
       adminAuthUser.id
     )
 
-    expect(e).toEqual({
-      statusCode: 403,
-      body: "Attempt to modify guest user forbidden property",
-    })
+    expect(e).toBe(error403ForbiddenToModify)
   })
   test("PUT to /user/{userId} where userId does not exist (and admin credentials) should return 404", async () => {
     const targetUser = mockUser()
     const adminAuthUser = getAuthUser(u => u.isAdmin!)
     expect.assertions(1)
-    const e = await service.userPUT(targetUser.id, targetUser, adminAuthUser.id)
+    const e = await service.userPUT(
+      targetUser.id,
+      { name: targetUser.name },
+      adminAuthUser.id
+    )
     expect(e).toBe(error404UserUnknown)
   })
 
@@ -711,7 +888,7 @@ describe("Full API service test", () => {
     expect(e).toBe(error403Forbidden)
   })
   test("DELETE to /user/{userId} should delete user and return 202 User deleted", () => {
-    const userToDelete = getTargetUser()
+    const userToDelete = getTargetUser(user => !user.isAdmin)
     const adminAuthUser = getAuthUser(u => u.isAdmin!)
     expect.assertions(2)
     return service
@@ -882,7 +1059,7 @@ describe("Full API service test", () => {
     )
     expect(e).toHaveProperty("statusCode", 404)
   })
-  test("PUT comment to /comment/{commentId} should return the edited comment with 204 Comment updated", () => {
+  test("PUT comment to /comment/{commentId} returns the saved comment with 200 OK", () => {
     const targetComment = chooseRandomElement(
       testComments.filter(isComment).filter(c => c.userId !== null)
     ) as Comment & { userId: string }
@@ -901,10 +1078,10 @@ describe("Full API service test", () => {
               id: targetComment.id,
               parentId: targetComment.parentId,
               text: updatedComment.text,
-              user: undefined,
+              user: expect.objectContaining({ id: userId }),
               userId,
             }),
-            statusCode: 204,
+            statusCode: 200,
           })
         )
       })
@@ -938,7 +1115,7 @@ describe("Full API service test", () => {
     const targetComment = chooseRandomElement(testComments.filter(isComment))
     const adminUser = getAuthUser(u => u.isAdmin!)
     return service
-      .commentDELETE(targetComment.id, adminUser.id)
+      .commentDELETE(targetComment.id, adminUser.id, "Moderator removal")
       .then(value =>
         expect(value).toEqual(expect.objectContaining(success202CommentDeleted))
       )
@@ -1009,15 +1186,16 @@ describe("Full API service test", () => {
     })
 
     const expectRetainedDeletion = async (deletedBy: User["id"]) => {
-      expect(await service.commentDELETE(target.id, deletedBy)).toEqual(
-        success202CommentDeleted
-      )
+      expect(
+        await service.commentDELETE(target.id, deletedBy, "Moderator removal")
+      ).toEqual(success202CommentDeleted)
       const deleted = await comments.findOne<Comment>({ id: target.id })
       expect(deleted).toMatchObject({
         id: target.id,
         parentId: target.parentId,
         userId: author.id,
         dateCreated: target.dateCreated,
+        deletedBy,
         dateDeleted: expect.any(Date),
       })
       expect(deleted?.text ?? null).toBeNull()
@@ -1092,9 +1270,13 @@ describe("Full API service test", () => {
         })
 
       try {
-        expect(await service.commentDELETE(target.id, authUserTest.id)).toEqual(
-          success202CommentDeleted
-        )
+        expect(
+          await service.commentDELETE(
+            target.id,
+            authUserTest.id,
+            "Moderator removal"
+          )
+        ).toEqual(success202CommentDeleted)
         expect(await comments.findOne({ id: target.id })).toMatchObject({
           text: null,
           dateDeleted,

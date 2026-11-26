@@ -11,10 +11,11 @@ type CommentDeleteTypestate = {
 type CommentDeleteMachineContext = {
   error?: ServerResponseError | string
   commentId?: CommentId
+  reason?: string
 }
 
 type CommentDeleteMachineEvent =
-  | { type: "DELETE"; commentId: CommentId }
+  | { type: "DELETE"; commentId: CommentId; reason?: string }
   | { type: "RESET" }
   | { type: "ERROR"; error: ServerResponseError | string }
   | { type: "SUCCESS" }
@@ -32,11 +33,12 @@ export const commentDeleteMachine = createMachine<
     states: {
       idle: {
         on: {
-          DELETE: { target: "deleting", actions: "assignCommentId" },
+          DELETE: { target: "deleting", actions: "assignDeletion" },
         },
       },
       deleting: {
         on: {
+          RESET: "idle",
           ERROR: { target: "error", actions: "assignErrorMessage" },
           SUCCESS: { target: "deleted" },
         },
@@ -64,13 +66,15 @@ export const commentDeleteMachine = createMachine<
           return undefined
         },
       }),
-      assignCommentId: assign({
+      assignDeletion: assign({
         commentId: (_, event) => {
           if (event.type === "DELETE") {
             return event.commentId
           }
           return undefined
         },
+        reason: (_, event) =>
+          event.type === "DELETE" ? event.reason : undefined,
       }),
     },
   }

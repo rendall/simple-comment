@@ -7,7 +7,8 @@
     toParagraphs,
     shortFormatDate,
   } from "../frontend-utilities"
-  import type { Comment, User } from "../lib/simple-comment-types"
+  import type { Comment, ServerResponseError, User } from "../lib/simple-comment-types"
+  import { approveComment } from "../apiClient"
   import SkeletonCommentDelete from "./low-level/SkeletonCommentDelete.svelte"
   import DeleteIcon from "./icons/DeleteIcon.svelte"
   import CommentList from "./CommentList.svelte"
@@ -19,6 +20,7 @@
   import ChevronLeft from "carbon-icons-svelte/lib/ChevronLeft.svelte"
   import { linear } from "svelte/easing"
   import type { AuthService } from "../lib/auth-service"
+  import { useViewerRevision } from "../lib/discussion-viewer"
 
   export let comment: (Comment & { isNew?: true }) | undefined = undefined
   export let showReply: string
@@ -31,12 +33,33 @@
   export let onUpdateSuccess
   export let depth
   export let handleReplyEvent
+  export let refreshDiscussion: () => void
+  export let isDeleting = false
+  export let deleteFailed = false
+  export let viewerRevision = 0
 
   const isRoot = depth === 0
 
-  let commentDeleted
+  let isEnteringRemovalReason = false
+  let removalReason = ""
   let isEditing = false
   let isOverflowToggled = false
+  let isApproving = false
+  let approvalError = ""
+  const getViewerRevision = useViewerRevision()
+  let visibleViewer = viewerRevision
+
+  const changeViewer = (revision: number) => {
+    if (revision === visibleViewer) return
+    visibleViewer = revision
+    approvalError = ""
+    isApproving = false
+    removalReason = ""
+    isEnteringRemovalReason = false
+    isEditing = false
+    isOverflowToggled = false
+  }
+  $: changeViewer(viewerRevision)
 
   let commentBodyHeight = 74
   let commentBodyRef
@@ -47,6 +70,29 @@
 
   let canEdit: (comment: Comment) => boolean
   let canDelete: (comment: Comment) => boolean
+  $: isHeld = comment?.isApproved === false
+  $: canApprove = isHeld && comment?.text !== null && currentUser?.isModerator
+
+  const onApprove = async () => {
+    if (!canApprove || !comment || comment.text === null || isApproving) return
+    const viewer = getViewerRevision()
+    isApproving = true
+    approvalError = ""
+    try {
+      await approveComment(comment.id, comment.text)
+      if (viewer === getViewerRevision()) refreshDiscussion()
+    } catch (error) {
+      if (viewer !== getViewerRevision()) return
+      if ((error as ServerResponseError)?.status === 409) {
+        approvalError = "This comment changed. Review the updated text before approving it."
+        refreshDiscussion()
+      } else {
+        approvalError = "The comment could not be approved. Try again."
+      }
+    } finally {
+      if (viewer === getViewerRevision()) isApproving = false
+    }
+  }
 
   const onEditClick = (comment: Comment) => {
     const commentId = comment?.id
@@ -61,15 +107,27 @@
 
   const onCloseCommentInput = onOpenCommentInput("")
 
-  const onCommentTextUpdated = text => {
+  const onCommentUpdated = (updated: Comment) => {
     isEditing = false
-    onUpdateSuccess({ ...comment, text })
+    onUpdateSuccess(updated)
+  }
+
+  const deleteCurrentComment = (reason?: string) => {
+    commentBodyHeight = refs[comment.id] ?? 74
+    onDeleteCommentClick(comment.id, reason)()
   }
 
   const onDeleteClick = () => {
-    commentDeleted = comment.id
-    commentBodyHeight = refs[comment.id] ?? 74
-    onDeleteCommentClick(comment.id)()
+    if (currentUser?.id === comment.user?.id) deleteCurrentComment()
+    else isEnteringRemovalReason = true
+  }
+
+  const onRemove = () => {
+    const reason = removalReason.trim()
+    if (!reason) return
+    isEnteringRemovalReason = false
+    removalReason = ""
+    deleteCurrentComment(reason)
   }
 
   onMount(() => {
@@ -85,10 +143,7 @@
       currentUser?.id === comment.user?.id &&
       new Date().valueOf() - new Date(comment.dateCreated).valueOf() <= 7200000
     canDelete = (comment: Comment): boolean =>
-      currentUser?.isAdmin ||
-      (currentUser &&
-        currentUser?.id === comment.user?.id &&
-        !comment?.replies?.length)
+      Boolean(currentUser && (currentUser.isModerator || currentUser.id === comment.user?.id))
 
     if (showReply !== comment.id) isOverflowToggled = false
   }
@@ -128,7 +183,7 @@
   class:is-open={showReply === comment.id}
   class:is-rtl={isRtl(comment.text)}
 >
-  {#if commentDeleted === comment.id && !comment.dateDeleted}
+  {#if isDeleting && !comment.dateDeleted}
     <SkeletonCommentDelete commentHeight={commentBodyHeight} />
   {:else if comment.dateDeleted}
     <header class="comment-header">
@@ -147,18 +202,23 @@
     </header>
     <article class="comment-body">
       <p>This comment was deleted {longFormatDate(comment.dateDeleted)}</p>
+      {#if comment.deletedReason}<p>{comment.deletedReason}</p>{/if}
+    </article>
+  {:else if isHeld && comment.text === null}
+    <article class="comment-body">
+      <p>This comment is awaiting moderation.</p>
     </article>
   {:else}
     <header class="comment-header">
       <div class="user-avatar">
         <img
-          src={idIconDataUrl(comment.user.id)}
-          alt={`${comment.user.name} avatar`}
+          src={idIconDataUrl(comment.user?.id ?? comment.id)}
+          alt={`${comment.user?.name ?? "Anonymous"} avatar`}
         />
       </div>
       <div class="comment-info">
         <p class="user-name" dir="auto">
-          {comment.user.name ?? "Anonymous"}
+          {comment.user?.name ?? "Anonymous"}
         </p>
         <p
           class="comment-date"
@@ -170,6 +230,15 @@
       </div>
     </header>
     <article class="comment-body" bind:this={commentBodyRef}>
+      {#if isHeld}
+        <p role="status">Awaiting moderation. {comment.heldReason ?? ""}</p>
+      {/if}
+      {#if approvalError}
+        <p role="alert">{approvalError}</p>
+      {/if}
+      {#if deleteFailed}
+        <p role="alert">The comment could not be deleted. Try again.</p>
+      {/if}
       {#if isEditing}
         <CommentEdit
           placeholder="Your edit"
@@ -177,14 +246,23 @@
           commentId={comment.id}
           commentText={comment.text}
           onCancel={onCancelEditClick}
-          onTextUpdated={onCommentTextUpdated}
+          {onCommentUpdated}
         />
       {:else}
         {#each toParagraphs(comment.text) as paragraph}
           <p dir="auto">{paragraph}</p>
         {/each}
       {/if}
-      {#if showReply === comment.id && !isEditing}
+      {#if isEnteringRemovalReason}
+        <form on:submit|preventDefault={onRemove}>
+          <label>
+            Reason for removal
+            <textarea bind:value={removalReason} required></textarea>
+          </label>
+          <button type="submit" disabled={!removalReason.trim()}>Remove comment</button>
+          <button type="button" on:click={() => { isEnteringRemovalReason = false; removalReason = "" }}>Cancel</button>
+        </form>
+      {:else if showReply === comment.id && !isEditing && !isHeld}
         <CommentInput
           {authService}
           placeholder="Your reply"
@@ -199,13 +277,15 @@
           class="button-row comment-footer"
           class:is-overflow={isOverflowToggled}
         >
-          <button
-            on:click={onOpenCommentInput(comment.id)}
-            class="comment-reply-button"
-            title="Click REPLY to reply to this comment"
-          >
-            <ReplyIcon size={20} /> Reply
-          </button>
+          {#if !isHeld}
+            <button
+              on:click={onOpenCommentInput(comment.id)}
+              class="comment-reply-button"
+              title="Click REPLY to reply to this comment"
+            >
+              <ReplyIcon size={20} /> Reply
+            </button>
+          {/if}
           {#if isOverflowToggled}
             <div class="overflow-menu" in:toggleExpand out:toggleExpand>
               {#if canEdit(comment)}
@@ -228,11 +308,15 @@
                 </button>
               {/if}
 
+              {#if canApprove}
+                <button on:click={onApprove} disabled={isApproving}>Approve</button>
+              {/if}
+
               <button on:click={() => (isOverflowToggled = false)}
                 ><ChevronLeft size={20} /></button
               >
             </div>
-          {:else if canEdit(comment) || canDelete(comment)}
+          {:else if canEdit(comment) || canDelete(comment) || canApprove}
             <button
               on:click={() => (isOverflowToggled = true)}
               class="overflow-menu-button"
@@ -250,10 +334,13 @@
       depth={depth + 1}
       on:delete={onDeleteSuccess}
       on:posted={onPostSuccess}
+      on:updated={event => onUpdateSuccess(event.detail.comment)}
       on:reply={handleReplyEvent}
       replies={comment.replies}
       {currentUser}
       {showReply}
+      {refreshDiscussion}
+      {viewerRevision}
     />
   {/if}
 </li>

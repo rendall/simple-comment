@@ -2,7 +2,7 @@
 
 Simple Comment can email your moderators when someone posts or edits a comment or reply. This helps you keep up with conversations without checking every page of your website.
 
-The notification email includes the full comment as plain text, along with the author's name and email address. Edit notices identify the comment as edited and include the updated text. Saving unchanged text, reading a comment, or deleting one does not send a notification.
+The notification email includes the full comment as plain text, along with the author's name and email address. Edit notices identify the comment as edited and include the updated text. When a saved comment is held for review, the email also includes its hold reason, comment ID, and parent ID. Creation and changed text are the notification events.
 
 Notifications are optional. They stay off until you configure an email provider. We recommend Resend for new installations, and you can also use SendGrid.
 
@@ -99,6 +99,8 @@ Post a new comment on your site, then check that:
 Post a reply and check that it also sends a notification with the reply text.
 
 As the comment's author, edit its text and save it. Check that the change appears on the site and that each moderator receives another email, labeled as an edit and containing the updated text and the author's details. Use a recent comment while its edit control is available.
+
+As a regular account, post a comment with a harmless link. Check that the author sees the hold and that the notification includes the reason and comment identifiers.
 
 Repeat these checks on your deployed site after releasing notification changes. A local success confirms your local setup; the deployed site has its own settings and needs its own delivery check.
 
@@ -211,7 +213,7 @@ There is no automatic retry queue, so a missed notification is not automatically
 
 Not yet. Direct comment links need a reliable connection between each discussion and its public page URL. That work is tracked in [#240](https://github.com/rendall/simple-comment/issues/240).
 
-For now, open the relevant page on your website to find the comment. A logged-in administrator can use the existing delete control there. Receiving notification emails does not itself grant administrator access.
+Open the relevant discussion on your website and use the email's comment text and identifiers to locate the held comment. Sign in with moderator access to review it. The deployment's `SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL` list determines who receives email, including held content.
 
 ## Configuration reference
 
@@ -256,11 +258,11 @@ The comment service saves a new comment, reply, or authorized text edit before c
 
 The service builds the message from the saved comment's full text and the posting author's details, using the same plain-text format for either provider. Line breaks and markup-like text are preserved as written.
 
-Edit notices identify the comment's author, including when an administrator makes the edit. Self-edits reuse the user already loaded for authorization. When an administrator edits someone else's comment, the additional author lookup has a one-second deadline. If the author's user record is no longer available, the email says "Author unavailable." If the lookup fails or times out, the service records a notification failure and returns the saved edit's `204` response without sending a notice. A later lookup result does not trigger an email.
+Only the original author can edit comment text. Edit notices reuse the account loaded for authorization. Hold notices use the saved publication state and the same configured recipient list as published comments.
 
 Recipient sends run concurrently. The request waits for every recipient's send to finish or reach its five-second deadline. One recipient's failure does not stop attempts to the others. The provider reports success only when every send is accepted, and partial failures include accepted and failed counts.
 
-Delivery failures leave the successful comment response intact. A new comment keeps its `201` response, and a saved edit keeps its `204` response. A timeout ends the wait; it does not guarantee that the provider has stopped processing the email. An email may still arrive afterward.
+Delivery failures leave the successful comment response intact. A new comment keeps its `201` response and a saved edit keeps its `200` response. A timed-out email may still arrive later.
 
 Notification results distinguish general provider failures, account or sender restrictions, exhausted allowances, unavailability, timeouts, and internal errors. Providers interpret their own response formats. Mixed failure summaries are consistent regardless of which recipient's send finishes first. Notification error statuses are internal results; they do not replace the response for a successfully saved comment.
 

@@ -20,6 +20,7 @@ import type {
   UserId,
   ValidationResult,
 } from "./simple-comment-types"
+import { Privilege } from "./simple-comment-types"
 import urlNormalizer from "normalize-url"
 import {
   isGuestId,
@@ -29,8 +30,9 @@ import {
   validateUserId,
 } from "./shared-utilities"
 import { getBackendEnv } from "./env"
+import { error403ForbiddenToModify } from "./messages"
 
-const { allowOrigin, jwtSecret } = getBackendEnv()
+const { allowOrigin, jwtSecret, moderatorId } = getBackendEnv()
 
 export const REALM = "Access to restricted resources"
 const AUTHORIZATION_HEADER = "Authorization"
@@ -100,31 +102,59 @@ export const publicUnsafeUserProperties: (keyof User)[] = [
 /**
  * These are user properties that only admins can modify on users
  */
-export const adminOnlyModifiableUserProperties: (keyof User)[] = [
-  "isVerified",
-  "isAdmin",
-]
+export const adminOnlyModifiableUserProperties: (keyof User)[] = ["isVerified"]
+
+export const hasReadOnlyUserRole = (user: object) =>
+  ["privilege", "isModerator", "isAdmin", "isOwner"].some(key => key in user)
 
 /**
  * Return a user object that is clean and secure
  */
+const getEffectivePrivilege = (
+  user?: Pick<User, "id" | "privilege"> | null
+) => {
+  if (user?.id === moderatorId) return Privilege.Owner
+  if (!user || !("privilege" in user)) return Privilege.User
+
+  switch (user.privilege) {
+    case Privilege.User:
+    case Privilege.Moderator:
+    case Privilege.Admin:
+      return user.privilege
+    default:
+      throw new globalThis.Error("Invalid stored user privilege")
+  }
+}
+
+export const getUserRole = (user?: Pick<User, "id" | "privilege"> | null) => {
+  const privilege = getEffectivePrivilege(user)
+  return {
+    privilege,
+    isModerator: privilege >= Privilege.Moderator,
+    isAdmin: privilege >= Privilege.Admin,
+    isOwner: privilege === Privilege.Owner,
+  }
+}
+
 export const toSafeUser = (
   user: User,
   isAdmin: boolean = false
 ): PublicSafeUser | AdminSafeUser =>
   isAdmin ? toAdminSafeUser(user) : toPublicSafeUser(user)
 export const toPublicSafeUser = (user: User) =>
-  user ? narrowType<PublicSafeUser>(user, ["id", "name", "isAdmin"]) : user
+  user ? { id: user.id, name: user.name, ...getUserRole(user) } : user
 export const toAdminSafeUser = (user: User) =>
   user
-    ? narrowType<AdminSafeUser>(user, [
-        "id",
-        "name",
-        "email",
-        "isAdmin",
-        "isVerified",
-        "challenge",
-      ])
+    ? {
+        ...narrowType<AdminSafeUser>(user, [
+          "id",
+          "name",
+          "email",
+          "isVerified",
+          "challenge",
+        ]),
+        ...getUserRole(user),
+      }
     : user
 
 export const isEmail = (x: string | Email): x is Email =>
@@ -460,30 +490,28 @@ const narrowType = <T>(obj: GenericObj | User, keys: (keyof T)[]) =>
     {}
   ) as T
 
-const newUserKeys: (keyof NewUser)[] = [
-  "id",
-  "isAdmin",
-  "email",
-  "isVerified",
-  "name",
-  "password",
-]
-export const getNewUserInfo = (body: string): NewUser => {
-  const newUser = narrowType<NewUser>(parseQuery(body), newUserKeys)
-  return newUser
+const parseUserQuery = (body: string) => {
+  const input = parseQuery(body)
+  if (hasReadOnlyUserRole(input)) throw error403ForbiddenToModify
+  return input
 }
-const updatedUserKeys: (keyof UpdateUser)[] = [
-  "isAdmin",
-  "email",
-  "isVerified",
-  "name",
-]
+
+export const getNewUserInfo = (body: string): NewUser =>
+  narrowType<NewUser>(parseUserQuery(body), [
+    "id",
+    "email",
+    "isVerified",
+    "name",
+    "password",
+  ])
+
+const updatedUserKeys: (keyof UpdateUser)[] = ["email", "isVerified", "name"]
 
 export const toUpdatedUser = (obj: GenericObj) =>
   narrowType<UpdateUser>(obj, updatedUserKeys) as UpdateUser
 
 export const getUpdatedUserInfo = (body: string): UpdateUser =>
-  toUpdatedUser(parseQuery(body))
+  narrowType<UpdateUser>(parseUserQuery(body), [...updatedUserKeys, "password"])
 
 export const getNewTopicInfo = (body: string): Topic =>
   toTopic(parseQuery(body))

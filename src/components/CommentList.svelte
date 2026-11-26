@@ -1,9 +1,5 @@
 <script lang="ts">
-  import type {
-    Comment,
-    ServerResponse,
-    User,
-  } from "../lib/simple-comment-types"
+  import type { Comment, User } from "../lib/simple-comment-types"
   import { createEventDispatcher } from "svelte"
   import { isResponseOk } from "../frontend-utilities"
   import { useMachine } from "@xstate/svelte"
@@ -11,14 +7,19 @@
   import { deleteComment } from "../apiClient"
   import CommentDisplay from "./CommentDisplay.svelte"
   import type { AuthService } from "../lib/auth-service"
+  import { useViewerRevision } from "../lib/discussion-viewer"
 
   export let currentUser: User | undefined
   export let authService: AuthService
   export let replies: (Comment & { isNew?: true; isDelete?: true })[] = []
   export let depth: number = 0
   export let showReply = ""
+  export let refreshDiscussion: () => void
+  export let viewerRevision = 0
 
   const { state, send } = useMachine(commentDeleteMachine)
+  const getViewerRevision = useViewerRevision()
+  let deleteErrorId: string | undefined
 
   //TODO: Loosen tight coupling of CommentDisplay and CommentList
   // The refactor of splitting one component into CommentList and
@@ -38,8 +39,9 @@
     dispatch("reply", { commentId })
   }
 
-  const onDeleteCommentClick = commentId => () => {
-    send({ type: "DELETE", commentId })
+  const onDeleteCommentClick = (commentId: string, reason?: string) => () => {
+    deleteErrorId = undefined
+    send({ type: "DELETE", commentId, reason })
   }
 
   const onDeleteSuccess = commentDeletedEvent => {
@@ -48,14 +50,17 @@
   }
 
   const deletingStateHandler = async () => {
-    const commentId = $state.context.commentId
+    const viewer = getViewerRevision()
+    const { commentId, reason } = $state.context
     try {
-      const response = await deleteComment(commentId)
+      const response = await deleteComment(commentId, reason)
+      if (viewer !== getViewerRevision()) return send("RESET")
       if (isResponseOk(response)) {
         dispatch("delete", { commentId })
         send("SUCCESS")
       } else send({ type: "ERROR", error: response })
     } catch (error) {
+      if (viewer !== getViewerRevision()) return send("RESET")
       send({ type: "ERROR", error })
     }
   }
@@ -75,20 +80,7 @@
 
   const errorStateHandler = () => {
     const error = $state.context.error
-    if (!error) {
-      console.error("Unknown error")
-      console.trace()
-      return
-    }
-
-    if (typeof error === "string") {
-      console.error(error)
-      return
-    }
-
-    const { ok } = error as ServerResponse
-    if (ok) console.warn("Error handler caught an OK response", error)
-
+    if (error) deleteErrorId = $state.context.commentId
     send({ type: "RESET" })
   }
 
@@ -105,7 +97,7 @@
 </script>
 
 <ul class="comment-replies" class:is-root={isRoot} class:is-deep={depth > 4}>
-  {#each replies as comment}
+  {#each replies as comment (comment.id)}
     <CommentDisplay
       {authService}
       {comment}
@@ -113,10 +105,14 @@
       {depth}
       {handleReplyEvent}
       {onDeleteCommentClick}
+      isDeleting={$state.matches("deleting") && $state.context.commentId === comment.id}
+      deleteFailed={deleteErrorId === comment.id}
       {onDeleteSuccess}
       {onOpenCommentInput}
       {onPostSuccess}
       {onUpdateSuccess}
+      {refreshDiscussion}
+      {viewerRevision}
       {showReply}
     />
   {/each}

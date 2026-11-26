@@ -76,12 +76,15 @@ export const commentPostMachine = createMachine<
       },
       posting: {
         on: {
+          RESET: "idle",
           ERROR: { target: "error", actions: "assignErrorMessage" },
           SUCCESS: { target: "posted", actions: "assignSuccessResponse" },
         },
       },
       posted: {
-        on: { RESET: "idle" },
+        on: {
+          RESET: { target: "idle", actions: assign({ response: undefined }) },
+        },
       },
       error: {
         on: {

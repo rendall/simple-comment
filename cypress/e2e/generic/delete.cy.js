@@ -49,17 +49,19 @@ describe("Comment delete", () => {
   })
 
   it("deletes an owned comment through DELETE /comment/:id", () => {
+    let deleted = false
     cy.intercept("GET", `/.netlify/functions/topic/${discussionId}`, req => {
       expect(req.method).to.equal("GET")
       req.reply({
         statusCode: 200,
-        body: buildDiscussion(),
+        body: buildDiscussion(deleted ? [] : [leafComment]),
       })
     }).as("getTopic")
 
     cy.intercept("DELETE", `/.netlify/functions/comment/${commentId}`, req => {
       expect(req.method).to.equal("DELETE")
       expect(req.url).to.include(`/.netlify/functions/comment/${commentId}`)
+      deleted = true
       req.reply({
         statusCode: 202,
         body: { message: "Deleted" },

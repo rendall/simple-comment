@@ -88,18 +88,30 @@ export type NewTopic = Pick<
 export type Comment = {
   _id?: ObjectId
   id: CommentId
-  userId: UserId | null
+  userId?: UserId | null
   user?: PublicSafeUser | AdminSafeUser
   text: string | null
   parentId: TopicId | CommentId
   replies?: Comment[]
   dateCreated: Date
   dateDeleted?: Date
+  isApproved?: boolean
+  heldBy?: UserId | null
+  heldReason?: string
+  deletedBy?: UserId
+  deletedReason?: string
 }
 
 export type DeletedComment = Comment & {
   text: null
   dateDeleted: Date
+}
+
+export enum Privilege {
+  User = 0,
+  Moderator = 1,
+  Admin = 2,
+  Owner = 3,
 }
 
 export type User = {
@@ -109,24 +121,27 @@ export type User = {
   email: Email
   challenge?: string
   hash?: string
+  privilege?: Privilege
+  isModerator?: boolean
   isAdmin?: boolean
+  isOwner?: boolean
   isVerified?: boolean
 }
 
 // This is a user that is safe to return from the server to the public
-export type PublicSafeUser = Pick<User, "id" | "name" | "isAdmin">
-// This is a user that is safe to return from the server to admin
-export type AdminSafeUser = Pick<
+export type PublicSafeUser = Pick<
   User,
-  "id" | "name" | "email" | "isAdmin" | "isVerified" | "challenge"
+  "id" | "name" | "privilege" | "isModerator" | "isAdmin" | "isOwner"
 >
+// This is a user that is safe to return from the server to admin
+export type AdminSafeUser = PublicSafeUser &
+  Pick<User, "email" | "isVerified" | "challenge">
 // The information that may be expected for a new user
 export type NewUser = {
   id: UserId
   name: string
   email: Email
   password: string
-  isAdmin?: boolean
   isVerified?: boolean
 }
 
