@@ -16,7 +16,7 @@ import type {
 } from "../../../src/lib/simple-comment-types"
 import { Privilege } from "../../../src/lib/simple-comment-types"
 import { MongodbService } from "../../../src/lib/MongodbService"
-import { Collection, Db, MongoClient } from "mongodb"
+import { Collection, Db, FindOneAndUpdateOptions, MongoClient } from "mongodb"
 import {
   error401BadCredentials,
   error401UserNotAuthenticated,
@@ -216,7 +216,9 @@ describe("Account privilege persistence and administration", () => {
 
       const deletion = await service.userDELETE(target.id, actor.id)
       expect(deletion.statusCode).toBe(allowed ? 202 : 403)
-      expect(Boolean(await users.findOne({ id: target.id }))).toBe(!allowed)
+      expect(await users.findOne({ id: target.id })).toMatchObject(
+        allowed ? { dateDeleted: expect.any(Date) } : { name: target.name }
+      )
     }
   )
 
@@ -248,6 +250,159 @@ describe("Account privilege persistence and administration", () => {
     expect(await users.findOne({ id: ownerId })).toMatchObject({
       email: owner.email,
       hash: owner.hash,
+    })
+  })
+
+  describe("Reserved deleted account IDs", () => {
+    const dateDeleted = new Date("2026-01-01T12:00:00Z")
+    const signup = (id: string) => ({
+      id,
+      name: regular.name,
+      email: regular.email,
+      password: mockPassword(),
+    })
+
+    test("hides a seeded reservation from account reads and listings", async () => {
+      const users = db.collection("users")
+      await users.insertMany([{ ...admin }, { id: regular.id, dateDeleted }])
+
+      expect(await service.userGET(regular.id, admin.id)).toBe(
+        error404UserUnknown
+      )
+      for (const viewer of [undefined, admin.id]) {
+        expect(await service.userListGET(viewer)).toMatchObject({
+          statusCode: 200,
+          body: [{ id: admin.id }],
+        })
+      }
+    })
+
+    test("rejects login and signup for a reserved ID", async () => {
+      await db.collection("users").insertOne({ id: regular.id, dateDeleted })
+
+      await expect(service.authPOST(regular.id, mockPassword())).rejects.toBe(
+        error404UserUnknown
+      )
+      expect(await service.userPOST(signup(regular.id))).toMatchObject({
+        statusCode: 409,
+      })
+    })
+
+    test("rejects bootstrap using a reserved guest or owner ID", async () => {
+      const guestId = generateGuestId()
+      await db.collection("users").insertMany([
+        { id: guestId, dateDeleted },
+        { id: ownerId, dateDeleted },
+      ])
+
+      expect(
+        await service.userPOST({ ...signup(guestId), password: "" }, guestId)
+      ).toMatchObject({ statusCode: 409 })
+      expect(await service.userPOST(signup(regular.id), guestId)).toMatchObject(
+        { statusCode: 404 }
+      )
+      await expect(
+        service.authPOST(ownerId, getBackendEnv().moderatorPassword)
+      ).rejects.toBe(error404UserUnknown)
+      expect(await service.userGET(ownerId, ownerId)).toBe(error404UserUnknown)
+    })
+
+    test("removes the reservation from comment authors and denies author access", async () => {
+      await db
+        .collection("users")
+        .insertMany([{ ...moderator }, { id: regular.id, dateDeleted }])
+      const topic = mockTopic("reserved-author-")
+      const published: Comment = {
+        id: "published-by-deleted-account",
+        parentId: topic.id,
+        userId: regular.id,
+        text: "A public comment",
+        dateCreated: new Date(),
+      }
+      const held: Comment = {
+        ...published,
+        id: "held-by-deleted-account",
+        isApproved: false,
+        heldReason: "Review required",
+      }
+      await db.collection("comments").insertMany([topic, published, held])
+
+      expect(await service.commentGET(held.id, regular.id)).toMatchObject({
+        statusCode: 404,
+      })
+      expect(await service.commentGET(held.id, moderator.id)).toMatchObject({
+        statusCode: 200,
+        body: { text: held.text, heldReason: held.heldReason },
+      })
+      const result = await service.topicGET(topic.id, regular.id)
+      expect(result).toMatchObject({ statusCode: 200 })
+      const replies = (result.body as Discussion).replies
+      expect(replies).toMatchObject([
+        { id: published.id, text: published.text },
+      ])
+      expect(replies?.[0].user?.id).toBeUndefined()
+
+      const direct = await service.commentGET(published.id)
+      expect(direct).toMatchObject({
+        statusCode: 200,
+        body: { text: published.text },
+      })
+      expect((direct.body as Comment).user?.id).toBeUndefined()
+      expect(
+        await service.commentPUT(published.id, "An edit", regular.id)
+      ).toBe(error401UserNotAuthenticated)
+    })
+
+    test("keeps only the original ID and deletion time and prevents reuse", async () => {
+      const users = db.collection("users")
+      const { insertedId } = await users.insertOne({
+        ...regular,
+        challenge: "abc",
+        isVerified: true,
+      })
+      const reservation = { _id: insertedId, id: regular.id }
+
+      expect(await service.userDELETE(regular.id, regular.id)).toBe(
+        success202UserDeleted
+      )
+      const deleted = await users.findOne(reservation)
+      expect(deleted).toEqual({ ...reservation, dateDeleted: expect.any(Date) })
+      expect(await service.userPOST(signup(regular.id))).toMatchObject({
+        statusCode: 409,
+      })
+      expect(await service.userDELETE(regular.id, regular.id)).toBe(
+        error404UserUnknown
+      )
+      expect(await users.findOne(reservation)).toEqual(deleted)
+    })
+
+    test("an update that reaches MongoDB after deletion leaves the reservation intact", async () => {
+      const users = db.collection("users")
+      const { insertedId } = await users.insertOne({ ...regular })
+      const reservation = { _id: insertedId, id: regular.id }
+      const update = jest
+        .spyOn(Collection.prototype, "findOneAndUpdate")
+        .mockImplementationOnce(
+          async (filter, change, options?: FindOneAndUpdateOptions) => {
+            update.mockRestore()
+            expect(await service.userDELETE(regular.id, regular.id)).toBe(
+              success202UserDeleted
+            )
+            return users.findOneAndUpdate(filter, change, { ...options })
+          }
+        )
+
+      try {
+        expect(
+          await service.userPUT(regular.id, { name: "Late update" }, regular.id)
+        ).toBe(error404UserUnknown)
+        expect(await users.findOne(reservation)).toEqual({
+          ...reservation,
+          dateDeleted: expect.any(Date),
+        })
+      } finally {
+        update.mockRestore()
+      }
     })
   })
 })
@@ -898,7 +1053,10 @@ describe("Full API service test", () => {
         const user = await db
           .collection("users")
           .findOne({ id: userToDelete.id })
-        expect(user).toBeNull()
+        expect(user).toMatchObject({
+          id: userToDelete.id,
+          dateDeleted: expect.any(Date),
+        })
       })
   })
   test("DELETE to /user/{userId} by self", () => {
@@ -911,7 +1069,10 @@ describe("Full API service test", () => {
         const user = await db
           .collection("users")
           .findOne({ id: userToDelete.id })
-        expect(user).toBeNull()
+        expect(user).toMatchObject({
+          id: userToDelete.id,
+          dateDeleted: expect.any(Date),
+        })
       })
   })
   // Comment Create
