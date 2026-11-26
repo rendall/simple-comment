@@ -253,7 +253,10 @@ export class MongodbService extends AbstractDbService {
   private findActiveUser = async (id?: UserId) =>
     id === undefined
       ? null
-      : (await this.getAccounts()).findOne<User>({ id, ...activeAccountFilter })
+      : (await this.getAccounts()).findOne<WithId<User>>({
+          id,
+          ...activeAccountFilter,
+        })
 
   constructor(
     connectionString: string,
@@ -727,8 +730,12 @@ export class MongodbService extends AbstractDbService {
     }
 
     try {
-      await users.deleteOne({ id: userId })
-      return success202UserDeleted
+      const reservation: AccountReservation = {
+        id: userId,
+        dateDeleted: new Date(),
+      }
+      const result = await users.replaceOne({ _id: foundUser._id }, reservation)
+      return result.acknowledged ? success202UserDeleted : error500UpdateError
     } catch (e) {
       return isAdmin
         ? { ...error500UpdateError, body: toErrorBody(e) }
