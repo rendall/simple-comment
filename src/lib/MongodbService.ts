@@ -96,6 +96,28 @@ const {
   moderatorPassword: simpleCommentModeratorPassword,
 } = getBackendEnv()
 
+type AccountReservation = Pick<User, "_id" | "id"> & { dateDeleted: Date }
+type StoredAccount = User | AccountReservation
+
+const activeAccountFilter = { dateDeleted: { $exists: false } }
+
+const isAccountReservation = (
+  account: StoredAccount | null
+): account is AccountReservation => account !== null && "dateDeleted" in account
+
+const firstActiveCommentAuthor = (users: string) => ({
+  $arrayElemAt: [
+    {
+      $filter: {
+        input: users,
+        as: "author",
+        cond: { $eq: [{ $type: "$$author.dateDeleted" }, "missing"] },
+      },
+    },
+    0,
+  ],
+})
+
 // Keep deleted replies anonymous even when the stored record has an author ID.
 const replyAuthorStages = [
   {
@@ -111,7 +133,7 @@ const replyAuthorStages = [
       "replies.user": {
         $cond: [
           { $eq: [{ $type: "$replies.dateDeleted" }, "missing"] },
-          { $arrayElemAt: ["$replies.userarr", 0] },
+          firstActiveCommentAuthor("$replies.userarr"),
           "$$REMOVE",
         ],
       },
@@ -225,6 +247,14 @@ export class MongodbService extends AbstractDbService {
     return this._db
   }
 
+  private getAccounts = async () =>
+    (await this.getDb()).collection<StoredAccount>("users")
+
+  private findActiveUser = async (id?: UserId) =>
+    id === undefined
+      ? null
+      : (await this.getAccounts()).findOne<User>({ id, ...activeAccountFilter })
+
   constructor(
     connectionString: string,
     dbName: string,
@@ -243,14 +273,27 @@ export class MongodbService extends AbstractDbService {
    **/
   authPOST = (identification: string | Email, password: string) =>
     new Promise<Success<AuthToken> | Error>((resolve, reject) =>
-      this.getDb()
-        .then(db => db.collection("users"))
-        .then(users =>
-          isEmail(identification)
-            ? users.findOne({ email: identification })
-            : users.findOne({ id: identification })
-        )
+      this.getAccounts()
+        .then(async users => {
+          if (!isEmail(identification)) {
+            return users.findOne({ id: identification })
+          }
+
+          const user = await users.findOne({ email: identification })
+          if (user || identification !== simpleCommentModeratorId) return user
+
+          // The configured owner ID can look like an email address.
+          return users.findOne({
+            id: identification,
+            dateDeleted: { $exists: true },
+          })
+        })
         .then(async user => {
+          if (isAccountReservation(user)) {
+            reject(error404UserUnknown)
+            return
+          }
+
           if (!isUser(user)) {
             // User is unknown. Reject them unless they claim to be Big Moderator
             if (identification !== simpleCommentModeratorId) {
@@ -355,18 +398,23 @@ export class MongodbService extends AbstractDbService {
       }
     }
 
-    const db = await this.getDb()
-    const users: Collection<User> = db.collection("users")
-    const authUser = await users.find({ id: authUserId }).limit(1).next()
+    const users = await this.getAccounts()
+    const authUser = authUserId ? await users.findOne({ id: authUserId }) : null
 
+    const userExists = {
+      ...error409UserExists,
+      body: `UserId '${newUser.id}' exists`,
+    }
+    const authUserUnknown = {
+      ...error404UserUnknown,
+      body: "Authenticating user is unknown",
+    }
+    if (isAccountReservation(authUser)) {
+      return newUser.id === authUserId ? userExists : authUserUnknown
+    }
     const isValidGuest = isGuestId(authUserId) && policy.canGuestCreateUser
-    const isUnknownUser = !isValidGuest && authUserId && !authUser
-
-    if (isUnknownUser) {
-      return {
-        ...error404UserUnknown,
-        body: "Authenticating user is unknown",
-      }
+    if (!isValidGuest && authUserId && !authUser) {
+      return authUserUnknown
     }
 
     const hasAdminOnlyProps = adminOnlyModifiableUserProperties.some(
@@ -383,10 +431,8 @@ export class MongodbService extends AbstractDbService {
       }
     }
 
-    const oldUser = await users.find({ id: newUser.id }).limit(1).next()
-
-    if (oldUser) {
-      return { ...error409UserExists, body: `UserId '${newUser.id}' exists` }
+    if (await users.findOne({ id: newUser.id })) {
+      return userExists
     }
 
     const hash = isGuestId(newUser.id)
@@ -437,8 +483,9 @@ export class MongodbService extends AbstractDbService {
       return error403UserNotAuthorized
     }
 
-    const users: Collection<User> = (await this.getDb()).collection("users")
-    const user = await users.find({ id: targetUserId }).limit(1).next()
+    const users = await this.getAccounts()
+    const user = await users.findOne({ id: targetUserId })
+    if (isAccountReservation(user)) return error404UserUnknown
 
     if (!user) {
       const isModerator =
@@ -479,9 +526,15 @@ export class MongodbService extends AbstractDbService {
         .catch(() => console.error("Owner privilege initialization failed"))
     }
 
-    const authUser = await users.findOne({ id: authUserId })
-    const isHardcodedModerator = authUserId === simpleCommentModeratorId
+    const storedAuthUser = authUserId
+      ? await users.findOne({ id: authUserId })
+      : null
+    const isDeletedAuthUser = isAccountReservation(storedAuthUser)
+    const authUser = isDeletedAuthUser ? null : storedAuthUser
+    const isHardcodedModerator =
+      !isDeletedAuthUser && authUserId === simpleCommentModeratorId
     const isValidGuest =
+      !isDeletedAuthUser &&
       isGuestId(authUserId) &&
       (policy.canGuestReadUser || policy.canPublicReadUser)
 
@@ -512,10 +565,10 @@ export class MongodbService extends AbstractDbService {
   userListGET = async (
     authUserId?: UserId
   ): Promise<Success<AdminSafeUser[] | PublicSafeUser[]> | Error> => {
-    const usersCollection: Collection<User> = (await this.getDb()).collection(
-      "users"
-    )
-    const users = await usersCollection.find({}).toArray()
+    const usersCollection = await this.getAccounts()
+    const users = await usersCollection
+      .find<User>(activeAccountFilter)
+      .toArray()
     const authUser = users.find(u => u.id === authUserId)
     const { isAdmin } = getUserRole(authUser)
     const outUsers = isAdmin
@@ -555,8 +608,8 @@ export class MongodbService extends AbstractDbService {
       }
     }
 
-    const users: Collection<User> = (await this.getDb()).collection("users")
-    const authUser = await users.findOne({ id: authUserId })
+    const users = await this.getAccounts()
+    const authUser = await this.findActiveUser(authUserId)
     if (!authUser)
       return {
         ...error404UserUnknown,
@@ -594,7 +647,7 @@ export class MongodbService extends AbstractDbService {
       }
     }
 
-    const foundUser = await users.find({ id: targetId }).limit(1).next()
+    const foundUser = await this.findActiveUser(targetId)
 
     if (!foundUser) {
       return error404UserUnknown
@@ -645,19 +698,19 @@ export class MongodbService extends AbstractDbService {
       return error401UserNotAuthenticated
     }
 
-    const users: Collection<User> = (await this.getDb()).collection("users")
+    const users = await this.getAccounts()
 
     if (userId === simpleCommentModeratorId) {
       return error403Forbidden
     }
 
-    const foundUser = await users.findOne({ id: userId })
+    const foundUser = await this.findActiveUser(userId)
 
     if (!foundUser) {
       return error404UserUnknown
     }
 
-    const authUser = await users.findOne({ id: authUserId })
+    const authUser = await this.findActiveUser(authUserId)
 
     if (!authUser) {
       return error401UserNotAuthenticated
@@ -708,8 +761,7 @@ export class MongodbService extends AbstractDbService {
       return error413CommentTooLong
     }
 
-    const users: Collection<User> = (await this.getDb()).collection("users")
-    const authUser = authUserId ? await users.findOne({ id: authUserId }) : null
+    const authUser = await this.findActiveUser(authUserId)
 
     if (authUser === null) {
       return error404UserUnknown
@@ -814,8 +866,7 @@ export class MongodbService extends AbstractDbService {
       return error401UserNotAuthenticated
     }
 
-    const users: Collection<User> = (await this.getDb()).collection("users")
-    const authUser = authUserId ? await users.findOne({ id: authUserId }) : null
+    const authUser = await this.findActiveUser(authUserId)
 
     if (!authUser && !policy.canPublicReadDiscussion) {
       return error401UserNotAuthenticated
@@ -857,9 +908,7 @@ export class MongodbService extends AbstractDbService {
       },
       {
         $addFields: {
-          user: {
-            $arrayElemAt: ["$userarr", 0],
-          },
+          user: firstActiveCommentAuthor("$userarr"),
         },
       },
       {
@@ -1014,8 +1063,13 @@ export class MongodbService extends AbstractDbService {
     text: string,
     authUserId?: UserId
   ): Promise<Success<Comment> | Error> => {
-    const users: Collection<User> = (await this.getDb()).collection("users")
-    const authUser = await users.find({ id: authUserId }).limit(1).next()
+    const users = await this.getAccounts()
+    const authUser = authUserId
+      ? await users
+          .find<User>({ id: authUserId, ...activeAccountFilter })
+          .limit(1)
+          .next()
+      : null
 
     if (!authUser) {
       return error401UserNotAuthenticated
@@ -1119,9 +1173,7 @@ export class MongodbService extends AbstractDbService {
     if (!authUserId) return error401UserNotAuthenticated
 
     const db = await this.getDb()
-    const reviewer = await db
-      .collection<User>("users")
-      .findOne({ id: authUserId })
+    const reviewer = await this.findActiveUser(authUserId)
     if (!reviewer) return error401UserNotAuthenticated
     if (!getUserRole(reviewer).isModerator) return error403UserNotAuthorized
 
@@ -1176,8 +1228,7 @@ export class MongodbService extends AbstractDbService {
       return error401UserNotAuthenticated
     }
 
-    const users: Collection<User> = (await this.getDb()).collection("users")
-    const authUser = await users.find({ id: authUserId }).limit(1).next()
+    const authUser = await this.findActiveUser(authUserId)
 
     if (!authUser) {
       return error404UserUnknown
@@ -1290,8 +1341,7 @@ export class MongodbService extends AbstractDbService {
       return error401UserNotAuthenticated
     }
 
-    const users: Collection<User> = (await this.getDb()).collection("users")
-    const authUser = await users.findOne({ id: authUserId })
+    const authUser = await this.findActiveUser(authUserId)
 
     if (authUserId && !authUser && !policy.canFirstVisitCreateTopic) {
       return error404UserUnknown
@@ -1386,8 +1436,7 @@ export class MongodbService extends AbstractDbService {
       return error401UserNotAuthenticated
     }
 
-    const users: Collection<User> = (await this.getDb()).collection("users")
-    const authUser = authUserId ? await users.findOne({ id: authUserId }) : null
+    const authUser = await this.findActiveUser(authUserId)
 
     if (!authUser && !policy.canPublicReadDiscussion) {
       return error404UserUnknown
@@ -1425,9 +1474,7 @@ export class MongodbService extends AbstractDbService {
       },
       {
         $addFields: {
-          user: {
-            $arrayElemAt: ["$userarr", 0],
-          },
+          user: firstActiveCommentAuthor("$userarr"),
         },
       },
       {
@@ -1583,8 +1630,7 @@ export class MongodbService extends AbstractDbService {
       return error401UserNotAuthenticated
     }
 
-    const users: Collection<User> = (await this.getDb()).collection("users")
-    const authUser = authUserId ? await users.findOne({ id: authUserId }) : null
+    const authUser = await this.findActiveUser(authUserId)
 
     if (authUserId && !authUser && !policy.canPublicReadDiscussion) {
       return error404UserUnknown
@@ -1618,8 +1664,7 @@ export class MongodbService extends AbstractDbService {
       return error401UserNotAuthenticated
     }
 
-    const users: Collection<User> = (await this.getDb()).collection("users")
-    const authUser = await users.findOne({ id: authUserId })
+    const authUser = await this.findActiveUser(authUserId)
 
     if (!authUser) {
       return error404UserUnknown
@@ -1680,8 +1725,7 @@ export class MongodbService extends AbstractDbService {
       return error401UserNotAuthenticated
     }
 
-    const users: Collection<User> = (await this.getDb()).collection("users")
-    const authUser = await users.findOne({ id: authUserId })
+    const authUser = await this.findActiveUser(authUserId)
 
     if (!authUser) {
       return error404UserUnknown
