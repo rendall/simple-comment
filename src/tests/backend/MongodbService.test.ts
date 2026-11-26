@@ -361,12 +361,22 @@ describe("Account privilege persistence and administration", () => {
         isVerified: true,
       })
       const reservation = { _id: insertedId, id: regular.id }
+      const comments = db.collection("comments")
+      const comment = {
+        id: "kept-after-account-deletion",
+        parentId: "existing-topic",
+        userId: regular.id,
+        text: "A comment to preserve",
+        dateCreated: new Date(),
+      }
+      await comments.insertOne({ ...comment })
 
       expect(await service.userDELETE(regular.id, regular.id)).toBe(
         success202UserDeleted
       )
       const deleted = await users.findOne(reservation)
       expect(deleted).toEqual({ ...reservation, dateDeleted: expect.any(Date) })
+      expect(await comments.findOne({ id: comment.id })).toMatchObject(comment)
       expect(await service.userPOST(signup(regular.id))).toMatchObject({
         statusCode: 409,
       })
@@ -374,6 +384,33 @@ describe("Account privilege persistence and administration", () => {
         error404UserUnknown
       )
       expect(await users.findOne(reservation)).toEqual(deleted)
+    })
+
+    test("preserves the first reservation when two deletions overlap", async () => {
+      const users = db.collection("users")
+      await users.insertMany([{ ...regular }, { ...admin }])
+      let firstReservation: unknown
+      const replace = jest
+        .spyOn(Collection.prototype, "replaceOne")
+        .mockImplementationOnce(async (filter, replacement, options) => {
+          replace.mockRestore()
+          expect(await service.userDELETE(regular.id, admin.id)).toBe(
+            success202UserDeleted
+          )
+          firstReservation = await users.findOne({ id: regular.id })
+          return users.replaceOne(filter, replacement, options)
+        })
+
+      try {
+        expect(await service.userDELETE(regular.id, admin.id)).toBe(
+          error404UserUnknown
+        )
+        expect(await users.findOne({ id: regular.id })).toEqual(
+          firstReservation
+        )
+      } finally {
+        replace.mockRestore()
+      }
     })
 
     test("an update that reaches MongoDB after deletion leaves the reservation intact", async () => {

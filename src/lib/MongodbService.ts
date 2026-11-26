@@ -523,7 +523,11 @@ export class MongodbService extends AbstractDbService {
     ) {
       await users
         .updateOne(
-          { id: targetUserId, privilege: { $exists: false } },
+          {
+            id: targetUserId,
+            ...activeAccountFilter,
+            privilege: { $exists: false },
+          },
           { $set: { privilege: Privilege.Admin } }
         )
         .catch(() => console.error("Owner privilege initialization failed"))
@@ -675,16 +679,14 @@ export class MongodbService extends AbstractDbService {
     }
 
     const modifyResult = await users.findOneAndUpdate(
-      { id: updatedUser.id },
+      { _id: foundUser._id, ...activeAccountFilter },
       { $set: updatedUser }
     )
 
-    if (modifyResult.ok) {
-      const safeUser = toAdminSafeUser(updatedUser)
-      return { ...success204UserUpdated, body: safeUser }
-    } else {
-      return error500UpdateError
-    }
+    if (!modifyResult.ok) return error500UpdateError
+    if (!modifyResult.value) return error404UserUnknown
+
+    return { ...success204UserUpdated, body: toAdminSafeUser(updatedUser) }
   }
 
   /**
@@ -734,8 +736,12 @@ export class MongodbService extends AbstractDbService {
         id: userId,
         dateDeleted: new Date(),
       }
-      const result = await users.replaceOne({ _id: foundUser._id }, reservation)
-      return result.acknowledged ? success202UserDeleted : error500UpdateError
+      const result = await users.replaceOne(
+        { _id: foundUser._id, ...activeAccountFilter },
+        reservation
+      )
+      if (!result.acknowledged) return error500UpdateError
+      return result.matchedCount ? success202UserDeleted : error404UserUnknown
     } catch (e) {
       return isAdmin
         ? { ...error500UpdateError, body: toErrorBody(e) }
