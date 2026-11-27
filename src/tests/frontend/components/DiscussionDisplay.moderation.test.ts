@@ -338,6 +338,59 @@ test("lets a moderator hide a published comment and approve the current text", a
   expect(heldRow.queryByRole("status")).not.toBeInTheDocument()
 })
 
+test("clears the Hide conflict after approving the refreshed comment", async () => {
+  const manuallyHeld: Comment = {
+    ...comment,
+    text: "Refreshed text under review",
+    isApproved: false,
+    isManuallyHeld: true,
+    heldReason: "Reason supplied by another moderator",
+  }
+  const republished: Comment = { ...comment, text: manuallyHeld.text }
+  vi.mocked(getOneDiscussion)
+    .mockResolvedValueOnce(discussion(comment))
+    .mockResolvedValueOnce(discussion(manuallyHeld))
+    .mockResolvedValue(discussion(republished))
+  vi.mocked(holdComment).mockRejectedValueOnce({ status: 409 })
+  vi.mocked(approveComment).mockResolvedValueOnce(success("Comment approved"))
+
+  showDiscussion(moderator)
+  await screen.findByText(comment.text!)
+  await openMenu(comment.text!)
+  await fireEvent.click(
+    rowFor(comment.text!).getByRole("button", { name: "Hide" })
+  )
+  await fireEvent.input(
+    screen.getByRole("textbox", { name: "Reason for hiding" }),
+    {
+      target: { value: "Reason for my hold request" },
+    }
+  )
+  await fireEvent.click(screen.getByRole("button", { name: "Hide comment" }))
+
+  await screen.findByText(manuallyHeld.text!)
+  const heldRow = rowFor(manuallyHeld.text!)
+  expect(heldRow.getByRole("alert")).toHaveTextContent(
+    "This comment is already held"
+  )
+  expect(heldRow.getByRole("status")).toHaveTextContent(
+    manuallyHeld.heldReason!
+  )
+  if (!heldRow.queryByRole("button", { name: "Approve" }))
+    await openMenu(manuallyHeld.text!)
+  await fireEvent.click(heldRow.getByRole("button", { name: "Approve" }))
+
+  expect(approveComment).toHaveBeenCalledWith(
+    manuallyHeld.id,
+    manuallyHeld.text
+  )
+  expect(
+    await heldRow.findByRole("button", { name: "Reply" })
+  ).toBeInTheDocument()
+  expect(heldRow.queryByRole("status")).not.toBeInTheDocument()
+  expect(heldRow.queryByRole("alert")).not.toBeInTheDocument()
+})
+
 test("keeps the Hide action from ordinary authors", async () => {
   vi.mocked(getOneDiscussion).mockResolvedValue(discussion(comment))
   showDiscussion(author)

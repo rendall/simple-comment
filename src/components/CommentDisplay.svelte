@@ -123,7 +123,9 @@
     approvalError = ""
     try {
       await approveComment(comment.id, comment.text)
-      if (viewer === getViewerRevision()) refreshDiscussion()
+      if (viewer !== getViewerRevision()) return
+      holdError = ""
+      refreshDiscussion()
     } catch (error) {
       if (viewer !== getViewerRevision()) return
       if ((error as ServerResponseError)?.status === 409) {
