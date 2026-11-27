@@ -1,5 +1,5 @@
 [build]
-  command = "yarn test:environment && yarn build"
+  command = "yarn test:environment && node scripts/fetch-moderation-terms.mjs && yarn build"
   functions = "functions"
   publish = "dist"
 

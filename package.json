@@ -6,6 +6,7 @@
   "main": "dist/js/index.js",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@netlify/blobs": "^10.7.0",
     "@shelf/jest-mongodb": "^6.0.2",
     "@sveltejs/vite-plugin-svelte": "^4.0.0",
     "@testing-library/jest-dom": "^6.9.1",
