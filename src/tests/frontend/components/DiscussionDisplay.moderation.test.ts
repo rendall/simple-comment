@@ -12,6 +12,7 @@ import {
   approveComment,
   deleteComment,
   getOneDiscussion,
+  holdComment,
   postComment,
   putComment,
 } from "../../../apiClient"
@@ -36,6 +37,7 @@ vi.mock("../../../apiClient", () => ({
   getGuestToken: vi.fn(),
   getOneDiscussion: vi.fn(),
   getOneUser: vi.fn(),
+  holdComment: vi.fn(),
   postAuth: vi.fn(),
   postComment: vi.fn(),
   putComment: vi.fn(),
@@ -262,6 +264,228 @@ test("keeps visible replies beneath a redacted held ancestor", async () => {
   expect(
     rowFor(child.text!).getByRole("button", { name: "Reply" })
   ).toBeInTheDocument()
+})
+
+test("lets a moderator hide a published comment and approve the current text", async () => {
+  const reason = "Please revise this comment"
+  const published: Comment = { ...comment, isApproved: undefined }
+  const savedHold: Comment = {
+    ...comment,
+    text: "Text returned by the refreshed discussion",
+    isApproved: false,
+    isManuallyHeld: true,
+    heldReason: reason,
+  }
+  const released = {
+    ...savedHold,
+    isApproved: true,
+    isManuallyHeld: undefined,
+    heldReason: undefined,
+  }
+  vi.mocked(getOneDiscussion)
+    .mockResolvedValueOnce(discussion(published, child))
+    .mockResolvedValueOnce(discussion(savedHold, child))
+    .mockResolvedValue(discussion(released, child))
+  vi.mocked(holdComment)
+    .mockRejectedValueOnce({ status: 500 })
+    .mockResolvedValueOnce(success("Comment hidden"))
+  vi.mocked(approveComment).mockResolvedValue(success("Comment approved"))
+
+  showDiscussion(moderator)
+  await screen.findByText(published.text!)
+  await openMenu(published.text!)
+  await fireEvent.click(
+    rowFor(published.text!).getByRole("button", { name: "Hide" })
+  )
+  const hideButton = screen.getByRole("button", { name: "Hide comment" })
+  const reasonField = screen.getByRole("textbox", { name: "Reason for hiding" })
+  expect(hideButton).toBeDisabled()
+  await fireEvent.input(reasonField, { target: { value: "  " } })
+  expect(hideButton).toBeDisabled()
+  await fireEvent.input(reasonField, { target: { value: ` ${reason} ` } })
+  await fireEvent.click(hideButton)
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "The comment could not be hidden"
+  )
+  expect(getOneDiscussion).toHaveBeenCalledTimes(1)
+  await fireEvent.click(hideButton)
+
+  await screen.findByText(savedHold.text!)
+  expect(holdComment).toHaveBeenCalledTimes(2)
+  expect(holdComment).toHaveBeenLastCalledWith(comment.id, reason)
+  const heldRow = rowFor(savedHold.text!)
+  expect(heldRow.getByRole("status")).toHaveTextContent(
+    `Hidden pending moderation. ${reason}`
+  )
+  expect(
+    heldRow.queryByRole("button", { name: "Reply" })
+  ).not.toBeInTheDocument()
+  expect(screen.getByText(child.text!)).toBeInTheDocument()
+  expect(
+    screen.queryByRole("textbox", { name: "Reason for hiding" })
+  ).not.toBeInTheDocument()
+  if (!heldRow.queryByRole("button", { name: "Approve" }))
+    await openMenu(savedHold.text!)
+  expect(
+    heldRow.queryByRole("button", { name: "Hide" })
+  ).not.toBeInTheDocument()
+
+  await fireEvent.click(heldRow.getByRole("button", { name: "Approve" }))
+  expect(approveComment).toHaveBeenCalledWith(comment.id, savedHold.text)
+  expect(
+    await heldRow.findByRole("button", { name: "Reply" })
+  ).toBeInTheDocument()
+  expect(heldRow.queryByRole("status")).not.toBeInTheDocument()
+})
+
+test("keeps the Hide action from ordinary authors", async () => {
+  vi.mocked(getOneDiscussion).mockResolvedValue(discussion(comment))
+  showDiscussion(author)
+  await screen.findByText(comment.text!)
+  await openMenu(comment.text!)
+  expect(
+    rowFor(comment.text!).getByRole("button", { name: "Delete" })
+  ).toBeInTheDocument()
+  expect(
+    rowFor(comment.text!).queryByRole("button", { name: "Hide" })
+  ).not.toBeInTheDocument()
+})
+
+test("keeps a redacted manually hidden leaf beneath an automatically held ancestor", async () => {
+  const ancestor: Comment = {
+    id: "automatic-ancestor",
+    parentId: comment.id,
+    dateCreated,
+    isApproved: false,
+    text: null,
+  }
+  const leaf: Comment = {
+    id: "manual-leaf",
+    parentId: ancestor.id,
+    dateCreated,
+    isApproved: false,
+    isManuallyHeld: true,
+    text: null,
+  }
+  vi.mocked(getOneDiscussion).mockResolvedValue(
+    discussion(comment, ancestor, leaf)
+  )
+  showDiscussion()
+
+  const hidden = "Hidden pending moderation."
+  const leafRow = (await screen.findByText(hidden)).closest("li")!
+  expect(leafRow.id).toBe(leaf.id)
+  const ancestorRow = screen
+    .getByText("This comment is awaiting moderation.")
+    .closest("li")!
+  expect(ancestorRow.id).toBe(ancestor.id)
+  expect(ancestorRow).toContainElement(leafRow)
+  expect(screen.getByText(comment.text!).closest("li")).toContainElement(
+    ancestorRow
+  )
+  expect(
+    rowFor(hidden).queryByRole("button", { name: "Reply" })
+  ).not.toBeInTheDocument()
+})
+
+test("clears a moderator's edit and Hide form when switching directly to an ordinary account", async () => {
+  const currentUser = writable<User | undefined>(moderator)
+  const authService = auth.createAuthService({ initialUser: moderator })
+  vi.spyOn(auth, "createAuthService").mockReturnValueOnce({
+    ...authService,
+    currentUser,
+    init: vi.fn().mockResolvedValue(undefined),
+  })
+  const outsider: User = {
+    id: "outside-reader",
+    name: "Outside reader",
+    email: "outside@example.test",
+  }
+  const ownHold: Comment = {
+    ...held,
+    id: "moderators-own-hold",
+    user: moderator,
+    isManuallyHeld: true,
+    heldReason: "A private moderation reason",
+  }
+  const placeholder: Comment = {
+    id: ownHold.id,
+    parentId: discussionId,
+    dateCreated,
+    text: null,
+    isApproved: false,
+    isManuallyHeld: true,
+  }
+  const second = {
+    ...comment,
+    id: "second-target",
+    text: "Another public comment",
+  }
+  const nextViewer = {
+    ...comment,
+    id: "current-viewer-only",
+    text: "Refreshed by the new account",
+  }
+  const staleRead = Promise.withResolvers<ServerResponse<Discussion>>()
+  const staleHold = Promise.withResolvers<ServerResponse<string>>()
+  vi.mocked(getOneDiscussion)
+    .mockResolvedValueOnce(discussion(ownHold, comment, second))
+    .mockReturnValueOnce(staleRead.promise)
+    .mockResolvedValue(discussion(placeholder, comment, second, nextViewer))
+  vi.mocked(holdComment)
+    .mockResolvedValueOnce(success("Comment hidden"))
+    .mockReturnValueOnce(staleHold.promise)
+
+  render(SimpleComment, {
+    discussionId,
+    title: "Moderation",
+    currentUser: moderator,
+  })
+  await screen.findByText(ownHold.text!)
+  const submitHold = async (text: string, reason: string) => {
+    await openMenu(text)
+    await fireEvent.click(rowFor(text).getByRole("button", { name: "Hide" }))
+    await fireEvent.input(
+      screen.getByRole("textbox", { name: "Reason for hiding" }),
+      { target: { value: reason } }
+    )
+    await fireEvent.click(screen.getByRole("button", { name: "Hide comment" }))
+  }
+
+  await submitHold(comment.text!, "Reason for the first hold")
+  await waitFor(() => expect(getOneDiscussion).toHaveBeenCalledTimes(2))
+  await openMenu(ownHold.text!)
+  await fireEvent.click(
+    rowFor(ownHold.text!).getByRole("button", { name: "Edit" })
+  )
+  const editDraft = "Private edit draft"
+  await fireEvent.input(screen.getByPlaceholderText("Your edit"), {
+    target: { value: editDraft },
+  })
+  const holdDraft = "Private Hide reason draft"
+  await submitHold(second.text, holdDraft)
+  expect(screen.getByDisplayValue(editDraft)).toBeInTheDocument()
+  expect(screen.getByDisplayValue(holdDraft)).toBeInTheDocument()
+
+  currentUser.set(outsider)
+  await screen.findByText(nextViewer.text)
+  expect(screen.getByText("Hidden pending moderation.")).toBeInTheDocument()
+  expect(screen.queryByText(ownHold.heldReason!)).not.toBeInTheDocument()
+  expect(screen.queryByPlaceholderText("Your edit")).not.toBeInTheDocument()
+  expect(
+    screen.queryByRole("textbox", { name: "Reason for hiding" })
+  ).not.toBeInTheDocument()
+
+  staleRead.resolve(discussion(ownHold, comment, second))
+  staleHold.resolve(success("Comment hidden"))
+  await Promise.all([staleRead.promise, staleHold.promise])
+  await tick()
+  expect(getOneDiscussion).toHaveBeenCalledTimes(3)
+  expect(screen.getByText(nextViewer.text)).toBeInTheDocument()
+  expect(screen.queryByText(ownHold.text!)).not.toBeInTheDocument()
+  expect(screen.queryByText(ownHold.heldReason!)).not.toBeInTheDocument()
+  expect(screen.queryByDisplayValue(editDraft)).not.toBeInTheDocument()
+  expect(screen.queryByDisplayValue(holdDraft)).not.toBeInTheDocument()
 })
 
 test("discards private content on logout and ignores requests from older identities", async () => {

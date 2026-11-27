@@ -121,7 +121,7 @@ Complete C01 and C02 before any manual-hold implementation. Use separate PRs for
     - “Keep the existing creation and changed-text emails and recipients.” (MH5 — Preserve notifications)
     - “Applying a manual hold creates no email event.” (MH5 — Preserve notifications)
 
-- [ ] T05 `[tests]` Verify the widget flow in `src/tests/frontend/components/DiscussionDisplay.moderation.test.ts`. Cover moderator-only **Hide** on published comments, reason entry, the resulting server state after refresh, approval using the current text, and manual-hold leaves and descendants.
+- [x] T05 `[tests]` Verify the widget flow in `src/tests/frontend/components/DiscussionDisplay.moderation.test.ts`. Cover moderator-only **Hide** on published comments, reason entry, the resulting server state after refresh, approval using the current text, and manual-hold leaves and descendants.
   - Depends on C08, C09, and C10.
   - Render a manually hidden leaf beneath an automatically held ancestor for an unrelated reader. Verify that both redacted placeholders survive recursive pruning and retain their nesting.
   - Switch directly from a moderator to an unrelated signed-in ordinary user. Cover an editor open on the moderator's own held comment and a Hide dialog with a reason draft. Verify that the private text, reasons, and local form state are cleared and that late reads or hold results from the previous viewer cannot restore them.
