@@ -48,6 +48,30 @@ describe("the Netlify moderation terms fetch", () => {
     expect(readFileSync(file, "utf8")).toBe("local fixture")
   })
 
+  test.each(["head", "download"])(
+    "removes an old local list when the Blob is missing at %s",
+    missingAt => {
+      const file = join(workspace, "moderation-terms.txt")
+      writeFileSync(file, "old fixture")
+      const result = runFetch(
+        enabled,
+        `async (url, options) => {
+          if (url === "https://blob.invalid/fixture") {
+            return new Response(null, { status: 404 })
+          }
+          if (options.method === "head") {
+            return new Response(null, { status: ${missingAt === "head" ? 404 : 200} })
+          }
+          return Response.json({ url: "https://blob.invalid/fixture" })
+        }`
+      )
+
+      expect(result.error).toBeUndefined()
+      expect(result.status).toBe(0)
+      expect(() => readFileSync(file)).toThrow("ENOENT")
+    }
+  )
+
   test.each([
     { status: 404, exitCode: 0 },
     { status: 403, exitCode: 1 },
@@ -67,7 +91,7 @@ describe("the Netlify moderation terms fetch", () => {
       expect(result.error).toBeUndefined()
       expect(result.status).toBe(exitCode)
       expect(result.stderr).toEqual(
-        exitCode ? expect.stringContaining("Could not fetch or write") : ""
+        exitCode ? expect.stringContaining("Could not update") : ""
       )
       expect(() =>
         readFileSync(join(workspace, "moderation-terms.txt"))
@@ -76,8 +100,10 @@ describe("the Netlify moderation terms fetch", () => {
   )
 
   test.each([Buffer.from([0xff, 0x0a]), Buffer.alloc(0)])(
-    "writes the exact Blob bytes for the existing validator (%j)",
+    "replaces an old local list with the exact Blob bytes (%j)",
     bytes => {
+      const file = join(workspace, "moderation-terms.txt")
+      writeFileSync(file, "old fixture")
       const result = runFetch(
         enabled,
         `async (url, options) => {
@@ -91,9 +117,7 @@ describe("the Netlify moderation terms fetch", () => {
 
       expect(result.error).toBeUndefined()
       expect(result.status).toBe(0)
-      expect(readFileSync(join(workspace, "moderation-terms.txt"))).toEqual(
-        bytes
-      )
+      expect(readFileSync(file)).toEqual(bytes)
     }
   )
 })

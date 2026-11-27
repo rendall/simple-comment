@@ -1,4 +1,4 @@
-import { writeFile } from "node:fs/promises"
+import { rm, writeFile } from "node:fs/promises"
 import { getStore } from "@netlify/blobs"
 
 const termsFile = "moderation-terms.txt"
@@ -19,13 +19,20 @@ const fetchModerationTerms = async () => {
   try {
     const store = getStore({ name: "moderation", siteID, token })
     // API access obtains a signed URL for GET. Check existence with HEAD first.
-    if ((await store.getMetadata(termsFile)) === null) return
+    const metadata = await store.getMetadata(termsFile)
+    const terms =
+      metadata === null
+        ? null
+        : await store.get(termsFile, { type: "arrayBuffer" })
 
-    const terms = await store.get(termsFile, { type: "arrayBuffer" })
-    if (terms !== null) await writeFile(termsFile, new Uint8Array(terms))
+    if (terms === null) {
+      await rm(termsFile, { force: true })
+    } else {
+      await writeFile(termsFile, new Uint8Array(terms))
+    }
   } catch {
     console.error(
-      "Could not fetch or write the private moderation terms file. Check the Netlify site, build token, and build directory."
+      "Could not update the private moderation terms file. Check the Netlify site, build token, and build directory."
     )
     process.exitCode = 1
   }
