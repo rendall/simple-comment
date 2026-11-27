@@ -948,7 +948,211 @@ describe("Comment moderation", () => {
     }
   })
 
-  test.each(["held", "deleted"])(
+  test.each([
+    {
+      action: "hide",
+      text: "$A clean edited comment",
+      expectedApproved: false,
+      expectedReason: "Moderator reason",
+    },
+    {
+      action: "approve",
+      text: "$A clean edited comment",
+      expectedApproved: true,
+      expectedReason: undefined,
+    },
+    {
+      action: "approve",
+      text: "See example.org for details",
+      expectedApproved: false,
+      expectedReason: linkReason,
+    },
+  ])(
+    "uses the hold state at the edit write after $action for $text",
+    async ({ action, text, expectedApproved, expectedReason }) => {
+      const target = comment("edit-in-flight")
+      await comments.insertOne(target)
+      const placeHold = () =>
+        service.commentHOLD(target.id, "Moderator reason", moderator.id)
+      if (action === "approve") expect((await placeHold()).statusCode).toBe(200)
+
+      const update = jest
+        .spyOn(Collection.prototype, "findOneAndUpdate")
+        .mockImplementationOnce(
+          async (filter, change, options?: FindOneAndUpdateOptions) => {
+            update.mockRestore()
+            const moderation =
+              action === "hide"
+                ? await placeHold()
+                : await service.commentAPPROVE(
+                    target.id,
+                    target.text!,
+                    moderator.id
+                  )
+            expect(moderation.statusCode).toBe(200)
+            return db
+              .collection("comments")
+              .findOneAndUpdate(filter, change, { ...options })
+          }
+        )
+
+      try {
+        const edited = await service.commentPUT(target.id, text, author.id)
+        expect(edited).toMatchObject({
+          statusCode: 200,
+          body: { text, isApproved: expectedApproved },
+        })
+        expect(edited.body).not.toHaveProperty("heldBy")
+        const stored = await comments.findOne<Comment>({ id: target.id })
+        expect(stored).toMatchObject({ text, isApproved: expectedApproved })
+        expect(stored?.heldReason).toBe(expectedReason)
+        expect((edited.body as Comment).heldReason).toBe(expectedReason)
+        if (action === "hide") {
+          expect(stored?.heldBy).toBe(moderator.id)
+          expect(edited.body).toHaveProperty("isManuallyHeld", true)
+        } else {
+          expect(stored).not.toHaveProperty("heldBy")
+          expect(edited.body).not.toHaveProperty("isManuallyHeld")
+        }
+      } finally {
+        update.mockRestore()
+      }
+    }
+  )
+
+  test("keeps the first actor and reason when two moderators try to hide the same comment", async () => {
+    const target = comment("competing-holds")
+    await comments.insertOne(target)
+    const pendingWrite = jest
+      .spyOn(Collection.prototype, "updateOne")
+      .mockImplementationOnce(async (filter, change) => {
+        pendingWrite.mockRestore()
+        expect(
+          (await service.commentHOLD(target.id, "Winning reason", admin.id))
+            .statusCode
+        ).toBe(200)
+        return db.collection("comments").updateOne(filter, change)
+      })
+    try {
+      expect(
+        (await service.commentHOLD(target.id, "Losing reason", moderator.id))
+          .statusCode
+      ).toBe(409)
+      expect(await comments.findOne({ id: target.id })).toMatchObject({
+        text: target.text,
+        isApproved: false,
+        heldBy: admin.id,
+        heldReason: "Winning reason",
+      })
+    } finally {
+      pendingWrite.mockRestore()
+    }
+  })
+
+  test("requires explicit approval of a moderator's edited text and clears the hold", async () => {
+    const target = comment("moderator-own", { userId: moderator.id })
+    await comments.insertOne(target)
+    expect(
+      (await service.commentHOLD(target.id, "Initial reason", admin.id))
+        .statusCode
+    ).toBe(200)
+    const text = "Moderator edit with a link to example.org"
+    expect(
+      await service.commentPUT(target.id, text, moderator.id)
+    ).toMatchObject({
+      statusCode: 200,
+      body: {
+        text,
+        isApproved: false,
+        isManuallyHeld: true,
+        heldReason: "Initial reason",
+      },
+    })
+    expect(
+      (await service.commentAPPROVE(target.id, target.text!, moderator.id))
+        .statusCode
+    ).toBe(409)
+    expect(await comments.findOne({ id: target.id })).toMatchObject({
+      heldBy: admin.id,
+      heldReason: "Initial reason",
+    })
+    const approve = () => service.commentAPPROVE(target.id, text, moderator.id)
+    expect((await approve()).statusCode).toBe(200)
+    expect(
+      (await service.commentHOLD(target.id, "Second reason", admin.id))
+        .statusCode
+    ).toBe(200)
+    expect((await approve()).statusCode).toBe(200)
+    const saved = await comments.findOne({ id: target.id })
+    expect(saved).toMatchObject({ text, isApproved: true })
+    expect(saved).not.toHaveProperty("heldBy")
+    expect(saved).not.toHaveProperty("heldReason")
+  })
+
+  test.each(["hold", "approval"])(
+    "keeps deletion terminal when it wins a race against %s",
+    async action => {
+      const target = comment("delete-race")
+      await comments.insertOne(target)
+      const placeHold = () =>
+        service.commentHOLD(target.id, "Removed hold reason", moderator.id)
+      const approve = () =>
+        service.commentAPPROVE(target.id, target.text!, moderator.id)
+      const remove = async () => {
+        expect(
+          (await service.commentDELETE(target.id, author.id)).statusCode
+        ).toBe(202)
+      }
+
+      if (action === "hold") {
+        const write = jest
+          .spyOn(Collection.prototype, "updateOne")
+          .mockImplementationOnce(async (filter, change) => {
+            write.mockRestore()
+            await remove()
+            return db.collection("comments").updateOne(filter, change)
+          })
+        try {
+          expect((await placeHold()).statusCode).toBe(404)
+        } finally {
+          write.mockRestore()
+        }
+      } else {
+        expect((await placeHold()).statusCode).toBe(200)
+        const write = jest
+          .spyOn(Collection.prototype, "findOneAndUpdate")
+          .mockImplementationOnce(
+            async (filter, change, options?: FindOneAndUpdateOptions) => {
+              write.mockRestore()
+              await remove()
+              return db
+                .collection("comments")
+                .findOneAndUpdate(filter, change, { ...options })
+            }
+          )
+        try {
+          expect((await approve()).statusCode).toBe(404)
+        } finally {
+          write.mockRestore()
+        }
+      }
+
+      expect((await placeHold()).statusCode).toBe(404)
+      expect((await approve()).statusCode).toBe(404)
+      expect(
+        (await service.commentPUT(target.id, "New text", author.id)).statusCode
+      ).toBe(404)
+      const deleted = await comments.findOne({ id: target.id })
+      expect(deleted).toMatchObject({
+        text: null,
+        dateDeleted: expect.any(Date),
+      })
+      expect(deleted).not.toHaveProperty("heldBy")
+      expect(deleted).not.toHaveProperty("heldReason")
+    }
+  )
+
+  test.each(["held", "manually held", "deleted"])(
     "keeps a reply that passed eligibility before its parent was %s",
     async state => {
       const parent = comment("parent-in-flight")
@@ -964,6 +1168,16 @@ describe("Comment moderation", () => {
                   parent.id,
                   "A new link example.com",
                   author.id
+                )
+              ).statusCode
+            ).toBe(200)
+          } else if (state === "manually held") {
+            expect(
+              (
+                await service.commentHOLD(
+                  parent.id,
+                  "Review reason",
+                  moderator.id
                 )
               ).statusCode
             ).toBe(200)
