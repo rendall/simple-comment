@@ -8,7 +8,7 @@
     shortFormatDate,
   } from "../frontend-utilities"
   import type { Comment, ServerResponseError, User } from "../lib/simple-comment-types"
-  import { approveComment } from "../apiClient"
+  import { approveComment, holdComment } from "../apiClient"
   import SkeletonCommentDelete from "./low-level/SkeletonCommentDelete.svelte"
   import DeleteIcon from "./icons/DeleteIcon.svelte"
   import CommentList from "./CommentList.svelte"
@@ -46,14 +46,26 @@
   let isOverflowToggled = false
   let isApproving = false
   let approvalError = ""
+  let isEnteringHoldReason = false
+  let holdReason = ""
+  let isHiding = false
+  let holdError = ""
   const getViewerRevision = useViewerRevision()
   let visibleViewer = viewerRevision
+
+  const closeHoldForm = () => {
+    isEnteringHoldReason = false
+    holdReason = ""
+  }
 
   const changeViewer = (revision: number) => {
     if (revision === visibleViewer) return
     visibleViewer = revision
     approvalError = ""
     isApproving = false
+    holdError = ""
+    isHiding = false
+    closeHoldForm()
     removalReason = ""
     isEnteringRemovalReason = false
     isEditing = false
@@ -72,6 +84,37 @@
   let canDelete: (comment: Comment) => boolean
   $: isHeld = comment?.isApproved === false
   $: canApprove = isHeld && comment?.text !== null && currentUser?.isModerator
+  $: canHide = comment && !comment.dateDeleted && !isHeld && comment.text !== null && currentUser?.isModerator
+
+  const openHoldForm = () => {
+    holdError = ""
+    isEnteringHoldReason = true
+  }
+
+  const onHide = async () => {
+    const reason = holdReason.trim()
+    if (!comment || !canHide || !reason || isHiding) return
+    const viewer = getViewerRevision()
+    isHiding = true
+    holdError = ""
+    try {
+      await holdComment(comment.id, reason)
+      if (viewer !== getViewerRevision()) return
+      closeHoldForm()
+      refreshDiscussion()
+    } catch (error) {
+      if (viewer !== getViewerRevision()) return
+      if ((error as ServerResponseError)?.status === 409) {
+        holdError = "This comment is already held. Review its current state."
+        closeHoldForm()
+        refreshDiscussion()
+      } else {
+        holdError = "The comment could not be hidden. Try again."
+      }
+    } finally {
+      if (viewer === getViewerRevision()) isHiding = false
+    }
+  }
 
   const onApprove = async () => {
     if (!canApprove || !comment || comment.text === null || isApproving) return
@@ -236,6 +279,9 @@
       {#if approvalError}
         <p role="alert">{approvalError}</p>
       {/if}
+      {#if holdError}
+        <p role="alert">{holdError}</p>
+      {/if}
       {#if deleteFailed}
         <p role="alert">The comment could not be deleted. Try again.</p>
       {/if}
@@ -261,6 +307,15 @@
           </label>
           <button type="submit" disabled={!removalReason.trim()}>Remove comment</button>
           <button type="button" on:click={() => { isEnteringRemovalReason = false; removalReason = "" }}>Cancel</button>
+        </form>
+      {:else if isEnteringHoldReason && canHide}
+        <form on:submit|preventDefault={onHide}>
+          <label>
+            Reason for hiding
+            <textarea bind:value={holdReason} required disabled={isHiding}></textarea>
+          </label>
+          <button type="submit" disabled={isHiding || !holdReason.trim()}>Hide comment</button>
+          <button type="button" disabled={isHiding} on:click={closeHoldForm}>Cancel</button>
         </form>
       {:else if showReply === comment.id && !isEditing && !isHeld}
         <CommentInput
@@ -311,12 +366,15 @@
               {#if canApprove}
                 <button on:click={onApprove} disabled={isApproving}>Approve</button>
               {/if}
+              {#if canHide}
+                <button on:click={openHoldForm}>Hide</button>
+              {/if}
 
               <button on:click={() => (isOverflowToggled = false)}
                 ><ChevronLeft size={20} /></button
               >
             </div>
-          {:else if canEdit(comment) || canDelete(comment) || canApprove}
+          {:else if canEdit(comment) || canDelete(comment) || canApprove || canHide}
             <button
               on:click={() => (isOverflowToggled = true)}
               class="overflow-menu-button"

@@ -72,7 +72,7 @@ Complete C01 and C02 before any manual-hold implementation. Use separate PRs for
     - “Other readers see a redacted **Hidden pending moderation** placeholder in the discussion, including for a comment with no replies.” (MH2 — Protect private content)
     - “The widget discards private details on authentication changes.” (MH2 — Protect private content)
 
-- [ ] C10 `[frontend]` Add **Hide** to `src/components/CommentDisplay.svelte` for moderators viewing published comments. Require a non-blank reason, submit through C08, surface failures, and refresh the discussion on success under the current viewer. Reuse the existing approval action for republishing and discard results or private action state when authentication changes.
+- [x] C10 `[frontend]` Add **Hide** to `src/components/CommentDisplay.svelte` for moderators viewing published comments. Require a non-blank reason, submit through C08, surface failures, and refresh the discussion on success under the current viewer. Reuse the existing approval action for republishing and discard results or private action state when authentication changes.
   - Depends on C08 and C09. Validated by T05.
   - Trace:
     - “A moderator can open a published comment's action menu, hide the comment, and explain why.” (Iteration two — Plain-Language Intent)
