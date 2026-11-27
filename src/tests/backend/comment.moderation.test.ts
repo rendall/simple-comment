@@ -511,6 +511,145 @@ describe("Comment moderation", () => {
     }
   })
 
+  test("keeps nested manual placeholders and independently visible replies", async () => {
+    const root = comment("published-root")
+    const automatic = held("automatic-ancestor", { parentId: root.id })
+    const hiddenLeaf = comment("hidden-leaf", {
+      parentId: automatic.id,
+      userId: guest.id,
+    })
+    const hiddenParent = comment("hidden-parent")
+    const reply = comment("published-reply", { parentId: hiddenParent.id })
+    const unrelated = held("automatic-leaf")
+    const deleted = comment("deleted-leaf", {
+      text: null,
+      dateDeleted: dateCreated,
+    })
+    await comments.insertMany([
+      root,
+      automatic,
+      hiddenLeaf,
+      hiddenParent,
+      reply,
+      unrelated,
+      deleted,
+    ])
+    for (const target of [hiddenLeaf, hiddenParent]) {
+      expect(
+        (
+          await service.commentHOLD(
+            target.id,
+            "Keep this private",
+            moderator.id
+          )
+        ).statusCode
+      ).toBe(200)
+    }
+
+    const automaticPlaceholder = {
+      id: automatic.id,
+      parentId: root.id,
+      isApproved: false,
+      text: null,
+    }
+    const manualPlaceholder = {
+      id: hiddenLeaf.id,
+      parentId: automatic.id,
+      isApproved: false,
+      isManuallyHeld: true,
+      text: null,
+    }
+    for (const viewer of [undefined, outsider]) {
+      const visible = await readDiscussion(viewer)
+      const ancestor = visible.find(value => value.id === automatic.id)
+      const leaf = visible.find(value => value.id === hiddenLeaf.id)
+      expect(ancestor).toMatchObject(automaticPlaceholder)
+      expect(ancestor).not.toHaveProperty("isManuallyHeld")
+      expect(leaf).toMatchObject(manualPlaceholder)
+      for (const placeholder of [ancestor, leaf]) {
+        for (const privateField of ["heldBy", "heldReason", "user", "userId"]) {
+          expect(placeholder).not.toHaveProperty(privateField)
+        }
+      }
+      expect(visible).toContainEqual(
+        expect.objectContaining({
+          id: reply.id,
+          parentId: hiddenParent.id,
+          text: reply.text,
+        })
+      )
+      expect(visible.find(value => value.id === unrelated.id)).toBeUndefined()
+
+      expect(await service.commentGET(automatic.id, viewer?.id)).toMatchObject({
+        statusCode: 200,
+        body: {
+          ...automaticPlaceholder,
+          replies: [expect.objectContaining(manualPlaceholder)],
+        },
+      })
+      const directLeaf = await service.commentGET(hiddenLeaf.id, viewer?.id)
+      expect(directLeaf).toMatchObject({
+        statusCode: 200,
+        body: { ...manualPlaceholder, replies: [] },
+      })
+      expect(directLeaf.body).not.toHaveProperty("heldReason")
+      expect(directLeaf.body).not.toHaveProperty("heldBy")
+      expect(
+        (await service.commentGET(unrelated.id, viewer?.id)).statusCode
+      ).toBe(404)
+      expect(
+        (await service.commentGET(deleted.id, viewer?.id)).statusCode
+      ).toBe(404)
+    }
+
+    for (const viewer of [guest, moderator]) {
+      const privateLeaf = {
+        id: hiddenLeaf.id,
+        text: hiddenLeaf.text,
+        isApproved: false,
+        isManuallyHeld: true,
+        heldReason: "Keep this private",
+      }
+      const direct = await service.commentGET(hiddenLeaf.id, viewer.id)
+      expect(direct).toMatchObject({ statusCode: 200, body: privateLeaf })
+      expect(direct.body).not.toHaveProperty("heldBy")
+      expect(await readDiscussion(viewer)).toContainEqual(
+        expect.objectContaining(privateLeaf)
+      )
+      expect(
+        (await service.commentPOST(hiddenLeaf.id, "Blocked reply", viewer.id))
+          .statusCode
+      ).toBe(404)
+    }
+
+    expect(
+      (await service.commentPOST(hiddenParent.id, "Blocked reply", outsider.id))
+        .statusCode
+    ).toBe(404)
+    expect(
+      (await service.commentPOST(reply.id, "Visible continuation", outsider.id))
+        .statusCode
+    ).toBe(201)
+    expect(
+      (
+        await service.commentAPPROVE(
+          hiddenParent.id,
+          hiddenParent.text!,
+          moderator.id
+        )
+      ).statusCode
+    ).toBe(200)
+    expect(
+      (
+        await service.commentPOST(
+          hiddenParent.id,
+          "Reply after approval",
+          outsider.id
+        )
+      ).statusCode
+    ).toBe(201)
+  })
+
   test("shows held content and reasons to its recognized guest author and moderators", async () => {
     const submitted = held("guest-held", { userId: guest.id })
     await comments.insertOne(submitted)

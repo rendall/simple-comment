@@ -94,7 +94,7 @@ Complete C01 and C02 before any manual-hold implementation. Use separate PRs for
     - “Unauthorized requests, blank reasons, and requests targeting a held or deleted comment leave the record unchanged.” (MH1 — Place a hold)
     - “A repeated hold on an already held target does not replace the original reason or actor.” (Iteration two — Validation Strategy)
 
-- [ ] T02 `[tests]` Verify direct and discussion reads and reply eligibility in `src/tests/backend/comment.moderation.test.ts`. Cover manually hidden leaves and parents, visible descendants, recognized guest authors, unrelated readers, moderators, and redaction of text, reason, and actor ID. Check that unconnected automatic holds and the base's deleted-comment contract retain their existing visibility. Verify that a new direct reply to a held comment fails while a reply to an eligible descendant succeeds, and that ordinary reply rules resume after approval.
+- [x] T02 `[tests]` Verify direct and discussion reads and reply eligibility in `src/tests/backend/comment.moderation.test.ts`. Cover manually hidden leaves and parents, visible descendants, recognized guest authors, unrelated readers, moderators, and redaction of text, reason, and actor ID. Check that unconnected automatic holds and the base's deleted-comment contract retain their existing visibility. Verify that a new direct reply to a held comment fails while a reply to an eligible descendant succeeds, and that ordinary reply rules resume after approval.
   - Depends on C04 and C06.
   - For an unrelated reader, verify that a manually hidden leaf keeps its automatically held ancestor visible as a structural placeholder. Check both direct and discussion reads for the redacted pair.
   - Trace:
