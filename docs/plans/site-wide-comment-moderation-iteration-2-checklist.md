@@ -141,8 +141,10 @@ Complete C01 and C02 before any manual-hold implementation. Use separate PRs for
     - “The moderation guide matches the verified hide and approval workflow.” (Iteration two — Validation Strategy)
     - “The repository's local CI parity gate passes.” (Iteration two — Validation Strategy)
 
-- [ ] T07 `[validation]` Review the manual-hold form in a browser at desktop width and in a narrow embed. Check that the reason field fits, **Hide comment** and **Cancel** are readable and stay within the form, and focus is visible. Run `cypress/e2e/generic/manual-hold.cy.js` to verify layout and the hold workflow, and record the findings before closing iteration two.
+- [x] T07 `[validation]` Review the manual-hold form in a browser at desktop width and in a narrow embed. Check that the reason field fits, **Hide comment** and **Cancel** are readable and stay within the form, and focus is visible. Run `cypress/e2e/generic/manual-hold.cy.js` to verify layout and the hold workflow, and record the findings before closing iteration two.
   - Depends on C12 and T05.
+  - Reviewed the form in Cypress Electron at 1,100 px and at 375 px with the host constraining the widget width. The reason field fit, both labels fit on one line, and the submit button showed a focus outline after tabbing from the reason field. The default demo widget still overflows narrow viewports because of its fixed width.
+  - The layout regression failed on the original clipped **Hide comment** label. All five manual-hold Cypress tests and all 1,098 tests in `yarn run ci:local` passed with the fix.
   - Trace:
     - “Before completing iteration two, review the hold form at desktop width and in a narrow embed.” (Iteration two — Validation Strategy)
     - “The reason field and actions fit the available space, the action labels fit their buttons, and keyboard focus is visible.” (Iteration two — Validation Strategy)
