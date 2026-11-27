@@ -311,13 +311,19 @@
           <button type="button" on:click={() => { isEnteringRemovalReason = false; removalReason = "" }}>Cancel</button>
         </form>
       {:else if isEnteringHoldReason && canHide}
-        <form on:submit|preventDefault={onHide}>
+        <form class="comment-hold-form" on:submit|preventDefault={onHide}>
           <label>
             Reason for hiding
             <textarea bind:value={holdReason} required disabled={isHiding}></textarea>
           </label>
-          <button type="submit" disabled={isHiding || !holdReason.trim()}>Hide comment</button>
-          <button type="button" disabled={isHiding} on:click={closeHoldForm}>Cancel</button>
+          <div class="comment-hold-actions">
+            <button type="submit" disabled={isHiding || !holdReason.trim()}>
+              Hide comment
+            </button>
+            <button type="button" disabled={isHiding} on:click={closeHoldForm}>
+              Cancel
+            </button>
+          </div>
         </form>
       {:else if showReply === comment.id && !isEditing && !isHeld}
         <CommentInput

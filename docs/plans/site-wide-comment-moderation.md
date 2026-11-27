@@ -282,6 +282,7 @@ The local terms-file behavior was verified. The hosted Netlify smoke test and it
 - Server-enforced hold eligibility, recorded actor and reason, and viewer-specific manual-hold visibility in direct and discussion reads.
 - Preservation of manual holds through author edits and reuse of the existing approval, deletion, and reply rules.
 - HTTP and OpenAPI parity, widget behavior, and moderation guide updates for manual holds.
+- Visual review and layout fixes for the manual-hold form.
 
 #### Out of Scope
 
@@ -321,6 +322,7 @@ Keep the existing creation and changed-text emails and recipients. A successful 
 | Persistence and concurrency | Controlled MongoDB interleavings preserve manual holds through author edits, apply approval only to current reviewed text, and keep deletion terminal. A repeated hold on an already held target does not replace the original reason or actor. |
 | Notification compatibility | Manual hold actions produce no email. Successful changed-text edits retain the existing recipients and report the active manual hold. |
 | Discussion widget | A moderator can hide and republish a comment. A public reader sees redacted placeholders and independently visible replies after refresh. Authentication changes discard the previous viewer's private text and reasons. |
+| Manual-hold visual review | Before completing iteration two, review the hold form at desktop width and in a narrow embed. The reason field and actions fit the available space, the action labels fit their buttons, and keyboard focus is visible. |
 | Release verification | The moderation guide matches the verified hide and approval workflow. The repository's local CI parity gate passes. |
 
 The exact hold endpoint, response statuses, and placeholder fields are engineering details within these acceptance criteria. Use subsequent fetches or refreshes to reflect changes made by other viewers.

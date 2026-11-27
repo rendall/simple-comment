@@ -44,6 +44,47 @@ const reasonField = () =>
     .find("textarea")
 const submitHold = () =>
   commentBody(publishedId).contains("button", /^Hide comment$/)
+const cancelHold = () => commentBody(publishedId).contains("button", /^Cancel$/)
+const holdForm = () => commentBody(publishedId).find(".comment-hold-form")
+
+const buttonBounds = buttons =>
+  [...buttons].map(button => {
+    const { x, y, width, height } = button.getBoundingClientRect()
+    return { x, y, width, height }
+  })
+
+const movePointerTo = element => {
+  // DevTools mouse coordinates are relative to the runner viewport.
+  const frame = Cypress.$autIframe[0]
+  const frameBounds = frame.getBoundingClientRect()
+  const { x, y, width, height } = element.getBoundingClientRect()
+  return Cypress.automation("remote:debugger:protocol", {
+    command: "Input.dispatchMouseEvent",
+    params: {
+      type: "mouseMoved",
+      x:
+        frameBounds.left +
+        (x + width / 2) * (frameBounds.width / frame.offsetWidth),
+      y:
+        frameBounds.top +
+        (y + height / 2) * (frameBounds.height / frame.offsetHeight),
+    },
+  })
+}
+
+const expectFocusOutline = $button => {
+  const button = $button[0]
+  const style = button.ownerDocument.defaultView.getComputedStyle(button)
+  expect(button.matches(":focus-visible"), "keyboard focus").to.equal(true)
+  expect(style.outlineStyle, "focus outline style").to.equal("solid")
+  expect(
+    parseFloat(style.outlineWidth),
+    "focus outline width"
+  ).to.be.greaterThan(0)
+  expect(style.outlineColor, "focus outline color").not.to.equal(
+    "rgba(0, 0, 0, 0)"
+  )
+}
 
 describe("Manual comment holds", () => {
   let viewer
@@ -61,6 +102,15 @@ describe("Manual comment holds", () => {
   const visitDiscussion = () => {
     cy.visit("/")
     waitForDiscussion(moderator)
+  }
+
+  const openNarrowHoldForm = () => {
+    cy.viewport(375, 700)
+    visitDiscussion()
+    // Simulate a host that constrains the widget to the available width.
+    cy.get(".simple-comment").invoke("css", "max-width", "100%")
+    openHoldForm()
+    reasonField().type(reason)
   }
 
   beforeEach(() => {
@@ -183,9 +233,7 @@ describe("Manual comment holds", () => {
     submitHold().should("be.disabled")
     reasonField().clear().type(reason)
     submitHold().should("be.enabled")
-    commentBody(publishedId)
-      .contains("button", /^Cancel$/)
-      .click()
+    cancelHold().click()
     submitHold().should("not.exist")
     commentBody(publishedId)
       .contains("button", /^Hide$/)
@@ -194,6 +242,85 @@ describe("Manual comment holds", () => {
     submitHold().should("be.disabled")
     cy.then(() => expect(holdRequests).to.equal(0))
   })
+
+  it("fits the reason field and action labels in a narrow embed", () => {
+    openNarrowHoldForm()
+
+    holdForm().should($form => {
+      const form = $form[0]
+      const { left, right, top, bottom } = form.getBoundingClientRect()
+      expect(right, "form fits viewport").to.be.at.most(
+        form.ownerDocument.documentElement.clientWidth
+      )
+      expect(left, "form left edge").to.be.at.least(0)
+
+      const field = form.querySelector("textarea").getBoundingClientRect()
+      expect(field.left, "reason field left edge").to.be.at.least(left)
+      expect(field.right, "reason field right edge").to.be.at.most(right)
+      expect(field.top, "reason field top edge").to.be.at.least(top)
+      expect(field.bottom, "reason field bottom edge").to.be.at.most(bottom)
+
+      const buttons = form.querySelectorAll("button")
+      expect(buttons, "hold actions").to.have.length(2)
+      for (const button of buttons) {
+        const label = form.ownerDocument.createRange()
+        label.selectNodeContents(button)
+        const bounds = button.getBoundingClientRect()
+        const text = label.getBoundingClientRect()
+        const name = button.textContent.trim()
+        expect(bounds.left, `${name} button left edge`).to.be.at.least(left)
+        expect(bounds.right, `${name} button right edge`).to.be.at.most(right)
+        expect(text.left, `${name} label left edge`).to.be.at.least(bounds.left)
+        expect(text.right, `${name} label right edge`).to.be.at.most(
+          bounds.right
+        )
+        expect(text.top, `${name} label top edge`).to.be.at.least(bounds.top)
+        expect(text.bottom, `${name} label bottom edge`).to.be.below(
+          bounds.bottom
+        )
+      }
+    })
+  })
+
+  it("shows keyboard focus on both hold actions", () => {
+    openNarrowHoldForm()
+
+    reasonField().should("be.focused")
+    cy.press(Cypress.Keyboard.Keys.TAB)
+    submitHold().should(expectFocusOutline)
+    cy.press(Cypress.Keyboard.Keys.TAB)
+    cancelHold().should(expectFocusOutline)
+  })
+
+  it(
+    "keeps both hold actions in place when hovered",
+    { browser: { family: "chromium" } },
+    () => {
+      openNarrowHoldForm()
+      holdForm().scrollIntoView()
+      reasonField().then($field => movePointerTo($field[0]))
+
+      holdForm()
+        .find("button")
+        .then($buttons => {
+          const restingBounds = buttonBounds($buttons)
+          cy.wrap($buttons).each($button => {
+            cy.then(() => movePointerTo($button[0]))
+            cy.wrap($button).should($hovered => {
+              const button = $hovered[0]
+              expect(
+                button.matches(":hover"),
+                "pointer is over the button"
+              ).to.equal(true)
+              expect(
+                buttonBounds($buttons),
+                `button layout while hovering ${button.textContent.trim()}`
+              ).to.deep.equal(restingBounds)
+            })
+          })
+        })
+    }
+  )
 
   it("submits the trimmed reason and refreshes public and moderator views", () => {
     visitDiscussion()
