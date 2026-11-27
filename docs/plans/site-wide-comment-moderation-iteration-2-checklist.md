@@ -43,7 +43,7 @@ Complete C01 and C02 before any manual-hold implementation. Use separate PRs for
     - “Direct reads apply the same visibility restrictions and retain available thread structure.” (MH2 — Protect private content)
     - “The public placeholder omits the text, private reason, and internal moderation actor ID.” (MH2 — Protect private content)
 
-- [ ] C05 `[backend]` Route the manual-hold request in `src/functions/comment.ts` through the existing authentication and service response handling. Pass the target and reason to the operation from C03, and keep approval and deletion routes available.
+- [x] C05 `[backend]` Route the manual-hold request in `src/functions/comment.ts` through the existing authentication and service response handling. Pass the target and reason to the operation from C03, and keep approval and deletion routes available.
   - Depends on C03. Validated by T01.
   - Trace:
     - “A moderator can hide a published comment by supplying a non-blank reason in the existing discussion.” (MH1 — Place a hold)
