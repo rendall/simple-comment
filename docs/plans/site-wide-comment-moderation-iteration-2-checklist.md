@@ -66,7 +66,7 @@ Complete C01 and C02 before any manual-hold implementation. Use separate PRs for
   - Trace:
     - “A moderator can hide a published comment by supplying a non-blank reason in the existing discussion.” (MH1 — Place a hold)
 
-- [ ] C09 `[frontend]` Render manual holds in `src/components/DiscussionDisplay.svelte` and `CommentDisplay.svelte`. Keep manually hidden leaves and visible replies in the rendered tree. Show the private reason from an authorized server response and the generic label for public placeholders. Preserve the safe placeholder when the viewer changes and remove private details.
+- [x] C09 `[frontend]` Render manual holds in `src/components/DiscussionDisplay.svelte` and `CommentDisplay.svelte`. Keep manually hidden leaves and visible replies in the rendered tree. Show the private reason from an authorized server response and the generic label for public placeholders. Preserve the safe placeholder when the viewer changes and remove private details.
   - Depends on C04. Validated by T05.
   - Trace:
     - “Other readers see a redacted **Hidden pending moderation** placeholder in the discussion, including for a comment with no replies.” (MH2 — Protect private content)

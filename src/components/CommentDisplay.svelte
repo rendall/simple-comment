@@ -206,7 +206,7 @@
     </article>
   {:else if isHeld && comment.text === null}
     <article class="comment-body">
-      <p>This comment is awaiting moderation.</p>
+      <p>{comment.isManuallyHeld ? "Hidden pending moderation." : "This comment is awaiting moderation."}</p>
     </article>
   {:else}
     <header class="comment-header">
@@ -231,7 +231,7 @@
     </header>
     <article class="comment-body" bind:this={commentBodyRef}>
       {#if isHeld}
-        <p role="status">Awaiting moderation. {comment.heldReason ?? ""}</p>
+        <p role="status">{comment.isManuallyHeld ? "Hidden pending moderation." : "Awaiting moderation."} {comment.heldReason ?? ""}</p>
       {/if}
       {#if approvalError}
         <p role="alert">{approvalError}</p>
