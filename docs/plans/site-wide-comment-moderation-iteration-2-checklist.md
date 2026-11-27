@@ -61,7 +61,7 @@ Complete C01 and C02 before any manual-hold implementation. Use separate PRs for
     - “An edit that races with a manual hold must preserve the hold if it is active when the edit writes.” (MH4 — Edit, approve, and delete)
     - “A successful edit of manually held text identifies the active hold in its existing edit email.” (MH5 — Preserve notifications)
 
-- [ ] C08 `[frontend]` Add the manual-hold request to `src/apiClient.ts` using the shipped route and existing credential and response handling.
+- [x] C08 `[frontend]` Add the manual-hold request to `src/apiClient.ts` using the shipped route and existing credential and response handling.
   - Depends on C05 and C06. Validated by T05.
   - Trace:
     - “A moderator can hide a published comment by supplying a non-blank reason in the existing discussion.” (MH1 — Place a hold)
