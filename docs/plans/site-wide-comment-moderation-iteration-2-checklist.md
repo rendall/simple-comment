@@ -84,6 +84,11 @@ Complete C01 and C02 before any manual-hold implementation. Use separate PRs for
   - Trace:
     - “The moderation guide matches the verified hide and approval workflow.” (Iteration two — Validation Strategy)
 
+- [ ] C12 `[frontend]` Size and lay out the manual-hold form actions in `src/components/CommentDisplay.svelte` and `src/scss/simple-comment-style.scss` so their labels fit and the actions can wrap within the form.
+  - Depends on C10. Validated by T07.
+  - Trace:
+    - “Visual review and layout fixes for the manual-hold form.” (Iteration two — In Scope)
+
 ## Validation items
 
 - [x] T01 `[tests]` Verify the hold write and shipped API contract in `src/tests/backend/comment.moderation.test.ts` and `src/tests/backend/api.test.ts`. Cover effective moderator levels 1–3, guests and ordinary accounts, missing authentication, non-blank reasons, published and legacy targets, both kinds of held targets, deleted and missing targets, and repeated hold requests. Check that rejected or repeated requests preserve the prior record.
@@ -136,6 +141,12 @@ Complete C01 and C02 before any manual-hold implementation. Use separate PRs for
     - “The moderation guide matches the verified hide and approval workflow.” (Iteration two — Validation Strategy)
     - “The repository's local CI parity gate passes.” (Iteration two — Validation Strategy)
 
+- [ ] T07 `[validation]` Review the manual-hold form in a browser at desktop width and in a narrow embed. Check that the reason field fits, **Hide comment** and **Cancel** are readable and stay within the form, and focus is visible. Run `cypress/e2e/generic/manual-hold.cy.js` to verify layout and the hold workflow, and record the findings before closing iteration two.
+  - Depends on C12 and T05.
+  - Trace:
+    - “Before completing iteration two, review the hold form at desktop width and in a narrow embed.” (Iteration two — Validation Strategy)
+    - “The reason field and actions fit the available space, the action labels fit their buttons, and keyboard focus is visible.” (Iteration two — Validation Strategy)
+
 ## Behavior Slices
 
 | Slice | Goal | Items | Type |
@@ -145,10 +156,11 @@ Complete C01 and C02 before any manual-hold implementation. Use separate PRs for
 | 3. Hold lifecycle | Preserve manual holds across edits, review, deletion, and notifications. | C07, T03, T04 | behavior |
 | 4. Discussion widget | Let moderators hide and republish comments in the discussion. | C08, C09, C10, T05 | behavior |
 | 5. Release verification | Document the workflow and pass the local CI gate. | C11, T06 | mechanical |
+| 6. Visual review | Verify that the hold form fits and its controls are readable. | C12, T07 | behavior |
 
 ## Conformance QC
 
-- **Missing from plan** — None. C01 and C02 cover the prerequisites. C03–C11 and T01–T06 cover MH1–MH5, including verification of the existing approval and deletion cleanup in T03.
+- **Missing from plan** — None. C01 and C02 cover the prerequisites. C03–C11 and T01–T06 cover MH1–MH5, including verification of the existing approval and deletion cleanup in T03. C12 and T07 cover the manual-hold visual review.
 - **Extra beyond plan** — None. Automatic-to-manual conversion, #292, and hosted iteration-one validation retain their recorded scope.
 - **Atomicity fixes needed** — None. Each prerequisite item records its own merged evidence. Each feature item covers one behavior or contract change.
 - **Validation mapping gaps** — None. T01–T03 and T05 cover cross-privilege moderation, nested placeholders, concurrent writes, and direct account switches. Each item belongs to one behavior slice.
