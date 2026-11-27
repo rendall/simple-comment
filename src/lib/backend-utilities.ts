@@ -1,4 +1,5 @@
 /** Server-side utilities.  Using any of these in the front end will lead to darkness and despair. */
+import type { APIGatewayEvent } from "aws-lambda"
 import crypto from "crypto"
 import * as jwt from "jsonwebtoken"
 import * as picomatch from "picomatch"
@@ -30,9 +31,11 @@ import {
   validateUserId,
 } from "./shared-utilities"
 import { getBackendEnv } from "./env"
-import { error403ForbiddenToModify } from "./messages"
+import { error403ForbiddenToModify, error403UntrustedOrigin } from "./messages"
 
-const { allowOrigin, jwtSecret, moderatorId } = getBackendEnv()
+const { allowOrigin, isCrossSite, jwtSecret, moderatorId } = getBackendEnv()
+
+export type NetlifyRequest = APIGatewayEvent & { rawUrl?: string }
 
 export const REALM = "Access to restricted resources"
 const AUTHORIZATION_HEADER = "Authorization"
@@ -356,6 +359,7 @@ export const hasTokenCookie = (headers: Headers) => {
   if (headerValue) return headerValue.indexOf("simple_comment_token=") >= 0
   else return false
 }
+
 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cookie "Pairs in the list are separated by a semicolon and a space ('; ')"
 export const getCookieToken = (
   headers: Headers,
@@ -443,6 +447,46 @@ export const getUserId = (headers: {
     console.error(error)
     return null
   }
+}
+
+const httpOrigin = (value?: string) => {
+  if (!value) return undefined
+  try {
+    const url = new URL(value)
+    if (url.protocol === "http:" || url.protocol === "https:") return url.origin
+  } catch {
+    return undefined
+  }
+}
+
+export const getCookieWriteError = (
+  event: Pick<NetlifyRequest, "httpMethod" | "rawUrl">,
+  headers: Headers
+): Error | undefined => {
+  if (
+    !["POST", "PUT", "PATCH", "DELETE"].includes(event.httpMethod) ||
+    !hasTokenCookie(headers)
+  )
+    return undefined
+
+  const origin = getOrigin(headers)
+  if (origin !== undefined && origin !== httpOrigin(origin)) {
+    return error403UntrustedOrigin
+  }
+
+  // This browser header also works when a local reverse proxy changes the host.
+  if (getHeaderValue(headers, "Sec-Fetch-Site") === "same-origin")
+    return undefined
+
+  const source = origin ?? httpOrigin(getHeaderValue(headers, "Referer"))
+  if (
+    source &&
+    (source === httpOrigin(event.rawUrl) ||
+      (isCrossSite && getAllowedOrigins().includes(source)))
+  )
+    return undefined
+
+  return error403UntrustedOrigin
 }
 
 /**

@@ -1,4 +1,4 @@
-import type { APIGatewayEvent } from "aws-lambda"
+import type { NetlifyRequest } from "../lib/backend-utilities"
 import {
   error400BadRequest,
   error405MethodNotAllowed,
@@ -16,6 +16,7 @@ import type {
 import {
   addHeaders,
   getAllowedOrigins,
+  getCookieWriteError,
   getAllowOriginHeaders,
   getNewUserInfo,
   getTargetId,
@@ -35,7 +36,7 @@ const service: MongodbService = new MongodbService(
   databaseName
 )
 
-const getAllowHeaders = (event: APIGatewayEvent) => {
+const getAllowHeaders = (event: NetlifyRequest) => {
   const allowedMethods = {
     "Access-Control-Allow-Methods": "POST,GET,PUT,DELETE,OPTIONS",
     "Access-Control-Allow-Credentials": "true",
@@ -50,14 +51,16 @@ const getAllowHeaders = (event: APIGatewayEvent) => {
   return headers
 }
 
-export const handler = async (event: APIGatewayEvent) => {
+export const handler = async (event: NetlifyRequest) => {
   const eventHeaders = toDefinedHeaders(event.headers)
   const headers = getAllowHeaders(event)
+  const blocked = getCookieWriteError(event, eventHeaders)
+  if (blocked) return addHeaders(blocked, headers)
   const authUserId = getUserId(eventHeaders) ?? undefined
   const targetId = getTargetId(event.path, "user") as UserId
 
   const handleMethod = (
-    method: APIGatewayEvent["httpMethod"]
+    method: NetlifyRequest["httpMethod"]
   ): Promise<
     | Success<
         (PublicSafeUser | AdminSafeUser) | (AdminSafeUser[] | PublicSafeUser[])

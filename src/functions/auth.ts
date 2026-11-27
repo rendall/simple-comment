@@ -1,4 +1,4 @@
-import type { APIGatewayEvent } from "aws-lambda"
+import type { NetlifyRequest } from "../lib/backend-utilities"
 import { MongodbService } from "../lib/MongodbService"
 import type { Success, Error, AuthToken } from "../lib/simple-comment-types"
 import {
@@ -14,6 +14,7 @@ import {
   REALM,
   getAllowOriginHeaders,
   getAllowedOrigins,
+  getCookieWriteError,
   addHeaders,
   toApiError,
   toDefinedHeaders,
@@ -28,7 +29,7 @@ const service: MongodbService = new MongodbService(
   databaseName
 )
 
-const getAllowHeaders = (event: APIGatewayEvent) => {
+const getAllowHeaders = (event: NetlifyRequest) => {
   const allowedMethods = {
     "Access-Control-Allow-Methods": "POST,GET,OPTIONS,DELETE",
     "Access-Control-Allow-Credentials": "true",
@@ -44,7 +45,7 @@ const getAllowHeaders = (event: APIGatewayEvent) => {
   return headers
 }
 
-export const handler = async (event: APIGatewayEvent) => {
+export const handler = async (event: NetlifyRequest) => {
   const dirs = event.path.split("/")
   const isValidPath = dirs.length <= 5
   const headers = getAllowHeaders(event)
@@ -59,15 +60,20 @@ export const handler = async (event: APIGatewayEvent) => {
     )
 
   const handleMethod = (
-    method: APIGatewayEvent["httpMethod"]
+    method: NetlifyRequest["httpMethod"]
   ): Promise<Success | Error> => {
     switch (method) {
       case "POST":
         return handleAuth(event)
       case "OPTIONS":
         return handleOption(event)
-      case "DELETE":
-        return service.authDELETE()
+      case "DELETE": {
+        const blocked = getCookieWriteError(
+          event,
+          toDefinedHeaders(event.headers)
+        )
+        return blocked ? Promise.resolve(blocked) : service.authDELETE()
+      }
       default: {
         const headers = getAllowHeaders(event)
         return new Promise<Error>(resolve =>
@@ -86,7 +92,7 @@ export const handler = async (event: APIGatewayEvent) => {
 }
 
 const handleAuth = async (
-  event: APIGatewayEvent
+  event: NetlifyRequest
 ): Promise<Success<string> | Error> => {
   const eventHeaders = toDefinedHeaders(event.headers)
   const isBasicAuth = hasBasicScheme(eventHeaders)
@@ -122,7 +128,7 @@ const handleAuth = async (
   }
 }
 
-const handleOption = async (event: APIGatewayEvent) => {
+const handleOption = async (event: NetlifyRequest) => {
   const headers = getAllowHeaders(event)
   return { ...success200OK, headers }
 }

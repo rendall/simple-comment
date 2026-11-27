@@ -1,7 +1,8 @@
-import type { APIGatewayEvent } from "aws-lambda"
+import type { NetlifyRequest } from "../lib/backend-utilities"
 import {
   addHeaders,
   getAllowedOrigins,
+  getCookieWriteError,
   getAllowOriginHeaders,
   getHeaderValue,
   getNewTopicInfo,
@@ -36,7 +37,7 @@ const service: MongodbService = new MongodbService(
   databaseName
 )
 
-const getAllowHeaders = (event: APIGatewayEvent) => {
+const getAllowHeaders = (event: NetlifyRequest) => {
   const allowHeaders = {
     "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
     "Access-Control-Allow-Credentials": "true",
@@ -51,7 +52,7 @@ const getAllowHeaders = (event: APIGatewayEvent) => {
   return headers
 }
 
-export const handler = async (event: APIGatewayEvent) => {
+export const handler = async (event: NetlifyRequest) => {
   const dirs = event.path.split("/")
   const isValidPath = dirs.length <= 5
   const headers = {
@@ -66,11 +67,13 @@ export const handler = async (event: APIGatewayEvent) => {
     )
 
   const eventHeaders = toDefinedHeaders(event.headers)
+  const blocked = getCookieWriteError(event, eventHeaders)
+  if (blocked) return addHeaders(blocked, headers)
   const authUserId = getUserId(eventHeaders) ?? undefined
   const targetId = getTargetId(event.path, "topic") as TopicId
 
   const handleMethod = (
-    method: APIGatewayEvent["httpMethod"]
+    method: NetlifyRequest["httpMethod"]
   ): Promise<Success<Discussion> | Success<Topic[]> | Error> => {
     switch (method) {
       case "GET":
