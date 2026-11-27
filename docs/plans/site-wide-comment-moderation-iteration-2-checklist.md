@@ -1,6 +1,6 @@
 # Iteration 2 checklist — Manually holding published comments
 
-Status — Draft for approval
+Status — Approved for implementation
 
 Source plan: [Second iteration — manually holding published comments](site-wide-comment-moderation.md#second-iteration--manually-holding-published-comments).
 
