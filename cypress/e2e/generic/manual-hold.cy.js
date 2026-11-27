@@ -195,6 +195,41 @@ describe("Manual comment holds", () => {
     cy.then(() => expect(holdRequests).to.equal(0))
   })
 
+  it("fits the action labels in a narrow embed", () => {
+    cy.viewport(375, 700)
+    visitDiscussion()
+    // Simulate a host that constrains the widget to the available width.
+    cy.get(".simple-comment").invoke("css", "max-width", "100%")
+    openHoldForm()
+    reasonField().type(reason)
+
+    commentBody(publishedId)
+      .find("form")
+      .should($form => {
+        const form = $form[0]
+        const { left, right } = form.getBoundingClientRect()
+        expect(right, "form fits viewport").to.be.at.most(
+          form.ownerDocument.documentElement.clientWidth
+        )
+        for (const button of form.querySelectorAll("button")) {
+          const label = form.ownerDocument.createRange()
+          label.selectNodeContents(button)
+          const bounds = button.getBoundingClientRect()
+          const text = label.getBoundingClientRect()
+          expect(bounds.left, `${button.textContent} left edge`).to.be.at.least(
+            left
+          )
+          expect(
+            bounds.right,
+            `${button.textContent} right edge`
+          ).to.be.at.most(right)
+          expect(text.bottom, `${button.textContent} label fits`).to.be.below(
+            bounds.bottom
+          )
+        }
+      })
+  })
+
   it("submits the trimmed reason and refreshes public and moderator views", () => {
     visitDiscussion()
     openHoldForm()

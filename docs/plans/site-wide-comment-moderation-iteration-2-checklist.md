@@ -84,7 +84,7 @@ Complete C01 and C02 before any manual-hold implementation. Use separate PRs for
   - Trace:
     - “The moderation guide matches the verified hide and approval workflow.” (Iteration two — Validation Strategy)
 
-- [ ] C12 `[frontend]` Size and lay out the manual-hold form actions in `src/components/CommentDisplay.svelte` and `src/scss/simple-comment-style.scss` so their labels fit and the actions can wrap within the form.
+- [x] C12 `[frontend]` Size and lay out the manual-hold form actions in `src/components/CommentDisplay.svelte` and `src/scss/simple-comment-style.scss` so their labels fit and the actions can wrap within the form.
   - Depends on C10. Validated by T07.
   - Trace:
     - “Visual review and layout fixes for the manual-hold form.” (Iteration two — In Scope)
