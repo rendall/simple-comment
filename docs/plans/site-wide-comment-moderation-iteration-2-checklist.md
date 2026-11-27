@@ -115,7 +115,7 @@ Complete C01 and C02 before any manual-hold implementation. Use separate PRs for
     - “Deletion stays terminal and clears active hold metadata.” (MH4 — Edit, approve, and delete)
     - “Controlled MongoDB interleavings preserve manual holds through author edits, apply approval only to current reviewed text, and keep deletion terminal.” (Iteration two — Validation Strategy)
 
-- [ ] T04 `[tests]` Verify notifications in `src/tests/backend/MongodbService.notifications.test.ts`. Check that the hold action sends no email and that a changed-text edit of a manually held comment retains the configured recipients and describes the active hold in the existing notice. Verify ordinary creation and edit behavior through the existing tests.
+- [x] T04 `[tests]` Verify notifications in `src/tests/backend/MongodbService.notifications.test.ts`. Check that the hold action sends no email and that a changed-text edit of a manually held comment retains the configured recipients and describes the active hold in the existing notice. Verify ordinary creation and edit behavior through the existing tests.
   - Depends on C03 and C07.
   - Trace:
     - “Keep the existing creation and changed-text emails and recipients.” (MH5 — Preserve notifications)

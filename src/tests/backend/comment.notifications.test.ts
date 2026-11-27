@@ -342,6 +342,56 @@ describe("comment endpoint notification wiring", () => {
       configureProvider("resend")
     })
 
+    it("uses the configured recipients for edits under a manual hold", async () => {
+      const secondRecipient = "reviewer@example.com"
+      process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL = `${recipient},${secondRecipient}`
+      const reviewer = {
+        ...author,
+        id: "manual-reviewer",
+        privilege: Privilege.Moderator,
+      }
+      await db.collection<User>("users").insertOne(reviewer)
+      const id = "manual-hold-notice"
+      await db.collection<Comment>("comments").insertOne({
+        id,
+        parentId: topic.id,
+        userId: author.id,
+        text: "Original text",
+        dateCreated: new Date(),
+      })
+      const handler = await loadHandler()
+      const path = `/.netlify/functions/comment/${id}`
+      const reason = "Private reviewer reason"
+      const hold = await handler(
+        eventFor({
+          path: `${path}/hold`,
+          body: reason,
+          headers: {
+            Origin: origin,
+            Authorization: `Bearer ${tokenFor(reviewer.id)}`,
+          },
+        })
+      )
+      expect(hold.statusCode).toBe(200)
+      expect(resendSend).not.toHaveBeenCalled()
+
+      const text = "Updated plain text"
+      const edit = await handler(
+        eventFor({ path, httpMethod: "PUT", body: text })
+      )
+      expect(edit.statusCode).toBe(200)
+      expect(
+        resendSend.mock.calls.map(([message]) => message.to).sort()
+      ).toEqual([recipient, secondRecipient].sort())
+      for (const [message] of resendSend.mock.calls) {
+        expect(message).toHaveProperty("text", expect.stringContaining(text))
+        expect(message).toHaveProperty(
+          "text",
+          expect.stringContaining(`Held for review: ${reason}`)
+        )
+      }
+    })
+
     it("sends held submissions to every configured recipient", async () => {
       const secondRecipient = "reviewer@example.com"
       process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL = `${recipient},${secondRecipient}`

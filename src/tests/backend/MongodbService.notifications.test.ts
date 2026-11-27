@@ -278,6 +278,37 @@ describe("comment notification lifecycle", () => {
       ).toMatchObject({ text: updatedText, userId: author.id })
     }
 
+    it("notifies on a manually held edit without notifying on the hold itself", async () => {
+      const reason = "Moderator supplied reason"
+      expect(
+        (
+          await service.commentHOLD(
+            editableComment.id,
+            reason,
+            administrator.id
+          )
+        ).statusCode
+      ).toBe(200)
+      expect(notifyModerators).not.toHaveBeenCalled()
+
+      const response = await service.commentPUT(
+        editableComment.id,
+        updatedText,
+        author.id
+      )
+      await expectUpdated(response)
+      expect(response.body).toMatchObject({
+        isApproved: false,
+        isManuallyHeld: true,
+        heldReason: reason,
+      })
+      expect(notifyModerators).toHaveBeenCalledTimes(1)
+      const [message] = notifyModerators.mock.calls[0]
+      expect(message).toContain(updatedText)
+      expect(message).toContain(`Held for review: ${reason}`)
+      expect(message).toContain(`Comment ID: ${editableComment.id}`)
+    })
+
     describe.each(["comment", "reply"] as const)("edited %s", target => {
       it("notifies with the saved text and author", async () => {
         if (target === "reply") {
