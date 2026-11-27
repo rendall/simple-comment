@@ -79,7 +79,7 @@ Complete C01 and C02 before any manual-hold implementation. Use separate PRs for
     - “The comment becomes public again when a moderator approves the current text.” (Iteration two — Plain-Language Intent)
     - “Use subsequent fetches or refreshes to reflect changes made by other viewers.” (Iteration two — Validation Strategy)
 
-- [ ] C11 `[docs]` Update `docs/MODERATION.md` with the hide, review, and republish workflow. Describe who sees the private reason, how replies behave, and how the author can revise held text.
+- [x] C11 `[docs]` Update `docs/MODERATION.md` with the hide, review, and republish workflow. Describe who sees the private reason, how replies behave, and how the author can revise held text.
   - Depends on C10. Validated by T06.
   - Trace:
     - “The moderation guide matches the verified hide and approval workflow.” (Iteration two — Validation Strategy)
