@@ -131,6 +131,10 @@ describe("Ensures API specs match controller service", () => {
       throw "Error: not implemented"
     }
 
+    commentHOLD = async (): Promise<Success | Error> => {
+      throw "Error: not implemented"
+    }
+
     commentGET = async (
       _targetId: TopicId | CommentId,
       _authUserId?: UserId

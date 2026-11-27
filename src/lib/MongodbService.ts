@@ -1225,6 +1225,40 @@ export class MongodbService extends AbstractDbService {
     return { ...success200OK, body: "Comment approved" }
   }
 
+  commentHOLD = async (
+    targetId: CommentId,
+    reason: string,
+    authUserId?: UserId
+  ): Promise<Success | Error> => {
+    const moderator = authUserId && (await this.findActiveUser(authUserId))
+    if (!moderator) return error401UserNotAuthenticated
+    if (!getUserRole(moderator).isModerator) return error403UserNotAuthorized
+
+    const heldReason = reason.trim()
+    if (!heldReason)
+      return { ...error400BadRequest, body: "A hold reason is required" }
+
+    const comments = (await this.getDb()).collection<Comment>("comments")
+    const liveComment = {
+      id: targetId,
+      parentId: { $exists: true },
+      dateDeleted: { $exists: false },
+    }
+    const result = await comments.updateOne(
+      { ...liveComment, isApproved: { $ne: false } },
+      { $set: { isApproved: false, heldBy: moderator.id, heldReason } }
+    )
+    if (!result.acknowledged) return error500UpdateError
+    if (result.matchedCount) return { ...success200OK, body: "Comment hidden" }
+
+    const existing = await comments.findOne(liveComment, {
+      projection: { _id: 1 },
+    })
+    return existing
+      ? { statusCode: 409, body: "Comment is already held" }
+      : error404CommentNotFound
+  }
+
   /**
    * Delete a comment
    *

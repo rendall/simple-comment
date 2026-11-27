@@ -30,7 +30,7 @@ Complete C01 and C02 before any manual-hold implementation. Use separate PRs for
 
 ## Atomic implementation items
 
-- [ ] C03 `[backend]` Add a manual-hold operation to `src/lib/AbstractDbService.ts` and `src/lib/MongodbService.ts`. Resolve the authenticated actor's effective moderator privilege and require a non-blank reason. Use a single conditional write against a live, published target to set `isApproved`, `heldBy`, and `heldReason`. Include legacy published records. Leave already-held or deleted records untouched. Update the test service in `src/tests/backend/api.test.ts` for the new abstract method.
+- [x] C03 `[backend]` Add a manual-hold operation to `src/lib/AbstractDbService.ts` and `src/lib/MongodbService.ts`. Resolve the authenticated actor's effective moderator privilege and require a non-blank reason. Use a single conditional write against a live, published target to set `isApproved`, `heldBy`, and `heldReason`. Include legacy published records. Leave already-held or deleted records untouched. Update the test service in `src/tests/backend/api.test.ts` for the new abstract method.
   - Depends on C01 and C02. Validated by T01 and T03.
   - Trace:
     - “A live legacy comment without stored `isApproved` counts as published.” (MH1 — Place a hold)

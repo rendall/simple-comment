@@ -134,6 +134,12 @@ export abstract class AbstractDbService {
     authUserId?: UserId
   ) => Promise<Success | Error>
 
+  abstract commentHOLD: (
+    commentId: CommentId,
+    reason: string,
+    authUserId?: UserId
+  ) => Promise<Success | Error>
+
   /**
    * returns an authenticated guest token
    **/
