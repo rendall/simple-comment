@@ -22,6 +22,10 @@ export const error401UserNotAuthenticated: Error = {
   body: "User not authenticated",
 }
 export const error403Forbidden: Error = { statusCode: 403, body: "Forbidden" }
+export const error403UntrustedOrigin: Error = {
+  statusCode: 403,
+  body: "Cookie-authenticated writes require a trusted origin",
+}
 export const error403ForbiddenToModify: Error = {
   statusCode: 403,
   body: "Forbidden to modify",

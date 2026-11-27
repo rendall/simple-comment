@@ -155,6 +155,8 @@ Optional variables:
 - `RESEND_API_KEY` and `RESEND_FROM` for Resend notifications
 - `SENDGRID_API_KEY` and `SENDGRID_VERIFIED_SENDER` for SendGrid notifications
 
+Writes authenticated by a session cookie must come from the API's origin or, with `IS_CROSS_SITE=true`, an origin explicitly listed in `ALLOW_ORIGIN`. Use full origins with scheme, host, and any non-default port for trusted embeds. Wildcards and referer patterns grant no write access. A cookie-authenticated write without trusted origin evidence returns `403`. Bearer-only clients continue to use the existing token authorization.
+
 Configure only one email provider. Leave all provider settings unset to keep notifications off. An incomplete configuration, empty values, or settings for both providers produce an error. See the [notification guide](docs/NOTIFICATIONS.md) for examples and configuration rules.
 
 ### Email notifications

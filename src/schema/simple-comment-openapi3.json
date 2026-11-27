@@ -2,7 +2,7 @@
   "openapi": "3.0.2",
   "info": {
     "title": "Simple Comment API",
-    "description": "A REST OpenAPI 3.0 Comment API",
+    "description": "A REST OpenAPI 3.0 Comment API. Cookie-authenticated writes require a trusted origin. Cross-site embeds must explicitly configure their origin and enable IS_CROSS_SITE.",
     "contact": {
       "name": "Rendall Koski",
       "url": "https://github.com/rendall/simple-comment/issues"
@@ -121,7 +121,7 @@
             }
           },
           "403": {
-            "description": "User is not authorized to create topics",
+            "description": "User is not authorized to create topics. Cookie-authenticated writes from untrusted origins are forbidden.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -302,7 +302,7 @@
             }
           },
           "403": {
-            "description": "Administrator access is required to edit the topic",
+            "description": "Administrator access is required to edit the topic. Cookie-authenticated writes from untrusted origins are forbidden.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -394,7 +394,7 @@
             }
           },
           "403": {
-            "description": "Administrator access is required to delete the topic",
+            "description": "Administrator access is required to delete the topic. Cookie-authenticated writes from untrusted origins are forbidden.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -484,7 +484,7 @@
             }
           },
           "403": {
-            "description": "User is not authorized to post this comment",
+            "description": "User is not authorized to post this comment. Cookie-authenticated writes from untrusted origins are forbidden.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -659,7 +659,7 @@
             }
           },
           "403": {
-            "description": "User is not authorized to update this comment",
+            "description": "User is not authorized to update this comment. Cookie-authenticated writes from untrusted origins are forbidden.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -745,7 +745,7 @@
             }
           },
           "403": {
-            "description": "User is not authorized to delete this comment",
+            "description": "User is not authorized to delete this comment. Cookie-authenticated writes from untrusted origins are forbidden.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -856,7 +856,7 @@
             }
           },
           "403": {
-            "description": "Caller lacks moderation privileges",
+            "description": "Caller lacks moderation privileges. Cookie-authenticated writes from untrusted origins are forbidden.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -965,7 +965,7 @@
             }
           },
           "403": {
-            "description": "Reviewer lacks moderation privileges",
+            "description": "Reviewer lacks moderation privileges. Cookie-authenticated writes from untrusted origins are forbidden.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -1110,7 +1110,7 @@
             }
           },
           "403": {
-            "description": "Requesting user is not authorized",
+            "description": "Requesting user is not authorized. Cookie-authenticated writes from untrusted origins are forbidden.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -1279,7 +1279,7 @@
             }
           },
           "403": {
-            "description": "User is not authorized to update this user",
+            "description": "User is not authorized to update this user. Cookie-authenticated writes from untrusted origins are forbidden.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -1367,7 +1367,7 @@
             }
           },
           "403": {
-            "description": "User is not authorized to delete this user",
+            "description": "User is not authorized to delete this user. Cookie-authenticated writes from untrusted origins are forbidden.",
             "content": {
               "text/plain": {
                 "schema": {
@@ -1497,6 +1497,16 @@
                   "type": "string"
                 },
                 "example": "Logged out"
+              }
+            }
+          },
+          "403": {
+            "description": "The cookie-authenticated logout request came from an untrusted origin",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
               }
             }
           }
