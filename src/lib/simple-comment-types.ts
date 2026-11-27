@@ -96,6 +96,7 @@ export type Comment = {
   dateCreated: Date
   dateDeleted?: Date
   isApproved?: boolean
+  isManuallyHeld?: boolean
   heldBy?: UserId | null
   heldReason?: string
   deletedBy?: UserId

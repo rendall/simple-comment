@@ -157,6 +157,9 @@ const canReadModerationDetails = (comment: Comment, viewer: CommentViewer) =>
   viewer.isModerator ||
   (viewer.id !== undefined && viewer.id === comment.userId)
 
+const isManuallyHeld = (comment: Comment) =>
+  comment.isApproved === false && comment.heldBy != null
+
 const toVisibleComment = (comment: Comment, viewer: CommentViewer): Comment => {
   const { id, parentId, dateCreated, dateDeleted, _id } = comment
   const canReadDetails = canReadModerationDetails(comment, viewer)
@@ -173,6 +176,7 @@ const toVisibleComment = (comment: Comment, viewer: CommentViewer): Comment => {
 
   const isApproved = comment.isApproved !== false
   const visible: Comment = { ...structure, isApproved, text: null }
+  if (isManuallyHeld(comment)) visible.isManuallyHeld = true
   if (!isApproved && !canReadDetails) return visible
 
   visible.text = comment.text
@@ -198,6 +202,7 @@ const toVisibleReplies = (
       continue
     if (
       comment.isApproved === false &&
+      !isManuallyHeld(comment) &&
       !canReadModerationDetails(comment, viewer)
     )
       continue
@@ -950,6 +955,7 @@ export class MongodbService extends AbstractDbService {
           dateDeleted: 1,
           userId: 1,
           isApproved: 1,
+          heldBy: 1,
           heldReason: 1,
           deletedReason: 1,
           "user.id": 1,
@@ -980,6 +986,7 @@ export class MongodbService extends AbstractDbService {
           "replies.dateDeleted": 1,
           "replies.userId": 1,
           "replies.isApproved": 1,
+          "replies.heldBy": 1,
           "replies.heldReason": 1,
           "replies.deletedReason": 1,
           "replies.user.id": 1,
@@ -1041,6 +1048,7 @@ export class MongodbService extends AbstractDbService {
           },
           userId: { $first: "$userId" },
           isApproved: { $first: "$isApproved" },
+          heldBy: { $first: "$heldBy" },
           heldReason: { $first: "$heldReason" },
           deletedReason: { $first: "$deletedReason" },
         },
@@ -1059,7 +1067,12 @@ export class MongodbService extends AbstractDbService {
     const body = toVisibleComment(comment, viewer)
     const replies = toVisibleReplies(comment.replies, viewer)
     if (body.dateDeleted && !body.deletedReason) return notFound
-    if (body.isApproved === false && body.text === null && !replies.length)
+    if (
+      body.isApproved === false &&
+      !body.isManuallyHeld &&
+      body.text === null &&
+      !replies.length
+    )
       return notFound
     return { ...success200OK, body: { ...body, replies } }
   }
@@ -1572,6 +1585,7 @@ export class MongodbService extends AbstractDbService {
           "replies.dateDeleted": 1,
           "replies.userId": 1,
           "replies.isApproved": 1,
+          "replies.heldBy": 1,
           "replies.heldReason": 1,
           "replies.deletedReason": 1,
           "replies.user.id": 1,

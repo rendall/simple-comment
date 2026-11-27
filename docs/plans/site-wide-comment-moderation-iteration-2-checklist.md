@@ -36,7 +36,7 @@ Complete C01 and C02 before any manual-hold implementation. Use separate PRs for
     - “A live legacy comment without stored `isApproved` counts as published.” (MH1 — Place a hold)
     - “In one conditional write, set `isApproved` to false and record `heldBy` and `heldReason`.” (MH1 — Place a hold)
 
-- [ ] C04 `[backend]` Project manual holds through `MongodbService.commentGET`, `topicGET`, and their shared visibility helpers. Keep a redacted manual-hold leaf in the discussion and preserve visible descendants on direct and discussion reads. Use a safe representation in `src/lib/simple-comment-types.ts` that lets the widget identify a manual hold without receiving the actor ID. Continue to require an active account for author-only access under C02 and preserve the base's automatic-hold and deletion behavior.
+- [x] C04 `[backend]` Project manual holds through `MongodbService.commentGET`, `topicGET`, and their shared visibility helpers. Keep a redacted manual-hold leaf in the discussion and preserve visible descendants on direct and discussion reads. Use a safe representation in `src/lib/simple-comment-types.ts` that lets the widget identify a manual hold without receiving the actor ID. Continue to require an active account for author-only access under C02 and preserve the base's automatic-hold and deletion behavior.
   - Depends on C03. Validated by T02.
   - Trace:
     - “Other readers see a redacted **Hidden pending moderation** placeholder in the discussion, including for a comment with no replies.” (MH2 — Protect private content)
