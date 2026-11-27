@@ -261,7 +261,7 @@
             "BearerAuth": []
           }
         ],
-        "description": "Returns the topic and its replies. Authentication is required when public discussion reads are disabled. Discussion replies are filtered for the viewer. Redacted ancestors preserve the structure of visible replies."
+        "description": "Returns the topic and its replies. Authentication is required when public discussion reads are disabled. Discussion replies are filtered for the viewer. Redacted ancestors preserve the structure of visible replies. Manually hidden comments appear as redacted placeholders even when they have no replies."
       },
       "put": {
         "summary": "Edit a topic",
@@ -608,7 +608,7 @@
             "BearerAuth": []
           }
         ],
-        "description": "Returns a viewer-appropriate comment and its replies. Authors and moderators can see held content and reasons. Other viewers receive redacted placeholders for unavailable comments when visible replies require their ancestry."
+        "description": "Returns a viewer-appropriate comment and its replies. Authors and moderators can see held content and reasons. Other viewers receive a redacted placeholder for a manually hidden comment, including a comment with no replies. An automatically held comment is replaced by a placeholder when visible descendants require its ancestry."
       },
       "put": {
         "summary": "Edit a comment",
@@ -795,6 +795,115 @@
             }
           }
         }
+      }
+    },
+    "/comment/{commentId}/hold": {
+      "post": {
+        "summary": "Hide a published comment",
+        "description": "An authenticated moderator can place a manual hold on a published comment by supplying a non-blank reason. The comment keeps its text and replies.",
+        "parameters": [
+          {
+            "name": "commentId",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "The moderator's reason for hiding the comment.",
+          "required": true,
+          "content": {
+            "text/plain": {
+              "schema": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Comment hidden",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "A hold reason is required",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Caller is not authenticated",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Caller lacks moderation privileges",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Comment was deleted or could not be found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Comment is already held",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "CookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ]
       }
     },
     "/comment/{commentId}/approve": {
@@ -1576,6 +1685,10 @@
           "isApproved": {
             "type": "boolean",
             "description": "Whether a live comment is published. Legacy live comments without a stored value are treated as approved."
+          },
+          "isManuallyHeld": {
+            "type": "boolean",
+            "description": "Present and true for a manually hidden comment, including its public placeholder. The moderator account ID is omitted."
           },
           "heldReason": {
             "type": "string",

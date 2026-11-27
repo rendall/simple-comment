@@ -49,7 +49,7 @@ Complete C01 and C02 before any manual-hold implementation. Use separate PRs for
     - “A moderator can hide a published comment by supplying a non-blank reason in the existing discussion.” (MH1 — Place a hold)
     - “Use the server's effective `isModerator` predicate.” (MH1 — Place a hold)
 
-- [ ] C06 `[contract]` Document the hold request, success and error responses, and viewer-specific read representations in `src/schema/simple-comment-openapi3.json`. Update the route map in `src/tests/backend/api.test.ts` to match the shipped routes and schema.
+- [x] C06 `[contract]` Document the hold request, success and error responses, and viewer-specific read representations in `src/schema/simple-comment-openapi3.json`. Update the route map in `src/tests/backend/api.test.ts` to match the shipped routes and schema.
   - Depends on C04 and C05. Validated by T01 and T02.
   - Trace:
     - “Shipped responses match OpenAPI.” (Iteration two — Validation Strategy)
