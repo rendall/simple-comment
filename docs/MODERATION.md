@@ -28,8 +28,10 @@ These steps send the moderation terms file from your computer straight to Netlif
    netlify blobs:set moderation moderation-terms.txt --input ./moderation-terms.txt
    ```
 
-4. Trigger a Netlify deploy. The build reads the Blob before validation and writes the file to the project root. Netlify bundles it with the comment function via `included_files`. Each deploy uses the list bundled at build time.
-5. To update the list, validate and upload the replacement to the same store and key, then deploy again. To disable term holds, upload an empty list and deploy again. The site-wide Blob persists across deploys, including clean rebuilds of the functions directory.
+4. In Netlify, set `SIMPLE_COMMENT_FETCH_MODERATION_TERMS=true` and set `SIMPLE_COMMENT_MODERATION_BLOBS_TOKEN` to a Netlify personal access token with access to this site. Scope both variables to Builds in the trusted deploy contexts where the list should apply. Netlify supplies the build's `SITE_ID`.
+5. Trigger a Netlify deploy. When enabled, the build reads the Blob before validation. If the key exists, the build writes it to the project root and Netlify bundles it with the comment function via `included_files`. A missing key is allowed. A failed read stops the build. Each deploy uses the list bundled at build time.
+6. To update the list, validate and upload the replacement to the same store and key, then deploy again. To disable term holds, upload an empty list and deploy again. The site-wide Blob persists across deploys, including clean rebuilds of the functions directory.
+
 Linking this checkout to a Netlify project can cause `yarn start` to fail with `Unauthorized` when the local backend contacts Netlify. Follow the cleanup steps below after uploading the terms if you use this checkout for local development.
 
 #### Return to local development
