@@ -55,7 +55,7 @@ Complete C01 and C02 before any manual-hold implementation. Use separate PRs for
     - “Shipped responses match OpenAPI.” (Iteration two — Validation Strategy)
     - “The exact hold endpoint, response statuses, and placeholder fields are engineering details within these acceptance criteria.” (Iteration two — Validation Strategy)
 
-- [ ] C07 `[backend]` Preserve an active manual hold in `MongodbService.commentPUT` using the hold state at the atomic edit write. Keep the actor and reason when a manual hold applies. Continue automatic evaluation for other changed text, return the saved viewer-appropriate representation, and base the existing edit notification on the effective saved publication state.
+- [ ] C07 `[backend]` Preserve an active manual hold in `MongodbService.commentPUT` using the hold state at the atomic edit write. Keep the actor and reason when a manual hold applies. Apply normal automatic rules whenever the write sees no manual hold, including when approval releases the hold during the edit. Return the saved viewer-appropriate representation and base the existing edit notification on the effective saved publication state.
   - Depends on C03 and C04. Validated by T03 and T04.
   - Trace:
     - “An edit that races with a manual hold must preserve the hold if it is active when the edit writes.” (MH4 — Edit, approve, and delete)
@@ -88,21 +88,31 @@ Complete C01 and C02 before any manual-hold implementation. Use separate PRs for
 
 - [ ] T01 `[tests]` Verify the hold write and shipped API contract in `src/tests/backend/comment.moderation.test.ts` and `src/tests/backend/api.test.ts`. Cover effective moderator levels 1–3, guests and ordinary accounts, missing authentication, non-blank reasons, published and legacy targets, both kinds of held targets, deleted and missing targets, and repeated hold requests. Check that rejected or repeated requests preserve the prior record.
   - Depends on C03, C05, and C06.
+  - Verify that a level-one moderator can hide an owner-authored published comment.
   - Trace:
+    - “Use the server's effective `isModerator` predicate.” (MH1 — Place a hold)
     - “Unauthorized requests, blank reasons, and requests targeting a held or deleted comment leave the record unchanged.” (MH1 — Place a hold)
     - “A repeated hold on an already held target does not replace the original reason or actor.” (Iteration two — Validation Strategy)
 
 - [ ] T02 `[tests]` Verify direct and discussion reads and reply eligibility in `src/tests/backend/comment.moderation.test.ts`. Cover manually hidden leaves and parents, visible descendants, recognized guest authors, unrelated readers, moderators, and redaction of text, reason, and actor ID. Check that unconnected automatic holds and the base's deleted-comment contract retain their existing visibility. Verify that a new direct reply to a held comment fails while a reply to an eligible descendant succeeds, and that ordinary reply rules resume after approval.
   - Depends on C04 and C06.
+  - For an unrelated reader, verify that a manually hidden leaf keeps its automatically held ancestor visible as a structural placeholder. Check both direct and discussion reads for the redacted pair.
   - Trace:
     - “The original author, including a recognized returning guest, and moderators see the held text and reason.” (MH2 — Protect private content)
+    - “Direct reads apply the same visibility restrictions and retain available thread structure.” (MH2 — Protect private content)
     - “Existing descendants remain independently visible and eligible for replies under their own state.” (MH3 — Preserve the thread)
 
-- [ ] T03 `[tests]` Verify persistence and controlled MongoDB interleavings in `src/tests/backend/comment.moderation.test.ts`. Cover edits by ordinary and moderator authors, overlapping hold and edit, matching and stale approval of edited text, the accepted identical-text approval retry, hold or approval racing with deletion, and an in-flight reply that passed the server check before the hold. Check resulting text, visibility, and hold metadata.
+- [ ] T03 `[tests]` Verify persistence and controlled MongoDB interleavings in `src/tests/backend/comment.moderation.test.ts`. Cover edits by ordinary and moderator authors, matching and stale approval of edited text, the accepted identical-text approval retry, and an in-flight reply that passed the server check before the hold. Check resulting text, visibility, and hold metadata.
   - Depends on C03 and C07.
+  - Place a hold through C03 and verify that the existing `commentAPPROVE` and `commentDELETE` writes remove both `heldBy` and `heldReason` from storage when they succeed. Race hold or approval with deletion and verify that later hold, edit, and approval requests cannot restore the deleted comment or its hold metadata.
+  - Pause an edit before its write and place a manual hold. Verify that the edit preserves the held state, actor, and reason. Repeat with an existing manual hold and approve it before the edit writes. Verify that new text passing the automatic rules publishes and new text matching an automatic rule receives the policy's hold reason. In both cases, verify that the former manual actor and reason stay cleared.
+  - Race two moderators placing holds with different reasons. Verify that only one request places a hold and that the stored actor and reason both come from the winning request.
+  - Verify that a moderator author's own edit preserves the manual hold until they explicitly approve the current text.
   - Trace:
     - “A reply that passed the check may finish after the hold.” (MH3 — Preserve the thread)
+    - “An edit that races with a manual hold must preserve the hold if it is active when the edit writes.” (MH4 — Edit, approve, and delete)
     - “Reuse the atomic reviewed-text approval rule and clear active hold metadata in the successful approval write.” (MH4 — Edit, approve, and delete)
+    - “Deletion stays terminal and clears active hold metadata.” (MH4 — Edit, approve, and delete)
     - “Controlled MongoDB interleavings preserve manual holds through author edits, apply approval only to current reviewed text, and keep deletion terminal.” (Iteration two — Validation Strategy)
 
 - [ ] T04 `[tests]` Verify notifications in `src/tests/backend/MongodbService.notifications.test.ts`. Check that the hold action sends no email and that a changed-text edit of a manually held comment retains the configured recipients and describes the active hold in the existing notice. Verify ordinary creation and edit behavior through the existing tests.
@@ -111,8 +121,10 @@ Complete C01 and C02 before any manual-hold implementation. Use separate PRs for
     - “Keep the existing creation and changed-text emails and recipients.” (MH5 — Preserve notifications)
     - “Applying a manual hold creates no email event.” (MH5 — Preserve notifications)
 
-- [ ] T05 `[tests]` Verify the widget flow in `src/tests/frontend/components/DiscussionDisplay.moderation.test.ts`. Cover moderator-only **Hide** on published comments, reason entry, the resulting server state after refresh, approval using the current text, manual-hold leaves and descendants, and clearing private content and late results after an authentication change.
+- [ ] T05 `[tests]` Verify the widget flow in `src/tests/frontend/components/DiscussionDisplay.moderation.test.ts`. Cover moderator-only **Hide** on published comments, reason entry, the resulting server state after refresh, approval using the current text, and manual-hold leaves and descendants.
   - Depends on C08, C09, and C10.
+  - Render a manually hidden leaf beneath an automatically held ancestor for an unrelated reader. Verify that both redacted placeholders survive recursive pruning and retain their nesting.
+  - Switch directly from a moderator to an unrelated signed-in ordinary user. Cover an editor open on the moderator's own held comment and a Hide dialog with a reason draft. Verify that the private text, reasons, and local form state are cleared and that late reads or hold results from the previous viewer cannot restore them.
   - Trace:
     - “A moderator can hide and republish a comment.” (Iteration two — Validation Strategy)
     - “Authentication changes discard the previous viewer's private text and reasons.” (Iteration two — Validation Strategy)
@@ -135,8 +147,8 @@ Complete C01 and C02 before any manual-hold implementation. Use separate PRs for
 
 ## Conformance QC
 
-- **Missing from plan** — None. C01 and C02 cover the prerequisites. C03–C11 and T01–T06 cover MH1–MH5.
+- **Missing from plan** — None. C01 and C02 cover the prerequisites. C03–C11 and T01–T06 cover MH1–MH5, including verification of the existing approval and deletion cleanup in T03.
 - **Extra beyond plan** — None. Automatic-to-manual conversion, #292, and hosted iteration-one validation retain their recorded scope.
 - **Atomicity fixes needed** — None. Each prerequisite item records its own merged evidence. Each feature item covers one behavior or contract change.
-- **Validation mapping gaps** — None. Every item names its evidence, and each item belongs to one behavior slice.
+- **Validation mapping gaps** — None. T01–T03 and T05 cover cross-privilege moderation, nested placeholders, concurrent writes, and direct account switches. Each item belongs to one behavior slice.
 - **Pass/Fail: checklist achieves plan goals** — **Pass**.
