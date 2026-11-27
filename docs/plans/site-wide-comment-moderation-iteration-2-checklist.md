@@ -129,8 +129,9 @@ Complete C01 and C02 before any manual-hold implementation. Use separate PRs for
     - “A moderator can hide and republish a comment.” (Iteration two — Validation Strategy)
     - “Authentication changes discard the previous viewer's private text and reasons.” (Iteration two — Validation Strategy)
 
-- [ ] T06 `[validation]` Check `docs/MODERATION.md` against the verified widget and API workflow. Run `yarn run ci:local` and record the result with T01–T05 in the PR validation notes.
+- [x] T06 `[validation]` Check `docs/MODERATION.md` against the verified widget and API workflow. Run `yarn run ci:local` and record the result with T01–T05 in the PR validation notes.
   - Depends on C11 and T01–T05.
+  - PR validation evidence. The guide matches the tested hide, edit, and approval workflow. `yarn run ci:local` passed lint, formatting, typechecking, builds, and 1,070 tests, including T01–T05. The run emitted a MongoDB Webpack warning and a Jest worker teardown warning.
   - Trace:
     - “The moderation guide matches the verified hide and approval workflow.” (Iteration two — Validation Strategy)
     - “The repository's local CI parity gate passes.” (Iteration two — Validation Strategy)
