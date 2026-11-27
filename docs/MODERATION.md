@@ -18,6 +18,8 @@ Place the file in the project root and run `yarn run validate:moderation-terms`.
 
 ### Netlify setup and updates
 
+These steps send the moderation terms file from your computer straight to Netlify so your live site can use it. The file stays out of GitHub, keeping the offensive words and phrases it may contain out of the repository and its history.
+
 1. Validate the local file with `yarn run validate:moderation-terms`. For a verification deployment, use an isolated Netlify project and database with a harmless fixture.
 2. Sign in to Netlify CLI and link your checkout to the intended project. Confirm the project before uploading. A site-wide Blob is available to all deploy contexts of that project.
 3. Upload the file to the `moderation` store:
@@ -28,6 +30,33 @@ Place the file in the project root and run `yarn run validate:moderation-terms`.
 
 4. Trigger a Netlify deploy. The build reads the Blob before validation and writes the file to the project root. Netlify bundles it with the comment function via `included_files`. Each deploy uses the list bundled at build time.
 5. To update the list, validate and upload the replacement to the same store and key, then deploy again. To disable term holds, upload an empty list and deploy again. The site-wide Blob persists across deploys, including clean rebuilds of the functions directory.
+Linking this checkout to a Netlify project can cause `yarn start` to fail with `Unauthorized` when the local backend contacts Netlify. Follow the cleanup steps below after uploading the terms if you use this checkout for local development.
+
+#### Return to local development
+
+After uploading, open a terminal in the project folder and run these steps in order.
+
+1. Clear any project ID set in this terminal, then unlink this checkout. Your CLI login stays available for other projects.
+
+   ```sh
+   unset NETLIFY_SITE_ID
+   yarn netlify unlink
+   ```
+
+   If `unlink` returns `Unauthorized`, open `.netlify/state.json` in your editor, delete the `siteId` entry, and save the file. If `siteId` is the only entry, replace the file contents with `{}`.
+
+2. If you also want to sign out of the Netlify CLI, clear any token set in this terminal and run the logout command. The command is hidden from the CLI's top-level help.
+
+   ```sh
+   unset NETLIFY_AUTH_TOKEN
+   yarn netlify logout
+   ```
+
+3. Start local development again in the same terminal.
+
+   ```sh
+   yarn start
+   ```
 
 A missing or empty list leaves link filtering active. An unreadable or invalid file supplied to the build fails validation. If a packaged file is unreadable or invalid at runtime, the function logs a generic configuration error and continues filtering links. See [Netlify Blobs](https://docs.netlify.com/build/data-and-storage/netlify-blobs/#getstore) and the [CLI reference](https://cli.netlify.com/commands/blobs/).
 
