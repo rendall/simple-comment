@@ -415,12 +415,17 @@ $highlight-text-color: color.scale(
               gap: 0.5rem;
 
               button {
+                font-weight: inherit;
                 height: auto;
                 max-width: 100%;
                 min-height: 2.75rem;
                 overflow-wrap: anywhere;
                 padding: 0.5rem 1rem;
                 width: auto;
+
+                &:enabled:hover {
+                  -webkit-text-stroke: 0.4px currentColor;
+                }
 
                 &:focus-visible {
                   outline: 2px solid $primary-color;
