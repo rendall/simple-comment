@@ -271,7 +271,7 @@ A moderator can open a published comment's action menu, hide the comment, and ex
 #### Iteration-two prerequisites
 
 - Land [PR #289](https://github.com/rendall/simple-comment/pull/289) on the moderation implementation base. Iteration two builds on the shipped moderator permissions, viewer-specific reads, approval, deletion, and discussion controls. The base must already include [#280](https://github.com/rendall/simple-comment/issues/280) soft deletion.
-- Resolve [#291](https://github.com/rendall/simple-comment/issues/291) and land its fix on that same base. The original-author visibility check must use an identity that a new account cannot inherit. Verify deleted and legacy account ID reservation, rejection of deleted-account sessions, and protection of ambiguous author records under #291.
+- Land the [#291](https://github.com/rendall/simple-comment/issues/291) fix on the same base. Reserve IDs for accounts deleted after the fix is deployed. Reserved IDs are unavailable to registration, and reservation records are inactive for moderation reads and writes.
 - Complete these prerequisites before starting manual-hold code. Prerequisite fixes ship through their own issues and PRs.
 
 The local terms-file behavior was verified. The hosted Netlify smoke test and its dependent documentation sign-off remain iteration-one validation items T08 and T09. Manual holds use the existing publication state and have no dependency on the hosted terms file.
@@ -288,6 +288,8 @@ The local terms-file behavior was verified. The hosted Netlify smoke test and it
 - Converting an automatic hold into a manual hold, or replacing an active manual hold's reason.
 - Moderator appointments, policy settings, comment history, a dedicated moderation view, new notification events, and real-time or incremental refresh.
 - [#292](https://github.com/rendall/simple-comment/issues/292) direct lookups of deleted comments. That issue can proceed independently. Preserve the direct-deletion contract present on the implementation base.
+- Backfilling account IDs from earlier deletions and resolving historical authorship after ID reuse. IDs deleted without a reservation can still be reused and mistaken for the original author. The maintainer accepted this limitation given the additional infrastructure and the lack of known production use.
+- Standalone session verification ([#293](https://github.com/rendall/simple-comment/issues/293)) and database-wide user ID uniqueness ([#294](https://github.com/rendall/simple-comment/issues/294)).
 
 #### Acceptance Criteria
 
@@ -941,7 +943,7 @@ The [focused first iteration](#focused-first-iteration--automatic-holds-and-mode
 - [#284](https://github.com/rendall/simple-comment/issues/284) — Parent issue for site-wide moderation.
 - [#280](https://github.com/rendall/simple-comment/issues/280) — Soft deletion for all comments; prerequisite for iteration one.
 - [PR #289](https://github.com/rendall/simple-comment/pull/289) — Iteration-one implementation and a prerequisite for iteration two.
-- [#291](https://github.com/rendall/simple-comment/issues/291) — Prevent deleted-account ID reuse; prerequisite for iteration two.
+- [#291](https://github.com/rendall/simple-comment/issues/291) — Reserve IDs for accounts deleted after deployment. Prerequisite for iteration two, merged in [PR #295](https://github.com/rendall/simple-comment/pull/295).
 - [#292](https://github.com/rendall/simple-comment/issues/292) — Deleted-comment direct lookup behavior; independent follow-up.
 - Dedicated site-wide moderation view — follow-up issue to create; distinct from the initial in-discussion approval control.
 - [#285](https://github.com/rendall/simple-comment/issues/285) — Third iteration: owner-appointed moderators using the iteration-one privilege model, plus the optional legacy-admin upgrade utility; new admin appointments remain deferred.

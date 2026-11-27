@@ -15,17 +15,18 @@ Source plan: [Second iteration — manually holding published comments](site-wid
 
 Complete C01 and C02 before any manual-hold implementation. Use separate PRs for prerequisite fixes and target feature implementation at `284-build-a-site-wide-comment-moderation-system`.
 
-- [ ] C01 `[prerequisite]` Land [PR #289 — Iteration one](https://github.com/rendall/simple-comment/pull/289) on the moderation implementation base. Verify the merged base includes [#280 soft deletion](https://github.com/rendall/simple-comment/issues/280) and the iteration-one moderation foundation. Record the merge and the base revision in the checklist or PR validation notes.
-  - Validation evidence is the merged revision and verification of the inherited code and tests on the base.
+- [x] C01 `[prerequisite]` Land [PR #289 — Iteration one](https://github.com/rendall/simple-comment/pull/289) on the moderation implementation base. Verify the merged base includes [#280 soft deletion](https://github.com/rendall/simple-comment/issues/280) and the iteration-one moderation foundation. Record the merge and the base revision in the checklist or PR validation notes.
+  - Verified that the implementation base at `5e5975a` contains the #289 merge (`3b4261f`) and the #280 soft-deletion merge (`6ad9784`).
   - Trace:
     - “Iteration two builds on the shipped moderator permissions, viewer-specific reads, approval, deletion, and discussion controls.” (Iteration-two prerequisites)
 
-- [ ] C02 `[prerequisite]` Resolve [#291 — Permanently reserve deleted account IDs](https://github.com/rendall/simple-comment/issues/291) in its own PR and land the fix on the moderation implementation base. Complete the issue's implementation and regression checklist, then record the merged PR and validation evidence here or in the iteration-two PR notes.
+- [x] C02 `[prerequisite]` Land the [#291 account-ID reservation fix](https://github.com/rendall/simple-comment/issues/291) on the moderation implementation base. Verify reservation for new account deletions and continued moderator access to held comments from deleted accounts.
   - Depends on C01 for final verification on the base.
-  - Verify that deleted IDs and legacy IDs still referenced by comments stay reserved, deleted-account sessions lose access, ambiguous author records withhold private details, and moderators can review held comments by deleted accounts.
+  - [PR #295](https://github.com/rendall/simple-comment/pull/295) landed as `5e5975a` on the implementation base. Its regression tests verify rejection of reserved-ID registration, denial of author access to reserved accounts, and continued moderator review. The PR reports 1,051 tests passed through `yarn run ci:local`.
+  - Legacy backfill and historical authorship are deferred, as are standalone session verification (#293) and database-wide uniqueness (#294).
   - Trace:
-    - “The original-author visibility check must use an identity that a new account cannot inherit.” (Iteration-two prerequisites)
-    - “Complete these prerequisites before starting manual-hold code.” (Iteration-two prerequisites)
+    - “Reserve IDs for accounts deleted after the fix is deployed.” (Iteration-two prerequisites)
+    - “Reserved IDs are unavailable to registration, and reservation records are inactive for moderation reads and writes.” (Iteration-two prerequisites)
 
 ## Atomic implementation items
 
@@ -35,7 +36,7 @@ Complete C01 and C02 before any manual-hold implementation. Use separate PRs for
     - “A live legacy comment without stored `isApproved` counts as published.” (MH1 — Place a hold)
     - “In one conditional write, set `isApproved` to false and record `heldBy` and `heldReason`.” (MH1 — Place a hold)
 
-- [ ] C04 `[backend]` Project manual holds through `MongodbService.commentGET`, `topicGET`, and their shared visibility helpers. Keep a redacted manual-hold leaf in the discussion and preserve visible descendants on direct and discussion reads. Use a safe representation in `src/lib/simple-comment-types.ts` that lets the widget identify a manual hold without receiving the actor ID. Apply the author identity protection landed in C02 and preserve the base's automatic-hold and deletion behavior.
+- [ ] C04 `[backend]` Project manual holds through `MongodbService.commentGET`, `topicGET`, and their shared visibility helpers. Keep a redacted manual-hold leaf in the discussion and preserve visible descendants on direct and discussion reads. Use a safe representation in `src/lib/simple-comment-types.ts` that lets the widget identify a manual hold without receiving the actor ID. Continue to require an active account for author-only access under C02 and preserve the base's automatic-hold and deletion behavior.
   - Depends on C03. Validated by T02.
   - Trace:
     - “Other readers see a redacted **Hidden pending moderation** placeholder in the discussion, including for a comment with no replies.” (MH2 — Protect private content)
