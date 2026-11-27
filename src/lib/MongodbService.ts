@@ -157,6 +157,9 @@ const canReadModerationDetails = (comment: Comment, viewer: CommentViewer) =>
   viewer.isModerator ||
   (viewer.id !== undefined && viewer.id === comment.userId)
 
+const isManuallyHeld = (comment: Comment) =>
+  comment.isApproved === false && comment.heldBy != null
+
 const toVisibleComment = (comment: Comment, viewer: CommentViewer): Comment => {
   const { id, parentId, dateCreated, dateDeleted, _id } = comment
   const canReadDetails = canReadModerationDetails(comment, viewer)
@@ -173,6 +176,7 @@ const toVisibleComment = (comment: Comment, viewer: CommentViewer): Comment => {
 
   const isApproved = comment.isApproved !== false
   const visible: Comment = { ...structure, isApproved, text: null }
+  if (isManuallyHeld(comment)) visible.isManuallyHeld = true
   if (!isApproved && !canReadDetails) return visible
 
   visible.text = comment.text
@@ -198,6 +202,7 @@ const toVisibleReplies = (
       continue
     if (
       comment.isApproved === false &&
+      !isManuallyHeld(comment) &&
       !canReadModerationDetails(comment, viewer)
     )
       continue
@@ -950,6 +955,7 @@ export class MongodbService extends AbstractDbService {
           dateDeleted: 1,
           userId: 1,
           isApproved: 1,
+          heldBy: 1,
           heldReason: 1,
           deletedReason: 1,
           "user.id": 1,
@@ -980,6 +986,7 @@ export class MongodbService extends AbstractDbService {
           "replies.dateDeleted": 1,
           "replies.userId": 1,
           "replies.isApproved": 1,
+          "replies.heldBy": 1,
           "replies.heldReason": 1,
           "replies.deletedReason": 1,
           "replies.user.id": 1,
@@ -1041,6 +1048,7 @@ export class MongodbService extends AbstractDbService {
           },
           userId: { $first: "$userId" },
           isApproved: { $first: "$isApproved" },
+          heldBy: { $first: "$heldBy" },
           heldReason: { $first: "$heldReason" },
           deletedReason: { $first: "$deletedReason" },
         },
@@ -1059,7 +1067,12 @@ export class MongodbService extends AbstractDbService {
     const body = toVisibleComment(comment, viewer)
     const replies = toVisibleReplies(comment.replies, viewer)
     if (body.dateDeleted && !body.deletedReason) return notFound
-    if (body.isApproved === false && body.text === null && !replies.length)
+    if (
+      body.isApproved === false &&
+      !body.isManuallyHeld &&
+      body.text === null &&
+      !replies.length
+    )
       return notFound
     return { ...success200OK, body: { ...body, replies } }
   }
@@ -1116,7 +1129,16 @@ export class MongodbService extends AbstractDbService {
     }
 
     const { isAdmin, isModerator } = getUserRole(authUser)
-    const changes = { text, ...getCommentPublication(text, isModerator) }
+    const publication = getCommentPublication(text, isModerator)
+    const keepManualHold = {
+      $and: [
+        { $eq: ["$isApproved", false] },
+        { $ne: [{ $ifNull: ["$heldBy", null] }, null] },
+      ],
+    }
+    const automaticReason = publication.isApproved
+      ? "$$REMOVE"
+      : { $literal: publication.heldReason }
     const liveComment = {
       _id: foundComment._id,
       dateDeleted: { $exists: false },
@@ -1125,18 +1147,28 @@ export class MongodbService extends AbstractDbService {
 
     const modifyResult = await comments.findOneAndUpdate(
       { ...liveComment, text: { $ne: text } },
-      {
-        $set: changes,
-        ...(changes.isApproved && { $unset: { heldReason: "" } }),
-      },
-      { collation, returnDocument: "before" }
+      [
+        {
+          $set: {
+            text: { $literal: text },
+            isApproved: {
+              $cond: [keepManualHold, false, publication.isApproved],
+            },
+            heldBy: { $cond: [keepManualHold, "$heldBy", "$$REMOVE"] },
+            heldReason: {
+              $cond: [keepManualHold, "$heldReason", automaticReason],
+            },
+          },
+        },
+      ],
+      { collation, returnDocument: "after" }
     )
 
-    const previous = modifyResult.ok ? modifyResult.value : null
-    const saved = previous
-      ? { ...previous, ...changes }
-      : modifyResult.ok &&
-        (await comments.findOne({ ...liveComment, text }, { collation }))
+    const updated = modifyResult.ok ? modifyResult.value : null
+    const saved =
+      updated ??
+      (modifyResult.ok &&
+        (await comments.findOne({ ...liveComment, text }, { collation })))
 
     if (!saved || !isComment(saved)) {
       if (isAdmin) {
@@ -1148,7 +1180,7 @@ export class MongodbService extends AbstractDbService {
       return error500UpdateError
     }
 
-    if (this._notificationService && previous) {
+    if (this._notificationService && updated) {
       try {
         const notification = await this._notificationService.notifyModerators(
           `Comment edited. Author: ${authUser.name} (${authUser.email})\n\n${saved.text}${describeCommentHold(saved)}`
@@ -1223,6 +1255,40 @@ export class MongodbService extends AbstractDbService {
       return error409ReviewedCommentChanged
     }
     return { ...success200OK, body: "Comment approved" }
+  }
+
+  commentHOLD = async (
+    targetId: CommentId,
+    reason: string,
+    authUserId?: UserId
+  ): Promise<Success | Error> => {
+    const moderator = authUserId && (await this.findActiveUser(authUserId))
+    if (!moderator) return error401UserNotAuthenticated
+    if (!getUserRole(moderator).isModerator) return error403UserNotAuthorized
+
+    const heldReason = reason.trim()
+    if (!heldReason)
+      return { ...error400BadRequest, body: "A hold reason is required" }
+
+    const comments = (await this.getDb()).collection<Comment>("comments")
+    const liveComment = {
+      id: targetId,
+      parentId: { $exists: true },
+      dateDeleted: { $exists: false },
+    }
+    const result = await comments.updateOne(
+      { ...liveComment, isApproved: { $ne: false } },
+      { $set: { isApproved: false, heldBy: moderator.id, heldReason } }
+    )
+    if (!result.acknowledged) return error500UpdateError
+    if (result.matchedCount) return { ...success200OK, body: "Comment hidden" }
+
+    const existing = await comments.findOne(liveComment, {
+      projection: { _id: 1 },
+    })
+    return existing
+      ? { statusCode: 409, body: "Comment is already held" }
+      : error404CommentNotFound
   }
 
   /**
@@ -1538,6 +1604,7 @@ export class MongodbService extends AbstractDbService {
           "replies.dateDeleted": 1,
           "replies.userId": 1,
           "replies.isApproved": 1,
+          "replies.heldBy": 1,
           "replies.heldReason": 1,
           "replies.deletedReason": 1,
           "replies.user.id": 1,

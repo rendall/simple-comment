@@ -18,6 +18,8 @@ Place the file in the project root and run `yarn run validate:moderation-terms`.
 
 ### Netlify setup and updates
 
+These steps send the moderation terms file from your computer straight to Netlify so your live site can use it. The file stays out of GitHub, keeping the offensive words and phrases it may contain out of the repository and its history.
+
 1. Validate the local file with `yarn run validate:moderation-terms`. For a verification deployment, use an isolated Netlify project and database with a harmless fixture.
 2. Sign in to Netlify CLI and link your checkout to the intended project. Confirm the project before uploading. A site-wide Blob is available to all deploy contexts of that project.
 3. Upload the file to the `moderation` store:
@@ -28,13 +30,41 @@ Place the file in the project root and run `yarn run validate:moderation-terms`.
 
 4. Trigger a Netlify deploy. The build reads the Blob before validation and writes the file to the project root. Netlify bundles it with the comment function via `included_files`. Each deploy uses the list bundled at build time.
 5. To update the list, validate and upload the replacement to the same store and key, then deploy again. To disable term holds, upload an empty list and deploy again. The site-wide Blob persists across deploys, including clean rebuilds of the functions directory.
+Linking this checkout to a Netlify project can cause `yarn start` to fail with `Unauthorized` when the local backend contacts Netlify. Follow the cleanup steps below after uploading the terms if you use this checkout for local development.
+
+#### Return to local development
+
+After uploading, open a terminal in the project folder and run these steps in order.
+
+1. Clear any project ID set in this terminal, then unlink this checkout. Your CLI login stays available for other projects.
+
+   ```sh
+   unset NETLIFY_SITE_ID
+   yarn netlify unlink
+   ```
+
+   If `unlink` returns `Unauthorized`, open `.netlify/state.json` in your editor, delete the `siteId` entry, and save the file. If `siteId` is the only entry, replace the file contents with `{}`.
+
+2. If you also want to sign out of the Netlify CLI, clear any token set in this terminal and run the logout command. The command is hidden from the CLI's top-level help.
+
+   ```sh
+   unset NETLIFY_AUTH_TOKEN
+   yarn netlify logout
+   ```
+
+3. Start local development again in the same terminal.
+
+   ```sh
+   yarn start
+   ```
 
 A missing or empty list leaves link filtering active. An unreadable or invalid file supplied to the build fails validation. If a packaged file is unreadable or invalid at runtime, the function logs a generic configuration error and continues filtering links. See [Netlify Blobs](https://docs.netlify.com/build/data-and-storage/netlify-blobs/#getstore) and the [CLI reference](https://cli.netlify.com/commands/blobs/).
 
-## Review and remove comments
+## Hide, review, and remove comments
 
-- **Review a hold.** Open the discussion as the owner or a moderator. The held comment shows its text and the reason it was held. The recognized author can also see their own held text and reason. Other readers see a placeholder only when a visible reply needs it to preserve the thread.
-- **Approve.** Open the action menu and select **Approve** after reviewing the text. If the text changes and still requires review, review the updated version before approving. Moderator submissions bypass automatic holds. Authors can edit their own comments, and an edit that clears all hold rules can publish the comment. Moderators cannot edit someone else's text.
+- **Hide a published comment.** As the owner or a moderator, open the comment's action menu, select **Hide**, enter a reason, and select **Hide comment**. The discussion preserves the comment's place and its visible replies. Readers can reply to eligible descendants while the hidden comment itself blocks new direct replies.
+- **Review a hold.** The author and moderators can see the text and reason. Other readers see **Hidden pending moderation** on a manually hidden comment, even when it has no replies. An automatically held comment appears as a placeholder when a visible descendant needs it to preserve the thread.
+- **Approve.** Open the action menu and select **Approve** after reviewing the text. If the text changes before approval, review the current version. Authors can edit their own held comments. Edits can release an automatic hold, and a manual hold persists through edits until a moderator approves the current text. Moderator submissions bypass automatic holds. Moderators can edit their own comments.
 - **Remove.** Open the action menu, select **Delete**, and enter a reason when removing someone else's comment. The original text is removed. The reason is visible to the author and moderators. Visible replies stay in the discussion under a placeholder. New direct replies to a held or removed comment are unavailable.
 
 ## Verify a deployment
@@ -47,6 +77,8 @@ Use an ordinary author account, a second ordinary account, and the owner account
 | Open the discussion as the second ordinary user and while signed out.                 | Published text is visible. Held text, hold reasons, and moderation controls for another author's comments are absent.         |
 | Sign in as the owner and approve the link comment.                                    | The owner can review both holds. The approved link becomes visible to an ordinary reader.                                     |
 | Edit the term comment as its author to remove all hold triggers.                      | The edited comment publishes and the hold reason clears.                                                                      |
+| Hide the published plain-text comment as the owner.                                  | An unrelated reader sees the public placeholder. The author and owner see the held text and reason.                             |
+| Revise the hidden comment as its author, then approve the current text as the owner.  | The edit preserves the manual hold and reason. Approval publishes the revised text and clears the reason.                        |
 | Reply to the published link as an ordinary user, then remove the parent as the owner. | A reason is required. The reply remains visible. An unrelated reader sees the deleted placeholder without the private reason. |
 | Log out after viewing held content as the owner.                                      | The discussion refreshes and private content and moderation controls disappear.                                               |
 | Inspect published assets and request `/moderation-terms.txt`.                         | The terms file and fixture phrase are absent from public assets and client bundles. The URL does not serve the file.          |

@@ -211,7 +211,7 @@ describe("Comment moderation", () => {
     }
   })
 
-  test("serves the documented account, comment, and discussion responses", async () => {
+  const createRequest = () => {
     const loadHandlers = () => {
       let handlers!: {
         comment: typeof import("../../functions/comment").handler
@@ -233,7 +233,7 @@ describe("Comment moderation", () => {
     }
 
     const handlers = loadHandlers()
-    const request = (
+    return (
       route: keyof typeof handlers,
       httpMethod: string,
       path: string,
@@ -248,6 +248,10 @@ describe("Comment moderation", () => {
           : {},
         body,
       } as APIGatewayEvent)
+  }
+
+  test("serves the documented account, comment, and discussion responses", async () => {
+    const request = createRequest()
 
     expect(
       await request("user", "PUT", author.id, author, "isAdmin=true")
@@ -376,6 +380,85 @@ describe("Comment moderation", () => {
     )
   })
 
+  test("places holds through the API only for eligible moderators and targets", async () => {
+    const request = createRequest()
+    const ownerComment = comment("owner-published", {
+      userId: owner.id,
+      isApproved: true,
+    })
+    const legacyComment = comment("legacy-published")
+    const published = comment("another-published", { isApproved: true })
+    const automatic = held("automatically-held")
+    const manual = held("manually-held", { heldBy: admin.id })
+    const deleted = comment("deleted", { dateDeleted: dateCreated, text: null })
+    await comments.insertMany([
+      ownerComment,
+      legacyComment,
+      published,
+      automatic,
+      manual,
+      deleted,
+    ])
+    const saved = await comments.find().sort({ id: 1 }).toArray()
+
+    for (const [id, viewer, reason, status] of [
+      [ownerComment.id, undefined, "Reason", 401],
+      [ownerComment.id, outsider, "Reason", 403],
+      [ownerComment.id, guest, "Reason", 403],
+      [ownerComment.id, moderator, null, 400],
+      [ownerComment.id, moderator, "  ", 400],
+      [automatic.id, moderator, "Another reason", 409],
+      [manual.id, moderator, "Another reason", 409],
+      [deleted.id, moderator, "Reason", 404],
+      [discussion.id, moderator, "Reason", 404],
+      ["missing", moderator, "Reason", 404],
+    ] as const) {
+      expect(
+        await request("comment", "POST", `${id}/hold`, viewer, reason)
+      ).toMatchObject({ statusCode: status })
+    }
+    expect(await comments.find().sort({ id: 1 }).toArray()).toEqual(saved)
+    expect(
+      await request("comment", "GET", `${ownerComment.id}/hold`, moderator)
+    ).toMatchObject({ statusCode: 405 })
+
+    for (const [target, viewer] of [
+      [ownerComment, moderator],
+      [legacyComment, admin],
+      [published, owner],
+    ] as const) {
+      const savedHold = await request(
+        "comment",
+        "POST",
+        `${target.id}/hold`,
+        viewer,
+        " Private reason "
+      )
+      expect(savedHold).toMatchObject({
+        statusCode: 200,
+        body: "Comment hidden",
+        headers: { "Content-Type": "text/plain" },
+      })
+      const heldComment = {
+        ...target,
+        isApproved: false,
+        heldBy: viewer.id,
+        heldReason: "Private reason",
+      }
+      expect(await comments.findOne({ id: target.id })).toEqual(heldComment)
+      expect(
+        await request(
+          "comment",
+          "POST",
+          `${target.id}/hold`,
+          moderator,
+          "Replacement reason"
+        )
+      ).toMatchObject({ statusCode: 409 })
+      expect(await comments.findOne({ id: target.id })).toEqual(heldComment)
+    }
+  })
+
   test("redacts held ancestors and retains independently visible descendants", async () => {
     const root = comment("root")
     const first = held("held-root", { parentId: root.id })
@@ -426,6 +509,145 @@ describe("Comment moderation", () => {
         404
       )
     }
+  })
+
+  test("keeps nested manual placeholders and independently visible replies", async () => {
+    const root = comment("published-root")
+    const automatic = held("automatic-ancestor", { parentId: root.id })
+    const hiddenLeaf = comment("hidden-leaf", {
+      parentId: automatic.id,
+      userId: guest.id,
+    })
+    const hiddenParent = comment("hidden-parent")
+    const reply = comment("published-reply", { parentId: hiddenParent.id })
+    const unrelated = held("automatic-leaf")
+    const deleted = comment("deleted-leaf", {
+      text: null,
+      dateDeleted: dateCreated,
+    })
+    await comments.insertMany([
+      root,
+      automatic,
+      hiddenLeaf,
+      hiddenParent,
+      reply,
+      unrelated,
+      deleted,
+    ])
+    for (const target of [hiddenLeaf, hiddenParent]) {
+      expect(
+        (
+          await service.commentHOLD(
+            target.id,
+            "Keep this private",
+            moderator.id
+          )
+        ).statusCode
+      ).toBe(200)
+    }
+
+    const automaticPlaceholder = {
+      id: automatic.id,
+      parentId: root.id,
+      isApproved: false,
+      text: null,
+    }
+    const manualPlaceholder = {
+      id: hiddenLeaf.id,
+      parentId: automatic.id,
+      isApproved: false,
+      isManuallyHeld: true,
+      text: null,
+    }
+    for (const viewer of [undefined, outsider]) {
+      const visible = await readDiscussion(viewer)
+      const ancestor = visible.find(value => value.id === automatic.id)
+      const leaf = visible.find(value => value.id === hiddenLeaf.id)
+      expect(ancestor).toMatchObject(automaticPlaceholder)
+      expect(ancestor).not.toHaveProperty("isManuallyHeld")
+      expect(leaf).toMatchObject(manualPlaceholder)
+      for (const placeholder of [ancestor, leaf]) {
+        for (const privateField of ["heldBy", "heldReason", "user", "userId"]) {
+          expect(placeholder).not.toHaveProperty(privateField)
+        }
+      }
+      expect(visible).toContainEqual(
+        expect.objectContaining({
+          id: reply.id,
+          parentId: hiddenParent.id,
+          text: reply.text,
+        })
+      )
+      expect(visible.find(value => value.id === unrelated.id)).toBeUndefined()
+
+      expect(await service.commentGET(automatic.id, viewer?.id)).toMatchObject({
+        statusCode: 200,
+        body: {
+          ...automaticPlaceholder,
+          replies: [expect.objectContaining(manualPlaceholder)],
+        },
+      })
+      const directLeaf = await service.commentGET(hiddenLeaf.id, viewer?.id)
+      expect(directLeaf).toMatchObject({
+        statusCode: 200,
+        body: { ...manualPlaceholder, replies: [] },
+      })
+      expect(directLeaf.body).not.toHaveProperty("heldReason")
+      expect(directLeaf.body).not.toHaveProperty("heldBy")
+      expect(
+        (await service.commentGET(unrelated.id, viewer?.id)).statusCode
+      ).toBe(404)
+      expect(
+        (await service.commentGET(deleted.id, viewer?.id)).statusCode
+      ).toBe(404)
+    }
+
+    for (const viewer of [guest, moderator]) {
+      const privateLeaf = {
+        id: hiddenLeaf.id,
+        text: hiddenLeaf.text,
+        isApproved: false,
+        isManuallyHeld: true,
+        heldReason: "Keep this private",
+      }
+      const direct = await service.commentGET(hiddenLeaf.id, viewer.id)
+      expect(direct).toMatchObject({ statusCode: 200, body: privateLeaf })
+      expect(direct.body).not.toHaveProperty("heldBy")
+      expect(await readDiscussion(viewer)).toContainEqual(
+        expect.objectContaining(privateLeaf)
+      )
+      expect(
+        (await service.commentPOST(hiddenLeaf.id, "Blocked reply", viewer.id))
+          .statusCode
+      ).toBe(404)
+    }
+
+    expect(
+      (await service.commentPOST(hiddenParent.id, "Blocked reply", outsider.id))
+        .statusCode
+    ).toBe(404)
+    expect(
+      (await service.commentPOST(reply.id, "Visible continuation", outsider.id))
+        .statusCode
+    ).toBe(201)
+    expect(
+      (
+        await service.commentAPPROVE(
+          hiddenParent.id,
+          hiddenParent.text!,
+          moderator.id
+        )
+      ).statusCode
+    ).toBe(200)
+    expect(
+      (
+        await service.commentPOST(
+          hiddenParent.id,
+          "Reply after approval",
+          outsider.id
+        )
+      ).statusCode
+    ).toBe(201)
   })
 
   test("shows held content and reasons to its recognized guest author and moderators", async () => {
@@ -726,7 +948,211 @@ describe("Comment moderation", () => {
     }
   })
 
-  test.each(["held", "deleted"])(
+  test.each([
+    {
+      action: "hide",
+      text: "$A clean edited comment",
+      expectedApproved: false,
+      expectedReason: "Moderator reason",
+    },
+    {
+      action: "approve",
+      text: "$A clean edited comment",
+      expectedApproved: true,
+      expectedReason: undefined,
+    },
+    {
+      action: "approve",
+      text: "See example.org for details",
+      expectedApproved: false,
+      expectedReason: linkReason,
+    },
+  ])(
+    "uses the hold state at the edit write after $action for $text",
+    async ({ action, text, expectedApproved, expectedReason }) => {
+      const target = comment("edit-in-flight")
+      await comments.insertOne(target)
+      const placeHold = () =>
+        service.commentHOLD(target.id, "Moderator reason", moderator.id)
+      if (action === "approve") expect((await placeHold()).statusCode).toBe(200)
+
+      const update = jest
+        .spyOn(Collection.prototype, "findOneAndUpdate")
+        .mockImplementationOnce(
+          async (filter, change, options?: FindOneAndUpdateOptions) => {
+            update.mockRestore()
+            const moderation =
+              action === "hide"
+                ? await placeHold()
+                : await service.commentAPPROVE(
+                    target.id,
+                    target.text!,
+                    moderator.id
+                  )
+            expect(moderation.statusCode).toBe(200)
+            return db
+              .collection("comments")
+              .findOneAndUpdate(filter, change, { ...options })
+          }
+        )
+
+      try {
+        const edited = await service.commentPUT(target.id, text, author.id)
+        expect(edited).toMatchObject({
+          statusCode: 200,
+          body: { text, isApproved: expectedApproved },
+        })
+        expect(edited.body).not.toHaveProperty("heldBy")
+        const stored = await comments.findOne<Comment>({ id: target.id })
+        expect(stored).toMatchObject({ text, isApproved: expectedApproved })
+        expect(stored?.heldReason).toBe(expectedReason)
+        expect((edited.body as Comment).heldReason).toBe(expectedReason)
+        if (action === "hide") {
+          expect(stored?.heldBy).toBe(moderator.id)
+          expect(edited.body).toHaveProperty("isManuallyHeld", true)
+        } else {
+          expect(stored).not.toHaveProperty("heldBy")
+          expect(edited.body).not.toHaveProperty("isManuallyHeld")
+        }
+      } finally {
+        update.mockRestore()
+      }
+    }
+  )
+
+  test("keeps the first actor and reason when two moderators try to hide the same comment", async () => {
+    const target = comment("competing-holds")
+    await comments.insertOne(target)
+    const pendingWrite = jest
+      .spyOn(Collection.prototype, "updateOne")
+      .mockImplementationOnce(async (filter, change) => {
+        pendingWrite.mockRestore()
+        expect(
+          (await service.commentHOLD(target.id, "Winning reason", admin.id))
+            .statusCode
+        ).toBe(200)
+        return db.collection("comments").updateOne(filter, change)
+      })
+    try {
+      expect(
+        (await service.commentHOLD(target.id, "Losing reason", moderator.id))
+          .statusCode
+      ).toBe(409)
+      expect(await comments.findOne({ id: target.id })).toMatchObject({
+        text: target.text,
+        isApproved: false,
+        heldBy: admin.id,
+        heldReason: "Winning reason",
+      })
+    } finally {
+      pendingWrite.mockRestore()
+    }
+  })
+
+  test("requires explicit approval of a moderator's edited text and clears the hold", async () => {
+    const target = comment("moderator-own", { userId: moderator.id })
+    await comments.insertOne(target)
+    expect(
+      (await service.commentHOLD(target.id, "Initial reason", admin.id))
+        .statusCode
+    ).toBe(200)
+    const text = "Moderator edit with a link to example.org"
+    expect(
+      await service.commentPUT(target.id, text, moderator.id)
+    ).toMatchObject({
+      statusCode: 200,
+      body: {
+        text,
+        isApproved: false,
+        isManuallyHeld: true,
+        heldReason: "Initial reason",
+      },
+    })
+    expect(
+      (await service.commentAPPROVE(target.id, target.text!, moderator.id))
+        .statusCode
+    ).toBe(409)
+    expect(await comments.findOne({ id: target.id })).toMatchObject({
+      heldBy: admin.id,
+      heldReason: "Initial reason",
+    })
+    const approve = () => service.commentAPPROVE(target.id, text, moderator.id)
+    expect((await approve()).statusCode).toBe(200)
+    expect(
+      (await service.commentHOLD(target.id, "Second reason", admin.id))
+        .statusCode
+    ).toBe(200)
+    expect((await approve()).statusCode).toBe(200)
+    const saved = await comments.findOne({ id: target.id })
+    expect(saved).toMatchObject({ text, isApproved: true })
+    expect(saved).not.toHaveProperty("heldBy")
+    expect(saved).not.toHaveProperty("heldReason")
+  })
+
+  test.each(["hold", "approval"])(
+    "keeps deletion terminal when it wins a race against %s",
+    async action => {
+      const target = comment("delete-race")
+      await comments.insertOne(target)
+      const placeHold = () =>
+        service.commentHOLD(target.id, "Removed hold reason", moderator.id)
+      const approve = () =>
+        service.commentAPPROVE(target.id, target.text!, moderator.id)
+      const remove = async () => {
+        expect(
+          (await service.commentDELETE(target.id, author.id)).statusCode
+        ).toBe(202)
+      }
+
+      if (action === "hold") {
+        const write = jest
+          .spyOn(Collection.prototype, "updateOne")
+          .mockImplementationOnce(async (filter, change) => {
+            write.mockRestore()
+            await remove()
+            return db.collection("comments").updateOne(filter, change)
+          })
+        try {
+          expect((await placeHold()).statusCode).toBe(404)
+        } finally {
+          write.mockRestore()
+        }
+      } else {
+        expect((await placeHold()).statusCode).toBe(200)
+        const write = jest
+          .spyOn(Collection.prototype, "findOneAndUpdate")
+          .mockImplementationOnce(
+            async (filter, change, options?: FindOneAndUpdateOptions) => {
+              write.mockRestore()
+              await remove()
+              return db
+                .collection("comments")
+                .findOneAndUpdate(filter, change, { ...options })
+            }
+          )
+        try {
+          expect((await approve()).statusCode).toBe(404)
+        } finally {
+          write.mockRestore()
+        }
+      }
+
+      expect((await placeHold()).statusCode).toBe(404)
+      expect((await approve()).statusCode).toBe(404)
+      expect(
+        (await service.commentPUT(target.id, "New text", author.id)).statusCode
+      ).toBe(404)
+      const deleted = await comments.findOne({ id: target.id })
+      expect(deleted).toMatchObject({
+        text: null,
+        dateDeleted: expect.any(Date),
+      })
+      expect(deleted).not.toHaveProperty("heldBy")
+      expect(deleted).not.toHaveProperty("heldReason")
+    }
+  )
+
+  test.each(["held", "manually held", "deleted"])(
     "keeps a reply that passed eligibility before its parent was %s",
     async state => {
       const parent = comment("parent-in-flight")
@@ -742,6 +1168,16 @@ describe("Comment moderation", () => {
                   parent.id,
                   "A new link example.com",
                   author.id
+                )
+              ).statusCode
+            ).toBe(200)
+          } else if (state === "manually held") {
+            expect(
+              (
+                await service.commentHOLD(
+                  parent.id,
+                  "Review reason",
+                  moderator.id
                 )
               ).statusCode
             ).toBe(200)

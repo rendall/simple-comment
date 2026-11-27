@@ -258,28 +258,72 @@ These detailed design checks supplement the iteration-one specification's accept
 
 ### Second iteration — manually holding published comments
 
-Extend the existing review workflow so a moderator can unpublish an already published comment. In this iteration, authorize the new moderation action using the same effective `isModerator` predicate as in iteration one. The configured owner will normally be the only moderator; appointed moderator accounts are introduced in iteration three.
+Status — Scope and acceptance criteria approved
 
-A moderator can choose to hide a published comment and must supply a non-empty reason. This is a manual hold, not deletion. Preserve the comment's content and original position, set `isApproved` to false, and record `heldBy` and `heldReason` together. Enforce authorization and required reasons on the server.
+#### Goal
 
-| Viewer | Comment content | Hidden state | Specific hold reason |
-| --- | --- | --- | --- |
-| Original author | Visible | Visible | Visible |
-| Authorized moderator (normally the owner in this iteration) | Visible | Visible | Visible |
-| Other readers | Not visible | Visible as a placeholder | Not visible |
+Let moderators temporarily hide published comments from public view and republish them after review.
 
-For ordinary readers, replace the previously published comment with a placeholder, including when it has no replies. The provisional label is **Hidden pending moderation**. Do not expose the text or specific reason through the API, placeholder, history, or other read paths. The author and moderator see the held comment in its original position, clearly marked as hidden, together with the reason. This public placeholder requirement is for manually hidden published comments; it does not require exposing the existence of every automatically held new comment.
+#### Plain-Language Intent
 
-Existing replies remain independently visible and eligible for further replies according to their own states. New direct replies to the hidden comment are not permitted. The author may edit their comment, but a manual hold and its reason survive edits. Only explicit authorized approval of the current reviewed text republishes it and clears the active hold metadata; deletion remains a separate terminal action. No new administration or manual-hold email notification is required for this iteration.
+A moderator can open a published comment's action menu, hide the comment, and explain why. The author can still read and revise the comment, and the discussion keeps its replies. Other readers see that the comment is hidden. The comment becomes public again when a moderator approves the current text.
 
-#### Second-iteration completion criteria
+#### Iteration-two prerequisites
 
-- The moderator can hide a published comment with a reason and subsequently approve it using the existing review workflow.
-- Unauthorized hide requests and requests without a reason are rejected without changing the comment.
-- Other readers see the hidden placeholder, including for a manually hidden leaf, but cannot retrieve the content or specific reason.
-- The author and moderator can read the content, hidden state and reason; the author's edits do not lift the hold.
-- Existing descendants remain independently visible; new direct replies to the held comment are rejected.
-- Concurrent edits and moderation actions preserve the manual hold and the atomic content-matched approval rules. Public reads and any implemented synchronization paths reflect the changed visibility.
+- Land [PR #289](https://github.com/rendall/simple-comment/pull/289) on the moderation implementation base. Iteration two builds on the shipped moderator permissions, viewer-specific reads, approval, deletion, and discussion controls. The base must already include [#280](https://github.com/rendall/simple-comment/issues/280) soft deletion.
+- Land the [#291](https://github.com/rendall/simple-comment/issues/291) fix on the same base. Reserve IDs for accounts deleted after the fix is deployed. Reserved IDs are unavailable to registration, and reservation records are inactive for moderation reads and writes.
+- Complete these prerequisites before starting manual-hold code. Prerequisite fixes ship through their own issues and PRs.
+
+The local terms-file behavior was verified. The hosted Netlify smoke test and its dependent documentation sign-off remain iteration-one validation items T08 and T09. Manual holds use the existing publication state and have no dependency on the hosted terms file.
+
+#### In Scope
+
+- A moderator action to hide a published comment from its existing discussion, with a required reason.
+- Server-enforced hold eligibility, recorded actor and reason, and viewer-specific manual-hold visibility in direct and discussion reads.
+- Preservation of manual holds through author edits and reuse of the existing approval, deletion, and reply rules.
+- HTTP and OpenAPI parity, widget behavior, and moderation guide updates for manual holds.
+
+#### Out of Scope
+
+- Converting an automatic hold into a manual hold, or replacing an active manual hold's reason.
+- Moderator appointments, policy settings, comment history, a dedicated moderation view, new notification events, and real-time or incremental refresh.
+- [#292](https://github.com/rendall/simple-comment/issues/292) direct lookups of deleted comments. That issue can proceed independently. Preserve the direct-deletion contract present on the implementation base.
+- Backfilling account IDs from earlier deletions and resolving historical authorship after ID reuse. IDs deleted without a reservation can still be reused and mistaken for the original author. The maintainer accepted this limitation given the additional infrastructure and the lack of known production use.
+- Standalone session verification ([#293](https://github.com/rendall/simple-comment/issues/293)) and database-wide user ID uniqueness ([#294](https://github.com/rendall/simple-comment/issues/294)).
+
+#### Acceptance Criteria
+
+##### MH1 — Place a hold
+
+A moderator can hide a published comment by supplying a non-blank reason in the existing discussion. Use the server's effective `isModerator` predicate. A live legacy comment without stored `isApproved` counts as published. In one conditional write, set `isApproved` to false and record `heldBy` and `heldReason`. Preserve the text, author, and thread position. Unauthorized requests, blank reasons, and requests targeting a held or deleted comment leave the record unchanged.
+
+##### MH2 — Protect private content
+
+The original author, including a recognized returning guest, and moderators see the held text and reason. Other readers see a redacted **Hidden pending moderation** placeholder in the discussion, including for a comment with no replies. Direct reads apply the same visibility restrictions and retain available thread structure. The public placeholder omits the text, private reason, and internal moderation actor ID. The widget discards private details on authentication changes.
+
+##### MH3 — Preserve the thread
+
+Existing descendants remain independently visible and eligible for replies under their own state. The server rejects new direct replies when the parent is held at the eligibility check. A reply that passed the check may finish after the hold. Ordinary reply rules resume when the parent is approved.
+
+##### MH4 — Edit, approve, and delete
+
+Author edits preserve the active manual hold, actor, and reason, including edits by moderator authors. An edit that races with a manual hold must preserve the hold if it is active when the edit writes. Reuse the atomic reviewed-text approval rule and clear active hold metadata in the successful approval write. Deletion stays terminal and clears active hold metadata. A stale approval can release a later hold on identical text under the existing approval contract.
+
+##### MH5 — Preserve notifications
+
+Keep the existing creation and changed-text emails and recipients. A successful edit of manually held text identifies the active hold in its existing edit email. Applying a manual hold creates no email event.
+
+#### Validation Strategy
+
+| Evidence | Passing condition |
+|---|---|
+| API contract and integration | Effective moderators can hide published comments. Rejected requests leave the record unchanged. Direct and discussion reads enforce the agreed visibility and reply rules. Shipped responses match OpenAPI. |
+| Persistence and concurrency | Controlled MongoDB interleavings preserve manual holds through author edits, apply approval only to current reviewed text, and keep deletion terminal. A repeated hold on an already held target does not replace the original reason or actor. |
+| Notification compatibility | Manual hold actions produce no email. Successful changed-text edits retain the existing recipients and report the active manual hold. |
+| Discussion widget | A moderator can hide and republish a comment. A public reader sees redacted placeholders and independently visible replies after refresh. Authentication changes discard the previous viewer's private text and reasons. |
+| Release verification | The moderation guide matches the verified hide and approval workflow. The repository's local CI parity gate passes. |
+
+The exact hold endpoint, response statuses, and placeholder fields are engineering details within these acceptance criteria. Use subsequent fetches or refreshes to reflect changes made by other viewers.
 
 ### Third iteration — moderator appointments
 
@@ -490,6 +534,8 @@ Deletion takes precedence over approval. A comment can start approved or held ac
 Deletion removes the content but retains the comment object and structural metadata, including for leaf comments, consistent with the incremental loading design. #280 is a prerequisite for iteration one. Deleted text is no longer available to the author or moderators. The default is to publish immediately unless an applicable publication rule requires a hold. The remaining details of edit-triggered policy evaluation are open. Use #241 for prior investigation and check whether #63 offers a starting point.
 
 #### Manual holds survive edits
+
+The broader lifecycle below includes converting an automatic hold to a manual hold. Iteration two implements manual holds on published comments only.
 
 Distinguish an automatic hold imposed by publication rules from a manual hold imposed by a moderator. An automatic hold has no `heldBy` value. A manual hold sets `isApproved` to false, records the acting moderator's immutable account ID in `heldBy`, and records the moderator's explanation in `heldReason`, including when a moderator explicitly places a manual hold on an already automatically held comment.
 
@@ -896,6 +942,9 @@ The [focused first iteration](#focused-first-iteration--automatic-holds-and-mode
 
 - [#284](https://github.com/rendall/simple-comment/issues/284) — Parent issue for site-wide moderation.
 - [#280](https://github.com/rendall/simple-comment/issues/280) — Soft deletion for all comments; prerequisite for iteration one.
+- [PR #289](https://github.com/rendall/simple-comment/pull/289) — Iteration-one implementation and a prerequisite for iteration two.
+- [#291](https://github.com/rendall/simple-comment/issues/291) — Reserve IDs for accounts deleted after deployment. Prerequisite for iteration two, merged in [PR #295](https://github.com/rendall/simple-comment/pull/295).
+- [#292](https://github.com/rendall/simple-comment/issues/292) — Deleted-comment direct lookup behavior; independent follow-up.
 - Dedicated site-wide moderation view — follow-up issue to create; distinct from the initial in-discussion approval control.
 - [#285](https://github.com/rendall/simple-comment/issues/285) — Third iteration: owner-appointed moderators using the iteration-one privilege model, plus the optional legacy-admin upgrade utility; new admin appointments remain deferred.
 - [#275](https://github.com/rendall/simple-comment/issues/275) — Administration settings dashboard, deferred with persistent configuration.

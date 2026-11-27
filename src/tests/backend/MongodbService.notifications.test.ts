@@ -14,7 +14,6 @@ import type {
   Document,
   FindOneAndUpdateOptions,
   InsertOneResult,
-  ModifyResult,
 } from "mongodb"
 import { inspect } from "node:util"
 import type { AbstractNotificationService } from "../../lib/AbstractNotificationService"
@@ -279,6 +278,37 @@ describe("comment notification lifecycle", () => {
       ).toMatchObject({ text: updatedText, userId: author.id })
     }
 
+    it("notifies on a manually held edit without notifying on the hold itself", async () => {
+      const reason = "Moderator supplied reason"
+      expect(
+        (
+          await service.commentHOLD(
+            editableComment.id,
+            reason,
+            administrator.id
+          )
+        ).statusCode
+      ).toBe(200)
+      expect(notifyModerators).not.toHaveBeenCalled()
+
+      const response = await service.commentPUT(
+        editableComment.id,
+        updatedText,
+        author.id
+      )
+      await expectUpdated(response)
+      expect(response.body).toMatchObject({
+        isApproved: false,
+        isManuallyHeld: true,
+        heldReason: reason,
+      })
+      expect(notifyModerators).toHaveBeenCalledTimes(1)
+      const [message] = notifyModerators.mock.calls[0]
+      expect(message).toContain(updatedText)
+      expect(message).toContain(`Held for review: ${reason}`)
+      expect(message).toContain(`Comment ID: ${editableComment.id}`)
+    })
+
     describe.each(["comment", "reply"] as const)("edited %s", target => {
       it("notifies with the saved text and author", async () => {
         if (target === "reply") {
@@ -313,13 +343,18 @@ describe("comment notification lifecycle", () => {
 
     it("does not notify before the database acknowledges the update", async () => {
       const entered = deferred<void>()
-      const update = deferred<ModifyResult<Document>>()
+      const release = deferred<void>()
       const updateSpy = jest
         .spyOn(Collection.prototype, "findOneAndUpdate")
-        .mockImplementationOnce(() => {
-          entered.resolve()
-          return update.promise
-        })
+        .mockImplementationOnce(
+          async (filter, update, options?: FindOneAndUpdateOptions) => {
+            entered.resolve()
+            await release.promise
+            return db
+              .collection("comments")
+              .findOneAndUpdate(filter, update, { ...options })
+          }
+        )
       const request = service.commentPUT(
         editableComment.id,
         updatedText,
@@ -332,14 +367,7 @@ describe("comment notification lifecycle", () => {
         .collection<Comment>("comments")
         .findOne({ id: editableComment.id })
       updateSpy.mockRestore()
-      update.resolve(
-        await db
-          .collection("comments")
-          .findOneAndUpdate(
-            { id: editableComment.id },
-            { $set: { text: updatedText } }
-          )
-      )
+      release.resolve()
       const response = await request
 
       expect(callsBeforeUpdate).toBe(0)

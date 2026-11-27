@@ -230,6 +230,16 @@ export const approveComment = (commentId: CommentId, reviewedText: string) =>
     }
   ).then(res => resolveBody<string>(res))
 
+export const holdComment = (commentId: CommentId, reason: string) =>
+  fetch(
+    `${getSimpleCommentURL()}/comment/${encodeURIComponent(commentId)}/hold`,
+    {
+      body: reason,
+      method: "POST",
+      credentials: "include",
+    }
+  ).then(res => resolveBody<string>(res))
+
 /** Delete a comment
  * @async
  * @function

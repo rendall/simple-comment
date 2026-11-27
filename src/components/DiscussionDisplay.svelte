@@ -78,7 +78,7 @@
       topicReplies,
       (a, b) =>
         new Date(b.dateCreated).valueOf() - new Date(a.dateCreated).valueOf(),
-      reply => reply.text !== null || Boolean(reply.replies?.length || reply.deletedReason)
+      reply => reply.text !== null || Boolean(reply.isManuallyHeld || reply.replies?.length || reply.deletedReason)
     )
   }
 
@@ -197,8 +197,8 @@
   }
 
   const publicComment = (comment: Comment): Comment => {
-    const {id, parentId, dateCreated, dateDeleted, isApproved, user} = comment
-    const structure = {id, parentId, dateCreated, dateDeleted, isApproved}
+    const {id, parentId, dateCreated, dateDeleted, isApproved, isManuallyHeld, user} = comment
+    const structure = {id, parentId, dateCreated, dateDeleted, isApproved, isManuallyHeld}
     if (dateDeleted || isApproved === false) return { ...structure, text: null }
     return {
       ...structure,
