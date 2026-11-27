@@ -1129,7 +1129,16 @@ export class MongodbService extends AbstractDbService {
     }
 
     const { isAdmin, isModerator } = getUserRole(authUser)
-    const changes = { text, ...getCommentPublication(text, isModerator) }
+    const publication = getCommentPublication(text, isModerator)
+    const keepManualHold = {
+      $and: [
+        { $eq: ["$isApproved", false] },
+        { $ne: [{ $ifNull: ["$heldBy", null] }, null] },
+      ],
+    }
+    const automaticReason = publication.isApproved
+      ? "$$REMOVE"
+      : { $literal: publication.heldReason }
     const liveComment = {
       _id: foundComment._id,
       dateDeleted: { $exists: false },
@@ -1138,18 +1147,28 @@ export class MongodbService extends AbstractDbService {
 
     const modifyResult = await comments.findOneAndUpdate(
       { ...liveComment, text: { $ne: text } },
-      {
-        $set: changes,
-        ...(changes.isApproved && { $unset: { heldReason: "" } }),
-      },
-      { collation, returnDocument: "before" }
+      [
+        {
+          $set: {
+            text: { $literal: text },
+            isApproved: {
+              $cond: [keepManualHold, false, publication.isApproved],
+            },
+            heldBy: { $cond: [keepManualHold, "$heldBy", "$$REMOVE"] },
+            heldReason: {
+              $cond: [keepManualHold, "$heldReason", automaticReason],
+            },
+          },
+        },
+      ],
+      { collation, returnDocument: "after" }
     )
 
-    const previous = modifyResult.ok ? modifyResult.value : null
-    const saved = previous
-      ? { ...previous, ...changes }
-      : modifyResult.ok &&
-        (await comments.findOne({ ...liveComment, text }, { collation }))
+    const updated = modifyResult.ok ? modifyResult.value : null
+    const saved =
+      updated ??
+      (modifyResult.ok &&
+        (await comments.findOne({ ...liveComment, text }, { collation })))
 
     if (!saved || !isComment(saved)) {
       if (isAdmin) {
@@ -1161,7 +1180,7 @@ export class MongodbService extends AbstractDbService {
       return error500UpdateError
     }
 
-    if (this._notificationService && previous) {
+    if (this._notificationService && updated) {
       try {
         const notification = await this._notificationService.notifyModerators(
           `Comment edited. Author: ${authUser.name} (${authUser.email})\n\n${saved.text}${describeCommentHold(saved)}`

@@ -55,7 +55,7 @@ Complete C01 and C02 before any manual-hold implementation. Use separate PRs for
     - “Shipped responses match OpenAPI.” (Iteration two — Validation Strategy)
     - “The exact hold endpoint, response statuses, and placeholder fields are engineering details within these acceptance criteria.” (Iteration two — Validation Strategy)
 
-- [ ] C07 `[backend]` Preserve an active manual hold in `MongodbService.commentPUT` using the hold state at the atomic edit write. Keep the actor and reason when a manual hold applies. Apply normal automatic rules whenever the write sees no manual hold, including when approval releases the hold during the edit. Return the saved viewer-appropriate representation and base the existing edit notification on the effective saved publication state.
+- [x] C07 `[backend]` Preserve an active manual hold in `MongodbService.commentPUT` using the hold state at the atomic edit write. Keep the actor and reason when a manual hold applies. Apply normal automatic rules whenever the write sees no manual hold, including when approval releases the hold during the edit. Return the saved viewer-appropriate representation and base the existing edit notification on the effective saved publication state.
   - Depends on C03 and C04. Validated by T03 and T04.
   - Trace:
     - “An edit that races with a manual hold must preserve the hold if it is active when the edit writes.” (MH4 — Edit, approve, and delete)
