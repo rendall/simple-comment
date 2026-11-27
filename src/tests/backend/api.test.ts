@@ -97,6 +97,23 @@ describe("Ensures API specs match controller service", () => {
     })
   })
 
+  test("documents the moderator hold request and responses", () => {
+    const operation = apiSpecJSON.paths["/comment/{commentId}/hold"].post
+    const textResponse = {
+      content: { "text/plain": { schema: { type: "string" } } },
+    }
+    expect(operation).toMatchObject({
+      requestBody: { required: true, ...textResponse },
+      responses: Object.fromEntries(
+        [200, 400, 401, 403, 404, 409, 500].map(status => [
+          status,
+          textResponse,
+        ])
+      ),
+      security: [{ CookieAuth: [] }, { BearerAuth: [] }],
+    })
+  })
+
   class TestService extends AbstractDbService {
     authDELETE = async (): Promise<Success | Error> => {
       throw "Error: not implemented"

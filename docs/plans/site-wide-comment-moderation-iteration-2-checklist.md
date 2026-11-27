@@ -86,7 +86,7 @@ Complete C01 and C02 before any manual-hold implementation. Use separate PRs for
 
 ## Validation items
 
-- [ ] T01 `[tests]` Verify the hold write and shipped API contract in `src/tests/backend/comment.moderation.test.ts` and `src/tests/backend/api.test.ts`. Cover effective moderator levels 1–3, guests and ordinary accounts, missing authentication, non-blank reasons, published and legacy targets, both kinds of held targets, deleted and missing targets, and repeated hold requests. Check that rejected or repeated requests preserve the prior record.
+- [x] T01 `[tests]` Verify the hold write and shipped API contract in `src/tests/backend/comment.moderation.test.ts` and `src/tests/backend/api.test.ts`. Cover effective moderator levels 1–3, guests and ordinary accounts, missing authentication, non-blank reasons, published and legacy targets, both kinds of held targets, deleted and missing targets, and repeated hold requests. Check that rejected or repeated requests preserve the prior record.
   - Depends on C03, C05, and C06.
   - Verify that a level-one moderator can hide an owner-authored published comment.
   - Trace:

@@ -211,7 +211,7 @@ describe("Comment moderation", () => {
     }
   })
 
-  test("serves the documented account, comment, and discussion responses", async () => {
+  const createRequest = () => {
     const loadHandlers = () => {
       let handlers!: {
         comment: typeof import("../../functions/comment").handler
@@ -233,7 +233,7 @@ describe("Comment moderation", () => {
     }
 
     const handlers = loadHandlers()
-    const request = (
+    return (
       route: keyof typeof handlers,
       httpMethod: string,
       path: string,
@@ -248,6 +248,10 @@ describe("Comment moderation", () => {
           : {},
         body,
       } as APIGatewayEvent)
+  }
+
+  test("serves the documented account, comment, and discussion responses", async () => {
+    const request = createRequest()
 
     expect(
       await request("user", "PUT", author.id, author, "isAdmin=true")
@@ -374,6 +378,85 @@ describe("Comment moderation", () => {
     expect(await request("comment", "GET", pending.id, outsider)).toMatchObject(
       { statusCode: 404 }
     )
+  })
+
+  test("places holds through the API only for eligible moderators and targets", async () => {
+    const request = createRequest()
+    const ownerComment = comment("owner-published", {
+      userId: owner.id,
+      isApproved: true,
+    })
+    const legacyComment = comment("legacy-published")
+    const published = comment("another-published", { isApproved: true })
+    const automatic = held("automatically-held")
+    const manual = held("manually-held", { heldBy: admin.id })
+    const deleted = comment("deleted", { dateDeleted: dateCreated, text: null })
+    await comments.insertMany([
+      ownerComment,
+      legacyComment,
+      published,
+      automatic,
+      manual,
+      deleted,
+    ])
+    const saved = await comments.find().sort({ id: 1 }).toArray()
+
+    for (const [id, viewer, reason, status] of [
+      [ownerComment.id, undefined, "Reason", 401],
+      [ownerComment.id, outsider, "Reason", 403],
+      [ownerComment.id, guest, "Reason", 403],
+      [ownerComment.id, moderator, null, 400],
+      [ownerComment.id, moderator, "  ", 400],
+      [automatic.id, moderator, "Another reason", 409],
+      [manual.id, moderator, "Another reason", 409],
+      [deleted.id, moderator, "Reason", 404],
+      [discussion.id, moderator, "Reason", 404],
+      ["missing", moderator, "Reason", 404],
+    ] as const) {
+      expect(
+        await request("comment", "POST", `${id}/hold`, viewer, reason)
+      ).toMatchObject({ statusCode: status })
+    }
+    expect(await comments.find().sort({ id: 1 }).toArray()).toEqual(saved)
+    expect(
+      await request("comment", "GET", `${ownerComment.id}/hold`, moderator)
+    ).toMatchObject({ statusCode: 405 })
+
+    for (const [target, viewer] of [
+      [ownerComment, moderator],
+      [legacyComment, admin],
+      [published, owner],
+    ] as const) {
+      const savedHold = await request(
+        "comment",
+        "POST",
+        `${target.id}/hold`,
+        viewer,
+        " Private reason "
+      )
+      expect(savedHold).toMatchObject({
+        statusCode: 200,
+        body: "Comment hidden",
+        headers: { "Content-Type": "text/plain" },
+      })
+      const heldComment = {
+        ...target,
+        isApproved: false,
+        heldBy: viewer.id,
+        heldReason: "Private reason",
+      }
+      expect(await comments.findOne({ id: target.id })).toEqual(heldComment)
+      expect(
+        await request(
+          "comment",
+          "POST",
+          `${target.id}/hold`,
+          moderator,
+          "Replacement reason"
+        )
+      ).toMatchObject({ statusCode: 409 })
+      expect(await comments.findOne({ id: target.id })).toEqual(heldComment)
+    }
   })
 
   test("redacts held ancestors and retains independently visible descendants", async () => {
