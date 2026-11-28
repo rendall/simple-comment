@@ -98,3 +98,34 @@ Use an ordinary author account, a second ordinary account, and the owner account
 | Inspect published assets and request `/moderation-terms.txt`.                         | The terms file and fixture phrase are absent from public assets and client bundles. The URL does not serve the file.          |
 
 For API integrations, see the [OpenAPI contract](../src/schema/simple-comment-openapi3.json). A successful create returns `201`, and a successful edit returns `200`. Both return the saved comment with its publication status so clients can display a hold immediately.
+
+### Sources for moderation terms
+
+Simple Comment does not distribute a default list of objectionable terms. Installation owners determine which words and phrases warrant moderation according to the language, audience, and policies of their community.
+
+Several publicly available datasets can serve as starting points:
+
+| Project | Contents | License |
+| --- | --- | --- |
+| [List of Dirty, Naughty, Obscene, and Otherwise Bad Words](https://github.com/LDNOOBW/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words) | Shutterstock's multilingual list, including Finnish. | CC BY 4.0 |
+| [cuss](https://github.com/words/cuss) | English terms rated by likelihood of offensive usage. | MIT |
+| [profanity-list](https://github.com/dsojevic/profanity-list) | Categorized terms with severity ratings, spelling variants, and exceptions. | MIT |
+| [profanities](https://github.com/words/profanities) | Flat lists of offensive terms, also available as an npm package. | MIT |
+| [wordfilter](https://github.com/dariusk/wordfilter) | A curated list emphasizing discriminatory and derogatory language rather than ordinary profanity. | MIT |
+| [LDNOOBW V2](https://github.com/LDNOOBWV2/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words_V2) | An expanded multilingual collection of offensive terms. | Check individual source licenses. |
+
+The [IFTAS Reserved Words Resources](https://about.iftas.org/library/reserved-words-resources/) collection provides additional moderation datasets and research, including resources from Bluesky and Ofcom.
+
+#### Selecting terms
+
+The `cuss` and `profanity-list` projects are particularly useful for constructing a selective moderation list. They distinguish between two different considerations: how likely a term is to be offensive in ordinary usage, and how offensive it is when used in that sense.
+
+Consider the following when preparing your list:
+
+- Remember that Simple Comment uses case-insensitive substring matching. Short terms may unintentionally match parts of otherwise harmless words.
+  - q.v. the [Scunthorpe Proplem](https://en.wikipedia.org/wiki/Scunthorpe_problem)
+- Convert selected entries to the plain-text format described above. Simple Comment does not interpret severity ratings, categories, exceptions, or regular expressions.
+
+A term match holds a comment for human review; it does not automatically reject or remove the comment. The list is a moderation aid, not a substitute for moderator judgment.
+
+We recommend keeping the resulting terms file private and out of version control, regardless of whether its source datasets are publicly available.
