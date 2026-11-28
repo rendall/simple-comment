@@ -59,6 +59,10 @@ describe("Ensures API specs match controller service", () => {
     const comment = apiSpecJSON.paths["/comment/{commentId}"]
     expect(comment.post).toMatchObject({ responses: { 201: commentResponse } })
     expect(comment.put).toMatchObject({ responses: { 200: commentResponse } })
+    expect(comment.get).toMatchObject({
+      description: expect.stringContaining("even if it has no visible replies"),
+      responses: { 200: commentResponse, 404: {} },
+    })
     expect(comment.delete).toMatchObject({
       requestBody: {
         content: { "text/plain": { schema: { type: "string" } } },
@@ -80,6 +84,7 @@ describe("Ensures API specs match controller service", () => {
     expect(apiSpecJSON.components.schemas.Comment).toMatchObject({
       properties: {
         text: { nullable: true },
+        dateDeleted: { type: "string", format: "date-time" },
         isApproved: { type: "boolean" },
         heldReason: {
           description: expect.stringContaining("author and moderators"),
