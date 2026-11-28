@@ -14,4 +14,19 @@ describe("SimpleComment auth cleanup source guards", () => {
     expect(simpleCommentSource).not.toMatch(/\bcreateAuthStoreBridge\b/)
     expect(simpleCommentSource).not.toMatch(/\bcurrentUserStore\b/)
   })
+
+  test("shares the viewer revision with discussion loads and mutations", () => {
+    const simpleCommentSource = readComponentSource(
+      "src/components/SimpleComment.svelte"
+    )
+
+    expect(simpleCommentSource).toMatch(/currentUser\?\.id !== value\?\.id/)
+    expect(simpleCommentSource).toMatch(
+      /currentUser\?\.isModerator !== value\?\.isModerator/
+    )
+    expect(simpleCommentSource).toMatch(/\) viewerRevision\+\+/)
+    expect(simpleCommentSource).toMatch(
+      /<DiscussionDisplay[^>]*\{viewerRevision\}[^>]*\{getViewerRevision\}/
+    )
+  })
 })

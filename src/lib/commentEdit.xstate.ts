@@ -1,5 +1,9 @@
 import { assign, createMachine } from "xstate"
-import type { CommentId, ServerResponseError } from "./simple-comment-types"
+import type {
+  Comment,
+  CommentId,
+  ServerResponseError,
+} from "./simple-comment-types"
 
 type CommentEditMachineState = "idle" | "updating" | "updated" | "error"
 
@@ -11,14 +15,14 @@ type CommentEditTypestate = {
 type CommentEditMachineContext = {
   error?: ServerResponseError | string
   commentId?: CommentId
-  commentText?: string
+  comment?: Comment
 }
 
 type CommentEditMachineEvent =
   | { type: "SUBMIT"; commentId: CommentId }
   | { type: "RESET" }
   | { type: "ERROR"; error: ServerResponseError | string }
-  | { type: "SUCCESS"; commentText?: string }
+  | { type: "SUCCESS"; comment: Comment }
 
 export const commentEditMachine = createMachine<
   CommentEditMachineContext,
@@ -40,7 +44,7 @@ export const commentEditMachine = createMachine<
       updating: {
         on: {
           ERROR: { target: "error", actions: "assignErrorMessage" },
-          SUCCESS: { target: "updated", actions: "assignCommentText" },
+          SUCCESS: { target: "updated", actions: "assignComment" },
         },
       },
       updated: {
@@ -74,10 +78,10 @@ export const commentEditMachine = createMachine<
           return undefined
         },
       }),
-      assignCommentText: assign({
-        commentText: (_, event) => {
+      assignComment: assign({
+        comment: (_, event) => {
           if (event.type === "SUCCESS") {
-            return event.commentText
+            return event.comment
           }
           return undefined
         },

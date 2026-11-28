@@ -16,6 +16,7 @@ import { Collection, MongoClient, ObjectId } from "mongodb"
 import type { Db } from "mongodb"
 import * as jwt from "jsonwebtoken"
 import type { Comment, Discussion, User } from "../../lib/simple-comment-types"
+import { Privilege } from "../../lib/simple-comment-types"
 import policy from "../../policy.json"
 
 declare const global: { __MONGO_URI__: string; __MONGO_DB_NAME__: string }
@@ -339,6 +340,82 @@ describe("comment endpoint notification wiring", () => {
   describe("when Resend is configured", () => {
     beforeEach(() => {
       configureProvider("resend")
+    })
+
+    it("uses the configured recipients for edits under a manual hold", async () => {
+      const secondRecipient = "reviewer@example.com"
+      process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL = `${recipient},${secondRecipient}`
+      const reviewer = {
+        ...author,
+        id: "manual-reviewer",
+        privilege: Privilege.Moderator,
+      }
+      await db.collection<User>("users").insertOne(reviewer)
+      const id = "manual-hold-notice"
+      await db.collection<Comment>("comments").insertOne({
+        id,
+        parentId: topic.id,
+        userId: author.id,
+        text: "Original text",
+        dateCreated: new Date(),
+      })
+      const handler = await loadHandler()
+      const path = `/.netlify/functions/comment/${id}`
+      const reason = "Private reviewer reason"
+      const hold = await handler(
+        eventFor({
+          path: `${path}/hold`,
+          body: reason,
+          headers: {
+            Origin: origin,
+            Authorization: `Bearer ${tokenFor(reviewer.id)}`,
+          },
+        })
+      )
+      expect(hold.statusCode).toBe(200)
+      expect(resendSend).not.toHaveBeenCalled()
+
+      const text = "Updated plain text"
+      const edit = await handler(
+        eventFor({ path, httpMethod: "PUT", body: text })
+      )
+      expect(edit.statusCode).toBe(200)
+      expect(
+        resendSend.mock.calls.map(([message]) => message.to).sort()
+      ).toEqual([recipient, secondRecipient].sort())
+      for (const [message] of resendSend.mock.calls) {
+        expect(message).toHaveProperty("text", expect.stringContaining(text))
+        expect(message).toHaveProperty(
+          "text",
+          expect.stringContaining(`Held for review: ${reason}`)
+        )
+      }
+    })
+
+    it("sends held submissions to every configured recipient", async () => {
+      const secondRecipient = "reviewer@example.com"
+      process.env.SIMPLE_COMMENT_MODERATOR_CONTACT_EMAIL = `${recipient},${secondRecipient}`
+      const handler = await loadHandler()
+      const text = "Look up example.org"
+      const response = await handler(eventFor({ body: text }))
+      expect(response.statusCode).toBe(201)
+      const body = JSON.parse(response.body as string) as Comment
+      expect(body.isApproved).toBe(false)
+      expect(resendSend.mock.calls.map(([message]) => message.to)).toEqual(
+        expect.arrayContaining([recipient, secondRecipient])
+      )
+      expect(resendSend).toHaveBeenCalledTimes(2)
+      for (const [message] of resendSend.mock.calls) {
+        expect(message).toHaveProperty("text", expect.stringContaining(text))
+        expect(message).toHaveProperty(
+          "text",
+          expect.stringContaining(`Held for review: ${body.heldReason}`)
+        )
+        expect(message).toHaveProperty(
+          "text",
+          expect.stringContaining(`Comment ID: ${body.id}`)
+        )
+      }
     })
 
     it("saves the comment before sending through Resend", async () => {
@@ -799,7 +876,7 @@ describe("comment endpoint notification wiring", () => {
       id: "endpoint-editing-administrator",
       name: "Editing Administrator",
       email: "editing-admin@example.com",
-      isAdmin: true,
+      privilege: Privilege.Admin,
     }
     const updatedText = "Edited text\n\n<b>Literal markup</b> & שלום"
     const editEvent = (overrides: Partial<APIGatewayEvent> = {}) =>
@@ -810,7 +887,7 @@ describe("comment endpoint notification wiring", () => {
         ...overrides,
       })
     const expectSavedEdit = async (response: Awaited<ReturnType<Handler>>) => {
-      expect(response.statusCode).toBe(204)
+      expect(response.statusCode).toBe(200)
       expect(JSON.parse(response.body as string)).toMatchObject({
         id: existingComment.id,
         text: updatedText,
@@ -842,72 +919,67 @@ describe("comment endpoint notification wiring", () => {
       })
       const providerSend = () => (provider === "resend" ? resendSend : send)
 
-      it.each(["author", "administrator"] as const)(
-        "sends the persisted edit with the original author when edited by the %s",
-        async editor => {
-          let savedAtSend: Comment | null = null
-          const observeSaved = async () => {
-            savedAtSend = await db
-              .collection<Comment>("comments")
-              .findOne({ id: existingComment.id })
-          }
-          if (provider === "resend") {
-            resendSend.mockImplementation(async () => {
-              await observeSaved()
-              return resendAccepted
-            })
-          } else {
-            send.mockImplementation(async () => {
-              await observeSaved()
-              return accepted
-            })
-          }
-          const handler = await loadHandler()
-
-          const response = await handler(
-            editEvent({
-              headers: {
-                Origin: origin,
-                Authorization: `Bearer ${tokenFor(editor === "author" ? author.id : administrator.id)}`,
-              },
-            })
-          )
-
-          await expectSavedEdit(response)
-          expect(savedAtSend).toMatchObject({
-            text: updatedText,
-            userId: author.id,
-          })
-          expect(providerSend()).toHaveBeenCalledTimes(1)
-          const message = providerSend().mock.calls[0][0]
-          expect(message).toEqual({
-            to: recipient,
-            from: provider === "resend" ? resendSender : verifiedSender,
-            subject: "Simple Comment Notification",
-            text: expect.stringContaining(updatedText),
-          })
-          expect(message).toHaveProperty(
-            "text",
-            expect.stringMatching(/comment edited/i)
-          )
-          expect(message).toHaveProperty(
-            "text",
-            expect.stringContaining(author.name)
-          )
-          expect(message).toHaveProperty(
-            "text",
-            expect.stringContaining(author.email)
-          )
-          expect(message).not.toHaveProperty(
-            "text",
-            expect.stringContaining(administrator.email)
-          )
-          expect(
-            provider === "resend" ? send : resendSend
-          ).not.toHaveBeenCalled()
-          expect(errorLog).not.toHaveBeenCalled()
+      it("sends the persisted edit with the author's details", async () => {
+        let savedAtSend: Comment | null = null
+        const observeSaved = async () => {
+          savedAtSend = await db
+            .collection<Comment>("comments")
+            .findOne({ id: existingComment.id })
         }
-      )
+        if (provider === "resend") {
+          resendSend.mockImplementation(async () => {
+            await observeSaved()
+            return resendAccepted
+          })
+        } else {
+          send.mockImplementation(async () => {
+            await observeSaved()
+            return accepted
+          })
+        }
+        const handler = await loadHandler()
+
+        const response = await handler(
+          editEvent({
+            headers: {
+              Origin: origin,
+              Authorization: `Bearer ${tokenFor(author.id)}`,
+            },
+          })
+        )
+
+        await expectSavedEdit(response)
+        expect(savedAtSend).toMatchObject({
+          text: updatedText,
+          userId: author.id,
+        })
+        expect(providerSend()).toHaveBeenCalledTimes(1)
+        const message = providerSend().mock.calls[0][0]
+        expect(message).toEqual({
+          to: recipient,
+          from: provider === "resend" ? resendSender : verifiedSender,
+          subject: "Simple Comment Notification",
+          text: expect.stringContaining(updatedText),
+        })
+        expect(message).toHaveProperty(
+          "text",
+          expect.stringMatching(/comment edited/i)
+        )
+        expect(message).toHaveProperty(
+          "text",
+          expect.stringContaining(author.name)
+        )
+        expect(message).toHaveProperty(
+          "text",
+          expect.stringContaining(author.email)
+        )
+        expect(message).not.toHaveProperty(
+          "text",
+          expect.stringContaining(administrator.email)
+        )
+        expect(provider === "resend" ? send : resendSend).not.toHaveBeenCalled()
+        expect(errorLog).not.toHaveBeenCalled()
+      })
 
       it.each([
         "provider error",
@@ -1047,6 +1119,13 @@ describe("comment endpoint notification wiring", () => {
         {
           name: "unauthorized editor",
           editorId: "endpoint-other-editor",
+          text: updatedText,
+          target: "existing",
+          statusCode: 403,
+        },
+        {
+          name: "a non-author administrator",
+          editorId: administrator.id,
           text: updatedText,
           target: "existing",
           statusCode: 403,

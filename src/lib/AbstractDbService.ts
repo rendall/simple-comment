@@ -123,9 +123,21 @@ export abstract class AbstractDbService {
    * returns Success
    **/
   abstract commentDELETE: (
-    topicId: TopicId,
     commentId: CommentId,
-    authUser: UserId
+    authUserId?: UserId,
+    deletedReason?: string
+  ) => Promise<Success | Error>
+
+  abstract commentAPPROVE: (
+    commentId: CommentId,
+    reviewedText: string,
+    authUserId?: UserId
+  ) => Promise<Success | Error>
+
+  abstract commentHOLD: (
+    commentId: CommentId,
+    reason: string,
+    authUserId?: UserId
   ) => Promise<Success | Error>
 
   /**

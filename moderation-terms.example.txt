@@ -1,0 +1,3 @@
+# Harmless fixture terms. Supply the real list privately as moderation-terms.txt.
+paper crane
+violet teacup

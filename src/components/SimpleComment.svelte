@@ -11,8 +11,17 @@
   const authService: AuthService = createAuthService({
     initialUser: currentUser,
   })
+  let viewerRevision = 0
+  const getViewerRevision = () => viewerRevision
   const unsubscribeAuthCurrentUser = authService.currentUser.subscribe(
-    value => (currentUser = value)
+    value => {
+      if (
+        currentUser?.id !== value?.id ||
+        currentUser?.isModerator !== value?.isModerator ||
+        currentUser?.isAdmin !== value?.isAdmin
+      ) viewerRevision++
+      currentUser = value
+    }
   )
 
   onMount(() => {
@@ -27,5 +36,5 @@
 
 <section class="simple-comment">
   <SelfDisplay {authService} {currentUser} />
-  <DiscussionDisplay {authService} {currentUser} {discussionId} {title} />
+  <DiscussionDisplay {authService} {currentUser} {discussionId} {title} {viewerRevision} {getViewerRevision} />
 </section>

@@ -6,6 +6,7 @@
   "main": "dist/js/index.js",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@netlify/blobs": "^10.7.0",
     "@shelf/jest-mongodb": "^6.0.2",
     "@sveltejs/vite-plugin-svelte": "^4.0.0",
     "@testing-library/jest-dom": "^6.9.1",
@@ -34,6 +35,7 @@
     "lint": "eslint .",
     "posttest": "rimraf ./globalConfig.json",
     "prebuild": "rimraf ./functions && rimraf ./dist/js && mkdir -p ./dist/js",
+    "prebuild:netlify": "yarn run validate:moderation-terms",
     "start:db": "sudo systemctl start mongod",
     "start:backend": "yarn run build:backend && netlify functions:serve --functions functions --port 9999",
     "start:frontend": "yarn run build:frontend && vite preview --config ./vite.config.ts --host 0.0.0.0 --port 5000",
@@ -48,6 +50,7 @@
     "test:frontend:components": "cross-env TZ=UTC vitest --config vitest.components.config.ts run",
     "test:frontend:unit": "cross-env TZ=UTC jest --config jest.frontend.config.ts",
     "typecheck": "tsc --noEmit -p tsconfig.frontend.json && tsc --noEmit -p tsconfig.netlify.functions.json",
+    "validate:moderation-terms": "node --input-type=module -e \"import { readModerationTerms } from './src/lib/moderation-terms.ts'; readModerationTerms()\"",
     "watch:backend": "webpack --config ./webpack.netlify.functions.cjs --watch",
     "watch:frontend": "vite build --config ./vite.config.ts --watch",
     "watch:lint": "esw -w ./src/**/*.ts --color --clear --changed",

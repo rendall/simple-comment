@@ -40,12 +40,84 @@ describe("Ensures API specs match controller service", () => {
 
   // Parse the spec file
   const apiSpecJSON: {
+    components: { schemas: Record<string, unknown> }
     paths: {
       [route: string]: {
         [key in Method]: Record<string, unknown>
       }
     }
   } = JSON.parse(apiSpecText)
+
+  test("documents moderation responses and viewer-dependent fields", () => {
+    const commentResponse = {
+      content: {
+        "application/json": {
+          schema: { $ref: "#/components/schemas/Comment" },
+        },
+      },
+    }
+    const comment = apiSpecJSON.paths["/comment/{commentId}"]
+    expect(comment.post).toMatchObject({ responses: { 201: commentResponse } })
+    expect(comment.put).toMatchObject({ responses: { 200: commentResponse } })
+    expect(comment.get).toMatchObject({
+      description: expect.stringContaining("even if it has no visible replies"),
+      responses: { 200: commentResponse, 404: {} },
+    })
+    expect(comment.delete).toMatchObject({
+      requestBody: {
+        content: { "text/plain": { schema: { type: "string" } } },
+      },
+      responses: { 202: {}, 400: {} },
+    })
+    expect(
+      apiSpecJSON.paths["/comment/{commentId}/approve"].post
+    ).toMatchObject({
+      requestBody: {
+        required: true,
+        content: { "text/plain": { schema: { type: "string" } } },
+      },
+      responses: { 200: {}, 404: {}, 409: {} },
+    })
+    expect(apiSpecJSON.paths["/user/{userId}"].put).toMatchObject({
+      responses: { 403: {} },
+    })
+    expect(apiSpecJSON.components.schemas.Comment).toMatchObject({
+      properties: {
+        text: { nullable: true },
+        dateDeleted: { type: "string", format: "date-time" },
+        isApproved: { type: "boolean" },
+        heldReason: {
+          description: expect.stringContaining("author and moderators"),
+        },
+        deletedReason: {
+          description: expect.stringContaining("author and moderators"),
+        },
+      },
+    })
+    expect(apiSpecJSON.components.schemas.User).toMatchObject({
+      properties: {
+        isAdmin: { readOnly: true },
+        privilege: { readOnly: true },
+      },
+    })
+  })
+
+  test("documents the moderator hold request and responses", () => {
+    const operation = apiSpecJSON.paths["/comment/{commentId}/hold"].post
+    const textResponse = {
+      content: { "text/plain": { schema: { type: "string" } } },
+    }
+    expect(operation).toMatchObject({
+      requestBody: { required: true, ...textResponse },
+      responses: Object.fromEntries(
+        [200, 400, 401, 403, 404, 409, 500].map(status => [
+          status,
+          textResponse,
+        ])
+      ),
+      security: [{ CookieAuth: [] }, { BearerAuth: [] }],
+    })
+  })
 
   class TestService extends AbstractDbService {
     authDELETE = async (): Promise<Success | Error> => {
@@ -70,10 +142,18 @@ describe("Ensures API specs match controller service", () => {
       throw "Error: not implemented"
     }
     commentDELETE = async (
-      _topicId: TopicId,
       _commentId: CommentId,
-      _authUser: UserId
+      _authUserId?: UserId,
+      _deletedReason?: string
     ): Promise<Success | Error> => {
+      throw "Error: not implemented"
+    }
+
+    commentAPPROVE = async (): Promise<Success | Error> => {
+      throw "Error: not implemented"
+    }
+
+    commentHOLD = async (): Promise<Success | Error> => {
       throw "Error: not implemented"
     }
 
@@ -195,6 +275,8 @@ describe("Ensures API specs match controller service", () => {
     ["/comment/{commentId}", "get", "commentGET"],
     ["/comment/{commentId}", "put", "commentPUT"],
     ["/comment/{commentId}", "delete", "commentDELETE"],
+    ["/comment/{commentId}/approve", "post", "commentAPPROVE"],
+    ["/comment/{commentId}/hold", "post", "commentHOLD"],
     ["/user", "get", "userListGET"],
     ["/user", "post", "userPOST"],
     ["/user/{userId}", "get", "userGET"],

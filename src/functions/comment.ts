@@ -1,4 +1,4 @@
-import type { APIGatewayEvent } from "aws-lambda"
+import type { NetlifyRequest } from "../lib/backend-utilities"
 import type {
   CommentId,
   Success,
@@ -17,6 +17,7 @@ import {
 import {
   addHeaders,
   getAllowedOrigins,
+  getCookieWriteError,
   getAllowOriginHeaders,
   getTargetId,
   getUserId,
@@ -34,7 +35,7 @@ const service: MongodbService = new MongodbService(
   getNotificationService()
 )
 
-const getAllowHeaders = (event: APIGatewayEvent) => {
+const getAllowHeaders = (event: NetlifyRequest) => {
   const allowedMethods = {
     "Access-Control-Allow-Methods": "POST,GET,OPTIONS,PUT,DELETE",
     "Access-Control-Allow-Credentials": "true",
@@ -50,10 +51,18 @@ const getAllowHeaders = (event: APIGatewayEvent) => {
   return headers
 }
 
-export const handler = async (event: APIGatewayEvent) => {
+export const handler = async (event: NetlifyRequest) => {
   const dirs = event.path.split("/")
-  const isValidPath = dirs.length <= 5
-  const headers = getAllowHeaders(event)
+  const action = dirs[dirs.length - 1]
+  const isModerationAction =
+    dirs[dirs.length - 3] === "comment" &&
+    (action === "approve" || action === "hold")
+  const isValidPath =
+    dirs.length <= 5 || (dirs.length === 6 && isModerationAction)
+  const headers = {
+    ...getAllowHeaders(event),
+    ...(event.httpMethod === "GET" && { "Cache-Control": "private, no-store" }),
+  }
 
   if (!isValidPath)
     return addHeaders(
@@ -64,12 +73,21 @@ export const handler = async (event: APIGatewayEvent) => {
       headers
     )
   const eventHeaders = toDefinedHeaders(event.headers)
+  const blocked = getCookieWriteError(event, eventHeaders)
+  if (blocked) return addHeaders(blocked, headers)
   const authUserId = getUserId(eventHeaders) ?? undefined
   const targetId = getTargetId(event.path, "comment") as CommentId
 
-  const handleMethod = (
-    method: APIGatewayEvent["httpMethod"]
+  const handleMethod = async (
+    method: NetlifyRequest["httpMethod"]
   ): Promise<Success<Comment> | Error> => {
+    if (isModerationAction && method !== "OPTIONS") {
+      if (method !== "POST") return error405MethodNotAllowed
+      if (!targetId || !isDefined(event.body)) return error400BadRequest
+      return action === "hold"
+        ? service.commentHOLD(targetId, event.body, authUserId)
+        : service.commentAPPROVE(targetId, event.body, authUserId)
+    }
     switch (method) {
       case "GET":
         return service.commentGET(targetId, authUserId)
@@ -82,7 +100,11 @@ export const handler = async (event: APIGatewayEvent) => {
           return service.commentPUT(targetId, event.body, authUserId)
         else return new Promise<Error>(resolve => resolve(error400BadRequest))
       case "DELETE":
-        return service.commentDELETE(targetId, authUserId)
+        return service.commentDELETE(
+          targetId,
+          authUserId,
+          event.body ?? undefined
+        )
       case "OPTIONS":
         return new Promise<Success>(resolve =>
           resolve({ ...success200OK, headers })

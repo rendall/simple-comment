@@ -105,12 +105,19 @@ export const createUser = (newUserInfo: NewUser) =>
 /** Update a user
  * @async
  * @function
- * @param {NewUser} newUserInfo
+ * @param userInfo - Account ID and writable profile fields
  * @returns {ServerResponse<User>}
  */
-export const updateUser = (userInfo: User) =>
-  fetch(`${getSimpleCommentURL()}/user/${userInfo.id}`, {
-    body: objToQuery(userInfo),
+export const updateUser = ({
+  id,
+  name,
+  email,
+}: Pick<User, "id"> & Partial<Pick<User, "name" | "email">>) =>
+  fetch(`${getSimpleCommentURL()}/user/${id}`, {
+    body: objToQuery({
+      ...(name !== undefined && { name }),
+      ...(email !== undefined && { email }),
+    }),
     method: "PUT",
     credentials: "include",
   }).then(res => resolveBody<AdminSafeUser>(res))
@@ -213,15 +220,36 @@ export const putComment = (
     credentials: "include",
   }).then(res => resolveBody<Comment>(res))
 
+export const approveComment = (commentId: CommentId, reviewedText: string) =>
+  fetch(
+    `${getSimpleCommentURL()}/comment/${encodeURIComponent(commentId)}/approve`,
+    {
+      body: reviewedText,
+      method: "POST",
+      credentials: "include",
+    }
+  ).then(res => resolveBody<string>(res))
+
+export const holdComment = (commentId: CommentId, reason: string) =>
+  fetch(
+    `${getSimpleCommentURL()}/comment/${encodeURIComponent(commentId)}/hold`,
+    {
+      body: reason,
+      method: "POST",
+      credentials: "include",
+    }
+  ).then(res => resolveBody<string>(res))
+
 /** Delete a comment
  * @async
  * @function
  * @param {string} commentId
  * @return {ServerResponse}
  */
-export const deleteComment = (commentId: CommentId) =>
+export const deleteComment = (commentId: CommentId, reason?: string) =>
   fetch(`${getSimpleCommentURL()}/comment/${commentId}`, {
     method: "DELETE",
+    ...(reason && { body: reason }),
     credentials: "include",
   }).then(res => resolveBody<string>(res))
 

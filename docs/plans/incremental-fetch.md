@@ -77,6 +77,8 @@ How readers _arrive_ and how they _choose to browse_ are different things. These
 
 **List view** presents selected comments without trying to show the whole tree. Search results are one possible use. Later, the same kind of list could show replies to me, recent activity, or moderator work.
 
+**User comment history** is another use of list view: select comments by one author across all discussions, whether readers browse public contributions, authors review their own comments, or moderators inspect a user's history. Selection remains separate from presentation and fetch order; a result can focus its comment in the original discussion. Apply the visibility rules defined in the [site-wide moderation design](site-wide-comment-moderation.md#user-comment-history). This is a separate exploratory feature ([#288](https://github.com/rendall/simple-comment/issues/288)), not a requirement of the first incremental-fetch implementation.
+
 **Focus** is a state, not necessarily a third view. A shared link, search result, or notification can focus a particular comment. The embed shows it promptly and lets the reader expand outward into its ancestry and the ordinary tree.
 
 These names are a vocabulary for the design, not a commitment to ship search or multiple browsing modes in the first release. Comment selection, fetch order, and on-screen arrangement should remain separate decisions.

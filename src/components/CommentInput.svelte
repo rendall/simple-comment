@@ -16,6 +16,7 @@
   import { useMachine } from "@xstate/svelte"
   import { LoginTab } from "../lib/simple-comment-types"
   import type { AuthOutcomeState, AuthService } from "../lib/auth-service"
+  import { useViewerRevision } from "../lib/discussion-viewer"
   export let currentUser: User | undefined
   export let commentId: CommentId
   export let authService: AuthService
@@ -33,6 +34,8 @@
   let authOutcomeUser: User | undefined = undefined
 
   const { state, send } = useMachine(commentPostMachine)
+  const getViewerRevision = useViewerRevision()
+  let requestViewer: number
   const dispatch = createEventDispatcher()
 
   const onSubmit = e => {
@@ -45,8 +48,7 @@
       send({ type: "ERROR", error: "Comment is required." })
       return
     }
-    const hasCurrentUser =
-      currentUser !== undefined || authOutcomeUser !== undefined
+    const hasCurrentUser = currentUser !== undefined || authOutcomeUser !== undefined
     if (hasCurrentUser) send({ type: "SUCCESS" })
     else send("LOG_IN")
   }
@@ -103,11 +105,14 @@
     authService.authOutcome.subscribe(handleAuthOutcome)
 
   const postingStateHandler = async () => {
+    requestViewer = getViewerRevision()
     try {
       const response = await postComment(commentId, commentText)
+      if (requestViewer !== getViewerRevision()) return send("RESET")
       if (isResponseOk(response)) send({ type: "SUCCESS", response })
       else send("ERROR", response)
     } catch (error) {
+      if (requestViewer !== getViewerRevision()) return send("RESET")
       send("ERROR", error)
     }
   }
@@ -119,7 +124,7 @@
       return
     }
     const { body } = response as ServerResponse<Comment>
-    dispatch("posted", { comment: body })
+    if (requestViewer === getViewerRevision()) dispatch("posted", { comment: body })
     send({ type: "RESET" })
     commentText = ""
   }
@@ -185,7 +190,7 @@
     }
   })
 
-  // The outcome user only bridges the update of the authoritative user prop.
+  // The outcome user bridges the update of the authoritative user prop.
   $: if (currentUser !== undefined) authOutcomeUser = undefined
 
   $: {
