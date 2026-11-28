@@ -1066,7 +1066,6 @@ export class MongodbService extends AbstractDbService {
 
     const body = toVisibleComment(comment, viewer)
     const replies = toVisibleReplies(comment.replies, viewer)
-    if (body.dateDeleted && !body.deletedReason) return notFound
     if (
       body.isApproved === false &&
       !body.isManuallyHeld &&

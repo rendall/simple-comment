@@ -559,7 +559,7 @@
         ],
         "responses": {
           "200": {
-            "description": "List comments for {commentId}",
+            "description": "Viewer-appropriate comment or deleted-comment placeholder, with visible replies",
             "content": {
               "application/json": {
                 "schema": {
@@ -608,7 +608,7 @@
             "BearerAuth": []
           }
         ],
-        "description": "Returns a viewer-appropriate comment and its replies. Authors and moderators can see held content and reasons. Other viewers receive a redacted placeholder for a manually hidden comment, including a comment with no replies. An automatically held comment is replaced by a placeholder when visible descendants require its ancestry."
+        "description": "Returns a viewer-appropriate comment and its replies. Authors and moderators can see held content and reasons. Other viewers receive a redacted placeholder for a manually hidden comment, including a comment with no replies. An automatically held comment is replaced by a placeholder when visible descendants require its ancestry. For an existing deleted comment, returns 200 with a placeholder (including id, dateDeleted, null text, and visible replies), even if it has no visible replies or was never published. The recorded removal reason is included only for the original author and moderators. Deleted text, former hold details, author information and private deletion metadata are not returned. Existing discussion read permissions apply."
       },
       "put": {
         "summary": "Edit a comment",
