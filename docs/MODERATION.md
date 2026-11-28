@@ -8,6 +8,18 @@ Simple Comment checks new comments and edits in which the text changes. A link o
 2. Open your site's `login.html` and sign in with the configured owner's credentials. Then open a discussion. On a held comment from another account, the owner can open the action menu to approve or remove it.
 3. If you want email alerts, configure a provider and the recipient list using the [notification guide](NOTIFICATIONS.md). Emails for held submissions or edits include the text, hold reason, comment ID, and parent ID. Use those details to find the comment in its discussion. Treat the email as private because it can contain unpublished text.
 
+## Upgrading an existing installation
+
+The moderation release uses numerical account privileges. Stored values are 0 (ordinary user), 1 (moderator), and 2 (administrator). The configured owner has effective privilege 3, derived from the deployment configuration rather than stored in the database.
+
+- Existing valid stored privileges are preserved. Ordinary accounts without a stored privilege default to 0; existing live comments without an approval flag are treated as published. Neither requires a migration.
+- A legacy `isAdmin: true` flag alone no longer grants authority. A non-owner account with that flag and no stored privilege becomes an ordinary user. The configured owner retains full authority without a migration.
+- Before upgrading, check the MongoDB `users` collection for non-owner accounts with `isAdmin: true` and no `privilege` field. If an affected account should retain access, the installation owner must explicitly assign stored privilege 1 for comment moderation or 2 for administration as well. There is no automatic migration or role-management interface in this release.
+- Only the original author can edit a comment, including when a moderator or administrator is signed in. Account creation and update requests must not supply the read-only role properties `privilege`, `isModerator`, `isAdmin`, or `isOwner`; such requests are rejected.
+- API integrations must account for successful comment edits returning HTTP 200 instead of 204, with the authoritative saved comment object including its publication state.
+
+**Rollback warning:** Rolling back to a version predating moderation is not recommended. Older versions do not respect moderation holds and may expose hidden or unpublished comments.
+
 ## Configure the private terms list
 
 Create a UTF-8 text file named `moderation-terms.txt`. Put one literal word or phrase on each line. Blank lines and lines starting with `#` are ignored. Matching is case-insensitive and can match inside a longer word. Start with the [harmless example](../moderation-terms.example.txt) for a test deployment.
