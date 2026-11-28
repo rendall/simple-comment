@@ -781,7 +781,8 @@ describe("Comment moderation", () => {
       ).statusCode
     ).toBe(202)
 
-    for (const viewer of [author, moderator, admin, owner, outsider, undefined]) {
+    const viewers = [author, moderator, admin, owner, outsider, undefined]
+    for (const viewer of viewers) {
       const response = await service.commentGET(submitted.id, viewer?.id)
       expect(response).toMatchObject({
         statusCode: 200,
