@@ -375,9 +375,21 @@ describe("Comment moderation", () => {
       text: null,
       deletedReason: "Private removal reason",
     })
-    expect(await request("comment", "GET", pending.id, outsider)).toMatchObject(
-      { statusCode: 404 }
-    )
+    for (const viewer of [undefined, outsider]) {
+      const response = await request("comment", "GET", pending.id, viewer)
+      expect(response).toMatchObject({
+        statusCode: 200,
+        headers: { "Cache-Control": "private, no-store" },
+      })
+      const placeholder = JSON.parse(String(response.body))
+      expect(placeholder).toMatchObject({
+        id: pending.id,
+        text: null,
+        dateDeleted: expect.any(String),
+        replies: [],
+      })
+      expect(placeholder).not.toHaveProperty("deletedReason")
+    }
   })
 
   test("places holds through the API only for eligible moderators and targets", async () => {
@@ -597,9 +609,15 @@ describe("Comment moderation", () => {
       expect(
         (await service.commentGET(unrelated.id, viewer?.id)).statusCode
       ).toBe(404)
-      expect(
-        (await service.commentGET(deleted.id, viewer?.id)).statusCode
-      ).toBe(404)
+      expect(await service.commentGET(deleted.id, viewer?.id)).toMatchObject({
+        statusCode: 200,
+        body: {
+          id: deleted.id,
+          text: null,
+          dateDeleted: dateCreated,
+          replies: [],
+        },
+      })
     }
 
     for (const viewer of [guest, moderator]) {
@@ -763,10 +781,34 @@ describe("Comment moderation", () => {
       ).statusCode
     ).toBe(202)
 
-    for (const viewer of [author, moderator]) {
-      expect(await service.commentGET(submitted.id, viewer.id)).toMatchObject({
-        body: { text: null, deletedReason: "Private reason" },
+    for (const viewer of [author, moderator, admin, owner, outsider, undefined]) {
+      const response = await service.commentGET(submitted.id, viewer?.id)
+      expect(response).toMatchObject({
+        statusCode: 200,
+        body: {
+          id: submitted.id,
+          parentId: submitted.parentId,
+          text: null,
+          dateDeleted: expect.any(Date),
+          replies: [],
+        },
       })
+      if (viewer && viewer !== outsider) {
+        expect(response.body).toHaveProperty("deletedReason", "Private reason")
+      } else {
+        expect(response.body).not.toHaveProperty("deletedReason")
+      }
+      for (const field of [
+        "heldReason",
+        "heldBy",
+        "isApproved",
+        "isManuallyHeld",
+        "deletedBy",
+        "userId",
+        "user",
+      ]) {
+        expect(response.body).not.toHaveProperty(field)
+      }
     }
     for (const viewer of [undefined, outsider]) {
       const tombstone = (await readDiscussion(viewer)).find(
@@ -785,8 +827,83 @@ describe("Comment moderation", () => {
       ]) {
         expect(tombstone).not.toHaveProperty(field)
       }
+    }
+  })
+
+  test("returns a self-deleted leaf without a removal reason to every viewer", async () => {
+    const leaf = comment("self-deleted-leaf")
+    await comments.insertOne(leaf)
+    expect(await service.commentDELETE(leaf.id, author.id)).toMatchObject({
+      statusCode: 202,
+    })
+    for (const viewer of [undefined, outsider, author, moderator]) {
+      const response = await service.commentGET(leaf.id, viewer?.id)
+      expect(response).toMatchObject({
+        statusCode: 200,
+        body: {
+          id: leaf.id,
+          parentId: leaf.parentId,
+          text: null,
+          dateDeleted: expect.any(Date),
+          replies: [],
+        },
+      })
+      for (const field of ["deletedReason", "deletedBy", "userId", "user"]) {
+        expect(response.body).not.toHaveProperty(field)
+      }
+    }
+  })
+
+  test("returns a deleted parent and only the viewer's visible replies", async () => {
+    const parent = comment("deleted-parent")
+    const reply = comment("surviving-reply", { parentId: parent.id })
+    const privateReply = held("private-reply", { parentId: parent.id })
+    await comments.insertMany([parent, reply, privateReply])
+    expect(
+      await service.commentDELETE(parent.id, moderator.id, "Removal reason")
+    ).toMatchObject({ statusCode: 202 })
+
+    for (const viewer of [undefined, outsider, author, moderator]) {
+      const response = await service.commentGET(parent.id, viewer?.id)
+      expect(response).toMatchObject({
+        statusCode: 200,
+        body: {
+          id: parent.id,
+          parentId: parent.parentId,
+          text: null,
+          dateDeleted: expect.any(Date),
+          replies: expect.arrayContaining([
+            expect.objectContaining({
+              id: reply.id,
+              parentId: parent.id,
+              text: reply.text,
+            }),
+          ]),
+        },
+      })
+      const body = response.body as Comment
+      if (viewer === author || viewer === moderator) {
+        expect(body.deletedReason).toBe("Removal reason")
+        expect(body.replies).toHaveLength(2)
+        expect(body.replies).toContainEqual(
+          expect.objectContaining({
+            id: privateReply.id,
+            parentId: parent.id,
+            text: privateReply.text,
+          })
+        )
+      } else {
+        expect(body).not.toHaveProperty("deletedReason")
+        expect(body.replies).toHaveLength(1)
+        expect(
+          (await service.commentGET(privateReply.id, viewer?.id)).statusCode
+        ).toBe(404)
+      }
+      for (const field of ["deletedBy", "userId", "user"]) {
+        expect(body).not.toHaveProperty(field)
+      }
       expect(
-        (await service.commentGET(submitted.id, viewer?.id)).statusCode
+        (await service.commentGET("missing-comment-id", viewer?.id)).statusCode
       ).toBe(404)
     }
   })

@@ -1427,9 +1427,18 @@ describe("Full API service test", () => {
 
     test("retains the record when the author deletes a leaf comment", async () => {
       await expectRetainedDeletion(author.id)
-      expect(
-        await service.commentGET(target.id, authUserTest.id)
-      ).toHaveProperty("statusCode", 404)
+      const response = await service.commentGET(target.id, authUserTest.id)
+      expect(response).toMatchObject({
+        statusCode: 200,
+        body: {
+          id: target.id,
+          parentId: target.parentId,
+          text: null,
+          dateDeleted: expect.any(Date),
+          replies: [],
+        },
+      })
+      expect(response.body).not.toHaveProperty("deletedReason")
     })
 
     test("retains the original author and live reply when an admin deletes a parent comment", async () => {
